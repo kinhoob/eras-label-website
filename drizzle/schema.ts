@@ -1,8 +1,5 @@
 import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal, json } from "drizzle-orm/mysql-core";
 
-/**
- * Core user table backing auth flow.
- */
 export const users = mysqlTable("users", {
   id: int("id").autoincrement().primaryKey(),
   openId: varchar("openId", { length: 64 }).notNull().unique(),
@@ -19,7 +16,6 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// Products table
 export const products = mysqlTable("products", {
   id: int("id").autoincrement().primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
@@ -38,7 +34,6 @@ export const products = mysqlTable("products", {
 export type Product = typeof products.$inferSelect;
 export type InsertProduct = typeof products.$inferInsert;
 
-// Product variations (sizes, stock, etc.)
 export const productVariations = mysqlTable("product_variations", {
   id: int("id").autoincrement().primaryKey(),
   productId: int("productId").notNull(),
@@ -51,7 +46,6 @@ export const productVariations = mysqlTable("product_variations", {
 export type ProductVariation = typeof productVariations.$inferSelect;
 export type InsertProductVariation = typeof productVariations.$inferInsert;
 
-// Orders table
 export const orders = mysqlTable("orders", {
   id: int("id").autoincrement().primaryKey(),
   orderNumber: varchar("orderNumber", { length: 50 }).notNull().unique(),
@@ -79,7 +73,6 @@ export const orders = mysqlTable("orders", {
 export type Order = typeof orders.$inferSelect;
 export type InsertOrder = typeof orders.$inferInsert;
 
-// Order items
 export const orderItems = mysqlTable("order_items", {
   id: int("id").autoincrement().primaryKey(),
   orderId: int("orderId").notNull(),
@@ -93,7 +86,6 @@ export const orderItems = mysqlTable("order_items", {
 export type OrderItem = typeof orderItems.$inferSelect;
 export type InsertOrderItem = typeof orderItems.$inferInsert;
 
-// Coupons
 export const coupons = mysqlTable("coupons", {
   id: int("id").autoincrement().primaryKey(),
   code: varchar("code", { length: 50 }).notNull().unique(),
@@ -110,7 +102,6 @@ export const coupons = mysqlTable("coupons", {
 export type Coupon = typeof coupons.$inferSelect;
 export type InsertCoupon = typeof coupons.$inferInsert;
 
-// Newsletter Subscribers
 export const newsletterSubscribers = mysqlTable("newsletter_subscribers", {
   id: int("id").autoincrement().primaryKey(),
   name: varchar("name", { length: 255 }),
@@ -122,7 +113,6 @@ export const newsletterSubscribers = mysqlTable("newsletter_subscribers", {
 export type NewsletterSubscriber = typeof newsletterSubscribers.$inferSelect;
 export type InsertNewsletterSubscriber = typeof newsletterSubscribers.$inferInsert;
 
-// Collections
 export const collections = mysqlTable("collections", {
   id: int("id").autoincrement().primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
@@ -137,7 +127,6 @@ export const collections = mysqlTable("collections", {
 export type Collection = typeof collections.$inferSelect;
 export type InsertCollection = typeof collections.$inferInsert;
 
-// Site Appearance & Settings
 export const siteAppearance = mysqlTable("site_appearance", {
   id: int("id").autoincrement().primaryKey(),
   sectionKey: varchar("sectionKey", { length: 100 }).notNull().unique(),
@@ -148,7 +137,6 @@ export const siteAppearance = mysqlTable("site_appearance", {
 export type SiteAppearance = typeof siteAppearance.$inferSelect;
 export type InsertSiteAppearance = typeof siteAppearance.$inferInsert;
 
-// Abandoned Carts
 export const abandonedCarts = mysqlTable("abandoned_carts", {
   id: int("id").autoincrement().primaryKey(),
   customerEmail: varchar("customerEmail", { length: 320 }),

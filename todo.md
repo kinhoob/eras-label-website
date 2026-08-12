@@ -21,7 +21,8 @@
 - [x] 7. **Efeitos de Interação e Sons**: Sons nos botões e animação de ampulheta nas transições.
 - [x] 8. **Testes Vitest e Revisão Final**: Cobertura de testes validada para autenticação, cupons, newsletter e checkout.
 - [x] 9. **Upload de Múltiplas Fotos na Edição de Produtos**
-  - [x] Adicionar rotas e helpers no backend para salvar galerias de produtos
-  - [x] Criar modal/ecrã de edição de produto com seletor de múltiplas imagens
-  - [x] Implementar pré-visualização, remoção e ordenação de fotos no painel administrativo
-  - [x] Validar persistência e testes Vitest
+- [ ] 10. **Menu Lateral, Sons e Ampulheta fiéis ao Lovable**
+  - [ ] Implementar menu lateral idêntico ao modelo (Explorar: Início, Arquivo de Eras, Manifesto Completo, Eventos, Contato, Grupo VIP no WhatsApp; Categorias; Coleções) para desktop e mobile
+  - [ ] Integrar Web Audio API para reproduzir os mesmos sons de clique/interação do Lovable
+  - [ ] Integrar animação de ampulheta rotativa nas transições de página e cliques de carregamento
+  - [ ] Validar responsividade e ausência de erros no build
