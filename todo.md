@@ -26,3 +26,9 @@
   - [x] Sincronizar comportamento exato do menu desktop/mobile com a referência Lovable
   - [x] Ajustar animação de ampulheta para estado de transição real
   - [x] Executar build de produção para validação completa
+
+- [ ] 11. **Navegação por Páginas Reais e Transição de Ampulheta (0.5s)**
+  - [ ] Criar rotas dedicadas para cada item do menu (Início, Arquivo de Eras, Manifesto, Eventos, Contato, Categorias e Coleções)
+  - [ ] Implementar ecrã de carregamento com ampulheta rotativa exata de 0,5s em cada transição de página
+  - [ ] Unificar o menu lateral idêntico ao Lovable para desktop e mobile
+  - [ ] Validar rotas, sons e build de produção sem erros

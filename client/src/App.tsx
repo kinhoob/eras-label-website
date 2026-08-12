@@ -7,11 +7,22 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
+import ArchivePage from "./pages/Archive";
+import ManifestoPage from "./pages/Manifesto";
+import EventsPage from "./pages/Events";
+import ContactPage from "./pages/Contact";
+import CatalogViewPage from "./pages/CatalogView";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/archive" component={ArchivePage} />
+      <Route path="/manifesto" component={ManifestoPage} />
+      <Route path="/events" component={EventsPage} />
+      <Route path="/contact" component={ContactPage} />
+      <Route path="/category/:slug" component={CatalogViewPage} />
+      <Route path="/collection/:slug" component={CatalogViewPage} />
       <Route path="/auth" component={Auth} />
       <Route path="/admin" component={Admin} />
       <Route path="/404" component={NotFound} />
