@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
-import { Package, Truck, CheckCircle2, Clock, ArrowLeft, ExternalLink, ShieldCheck, User as UserIcon, LogOut, Check, X, Box } from "lucide-react";
+import { Package, Truck, CheckCircle2, Clock, ArrowLeft, ExternalLink, ShieldCheck, User as UserIcon, LogOut, Check, X, Box, Copy } from "lucide-react";
 import { Link } from "wouter";
 
 /* Função utilitária para formatar valores monetários em Reais (BRL) */
@@ -16,6 +16,14 @@ export default function Account() {
     enabled: !!user,
   });
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
+  const [copiedTracking, setCopiedTracking] = useState(false);
+
+  // Função para copiar o código de rastreio para a área de transferência com feedback visual temporário
+  const handleCopyTracking = (code: string) => {
+    navigator.clipboard.writeText(code);
+    setCopiedTracking(true);
+    setTimeout(() => setCopiedTracking(false), 2000);
+  };
 
   // Se o usuário não estiver autenticado, exibe tela de prompt de login
   if (!user) {
@@ -185,9 +193,28 @@ export default function Account() {
               {/* Informações de Rastreio */}
               {selectedOrder.trackingCode ? (
                 <div className="tracking-box">
-                  <div className="tracking-title">
-                    <Truck size={16} />
-                    <strong>Código de Rastreio: {selectedOrder.trackingCode}</strong>
+                  <div className="tracking-title" style={{ display: "flex", alignItems: "center", justifyContent: "between", width: "100%" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <Truck size={16} />
+                      <strong>Código de Rastreio: {selectedOrder.trackingCode}</strong>
+                    </div>
+                    <button 
+                      className="copy-tracking-btn"
+                      onClick={() => handleCopyTracking(selectedOrder.trackingCode)}
+                      title="Copiar código de rastreio"
+                    >
+                      {copiedTracking ? (
+                        <>
+                          <Check size={14} className="text-emerald-400" />
+                          <span>COPIADO!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy size={14} />
+                          <span>COPIAR</span>
+                        </>
+                      )}
+                    </button>
                   </div>
                   <div className="tracking-details">
                     <span>Transportadora: {selectedOrder.carrier || "Correios / Logística"}</span>
