@@ -515,6 +515,23 @@ export default function Home() {
                 <button className="primary-button checkout-button" onClick={() => setIsCheckoutOpen(true)}>
                   IR PARA CHECKOUT <ArrowRight size={16} />
                 </button>
+                <div className="cart-recommendations">
+                  <h3>VOCÊ TAMBÉM PODE GOSTAR</h3>
+                  <div className="recommendations-grid">
+                    {products.slice(0, 2).map((rec) => (
+                      <div className="recommendation-card" key={rec.id}>
+                        <img src={rec.image} alt={rec.alt} />
+                        <div>
+                          <p>{rec.name}</p>
+                          <span className="rec-price">{formatPrice(rec.price)}</span>
+                        </div>
+                        <button className="rec-add" onClick={() => addToCart(rec, rec.sizes[0] ?? "P")}>
+                          ADICIONAR <Plus size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </>
             )}
           </aside>
