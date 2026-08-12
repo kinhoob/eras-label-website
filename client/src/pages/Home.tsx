@@ -163,6 +163,7 @@ export default function Home() {
   const [newsletterSent, setNewsletterSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [couponLoading, setCouponLoading] = useState(false);
+  const [lastRemovedItem, setLastRemovedItem] = useState<CartLine | null>(null);
   const newsletterMutation = trpc.newsletter.subscribe.useMutation();
   const checkoutMutation = trpc.checkout.create.useMutation();
 
@@ -503,6 +504,17 @@ export default function Home() {
                 </div>
               </div>
             )}
+            {lastRemovedItem && (
+              <div className="undo-banner">
+                <span>Item removido da sacola.</span>
+                <button onClick={() => {
+                  playClick(soundsOn);
+                  setCart((current) => [...current, lastRemovedItem]);
+                  setLastRemovedItem(null);
+                  toast.success("Item restaurado com sucesso.");
+                }}>Desfazer</button>
+              </div>
+            )}
             {cart.length === 0 ? (
               <div className="empty-cart"><ShoppingBag size={33} /><p>Ainda não há peças aqui.</p><button className="text-link" onClick={() => setIsCartOpen(false)}>CONTINUAR A EXPLORAR <ArrowRight size={16} /></button></div>
             ) : (
@@ -522,8 +534,17 @@ export default function Home() {
                         </div>
                         <button className="cart-line-remove" onClick={() => {
                           playClick(soundsOn);
+                          setLastRemovedItem(item);
                           setCart((current) => current.filter((i) => !(i.id === item.id && i.size === item.size)));
-                          toast.success("Peça removida da sacola.");
+                          toast.success("Peça removida da sacola.", {
+                            action: {
+                              label: "Desfazer",
+                              onClick: () => {
+                                setCart((current) => [...current, item]);
+                                setLastRemovedItem(null);
+                              }
+                            }
+                          });
                         }}>Remover</button>
                       </div>
                     </div>

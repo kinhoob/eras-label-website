@@ -577,3 +577,8 @@ td { border-top: 1px solid #e1dacf; padding: 15px 17px; color: #6f675e; font-siz
 .cart-line .quantity span { margin: 0 4px; font-weight: 600; font-size: 12px; }
 .cart-line-remove { background: transparent; border: none; color: #81786e; font-size: 10px; cursor: pointer; margin-top: 6px; padding: 0; display: inline-flex; align-items: center; gap: 4px; }
 .cart-line-remove:hover { color: #23221e; }
+
+/* Estilos para a notificação temporária de desfazer remoção de item */
+.undo-banner { display: flex; justify-content: space-between; align-items: center; background: #23221e; color: #f6f3ee; padding: 10px 14px; margin-bottom: 15px; font-size: 11px; animation: drawer-in .2s ease; }
+.undo-banner button { background: transparent; border: none; color: #e5dec9; font-weight: 700; font-size: 11px; cursor: pointer; letter-spacing: .1em; text-transform: uppercase; }
+.undo-banner button:hover { color: #fff; text-decoration: underline; }
