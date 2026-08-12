@@ -569,3 +569,11 @@ td { border-top: 1px solid #e1dacf; padding: 15px 17px; color: #6f675e; font-siz
 .coupon-row button:disabled { opacity: .7; cursor: wait; }
 .spinner-icon { animation: spin 1s linear infinite; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* Estilos aprimorados para os controles de quantidade no carrinho lateral */
+.cart-line .quantity { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.cart-line .quantity button { width: 24px; height: 24px; border: 1px solid #d1c7bb; background: #fff; color: #23221e; display: inline-grid; place-items: center; cursor: pointer; transition: background .15s ease; }
+.cart-line .quantity button:hover { background: #e5dec9; }
+.cart-line .quantity span { margin: 0 4px; font-weight: 600; font-size: 12px; }
+.cart-line-remove { background: transparent; border: none; color: #81786e; font-size: 10px; cursor: pointer; margin-top: 6px; padding: 0; display: inline-flex; align-items: center; gap: 4px; }
+.cart-line-remove:hover { color: #23221e; }

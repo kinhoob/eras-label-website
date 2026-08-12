@@ -516,10 +516,15 @@ export default function Home() {
                         <span>Tamanho {item.size}</span>
                         <strong>{formatPrice(item.price)}</strong>
                         <div className="quantity">
-                          <button onClick={() => changeQuantity(item.id, item.size, -1)}><Minus size={12} /></button>
+                          <button onClick={() => changeQuantity(item.id, item.size, -1)} aria-label="Diminuir quantidade"><Minus size={12} /></button>
                           <span>{item.quantity}</span>
-                          <button onClick={() => changeQuantity(item.id, item.size, 1)}><Plus size={12} /></button>
+                          <button onClick={() => changeQuantity(item.id, item.size, 1)} aria-label="Aumentar quantidade"><Plus size={12} /></button>
                         </div>
+                        <button className="cart-line-remove" onClick={() => {
+                          playClick(soundsOn);
+                          setCart((current) => current.filter((i) => !(i.id === item.id && i.size === item.size)));
+                          toast.success("Peça removida da sacola.");
+                        }}>Remover</button>
                       </div>
                     </div>
                   ))}
