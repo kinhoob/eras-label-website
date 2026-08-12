@@ -165,9 +165,13 @@ export default function Home() {
   const [couponLoading, setCouponLoading] = useState(false);
   const [lastRemovedItem, setLastRemovedItem] = useState<CartLine | null>(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"pix" | "credit_card">("pix");
+  const [cepInput, setCepInput] = useState("");
+  const [shippingCep, setShippingCep] = useState("");
   const { data: commercialConfig } = trpc.catalog.getConfig.useQuery();
   const pixDiscountPercent = commercialConfig?.pixDiscountPercent ?? 5;
   const freeShippingThreshold = commercialConfig?.freeShippingThreshold ?? 350;
+
+
 
   const newsletterMutation = trpc.newsletter.subscribe.useMutation();
   const checkoutMutation = trpc.checkout.create.useMutation();
@@ -179,7 +183,14 @@ export default function Home() {
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const discount = couponApplied ? subtotal * 0.1 : 0;
-  const total = subtotal - discount;
+
+  const { data: shippingData, isLoading: shippingLoading, refetch: refetchShipping } = trpc.catalog.calculateShipping.useQuery(
+    { cep: shippingCep, subtotal },
+    { enabled: shippingCep.length === 8 }
+  );
+
+  const shippingCost = shippingData?.free ? 0 : (shippingData?.cost ?? 0);
+  const total = subtotal - discount + shippingCost;
 
   function openProduct(product: Product) {
     playClick(soundsOn);
@@ -283,7 +294,7 @@ export default function Home() {
       },
       items: cart.map((item) => ({ productId: item.id, size: item.size, quantity: item.quantity, price: item.price })),
       subtotal,
-      shippingCost: 0,
+      shippingCost,
       discount,
       total,
       paymentMethod: selectedPaymentMethod,
@@ -573,9 +584,50 @@ export default function Home() {
                     </div>
                   )}
                 </div>
+
+                <div className="shipping-cep-section">
+                  <label>Calcular Frete e Prazo</label>
+                  <div className="coupon-row">
+                    <Input
+                      value={cepInput}
+                      onChange={(event) => setCepInput(event.target.value.replace(/\D/g, "").slice(0, 8))}
+                      placeholder="Digite seu CEP (ex: 01001000)"
+                      maxLength={8}
+                    />
+                    <button
+                      onClick={() => {
+                        playClick(soundsOn);
+                        if (cepInput.length !== 8) {
+                          toast.error("Digite um CEP válido com 8 dígitos.");
+                          return;
+                        }
+                        setShippingCep(cepInput);
+                        toast.success("Calculando frete...");
+                      }}
+                      disabled={shippingLoading}
+                    >
+                      {shippingLoading ? <Loader2 size={14} className="spinner-icon" /> : "CALCULAR"}
+                    </button>
+                  </div>
+                  {shippingData && (
+                    <div className="shipping-result-box">
+                      <div className="shipping-info">
+                        <strong>{shippingData.service}</strong>
+                        <span>Prazo: {shippingData.deadline}</span>
+                      </div>
+                      <strong className="shipping-price">
+                        {shippingData.free ? "GRÁTIS" : formatPrice(shippingData.cost)}
+                      </strong>
+                    </div>
+                  )}
+                </div>
                 <div className="cart-summary">
                   <div><span>Subtotal</span><strong>{formatPrice(subtotal)}</strong></div>
                   {couponApplied && <div><span>Desconto</span><strong>-{formatPrice(discount)}</strong></div>}
+                  <div>
+                    <span>Frete {shippingData ? `(${shippingData.service})` : ""}</span>
+                    <strong>{shippingData ? (shippingData.free ? "GRÁTIS" : formatPrice(shippingData.cost)) : "A calcular"}</strong>
+                  </div>
                   {selectedPaymentMethod === "pix" && (
                     <div className="pix-saving-highlight">
                       <span>Economia Pix ({pixDiscountPercent}%)</span>

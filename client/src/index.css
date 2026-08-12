@@ -597,3 +597,45 @@ td { border-top: 1px solid #e1dacf; padding: 15px 17px; color: #6f675e; font-siz
 .payment-chip.active { background: #23221e; color: #f6f3ee; border-color: #23221e; }
 .payment-chip span.highlight { font-size: 9px; color: #c84b31; font-weight: 700; margin-top: 2px; }
 .payment-chip.active span.highlight { color: #f28b75; }
+
+/* Shipping CEP Section in Side Cart */
+.shipping-cep-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.shipping-cep-section label {
+  display: block;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #a1a1aa;
+  margin-bottom: 0.5rem;
+}
+.shipping-result-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-top: 0.75rem;
+}
+.shipping-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.shipping-info strong {
+  font-size: 0.8rem;
+  color: #fff;
+}
+.shipping-info span {
+  font-size: 0.7rem;
+  color: #a1a1aa;
+}
+.shipping-price {
+  font-size: 0.85rem;
+  color: #10b981;
+}

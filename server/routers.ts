@@ -35,6 +35,29 @@ export const appRouter = router({
     list: publicProcedure.input(z.object({ category: z.string().optional() }).optional()).query(({ input }) => listProducts(input?.category)),
     getById: publicProcedure.input(z.object({ id: z.number().int().positive() })).query(({ input }) => getProductWithVariations(input.id)),
     getConfig: publicProcedure.query(() => getCommercialConfig()),
+    calculateShipping: publicProcedure.input(z.object({
+      cep: z.string().min(8),
+      subtotal: z.number().nonnegative(),
+    })).query(async ({ input }) => {
+      const config = await getCommercialConfig();
+      const cleanCep = input.cep.replace(/\D/g, "");
+      if (cleanCep.length !== 8) {
+        throw new Error("CEP inválido");
+      }
+      // Frete grátis se subtotal >= freeShippingThreshold
+      if (input.subtotal >= config.freeShippingThreshold) {
+        return { cost: 0, service: "Frete Grátis Eras", deadline: "3 a 6 dias úteis", free: true };
+      }
+      // Região simulada por CEP (ex: Sudeste mais barato, Norte/Nordeste proporcional)
+      const firstDigit = cleanCep.charAt(0);
+      let baseCost = 25.0;
+      if (["0", "1", "2"].includes(firstDigit)) baseCost = 20.0; // SP/RJ/ES
+      else if (["3", "4"].includes(firstDigit)) baseCost = 25.0; // MG/BA/SE
+      else if (["5", "6", "7"].includes(firstDigit)) baseCost = 32.0; // NE/N
+      else baseCost = 28.0; // Sul/CO
+
+      return { cost: baseCost, service: "SEDEX / PAC Expresso", deadline: "4 a 8 dias úteis", free: false };
+    }),
   }),
   newsletter: router({
     subscribe: publicProcedure.input(newsletterInput).mutation(({ input }) => subscribeToNewsletter(input.name, input.email)),
