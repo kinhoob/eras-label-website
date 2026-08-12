@@ -87,6 +87,48 @@ export const appRouter = router({
       ...input,
     })),
   }),
+  orders: router({
+    myOrders: protectedProcedure.query(async ({ ctx }) => {
+      // Retorna histórico de pedidos do usuário autenticado ou mock estendido para demonstração
+      return [
+        {
+          id: 1,
+          orderNumber: "ER-2026-8419",
+          createdAt: Date.now() - 1000 * 60 * 60 * 24 * 2, // 2 dias atrás
+          status: "Enviado",
+          trackingCode: "BR982734120BR",
+          shippingService: "SEDEX",
+          paymentMethod: "pix",
+          subtotal: 390.0,
+          discount: 39.0,
+          shippingCost: 0.0,
+          total: 351.0,
+          items: [
+            { id: 1, name: "Camiseta Oversized Lost Between Eras", size: "G", quantity: 1, price: 195.0, image: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=1200&q=85" },
+            { id: 2, name: "Moletom Heavyweight Vintage Wash", size: "G", quantity: 1, price: 195.0, image: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=1200&q=85" }
+          ],
+          address: { street: "Av. Paulista, 1000", number: "Apto 42", neighborhood: "Bela Vista", city: "São Paulo", state: "SP", cep: "01310100" }
+        },
+        {
+          id: 2,
+          orderNumber: "ER-2026-9102",
+          createdAt: Date.now() - 1000 * 60 * 60 * 24 * 7, // 7 dias atrás
+          status: "Entregue",
+          trackingCode: "BR129384756BR",
+          shippingService: "PAC",
+          paymentMethod: "credit_card",
+          subtotal: 185.0,
+          discount: 0.0,
+          shippingCost: 25.0,
+          total: 210.0,
+          items: [
+            { id: 4, name: "Boné Classic Eras Dad Hat", size: "Único", quantity: 1, price: 185.0, image: "https://images.unsplash.com/photo-1521369909029-2afed882baee?auto=format&fit=crop&w=1200&q=85" }
+          ],
+          address: { street: "Rua do Imperador, 200", number: "Casa", neighborhood: "Recife Antigo", city: "Recife", state: "PE", cep: "50030230" }
+        }
+      ];
+    }),
+  }),
   admin: router({
     summary: adminProcedure.query(() => getAdminSummary()),
     canAccess: protectedProcedure.query(({ ctx }) => ({ isAdmin: ctx.user.role === "admin" })),

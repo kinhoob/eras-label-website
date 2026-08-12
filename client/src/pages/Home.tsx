@@ -331,7 +331,7 @@ export default function Home() {
           <button className="icon-button" aria-label={soundsOn ? "Desativar sons" : "Ativar sons"} onClick={() => setSoundsOn((value) => !value)}>
             {soundsOn ? <Volume2 size={17} /> : <VolumeX size={17} />}
           </button>
-          <Link href="/auth" className="icon-button" aria-label="Entrar na conta" onClick={() => playClick(soundsOn)}>
+          <Link href="/account" className="icon-button" aria-label="Minha Conta e Pedidos" onClick={() => playClick(soundsOn)}>
             <CircleUserRound size={18} />
           </Link>
           <button className="bag-button" onClick={() => { playClick(soundsOn); setIsCartOpen(true); }}>

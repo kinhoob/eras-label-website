@@ -12,6 +12,7 @@ import ManifestoPage from "./pages/Manifesto";
 import EventsPage from "./pages/Events";
 import ContactPage from "./pages/Contact";
 import CatalogViewPage from "./pages/CatalogView";
+import AccountPage from "./pages/Account";
 
 function Router() {
   return (
@@ -25,6 +26,7 @@ function Router() {
       <Route path="/collection/:slug" component={CatalogViewPage} />
       <Route path="/auth" component={Auth} />
       <Route path="/admin" component={Admin} />
+      <Route path="/account" component={AccountPage} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
