@@ -481,6 +481,18 @@ export default function Home() {
               <div><span className="section-kicker">SACOLA</span><h2>{cartCount} {cartCount === 1 ? "peça" : "peças"}</h2></div>
               <button className="close-button" onClick={() => setIsCartOpen(false)}><X /></button>
             </div>
+            {cart.length > 0 && (
+              <div className="free-shipping-progress">
+                {subtotal >= 350 ? (
+                  <p className="shipping-msg"><Sparkles size={14} /> PARABÉNS! VOCÊ GANHOU FRETE GRÁTIS.</p>
+                ) : (
+                  <p className="shipping-msg">FALTAM {formatPrice(350 - subtotal)} PARA GANHAR FRETE GRÁTIS</p>
+                )}
+                <div className="shipping-bar-track">
+                  <div className="shipping-bar-fill" style={{ width: `${Math.min(100, (subtotal / 350) * 100)}%` }} />
+                </div>
+              </div>
+            )}
             {cart.length === 0 ? (
               <div className="empty-cart"><ShoppingBag size={33} /><p>Ainda não há peças aqui.</p><button className="text-link" onClick={() => setIsCartOpen(false)}>CONTINUAR A EXPLORAR <ArrowRight size={16} /></button></div>
             ) : (
