@@ -20,3 +20,8 @@
 - [x] 6. **Notificações e E-mails**: E-mails automáticos de confirmação e alerta ao administrador para novos pedidos.
 - [x] 7. **Efeitos de Interação e Sons**: Sons nos botões e animação de ampulheta nas transições.
 - [x] 8. **Testes Vitest e Revisão Final**: Cobertura de testes validada para autenticação, cupons, newsletter e checkout.
+- [x] 9. **Upload de Múltiplas Fotos na Edição de Produtos**
+  - [x] Adicionar rotas e helpers no backend para salvar galerias de produtos
+  - [x] Criar modal/ecrã de edição de produto com seletor de múltiplas imagens
+  - [x] Implementar pré-visualização, remoção e ordenação de fotos no painel administrativo
+  - [x] Validar persistência e testes Vitest

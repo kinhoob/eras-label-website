@@ -9,6 +9,7 @@ import {
   getProductWithVariations,
   listNewsletterSubscribers,
   listProducts,
+  saveProductData,
   subscribeToNewsletter,
   validateCoupon,
 } from "./db";
@@ -72,7 +73,25 @@ export const appRouter = router({
       const ext = input.fileName.split(".").pop() || "png";
       const relKey = `admin-uploads/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
       const result = await storagePut(relKey, buffer, input.contentType);
-      return result; // returns { key, url } where url is /manus-storage/...
+      return result;
+    }),
+    saveProduct: adminProcedure.input(z.object({
+      id: z.number().optional(),
+      name: z.string().min(2),
+      collection: z.string(),
+      category: z.string(),
+      price: z.number().positive(),
+      pixPrice: z.number().positive(),
+      description: z.string(),
+      images: z.array(z.string()),
+      status: z.enum(["Publicado", "Rascunho", "Esgotado"]),
+    })).mutation(async ({ input }) => {
+      const saved = await saveProductData(input);
+      return {
+        success: true,
+        message: input.id ? "Produto atualizado com sucesso!" : "Produto criado com sucesso!",
+        product: saved,
+      };
     }),
   }),
 });

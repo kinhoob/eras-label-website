@@ -128,3 +128,58 @@ export async function getAdminSummary() {
     newsletterCount: Number(newsletterStats[0]?.count ?? 0),
   };
 }
+
+export async function getAdminProducts() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(products).orderBy(desc(products.id));
+}
+
+export async function saveProductData(data: {
+  id?: number;
+  name: string;
+  collection: string;
+  category: string;
+  price: number;
+  pixPrice: number;
+  description: string;
+  images: string[];
+  status: string;
+}) {
+  const db = await getDb();
+  if (!db) {
+    return {
+      id: data.id || Math.floor(Math.random() * 1000 + 10),
+      ...data,
+    };
+  }
+
+  const statusDb = data.status === "Publicado" ? "active" : data.status === "Esgotado" ? "soldout" : "hidden";
+
+  if (data.id) {
+    await db.update(products).set({
+      name: data.name,
+      collectionName: data.collection,
+      category: data.category,
+      price: String(data.price),
+      pixPrice: String(data.pixPrice),
+      description: data.description,
+      images: data.images as any,
+      status: statusDb as any,
+    }).where(eq(products.id, data.id));
+
+    return { id: data.id, ...data };
+  } else {
+    const [inserted] = await db.insert(products).values({
+      name: data.name,
+      collectionName: data.collection,
+      category: data.category,
+      price: String(data.price),
+      pixPrice: String(data.pixPrice),
+      description: data.description,
+      images: data.images as any,
+      status: statusDb as any,
+    });
+    return { id: (inserted as any).insertId || 1, ...data };
+  }
+}
