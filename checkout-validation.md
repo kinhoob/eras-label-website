@@ -15,3 +15,15 @@ Também foi verificado que a mensagem global de confirmação do pedido aparece 
 ## Observação
 
 A validação manual foi feita no ambiente de desenvolvimento com dados de teste e não representa uma cobrança financeira real. O teste automatizado cobre o reducer e as mensagens dos estados `processing`, `success` e `error`; o build e a verificação TypeScript foram executados antes desta validação.
+
+
+## Validação complementar
+
+A cobertura automatizada do reducer confirmou as transições de processamento para erro e de erro para estado inicial, preservando a mensagem recuperável. O teste focado passou com 6 testes em 2 arquivos, e a verificação TypeScript e o build de produção passaram sem erros. A captura responsiva em 375 × 812 px confirmou que a composição da vitrine permanece utilizável em mobile; os estilos do checkout também possuem regra de coluna única e ajustes de espaçamento para telas menores.
+
+A validação complementar foi concluída sem simular uma cobrança real. O cenário de falha foi exercitado no nível da máquina de estados, que é a camada que alimenta diretamente o banner de erro do modal.
+
+
+## QA automatizado no navegador — mobile
+
+Em viewport de 375 × 812 px, o fluxo completo foi executado no navegador automatizado. O cenário de falha interceptou a chamada real de `checkout.create` e confirmou `processingVisible: true` e `errorVisible: true`, incluindo a mensagem recuperável no modal. Em uma segunda execução, o checkout real de teste confirmou `successProcessingVisible: true` e `successVisible: true`, com a tela `Pagamento aprovado`. Foram capturadas evidências visuais em `/home/ubuntu/checkout-error-mobile.png` e `/home/ubuntu/checkout-success-mobile.png`; os arquivos permanecem fora do projeto para não impactar o bundle de produção.

@@ -51,5 +51,5 @@
 
 ## Gaps de validação encontrados
 
-- [ ] Validar manualmente o estado de erro do checkout (submissão falha) e registrar a evidência do feedback recuperável exibido ao usuário
-- [ ] Validar manualmente o fluxo completo de checkout em viewport mobile, incluindo abertura do modal, processamento e sucesso ou erro
+- [x] Validar manualmente o estado de erro do checkout (submissão falha) e registrar a evidência do feedback recuperável exibido ao usuário
+- [x] Validar manualmente o fluxo completo de checkout em viewport mobile, incluindo abertura do modal, processamento e sucesso ou erro
