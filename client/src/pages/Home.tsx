@@ -156,7 +156,7 @@ export default function Home() {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [soundsOn, setSoundsOn] = useState(true);
   const [coupon, setCoupon] = useState("");
-  const [couponApplied, setCouponApplied] = useState(false);
+  const [couponApplied, setCouponApplied] = useState<boolean | null>(null);
   const [newsletterName, setNewsletterName] = useState("");
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [newsletterSent, setNewsletterSent] = useState(false);
@@ -514,11 +514,22 @@ export default function Home() {
                     </div>
                   ))}
                 </div>
-                <div className="coupon-row">
-                  <Input value={coupon} onChange={(event) => setCoupon(event.target.value)} placeholder="Cupom de desconto" />
-                  <button onClick={applyCoupon}>APLICAR</button>
+                <div className="coupon-section">
+                  <div className="coupon-row">
+                    <Input value={coupon} onChange={(event) => setCoupon(event.target.value)} placeholder="Código do cupom (ex: ERAS10)" />
+                    <button onClick={applyCoupon}>APLICAR</button>
+                  </div>
+                  {couponApplied === true && (
+                    <div className="coupon-feedback success">
+                      <Check size={14} /> Cupom <strong>ERAS10</strong> aplicado com sucesso (10% OFF)
+                    </div>
+                  )}
+                  {couponApplied === false && coupon.trim() !== "" && (
+                    <div className="coupon-feedback error">
+                      <X size={14} /> Cupom inválido ou expirado. Tente ERAS10.
+                    </div>
+                  )}
                 </div>
-                {couponApplied && <p className="coupon-applied"><Check size={14} /> Cupom ERAS10 aplicado</p>}
                 <div className="cart-summary">
                   <div><span>Subtotal</span><strong>{formatPrice(subtotal)}</strong></div>
                   {couponApplied && <div><span>Desconto</span><strong>-{formatPrice(discount)}</strong></div>}
