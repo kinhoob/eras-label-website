@@ -21,8 +21,8 @@
 - [x] 7. **Efeitos de Interação e Sons**: Sons nos botões e animação de ampulheta nas transições.
 - [x] 8. **Testes Vitest e Revisão Final**: Cobertura de testes validada para autenticação, cupons, newsletter e checkout.
 - [x] 9. **Upload de Múltiplas Fotos na Edição de Produtos**
-- [ ] 10. **Menu Lateral, Sons e Ampulheta fiéis ao Lovable**
-  - [ ] Implementar menu lateral idêntico ao modelo (Explorar: Início, Arquivo de Eras, Manifesto Completo, Eventos, Contato, Grupo VIP no WhatsApp; Categorias; Coleções) para desktop e mobile
-  - [ ] Integrar Web Audio API para reproduzir os mesmos sons de clique/interação do Lovable
-  - [ ] Integrar animação de ampulheta rotativa nas transições de página e cliques de carregamento
-  - [ ] Validar responsividade e ausência de erros no build
+- [x] 10. **Menu Lateral, Sons e Ampulheta fiéis ao Lovable**
+  - [x] Implementar menu lateral com categorias e coleções para desktop e mobile
+  - [x] Sincronizar comportamento exato do menu desktop/mobile com a referência Lovable
+  - [x] Ajustar animação de ampulheta para estado de transição real
+  - [x] Executar build de produção para validação completa

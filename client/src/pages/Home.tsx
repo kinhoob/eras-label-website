@@ -552,18 +552,20 @@ export default function Home() {
         </div>
       )}
 
-      {/* Rotating Hourglass Transition Indicator */}
-      <div className="loading-hint" aria-hidden="true">
-        <span>
-          <svg className="hourglass-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M5 22h14" />
-            <path d="M5 2h14" />
-            <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22" />
-            <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2" />
-          </svg>
-          transição de era
-        </span>
-      </div>
+      {/* State-driven Rotating Hourglass Transition Indicator */}
+      {loading && (
+        <div className="loading-hint active" aria-hidden="true">
+          <span>
+            <svg className="hourglass-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 22h14" />
+              <path d="M5 2h14" />
+              <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22" />
+              <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2" />
+            </svg>
+            a carregar era...
+          </span>
+        </div>
+      )}
     </div>
   );
 }
