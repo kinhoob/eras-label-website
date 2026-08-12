@@ -164,6 +164,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [couponLoading, setCouponLoading] = useState(false);
   const [lastRemovedItem, setLastRemovedItem] = useState<CartLine | null>(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"pix" | "credit_card" | "boleto">("pix");
   const newsletterMutation = trpc.newsletter.subscribe.useMutation();
   const checkoutMutation = trpc.checkout.create.useMutation();
 
@@ -281,7 +282,7 @@ export default function Home() {
       shippingCost: 0,
       discount,
       total,
-      paymentMethod: "pix",
+      paymentMethod: selectedPaymentMethod,
     }, {
       onSuccess: (result) => {
         setLoading(false);
@@ -573,8 +574,24 @@ export default function Home() {
                   {couponApplied && <div><span>Desconto</span><strong>-{formatPrice(discount)}</strong></div>}
                   <div className="summary-total"><span>Total</span><strong>{formatPrice(total)}</strong></div>
                 </div>
+
+                <div className="payment-methods-section">
+                  <h4>Forma de Pagamento</h4>
+                  <div className="payment-methods-grid">
+                    <button type="button" className={`payment-chip ${selectedPaymentMethod === "pix" ? "active" : ""}`} onClick={() => { playClick(soundsOn); setSelectedPaymentMethod("pix"); }}>
+                      Pix <span className="highlight">5% OFF</span>
+                    </button>
+                    <button type="button" className={`payment-chip ${selectedPaymentMethod === "credit_card" ? "active" : ""}`} onClick={() => { playClick(soundsOn); setSelectedPaymentMethod("credit_card"); }}>
+                      Cartão <span>Até 6x</span>
+                    </button>
+                    <button type="button" className={`payment-chip ${selectedPaymentMethod === "boleto" ? "active" : ""}`} onClick={() => { playClick(soundsOn); setSelectedPaymentMethod("boleto"); }}>
+                      Boleto <span>À vista</span>
+                    </button>
+                  </div>
+                </div>
+
                 <button className="primary-button checkout-button" onClick={() => setIsCheckoutOpen(true)}>
-                  IR PARA CHECKOUT <ArrowRight size={16} />
+                  IR PARA CHECKOUT ({selectedPaymentMethod === "pix" ? "Pix" : selectedPaymentMethod === "credit_card" ? "Cartão" : "Boleto"}) <ArrowRight size={16} />
                 </button>
                 <div className="cart-recommendations">
                   <h3>VOCÊ TAMBÉM PODE GOSTAR</h3>
