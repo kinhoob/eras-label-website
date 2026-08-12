@@ -25,7 +25,7 @@ describe("store procedures", () => {
     expect(result.discount).toBe(10);
   });
 
-  it("creates a pending checkout order payload", async () => {
+  it("creates an approved checkout order payload", async () => {
     const caller = appRouter.createCaller(createContext());
     const result = await caller.checkout.create({
       customerName: "Pessoa Teste",
@@ -41,7 +41,7 @@ describe("store procedures", () => {
       paymentMethod: "pix",
     });
     expect(result.success).toBe(true);
-    expect(result.paymentStatus).toBe("pending");
+    expect(result.paymentStatus).toBe("approved");
     expect(result.orderNumber).toMatch(/^ER-\d{4}-\d{4}$/);
   });
 });

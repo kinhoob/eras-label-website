@@ -1,9 +1,11 @@
-import { useState, useMemo } from "react";
+import { useMemo, useReducer, useState } from "react";
 import { Link } from "wouter";
 import {
   ArrowDown,
   ArrowRight,
   Check,
+  CheckCircle2,
+  AlertCircle,
   CircleUserRound,
   Clock3,
   Menu,
@@ -20,6 +22,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
+import { getCheckoutFeedback } from "@/lib/checkout-feedback";
+import { checkoutFlowReducer, initialCheckoutFlowState } from "@/lib/checkout-flow";
 
 type Category = "Todos" | "Camisetas" | "Bonés";
 type Product = {
@@ -162,6 +166,8 @@ export default function Home() {
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [newsletterSent, setNewsletterSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [checkoutFlow, setCheckoutFlow] = useReducer(checkoutFlowReducer, initialCheckoutFlowState);
+  const { status: checkoutStatus, errorMessage: checkoutError, orderNumber: confirmedOrderNumber } = checkoutFlow;
   const [couponLoading, setCouponLoading] = useState(false);
   const [lastRemovedItem, setLastRemovedItem] = useState<CartLine | null>(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"pix" | "credit_card">("pix");
@@ -191,6 +197,7 @@ export default function Home() {
 
   const shippingCost = shippingData?.free ? 0 : (shippingData?.cost ?? 0);
   const total = subtotal - discount + shippingCost;
+  const checkoutFeedback = getCheckoutFeedback(checkoutStatus, confirmedOrderNumber, checkoutError);
 
   function openProduct(product: Product) {
     playClick(soundsOn);
@@ -275,8 +282,10 @@ export default function Home() {
 
   function submitCheckout(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (loading) return;
     const form = new FormData(event.currentTarget);
     setLoading(true);
+    setCheckoutFlow({ type: "start" });
     playClick(soundsOn);
     checkoutMutation.mutate({
       customerName: String(form.get("customerName") ?? ""),
@@ -301,14 +310,16 @@ export default function Home() {
     }, {
       onSuccess: (result) => {
         setLoading(false);
-        setIsCheckoutOpen(false);
+        setCheckoutFlow({ type: "success", orderNumber: result.orderNumber });
         setIsCartOpen(false);
         setCart([]);
-        toast.success(`Pedido ${result.orderNumber} recebido. Confirmação enviada por e-mail.`);
+        playClick(soundsOn);
+        toast.success(`Pagamento confirmado para o pedido ${result.orderNumber}.`);
       },
-      onError: () => {
+      onError: (error) => {
         setLoading(false);
-        toast.error("Não foi possível criar o pedido. Tente novamente.");
+        setCheckoutFlow({ type: "error", message: error.message || "Não foi possível confirmar o pagamento." });
+        toast.error("Não foi possível confirmar o pagamento. Revise os dados e tente novamente.");
       },
     });
   }
@@ -653,7 +664,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                <button className="primary-button checkout-button" onClick={() => setIsCheckoutOpen(true)}>
+                <button className="primary-button checkout-button" onClick={() => { playClick(soundsOn); setCheckoutFlow({ type: "reset" }); setIsCheckoutOpen(true); }}>
                   IR PARA CHECKOUT ({selectedPaymentMethod === "pix" ? "Pix" : "Cartão"}) <ArrowRight size={16} />
                 </button>
                 <div className="cart-recommendations">
@@ -680,32 +691,64 @@ export default function Home() {
       )}
 
       {isCheckoutOpen && (
-        <div className="overlay" onClick={() => setIsCheckoutOpen(false)}>
-          <div className="checkout-modal" onClick={(event) => event.stopPropagation()}>
+        <div className="overlay" onClick={() => { if (!loading) setIsCheckoutOpen(false); }}>
+          <div className={`checkout-modal ${checkoutStatus === "success" ? "checkout-modal-success" : ""}`} onClick={(event) => event.stopPropagation()}>
             <div className="drawer-head">
-              <div><span className="section-kicker">CHECKOUT</span><h2>Finalizar pedido</h2></div>
-              <button className="close-button" onClick={() => setIsCheckoutOpen(false)}><X /></button>
+              <div><span className="section-kicker">CHECKOUT</span><h2>{checkoutFeedback.title}</h2></div>
+              <button className="close-button" onClick={() => { if (!loading) setIsCheckoutOpen(false); }} disabled={loading} aria-label="Fechar checkout"><X /></button>
             </div>
-            <form onSubmit={submitCheckout} className="checkout-form">
-              <div className="checkout-grid">
-                <label>Nome completo<Input name="customerName" required placeholder="Seu nome" /></label>
-                <label>E-mail<Input name="customerEmail" required type="email" placeholder="voce@email.com" /></label>
-                <label>CPF<Input name="cpf" required placeholder="000.000.000-00" /></label>
-                <label>Telefone<Input name="phone" required placeholder="(00) 00000-0000" /></label>
-                <label>CEP<Input name="cep" required placeholder="00000-000" /></label>
-                <label>Número<Input name="number" required placeholder="123" /></label>
-                <label className="wide">Endereço completo<Input name="street" required placeholder="Rua, avenida ou travessa" /></label>
-                <label>Complemento<Input name="complement" placeholder="Apartamento, bloco" /></label>
-                <label>Bairro<Input name="neighborhood" required placeholder="Seu bairro" /></label>
-                <label>Cidade<Input name="city" required placeholder="Sua cidade" /></label>
-                <label>Estado<Input name="state" required placeholder="UF" /></label>
+
+            {checkoutStatus === "success" ? (
+              <div className="checkout-success-state" role="status" aria-live="polite">
+                <div className="checkout-success-icon"><CheckCircle2 size={42} strokeWidth={1.5} /></div>
+                <span className="section-kicker">CONFIRMAÇÃO RECEBIDA</span>
+                <h3>Seu pagamento foi confirmado.</h3>
+                <p>{checkoutFeedback.message}</p>
+                <div className="checkout-success-meta">
+                  <span><Check size={14} /> Pedido recebido pela Eras Label</span>
+                  <span><Check size={14} /> Pagamento aprovado com segurança</span>
+                  <span><Check size={14} /> Acompanhamento disponível na sua conta</span>
+                </div>
+                <div className="checkout-success-actions">
+                  <Link href="/account" className="primary-button" onClick={() => playClick(soundsOn)}>ACOMPANHAR PEDIDO <ArrowRight size={16} /></Link>
+                  <button type="button" className="text-link" onClick={() => { playClick(soundsOn); setIsCheckoutOpen(false); }}>CONTINUAR COMPRANDO</button>
+                </div>
               </div>
-              <div className="shipping-placeholder"><Clock3 size={16} /><span>O cálculo de frete e as opções do Melhor Envio aparecerão após o CEP.</span></div>
-              <div className="payment-placeholder"><span className="eyebrow">PAGAMENTO</span><p>Ambiente seguro. Pix, cartão e outros métodos habilitados.</p></div>
-              <button type="submit" className="primary-button" disabled={loading}>
-                {loading ? "A PROCESSAR..." : `CONFIRMAR PEDIDO · ${formatPrice(total)}`} <ArrowRight size={16} />
-              </button>
-            </form>
+            ) : (
+              <form onSubmit={submitCheckout} className="checkout-form" aria-busy={loading}>
+                {checkoutStatus === "processing" && (
+                  <div className="checkout-processing-banner" role="status" aria-live="polite">
+                    <Loader2 size={18} className="spinner-icon" />
+                    <div><strong>{checkoutFeedback.title}</strong><span>{checkoutFeedback.message}</span></div>
+                  </div>
+                )}
+                {checkoutStatus === "error" && (
+                  <div className="checkout-error-banner" role="alert">
+                    <AlertCircle size={18} />
+                    <div><strong>{checkoutFeedback.title}</strong><span>{checkoutFeedback.message}</span><small>Confira os dados e tente novamente. Seu carrinho permanece salvo.</small></div>
+                  </div>
+                )}
+                <div className="checkout-grid">
+                  <label>Nome completo<Input name="customerName" required placeholder="Seu nome" disabled={loading} /></label>
+                  <label>E-mail<Input name="customerEmail" required type="email" placeholder="voce@email.com" disabled={loading} /></label>
+                  <label>CPF<Input name="cpf" required placeholder="000.000.000-00" disabled={loading} /></label>
+                  <label>Telefone<Input name="phone" required placeholder="(00) 00000-0000" disabled={loading} /></label>
+                  <label>CEP<Input name="cep" required placeholder="00000-000" disabled={loading} /></label>
+                  <label>Número<Input name="number" required placeholder="123" disabled={loading} /></label>
+                  <label className="wide">Endereço completo<Input name="street" required placeholder="Rua, avenida ou travessa" disabled={loading} /></label>
+                  <label>Complemento<Input name="complement" placeholder="Apartamento, bloco" disabled={loading} /></label>
+                  <label>Bairro<Input name="neighborhood" required placeholder="Seu bairro" disabled={loading} /></label>
+                  <label>Cidade<Input name="city" required placeholder="Sua cidade" disabled={loading} /></label>
+                  <label>Estado<Input name="state" required placeholder="UF" disabled={loading} /></label>
+                </div>
+                <div className="shipping-placeholder"><Clock3 size={16} /><span>O cálculo de frete e as opções do Melhor Envio aparecerão após o CEP.</span></div>
+                <div className="payment-placeholder"><span className="eyebrow">PAGAMENTO</span><p>Ambiente seguro. Pix, cartão e outros métodos habilitados.</p></div>
+                <button type="submit" className="primary-button checkout-submit-button" disabled={loading}>
+                  {loading ? <><Loader2 size={16} className="spinner-icon" /> CONFIRMANDO PAGAMENTO...</> : <>CONFIRMAR PAGAMENTO · {formatPrice(total)} <ArrowRight size={16} /></>}
+                </button>
+                {loading && <p className="checkout-processing-note">A confirmação pode levar alguns segundos.</p>}
+              </form>
+            )}
           </div>
         </div>
       )}

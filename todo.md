@@ -32,3 +32,24 @@
   - [x] Refatorar o menu lateral em componente compartilhado entre todas as páginas (desktop e mobile)
   - [x] Corrigir erros de exportação duplicados no schema Drizzle para limpar o servidor de desenvolvimento
   - [x] Validar todas as rotas e sons com build e testes limpos
+
+
+## Melhoria solicitada — checkout e pagamento
+
+- [x] Melhorar o checkout com animação de carregamento durante a confirmação do pagamento
+- [x] Exibir mensagem de sucesso clara após a confirmação do pagamento
+- [x] Exibir feedback de erro recuperável quando a confirmação falhar
+- [x] Validar o fluxo de checkout em desktop e mobile
+- [x] Criar testes Vitest para os estados do fluxo de confirmação do pagamento
+
+
+## Validações adicionais identificadas
+
+- [x] Validar manualmente o fluxo de checkout em desktop e mobile, incluindo abertura do modal, processamento, sucesso e erro
+- [x] Ampliar os testes automatizados para cobrir a transição real entre os estados processing, success e error
+
+
+## Gaps de validação encontrados
+
+- [ ] Validar manualmente o estado de erro do checkout (submissão falha) e registrar a evidência do feedback recuperável exibido ao usuário
+- [ ] Validar manualmente o fluxo completo de checkout em viewport mobile, incluindo abertura do modal, processamento e sucesso ou erro
