@@ -9,6 +9,7 @@ import {
   newsletterSubscribers,
   coupons,
   orders,
+  siteAppearance,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
@@ -133,6 +134,26 @@ export async function getAdminProducts() {
   const db = await getDb();
   if (!db) return [];
   return db.select().from(products).orderBy(desc(products.id));
+}
+
+export async function getCommercialConfig() {
+  const db = await getDb();
+  if (!db) return { pixDiscountPercent: 5, freeShippingThreshold: 350 };
+  const rows = await db.select().from(siteAppearance).where(eq(siteAppearance.sectionKey, "commercial_config")).limit(1);
+  if (!rows[0]) return { pixDiscountPercent: 5, freeShippingThreshold: 350 };
+  return (rows[0].content as any) || { pixDiscountPercent: 5, freeShippingThreshold: 350 };
+}
+
+export async function saveCommercialConfig(config: { pixDiscountPercent: number; freeShippingThreshold: number }) {
+  const db = await getDb();
+  if (!db) return config;
+  const existing = await db.select().from(siteAppearance).where(eq(siteAppearance.sectionKey, "commercial_config")).limit(1);
+  if (existing[0]) {
+    await db.update(siteAppearance).set({ content: config as any }).where(eq(siteAppearance.sectionKey, "commercial_config"));
+  } else {
+    await db.insert(siteAppearance).values({ sectionKey: "commercial_config", content: config as any });
+  }
+  return config;
 }
 
 export async function saveProductData(data: {

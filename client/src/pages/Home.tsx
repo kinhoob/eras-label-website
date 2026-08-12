@@ -164,7 +164,11 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [couponLoading, setCouponLoading] = useState(false);
   const [lastRemovedItem, setLastRemovedItem] = useState<CartLine | null>(null);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"pix" | "credit_card" | "boleto">("pix");
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"pix" | "credit_card">("pix");
+  const { data: commercialConfig } = trpc.catalog.getConfig.useQuery();
+  const pixDiscountPercent = commercialConfig?.pixDiscountPercent ?? 5;
+  const freeShippingThreshold = commercialConfig?.freeShippingThreshold ?? 350;
+
   const newsletterMutation = trpc.newsletter.subscribe.useMutation();
   const checkoutMutation = trpc.checkout.create.useMutation();
 
@@ -495,13 +499,13 @@ export default function Home() {
             </div>
             {cart.length > 0 && (
               <div className="free-shipping-progress">
-                {subtotal >= 350 ? (
+                {subtotal >= freeShippingThreshold ? (
                   <p className="shipping-msg"><Sparkles size={14} /> PARABÉNS! VOCÊ GANHOU FRETE GRÁTIS.</p>
                 ) : (
-                  <p className="shipping-msg">FALTAM {formatPrice(350 - subtotal)} PARA GANHAR FRETE GRÁTIS</p>
+                  <p className="shipping-msg">FALTAM {formatPrice(freeShippingThreshold - subtotal)} PARA GANHAR FRETE GRÁTIS</p>
                 )}
                 <div className="shipping-bar-track">
-                  <div className="shipping-bar-fill" style={{ width: `${Math.min(100, (subtotal / 350) * 100)}%` }} />
+                  <div className="shipping-bar-fill" style={{ width: `${Math.min(100, (subtotal / freeShippingThreshold) * 100)}%` }} />
                 </div>
               </div>
             )}
@@ -584,14 +588,12 @@ export default function Home() {
                     <button type="button" className={`payment-chip ${selectedPaymentMethod === "credit_card" ? "active" : ""}`} onClick={() => { playClick(soundsOn); setSelectedPaymentMethod("credit_card"); }}>
                       Cartão <span>Até 6x</span>
                     </button>
-                    <button type="button" className={`payment-chip ${selectedPaymentMethod === "boleto" ? "active" : ""}`} onClick={() => { playClick(soundsOn); setSelectedPaymentMethod("boleto"); }}>
-                      Boleto <span>À vista</span>
-                    </button>
+
                   </div>
                 </div>
 
                 <button className="primary-button checkout-button" onClick={() => setIsCheckoutOpen(true)}>
-                  IR PARA CHECKOUT ({selectedPaymentMethod === "pix" ? "Pix" : selectedPaymentMethod === "credit_card" ? "Cartão" : "Boleto"}) <ArrowRight size={16} />
+                  IR PARA CHECKOUT ({selectedPaymentMethod === "pix" ? "Pix" : "Cartão"}) <ArrowRight size={16} />
                 </button>
                 <div className="cart-recommendations">
                   <h3>VOCÊ TAMBÉM PODE GOSTAR</h3>

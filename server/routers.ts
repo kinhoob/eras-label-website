@@ -12,6 +12,8 @@ import {
   saveProductData,
   subscribeToNewsletter,
   validateCoupon,
+  getCommercialConfig,
+  saveCommercialConfig,
 } from "./db";
 
 const newsletterInput = z.object({
@@ -32,6 +34,7 @@ export const appRouter = router({
   catalog: router({
     list: publicProcedure.input(z.object({ category: z.string().optional() }).optional()).query(({ input }) => listProducts(input?.category)),
     getById: publicProcedure.input(z.object({ id: z.number().int().positive() })).query(({ input }) => getProductWithVariations(input.id)),
+    getConfig: publicProcedure.query(() => getCommercialConfig()),
   }),
   newsletter: router({
     subscribe: publicProcedure.input(newsletterInput).mutation(({ input }) => subscribeToNewsletter(input.name, input.email)),
@@ -52,7 +55,7 @@ export const appRouter = router({
       shippingCost: z.number().nonnegative(),
       discount: z.number().nonnegative(),
       total: z.number().nonnegative(),
-      paymentMethod: z.enum(["pix", "credit_card", "boleto"]).default("pix"),
+      paymentMethod: z.enum(["pix", "credit_card"]).default("pix"),
     })).mutation(({ input }) => ({
       success: true,
       orderNumber: `ER-${new Date().getFullYear()}-${Math.floor(Math.random() * 9000 + 1000)}`,
@@ -92,6 +95,13 @@ export const appRouter = router({
         message: input.id ? "Produto atualizado com sucesso!" : "Produto criado com sucesso!",
         product: saved,
       };
+    }),
+    saveConfig: adminProcedure.input(z.object({
+      pixDiscountPercent: z.number().min(0).max(100),
+      freeShippingThreshold: z.number().nonnegative(),
+    })).mutation(async ({ input }) => {
+      const saved = await saveCommercialConfig(input);
+      return { success: true, config: saved };
     }),
   }),
 });
