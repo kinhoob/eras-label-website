@@ -15,6 +15,13 @@
       "when": 1786503051510,
       "tag": "0001_sad_arachne",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1786503561980,
+      "tag": "0002_massive_saracen",
+      "breakpoints": true
     }
   ]
 }

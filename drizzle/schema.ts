@@ -8,6 +8,7 @@ export const users = mysqlTable("users", {
   openId: varchar("openId", { length: 64 }).notNull().unique(),
   name: text("name"),
   email: varchar("email", { length: 320 }),
+  passwordHash: varchar("passwordHash", { length: 255 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -23,12 +24,12 @@ export const products = mysqlTable("products", {
   id: int("id").autoincrement().primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
-  category: varchar("category", { length: 100 }).notNull(), // camisetas, bones, etc.
-  collectionName: varchar("collectionName", { length: 100 }).notNull(), // PARADOX COLLECTION, etc.
+  category: varchar("category", { length: 100 }).notNull(),
+  collectionName: varchar("collectionName", { length: 100 }).notNull(),
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   pixPrice: decimal("pixPrice", { precision: 10, scale: 2 }).notNull(),
   promotionalPrice: decimal("promotionalPrice", { precision: 10, scale: 2 }),
-  images: json("images").notNull(), // array of image URLs
+  images: json("images").notNull(),
   status: mysqlEnum("status", ["active", "hidden", "soldout"]).default("active").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -41,7 +42,7 @@ export type InsertProduct = typeof products.$inferInsert;
 export const productVariations = mysqlTable("product_variations", {
   id: int("id").autoincrement().primaryKey(),
   productId: int("productId").notNull(),
-  size: varchar("size", { length: 50 }).notNull(), // P, M, G, GG, Único, etc.
+  size: varchar("size", { length: 50 }).notNull(),
   stock: int("stock").default(0).notNull(),
   price: decimal("price", { precision: 10, scale: 2 }),
   promotionalPrice: decimal("promotionalPrice", { precision: 10, scale: 2 }),
@@ -59,7 +60,7 @@ export const orders = mysqlTable("orders", {
   customerEmail: varchar("customerEmail", { length: 320 }).notNull(),
   customerCpf: varchar("customerCpf", { length: 20 }).notNull(),
   phone: varchar("phone", { length: 30 }),
-  shippingAddress: json("shippingAddress").notNull(), // cep, street, number, complement, neighborhood, city, state
+  shippingAddress: json("shippingAddress").notNull(),
   shippingMethod: varchar("shippingMethod", { length: 100 }).notNull(),
   shippingCost: decimal("shippingCost", { precision: 10, scale: 2 }).notNull(),
   subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
@@ -102,7 +103,7 @@ export const coupons = mysqlTable("coupons", {
   usageLimit: int("usageLimit"),
   timesUsed: int("timesUsed").default(0).notNull(),
   validUntil: timestamp("validUntil"),
-  active: int("active").default(1).notNull(), // 1 for active, 0 for inactive
+  active: int("active").default(1).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
@@ -121,11 +122,26 @@ export const newsletterSubscribers = mysqlTable("newsletter_subscribers", {
 export type NewsletterSubscriber = typeof newsletterSubscribers.$inferSelect;
 export type InsertNewsletterSubscriber = typeof newsletterSubscribers.$inferInsert;
 
-// Site Appearance / Content Layout settings
+// Collections
+export const collections = mysqlTable("collections", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 100 }).notNull().unique(),
+  year: varchar("year", { length: 10 }).notNull(),
+  description: text("description"),
+  imageUrl: text("imageUrl"),
+  active: int("active").default(1).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Collection = typeof collections.$inferSelect;
+export type InsertCollection = typeof collections.$inferInsert;
+
+// Site Appearance & Settings
 export const siteAppearance = mysqlTable("site_appearance", {
   id: int("id").autoincrement().primaryKey(),
-  key: varchar("key", { length: 100 }).notNull().unique(), // hero_image, editoriais, gallery, categories, menu_links, footer_links
-  value: json("value").notNull(),
+  sectionKey: varchar("sectionKey", { length: 100 }).notNull().unique(),
+  content: json("content").notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
@@ -135,10 +151,11 @@ export type InsertSiteAppearance = typeof siteAppearance.$inferInsert;
 // Abandoned Carts
 export const abandonedCarts = mysqlTable("abandoned_carts", {
   id: int("id").autoincrement().primaryKey(),
-  contact: varchar("contact", { length: 320 }).notNull(), // email or phone
+  customerEmail: varchar("customerEmail", { length: 320 }),
+  customerName: varchar("customerName", { length: 255 }),
   items: json("items").notNull(),
-  step: varchar("step", { length: 100 }).notNull(),
-  recovered: int("recovered").default(0).notNull(), // 0 or 1
+  total: decimal("total", { precision: 10, scale: 2 }).notNull(),
+  recovered: int("recovered").default(0).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
