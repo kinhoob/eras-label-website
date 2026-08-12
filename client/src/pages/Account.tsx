@@ -1,20 +1,23 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
-import { Package, Truck, CheckCircle2, Clock, ArrowLeft, ExternalLink, ShieldCheck, User as UserIcon, LogOut } from "lucide-react";
+import { Package, Truck, CheckCircle2, Clock, ArrowLeft, ExternalLink, ShieldCheck, User as UserIcon, LogOut, Check, X, Box } from "lucide-react";
 import { Link } from "wouter";
 
+/* Função utilitária para formatar valores monetários em Reais (BRL) */
 function formatPrice(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
 export default function Account() {
   const { user, logout } = useAuth();
+  // Busca os pedidos do usuário autenticado no backend tRPC
   const { data: orders, isLoading } = trpc.orders.myOrders.useQuery(undefined, {
     enabled: !!user,
   });
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
 
+  // Se o usuário não estiver autenticado, exibe tela de prompt de login
   if (!user) {
     return (
       <div className="eras-site auth-required-page">
@@ -49,6 +52,7 @@ export default function Account() {
 
       <main className="account-main">
         <div className="account-container">
+          {/* Cartão de boas-vindas do colecionador */}
           <div className="account-welcome">
             <div className="user-avatar-badge">
               <UserIcon size={24} />
@@ -96,7 +100,7 @@ export default function Account() {
                           <img src={item.image} alt={item.name} />
                           <div>
                             <p>{item.name}</p>
-                            <span>Tam: {item.size} · Qtd: {item.quantity}</span>
+                            <span>Tam: {item.size} · {item.quantity}x</span>
                           </div>
                         </div>
                       ))}
@@ -104,11 +108,11 @@ export default function Account() {
 
                     <div className="order-footer">
                       <div className="order-total-info">
-                        <span>Total ({order.paymentMethod === "pix" ? "Pix" : "Cartão"})</span>
+                        <span>Total do Pedido</span>
                         <strong>{formatPrice(order.total)}</strong>
                       </div>
                       <button className="details-button">
-                        VER DETALHES E RASTREIO <ExternalLink size={14} />
+                        VER DETALHES & RASTREIO <ExternalLink size={14} />
                       </button>
                     </div>
                   </div>
@@ -119,33 +123,91 @@ export default function Account() {
         </div>
       </main>
 
+      {/* Modal de Detalhes do Pedido com Linha do Tempo de Entrega Animada */}
       {selectedOrder && (
-        <div className="overlay" onClick={() => setSelectedOrder(null)}>
-          <div className="order-modal" onClick={(event) => event.stopPropagation()}>
-            <div className="drawer-head">
-              <div>
-                <span className="section-kicker">DETALHES DO PEDIDO</span>
-                <h2>{selectedOrder.orderNumber}</h2>
-              </div>
-              <button className="close-button" onClick={() => setSelectedOrder(null)}>✕</button>
+        <div className="cart-overlay" onClick={() => setSelectedOrder(null)}>
+          <div className="cart-drawer order-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="cart-header">
+              <h2>DETALHES DO PEDIDO {selectedOrder.orderNumber}</h2>
+              <button className="icon-button" onClick={() => setSelectedOrder(null)}>
+                <X size={20} />
+              </button>
             </div>
 
-            <div className="modal-scrollable-content">
-              <div className="tracking-box">
-                <div className="tracking-title">
-                  <Truck size={18} />
-                  <span>Status de Entrega: <strong>{selectedOrder.status}</strong></span>
-                </div>
-                {selectedOrder.trackingCode ? (
-                  <div className="tracking-details">
-                    <span>Código de Rastreio: <strong>{selectedOrder.trackingCode}</strong></span>
-                    <span className="carrier-tag">{selectedOrder.shippingService}</span>
-                  </div>
-                ) : (
-                  <p className="tracking-note">O código de rastreio será gerado assim que o pacote for despachado pelo ateliê.</p>
-                )}
+            <div className="cart-body" style={{ overflowY: "auto", padding: "1.5rem" }}>
+              
+              {/* BARRA DE PROGRESSO VISUAL E ANIMADA DA ENTREGA */}
+              <div className="delivery-timeline-container">
+                <h3>STATUS DA ENTREGA</h3>
+                {(() => {
+                  // Mapeia o status atual para o índice da etapa (0: Processando, 1: Enviado, 2: Entregue)
+                  const statusMap: Record<string, number> = {
+                    "Processando": 0,
+                    "Enviado": 1,
+                    "Entregue": 2,
+                  };
+                  const currentIndex = statusMap[selectedOrder.status] ?? 0;
+
+                  const steps = [
+                    { label: "Preparando", desc: "Separação no Ateliê" },
+                    { label: "Enviado", desc: "Em Trânsito" },
+                    { label: "Entregue", desc: "Concluído" },
+                  ];
+
+                  return (
+                    <div className="delivery-progress-wrapper">
+                      <div className="delivery-progress-bar-bg">
+                        <div 
+                          className="delivery-progress-bar-fill" 
+                          style={{ width: `${(currentIndex / (steps.length - 1)) * 100}%` }}
+                        />
+                      </div>
+                      <div className="delivery-steps-grid">
+                        {steps.map((step, idx) => {
+                          const isCompleted = idx <= currentIndex;
+                          const isCurrent = idx === currentIndex;
+                          return (
+                            <div key={idx} className={`delivery-step ${isCompleted ? "completed" : ""} ${isCurrent ? "current" : ""}`}>
+                              <div className="step-bullet">
+                                {isCompleted ? <Check size={12} /> : idx + 1}
+                              </div>
+                              <span className="step-label">{step.label}</span>
+                              <span className="step-desc">{step.desc}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
 
+              {/* Informações de Rastreio */}
+              {selectedOrder.trackingCode ? (
+                <div className="tracking-box">
+                  <div className="tracking-title">
+                    <Truck size={16} />
+                    <strong>Código de Rastreio: {selectedOrder.trackingCode}</strong>
+                  </div>
+                  <div className="tracking-details">
+                    <span>Transportadora: {selectedOrder.carrier || "Correios / Logística"}</span>
+                    <a 
+                      href={`https://www.linkcorreios.com.br/?id=${selectedOrder.trackingCode}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-link"
+                    >
+                      RASTREAR NO SITE <ExternalLink size={12} />
+                    </a>
+                  </div>
+                </div>
+              ) : (
+                <div className="tracking-box">
+                  <p className="tracking-note">O código de rastreio será disponibilizado assim que o pedido for despachado pelo ateliê.</p>
+                </div>
+              )}
+
+              {/* Lista de itens do pedido */}
               <div className="modal-items-list">
                 <h3>Itens do Pedido</h3>
                 {selectedOrder.items.map((item: any, idx: number) => (
@@ -160,12 +222,14 @@ export default function Account() {
                 ))}
               </div>
 
+              {/* Endereço de Entrega */}
               <div className="shipping-address-summary">
                 <h3>Endereço de Entrega</h3>
                 <p>{selectedOrder.address.street}, {selectedOrder.address.number} {selectedOrder.address.complement ? `(${selectedOrder.address.complement})` : ""}</p>
                 <p>{selectedOrder.address.neighborhood} — {selectedOrder.address.city}/{selectedOrder.address.state} · CEP: {selectedOrder.address.cep}</p>
               </div>
 
+              {/* Sumário financeiro */}
               <div className="modal-financial-summary">
                 <div><span>Subtotal</span><strong>{formatPrice(selectedOrder.subtotal)}</strong></div>
                 {selectedOrder.discount > 0 && <div><span>Desconto</span><strong>-{formatPrice(selectedOrder.discount)}</strong></div>}
