@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { getCheckoutFeedback } from "@/lib/checkout-feedback";
 import { checkoutFlowReducer, initialCheckoutFlowState } from "@/lib/checkout-flow";
+import { createOrderSummary, type OrderSummary } from "@/lib/order-summary";
 
 type Category = "Todos" | "Camisetas" | "Bonés";
 type Product = {
@@ -166,6 +167,7 @@ export default function Home() {
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [newsletterSent, setNewsletterSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [confirmedOrderSummary, setConfirmedOrderSummary] = useState<OrderSummary | null>(null);
   const [checkoutFlow, setCheckoutFlow] = useReducer(checkoutFlowReducer, initialCheckoutFlowState);
   const { status: checkoutStatus, errorMessage: checkoutError, orderNumber: confirmedOrderNumber } = checkoutFlow;
   const [couponLoading, setCouponLoading] = useState(false);
@@ -310,6 +312,23 @@ export default function Home() {
     }, {
       onSuccess: (result) => {
         setLoading(false);
+        setConfirmedOrderSummary(createOrderSummary({
+          items: cart.map((item) => ({
+            id: item.id,
+            name: item.name,
+            size: item.size,
+            quantity: item.quantity,
+            price: item.price,
+            image: item.image,
+            alt: item.alt,
+          })),
+          subtotal,
+          discount,
+          shippingCost,
+          total,
+          paymentMethod: selectedPaymentMethod,
+          estimatedDelivery: shippingData?.deadline,
+        }));
         setCheckoutFlow({ type: "success", orderNumber: result.orderNumber });
         setIsCartOpen(false);
         setCart([]);
@@ -664,7 +683,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                <button className="primary-button checkout-button" onClick={() => { playClick(soundsOn); setCheckoutFlow({ type: "reset" }); setIsCheckoutOpen(true); }}>
+                <button className="primary-button checkout-button" onClick={() => { playClick(soundsOn); setConfirmedOrderSummary(null); setCheckoutFlow({ type: "reset" }); setIsCheckoutOpen(true); }}>
                   IR PARA CHECKOUT ({selectedPaymentMethod === "pix" ? "Pix" : "Cartão"}) <ArrowRight size={16} />
                 </button>
                 <div className="cart-recommendations">
@@ -704,6 +723,40 @@ export default function Home() {
                 <span className="section-kicker">CONFIRMAÇÃO RECEBIDA</span>
                 <h3>Seu pagamento foi confirmado.</h3>
                 <p>{checkoutFeedback.message}</p>
+
+                {confirmedOrderSummary && (
+                  <section className="checkout-order-summary" aria-label="Resumo detalhado do pedido">
+                    <div className="checkout-order-summary-heading">
+                      <div>
+                        <span className="section-kicker">RESUMO DO PEDIDO</span>
+                        <strong>{confirmedOrderSummary.totalItems} {confirmedOrderSummary.totalItems === 1 ? "item" : "itens"}</strong>
+                      </div>
+                      <span className="checkout-delivery-estimate"><Clock3 size={15} /> Chega em {confirmedOrderSummary.estimatedDelivery}</span>
+                    </div>
+
+                    <div className="checkout-order-items">
+                      {confirmedOrderSummary.items.map((item) => (
+                        <div className="checkout-order-item" key={`${item.id}-${item.size}`}>
+                          <img src={item.image} alt={item.alt} />
+                          <div className="checkout-order-item-copy">
+                            <strong>{item.name}</strong>
+                            <span>Tamanho {item.size} · Qtd. {item.quantity}</span>
+                          </div>
+                          <strong>{formatPrice(item.price * item.quantity)}</strong>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="checkout-order-totals">
+                      <div><span>Subtotal</span><strong>{formatPrice(confirmedOrderSummary.subtotal)}</strong></div>
+                      <div><span>Descontos</span><strong className={confirmedOrderSummary.discount > 0 ? "summary-discount" : ""}>{confirmedOrderSummary.discount > 0 ? `- ${formatPrice(confirmedOrderSummary.discount)}` : formatPrice(0)}</strong></div>
+                      <div><span>Frete</span><strong>{confirmedOrderSummary.shippingCost === 0 ? "Grátis" : formatPrice(confirmedOrderSummary.shippingCost)}</strong></div>
+                      <div><span>Pagamento</span><strong>{confirmedOrderSummary.paymentMethod === "pix" ? "Pix" : "Cartão"}</strong></div>
+                      <div className="checkout-order-total"><span>Total pago</span><strong>{formatPrice(confirmedOrderSummary.total)}</strong></div>
+                    </div>
+                  </section>
+                )}
+
                 <div className="checkout-success-meta">
                   <span><Check size={14} /> Pedido recebido pela Eras Label</span>
                   <span><Check size={14} /> Pagamento aprovado com segurança</span>

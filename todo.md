@@ -53,3 +53,12 @@
 
 - [x] Validar manualmente o estado de erro do checkout (submissão falha) e registrar a evidência do feedback recuperável exibido ao usuário
 - [x] Validar manualmente o fluxo completo de checkout em viewport mobile, incluindo abertura do modal, processamento e sucesso ou erro
+
+
+## Melhoria solicitada — resumo detalhado do pedido na confirmacao
+
+- [x] Preservar os dados do pedido confirmado para exibir itens, quantidades e valores na tela de sucesso
+- [x] Exibir subtotal, descontos, frete, total e metodo de pagamento no resumo
+- [x] Exibir prazo estimado de entrega de forma clara e responsiva
+- [x] Criar testes Vitest para o calculo e a apresentacao dos dados do resumo
+- [x] Validar TypeScript, build e layout responsivo da confirmacao
