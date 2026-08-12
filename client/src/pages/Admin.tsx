@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState, useMemo, useRef } from "react";
 import { Link } from "wouter";
 import {
   ArrowLeft,
@@ -18,10 +18,13 @@ import {
   ShoppingCart,
   Tag,
   Users,
+  Upload,
+  Check,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { trpc } from "@/lib/trpc";
 
 const adminProducts = [
   { name: "T-Shirt Travessia", collection: "PARADOX COLLECTION", category: "Camisetas", price: "R$ 154,90", stock: 18, status: "Publicado" },
@@ -44,6 +47,43 @@ export default function Admin() {
   const [appearanceSaved, setAppearanceSaved] = useState(false);
   const [couponActive, setCouponActive] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [heroImage, setHeroImage] = useState("https://images.unsplash.com/photo-1554412933-514a83d2f3c8?auto=format&fit=crop&q=80&w=1200");
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const uploadMutation = trpc.admin.uploadImage.useMutation();
+
+  function handleImageUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("O ficheiro é muito grande. Escolha uma imagem de até 5MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    setUploading(true);
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      uploadMutation.mutate({
+        fileName: file.name,
+        fileBase64: base64,
+        contentType: file.type || "image/png",
+      }, {
+        onSuccess: (res) => {
+          setUploading(false);
+          setHeroImage(res.url);
+          toast.success("Imagem carregada e guardada no armazenamento com sucesso!");
+        },
+        onError: () => {
+          setUploading(false);
+          toast.error("Não foi possível carregar a imagem. Tente novamente.");
+        }
+      });
+    };
+    reader.readAsDataURL(file);
+  }
 
   const filteredProducts = useMemo(() => adminProducts.filter((product) => product.name.toLowerCase().includes(query.toLowerCase())), [query]);
   const navItems = [
@@ -79,7 +119,7 @@ export default function Admin() {
         {active === "Produtos" && <section className="admin-content"><div className="content-toolbar"><div className="search-box"><Search size={15} /><Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar produto" /></div><Button onClick={() => toast.success("Formulário de novo produto aberto.")}><Plus size={16} /> Novo produto</Button></div><div className="admin-panel table-panel"><table><thead><tr><th>Produto</th><th>Categoria</th><th>Preço</th><th>Estoque</th><th>Status</th><th /></tr></thead><tbody>{filteredProducts.map((product) => <tr key={product.name}><td><div className="table-product"><div className="table-thumb"><Package size={16} /></div><div><strong>{product.name}</strong><span>{product.collection}</span></div></div></td><td>{product.category}</td><td>{product.price}</td><td><span className={product.stock === 0 ? "stock-danger" : product.stock < 6 ? "stock-warning" : "stock-ok"}>{product.stock} un.</span></td><td><span className={`status-pill ${product.status === "Esgotado" ? "danger" : "success"}`}>{product.status}</span></td><td><button className="table-more" onClick={() => toast.info(`Ações de ${product.name}`)}><MoreHorizontal size={18} /></button></td></tr>)}</tbody></table></div></section>}
         {active === "Pedidos" && <section className="admin-content"><div className="order-cards"><div className="metric-card"><span>Todos os pedidos</span><strong>108</strong></div><div className="metric-card"><span>Aguardando pagamento</span><strong>6</strong></div><div className="metric-card"><span>Em preparação</span><strong>11</strong></div><div className="metric-card"><span>Enviados</span><strong>21</strong></div></div><div className="admin-panel table-panel"><table><thead><tr><th>Pedido</th><th>Cliente</th><th>Data</th><th>Total</th><th>Pagamento</th><th>Status</th><th /></tr></thead><tbody>{orders.map((order) => <tr key={order.id}><td><strong>{order.id}</strong></td><td>{order.customer}</td><td>{order.date}</td><td>{order.total}</td><td><span className={order.payment === "Pago" ? "stock-ok" : "stock-warning"}>{order.payment}</span></td><td><span className="status-pill success">{order.status}</span></td><td><button className="table-more" onClick={() => toast.info(`Detalhes do pedido ${order.id}`)}><Eye size={17} /></button></td></tr>)}</tbody></table></div></section>}
         {active === "Cupons" && <section className="admin-content"><div className="content-toolbar"><div><span className="section-kicker">DESCONTOS</span><h2 className="content-title">Cupons de desconto</h2></div><Button onClick={() => toast.success("Novo cupom criado.")}><Plus size={16} /> Criar cupom</Button></div><div className="coupon-admin-grid"><div className="admin-panel coupon-admin-card"><div className="coupon-code">ERAS10 <span className="status-pill success">Ativo</span></div><p>10% de desconto para novos inscritos da newsletter.</p><div className="coupon-info"><span>Usos <strong>34 / ilimitado</strong></span><span>Válido até <strong>31 Dez 2026</strong></span></div><button className="coupon-toggle" onClick={() => setCouponActive((value) => !value)}>{couponActive ? "Desativar cupom" : "Ativar cupom"}</button></div><div className="admin-panel coupon-admin-card"><div className="coupon-code">PARADOX20 <span className="status-pill warning">Rascunho</span></div><p>20% no lançamento da coleção Paradox.</p><div className="coupon-info"><span>Usos <strong>0 / 100</strong></span><span>Válido até <strong>14 Ago 2026</strong></span></div><button className="coupon-toggle" onClick={() => toast.success("Cupom publicado.")}>Publicar cupom</button></div></div></section>}
-        {active === "Aparência" && <section className="admin-content"><div className="content-toolbar"><div><span className="section-kicker">EDITOR DA LOJA</span><h2 className="content-title">Aparência</h2></div><Button onClick={() => { setAppearanceSaved(true); toast.success("Alterações guardadas."); }}>Guardar alterações</Button></div><div className="appearance-grid"><div className="admin-panel appearance-panel"><div className="panel-heading"><div><span className="section-kicker">HOME</span><h3>Hero principal</h3></div><button className="inline-link"><Eye size={15} /> Pré-visualizar</button></div><div className="appearance-preview"><div className="preview-label">REVIVER.<br /><em>REINVENTAR</em><br />ERAS.</div><div className="preview-controls"><button><ImagePlus size={15} /> Trocar imagem</button><button><Eye size={15} /> Ver no site</button></div></div><div className="editor-field"><label>Título principal</label><Input defaultValue="REVIVER. REINVENTAR ERAS." /></div><div className="editor-field"><label>Texto de apoio</label><Input defaultValue="A ERA EM CURSO · 2026" /></div></div><div className="admin-panel appearance-panel"><div className="panel-heading"><div><span className="section-kicker">EDITORIAIS</span><h3>Galeria da home</h3></div><button className="icon-button"><Plus size={18} /></button></div><div className="editorial-list">{['Editorial Paradox', 'Arquivo Lost Between Eras', 'Próximo encontro'].map((item, index) => <div className="editorial-item" draggable key={item}><span className="drag-handle">⋮⋮</span><div className={`editorial-swatch swatch-${index}`} /><span>{item}</span><MoreHorizontal size={16} /></div>)}</div><p className="editor-help">Arraste os blocos para reordenar os conteúdos da página inicial.</p></div></div>{appearanceSaved && <p className="saved-note">As últimas alterações foram guardadas agora.</p>}</section>}
+        {active === "Aparência" && <section className="admin-content"><div className="content-toolbar"><div><span className="section-kicker">EDITOR DA LOJA</span><h2 className="content-title">Aparência e Gestão de Banners</h2></div><Button onClick={() => { setAppearanceSaved(true); toast.success("Alterações guardadas com sucesso."); }}>Guardar alterações</Button></div><div className="appearance-grid"><div className="admin-panel appearance-panel"><div className="panel-heading"><div><span className="section-kicker">HOME</span><h3>Hero principal e Banners</h3></div><button className="inline-link"><Eye size={15} /> Pré-visualizar</button></div><div className="appearance-preview" style={{ backgroundImage: `url(${heroImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }}><div className="preview-label">REVIVER.<br /><em>REINVENTAR</em><br />ERAS.</div><div className="preview-controls"><input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="image/*" onChange={handleImageUpload} /><button onClick={() => fileInputRef.current?.click()} disabled={uploading}><Upload size={15} /> {uploading ? "A carregar..." : "Carregar nova foto"}</button></div></div><div className="editor-field"><label>URL da imagem atual</label><Input value={heroImage} onChange={(event) => setHeroImage(event.target.value)} /></div><div className="editor-field"><label>Título principal</label><Input defaultValue="REVIVER. REINVENTAR ERAS." /></div><div className="editor-field"><label>Texto de apoio</label><Input defaultValue="A ERA EM CURSO · 2026" /></div></div><div className="admin-panel appearance-panel"><div className="panel-heading"><div><span className="section-kicker">EDITORIAIS</span><h3>Galeria da home</h3></div><button className="icon-button" onClick={() => toast.success("Novo bloco de editorial adicionado.")}><Plus size={18} /></button></div><div className="editorial-list">{['Editorial Paradox', 'Arquivo Lost Between Eras', 'Próximo encontro'].map((item, index) => <div className="editorial-item" draggable key={item}><span className="drag-handle">⋮⋮</span><div className={`editorial-swatch swatch-${index}`} /><span>{item}</span><button className="table-more" onClick={() => fileInputRef.current?.click()}><Upload size={14} /></button></div>)}</div><p className="editor-help">Carregue novas imagens e arraste os blocos para reordenar os conteúdos da página inicial.</p></div></div>{appearanceSaved && <p className="saved-note"><Check size={14} /> As últimas alterações foram guardadas agora.</p>}</section>}
         {active === "Newsletter" && <section className="admin-content"><div className="content-toolbar"><div><span className="section-kicker">RELACIONAMENTO</span><h2 className="content-title">Newsletter</h2></div><Button onClick={() => toast.success("Exportação preparada.")}>Exportar lista</Button></div><div className="newsletter-admin-top"><div className="metric-card"><span>Total de inscritos</span><strong>1.284</strong><small className="positive">+83 este mês</small></div><div className="metric-card"><span>Cupons enviados</span><strong>1.276</strong><small>ERAS10 · 10% OFF</small></div><div className="metric-card"><span>Taxa de abertura</span><strong>68,4%</strong><small className="positive">acima da média</small></div></div><div className="admin-panel table-panel"><table><thead><tr><th>Nome</th><th>E-mail</th><th>Inscrição</th><th>Cupom</th><th>Status</th></tr></thead><tbody>{[['Marina Oliveira','marina@email.com','Hoje, 13:48'],['Caio Nascimento','caio@email.com','Hoje, 11:02'],['Lara Martins','lara@email.com','Ontem, 18:45'],['João Pedro','joao@email.com','12 Ago, 09:17']].map(([name, email, date]) => <tr key={email}><td><strong>{name}</strong></td><td>{email}</td><td>{date}</td><td><span className="coupon-mini">ERAS10</span></td><td><span className="status-pill success">Enviado</span></td></tr>)}</tbody></table></div></section>}
         {active === "Clientes" && <section className="admin-content"><div className="empty-admin"><Users size={31} /><h2>Base de clientes</h2><p>Os clientes que criarem uma conta e realizarem pedidos aparecerão aqui.</p><Button onClick={() => toast.info("Exportação de clientes em breve.")}>Exportar clientes</Button></div></section>}
       </main>

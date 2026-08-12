@@ -3,6 +3,7 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
+import { storagePut } from "./storage";
 import {
   getAdminSummary,
   getProductWithVariations,
@@ -62,6 +63,17 @@ export const appRouter = router({
   admin: router({
     summary: adminProcedure.query(() => getAdminSummary()),
     canAccess: protectedProcedure.query(({ ctx }) => ({ isAdmin: ctx.user.role === "admin" })),
+    uploadImage: adminProcedure.input(z.object({
+      fileName: z.string(),
+      fileBase64: z.string(),
+      contentType: z.string().default("image/png"),
+    })).mutation(async ({ input }) => {
+      const buffer = Buffer.from(input.fileBase64.replace(/^data:.*;base64,/, ""), "base64");
+      const ext = input.fileName.split(".").pop() || "png";
+      const relKey = `admin-uploads/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const result = await storagePut(relKey, buffer, input.contentType);
+      return result; // returns { key, url } where url is /manus-storage/...
+    }),
   }),
 });
 
