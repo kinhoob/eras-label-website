@@ -576,7 +576,16 @@ export default function Home() {
                 <div className="cart-summary">
                   <div><span>Subtotal</span><strong>{formatPrice(subtotal)}</strong></div>
                   {couponApplied && <div><span>Desconto</span><strong>-{formatPrice(discount)}</strong></div>}
-                  <div className="summary-total"><span>Total</span><strong>{formatPrice(total)}</strong></div>
+                  {selectedPaymentMethod === "pix" && (
+                    <div className="pix-saving-highlight">
+                      <span>Economia Pix ({pixDiscountPercent}%)</span>
+                      <strong className="saving-value">-{formatPrice(total * (pixDiscountPercent / 100))}</strong>
+                    </div>
+                  )}
+                  <div className="summary-total">
+                    <span>Total {selectedPaymentMethod === "pix" ? "(no Pix)" : ""}</span>
+                    <strong>{formatPrice(selectedPaymentMethod === "pix" ? total * (1 - pixDiscountPercent / 100) : total)}</strong>
+                  </div>
                 </div>
 
                 <div className="payment-methods-section">
