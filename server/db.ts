@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { nanoid } from "nanoid";
 import {
@@ -10,6 +10,8 @@ import {
   coupons,
   orders,
   siteAppearance,
+  notifications,
+  InsertNotification,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
@@ -110,7 +112,7 @@ export async function validateCoupon(code: string, subtotal: number) {
   if (!coupon || !coupon.active || (coupon.usageLimit !== null && coupon.timesUsed >= coupon.usageLimit)) return { valid: false, discount: 0, code };
   if (coupon.validUntil && coupon.validUntil.getTime() < Date.now()) return { valid: false, discount: 0, code };
   if (coupon.minPurchase && subtotal < Number(coupon.minPurchase)) return { valid: false, discount: 0, code };
-  const discount = coupon.discountPercent ? subtotal * Number(coupon.discountPercent) / 100 : Number(coupon.discountAmount ?? 0);
+  const discount = coupon.discountPercent ? subtotal * Number(coupon.discountPercent) / 100 : 0;
   return { valid: true, discount, code: coupon.code };
 }
 
@@ -142,6 +144,32 @@ export async function getCommercialConfig() {
   const rows = await db.select().from(siteAppearance).where(eq(siteAppearance.sectionKey, "commercial_config")).limit(1);
   if (!rows[0]) return { pixDiscountPercent: 5, freeShippingThreshold: 350 };
   return (rows[0].content as any) || { pixDiscountPercent: 5, freeShippingThreshold: 350 };
+}
+
+// Funções de Gerenciamento de Notificações (Estilo Nuvemshop)
+export async function createNotification(data: InsertNotification) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(notifications).values(data);
+}
+
+export async function listNotifications(userId?: number, role?: string) {
+  const db = await getDb();
+  if (!db) return [];
+  if (role === "admin") {
+    // Admin vê notificações para admin ou all
+    return db.select().from(notifications).where(or(eq(notifications.targetRole, "admin"), eq(notifications.targetRole, "all"))).orderBy(desc(notifications.createdAt)).limit(50);
+  } else if (userId) {
+    // Cliente vê notificações destinadas a ele ou all/customer
+    return db.select().from(notifications).where(or(eq(notifications.userId, userId), eq(notifications.targetRole, "customer"), eq(notifications.targetRole, "all"))).orderBy(desc(notifications.createdAt)).limit(50);
+  }
+  return [];
+}
+
+export async function markNotificationAsRead(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(notifications).set({ isRead: 1 }).where(eq(notifications.id, id));
 }
 
 export async function saveCommercialConfig(config: { pixDiscountPercent: number; freeShippingThreshold: number }) {
@@ -180,7 +208,7 @@ export async function saveProductData(data: {
   if (data.id) {
     await db.update(products).set({
       name: data.name,
-      collectionName: data.collection,
+      collection: data.collection,
       category: data.category,
       price: String(data.price),
       pixPrice: String(data.pixPrice),
@@ -193,7 +221,7 @@ export async function saveProductData(data: {
   } else {
     const [inserted] = await db.insert(products).values({
       name: data.name,
-      collectionName: data.collection,
+      collection: data.collection,
       category: data.category,
       price: String(data.price),
       pixPrice: String(data.pixPrice),

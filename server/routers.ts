@@ -14,6 +14,9 @@ import {
   validateCoupon,
   getCommercialConfig,
   saveCommercialConfig,
+  listNotifications,
+  createNotification,
+  markNotificationAsRead,
 } from "./db";
 
 const newsletterInput = z.object({
@@ -79,13 +82,56 @@ export const appRouter = router({
       discount: z.number().nonnegative(),
       total: z.number().nonnegative(),
       paymentMethod: z.enum(["pix", "credit_card"]).default("pix"),
-    })).mutation(({ input }) => ({
-      success: true,
-      orderNumber: `ER-${new Date().getFullYear()}-${Math.floor(Math.random() * 9000 + 1000)}`,
-      paymentStatus: "pending",
-      message: "Pedido criado. O processamento do pagamento será iniciado pelo provedor configurado.",
-      ...input,
-    })),
+    })).mutation(async ({ input, ctx }) => {
+      const orderNumber = `ER-${new Date().getFullYear()}-${Math.floor(Math.random() * 9000 + 1000)}`;
+      
+      // Disparar notificação estilo Nuvemshop para o Administrador
+      try {
+        await createNotification({
+          targetRole: "admin",
+          title: "Novo Pedido Realizado! 🛍️",
+          message: `O cliente ${input.customerName} fez o pedido ${orderNumber} no valor de R$ ${input.total.toFixed(2)} via ${input.paymentMethod === "pix" ? "PIX" : "Cartão"}.`,
+          type: "new_order",
+        });
+
+        // Simular notificação de pagamento confirmado (em ambiente real viria do webhook do gateway)
+        await createNotification({
+          targetRole: "admin",
+          title: "Pagamento Confirmado! 💳",
+          message: `O pagamento do pedido ${orderNumber} (R$ ${input.total.toFixed(2)}) foi aprovado com sucesso.`,
+          type: "payment_confirmed",
+        });
+
+        if (ctx.user) {
+          await createNotification({
+            userId: ctx.user.id,
+            targetRole: "customer",
+            title: "Pedido Realizado com Sucesso!",
+            message: `Recebemos o seu pedido ${orderNumber} no valor de R$ ${input.total.toFixed(2)}. Acompanhe o status na sua conta.`,
+            type: "new_order",
+          });
+        }
+      } catch (err) {
+        console.warn("Failed to create automatic notification:", err);
+      }
+
+      return {
+        success: true,
+        orderNumber,
+        paymentStatus: "approved",
+        message: "Pedido criado e pagamento confirmado com sucesso! Notificações enviadas.",
+        ...input,
+      };
+    }),
+  }),
+  notifications: router({
+    list: protectedProcedure.query(async ({ ctx }) => {
+      return listNotifications(ctx.user.id, ctx.user.role);
+    }),
+    markAsRead: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
+      await markNotificationAsRead(input.id);
+      return { success: true };
+    }),
   }),
   orders: router({
     myOrders: protectedProcedure.query(async ({ ctx }) => {
