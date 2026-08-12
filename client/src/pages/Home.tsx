@@ -14,6 +14,7 @@ import {
   X,
   Volume2,
   VolumeX,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -161,6 +162,7 @@ export default function Home() {
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [newsletterSent, setNewsletterSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [couponLoading, setCouponLoading] = useState(false);
   const newsletterMutation = trpc.newsletter.subscribe.useMutation();
   const checkoutMutation = trpc.checkout.create.useMutation();
 
@@ -216,13 +218,21 @@ export default function Home() {
 
   function applyCoupon() {
     playClick(soundsOn);
-    if (coupon.trim().toUpperCase() === "ERAS10") {
-      setCouponApplied(true);
-      toast.success("Cupom ERAS10 aplicado: 10% de desconto.");
-    } else {
-      setCouponApplied(false);
-      toast.error("Cupom não encontrado ou expirado.");
+    if (!coupon.trim()) {
+      toast.error("Digite o código do cupom.");
+      return;
     }
+    setCouponLoading(true);
+    setTimeout(() => {
+      setCouponLoading(false);
+      if (coupon.trim().toUpperCase() === "ERAS10") {
+        setCouponApplied(true);
+        toast.success("Cupom ERAS10 aplicado: 10% de desconto.");
+      } else {
+        setCouponApplied(false);
+        toast.error("Cupom não encontrado ou expirado.");
+      }
+    }, 600);
   }
 
   function submitNewsletter(event: React.FormEvent) {
@@ -516,8 +526,10 @@ export default function Home() {
                 </div>
                 <div className="coupon-section">
                   <div className="coupon-row">
-                    <Input value={coupon} onChange={(event) => setCoupon(event.target.value)} placeholder="Código do cupom (ex: ERAS10)" />
-                    <button onClick={applyCoupon}>APLICAR</button>
+                    <Input value={coupon} onChange={(event) => setCoupon(event.target.value)} placeholder="Código do cupom (ex: ERAS10)" disabled={couponLoading} />
+                    <button onClick={applyCoupon} disabled={couponLoading}>
+                      {couponLoading ? <Loader2 size={14} className="spinner-icon" /> : "APLICAR"}
+                    </button>
                   </div>
                   {couponApplied === true && (
                     <div className="coupon-feedback success">

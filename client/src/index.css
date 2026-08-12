@@ -563,3 +563,9 @@ td { border-top: 1px solid #e1dacf; padding: 15px 17px; color: #6f675e; font-siz
 .coupon-feedback { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 11px; }
 .coupon-feedback.success { color: #3b7a57; }
 .coupon-feedback.error { color: #a63a3a; }
+
+/* Estilos para o botão de cupom com estado de carregamento assíncrono */
+.coupon-row button { position: relative; transition: opacity .2s ease; }
+.coupon-row button:disabled { opacity: .7; cursor: wait; }
+.spinner-icon { animation: spin 1s linear infinite; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
