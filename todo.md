@@ -1,0 +1,23 @@
+# Project TODO - Eras Label Website
+
+- [ ] 1. **Base de Dados e Esquema (Drizzle)**: Tabelas para produtos, variações de tamanho, coleções, pedidos, itens de pedido, cupons, aparências (fotos/galeria/categorias/links) e subscritores de newsletter.
+- [ ] 2. **Servidor e tRPC (Backend)**: Rotas tRPC para catálogo, carrinho, checkout, gestão de pedidos, cupons, aparência do site e newsletter.
+- [ ] 3. **Componentes e Utilitários de Armazenamento**: Integração com S3/storage para upload persistente de imagens e ficheiros de aparência.
+- [ ] 4. **Loja Pública (Frontend)**:
+  - [ ] Hero animado, manifesto, coleções em destaque, arquivo de eras, próximos eventos e caixa de newsletter.
+  - [ ] Catálogo filtrável por categoria (camisetas, bonés) com preços (normal e PIX) e coleção.
+  - [ ] Página de produto individual com seletor de tamanho, estoque por variação e botão de adição à sacola.
+  - [ ] Sacola lateral (drawer) com validação de cupom, cálculo de totais e checkout.
+  - [ ] Fluxo de checkout completo (dados pessoais, morada, frete e confirmação).
+  - [ ] Área de cliente (login, dados, moradas).
+- [ ] 5. **Painel Administrativo (Admin)**:
+  - [ ] Autenticação restrita a administradores por e-mail e senha (sem Google).
+  - [ ] Gestão de produtos (criar, editar, ocultar, duplicar, excluir com tabela Nuvemshop).
+  - [ ] Gestão de stock por variação e marcação automática de esgotado.
+  - [ ] Gestão de pedidos (faturamento, alteração de status, rastreio, comprovante, carrinhos abandonados).
+  - [ ] Gestão de cupons de desconto.
+  - [ ] Painel de Aparência (troca de fotos, editoriais com drag-and-drop, galeria, categorias e menus).
+  - [ ] Aba de Newsletter com lista de subscritores.
+- [ ] 6. **Notificações e E-mails**: E-mails automáticos de confirmação de compra, envio com rastreio e alerta ao administrador para cada novo pedido.
+- [ ] 7. **Efeitos de Interação e Sons**: Sons nos botões e animação de ampulheta nas transições.
+- [ ] 8. **Testes Vitest e Revisão Final**: Garantir cobertura de testes para as rotas principais.
