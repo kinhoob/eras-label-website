@@ -1,0 +1,51 @@
+import React from "react";
+import { Link } from "wouter";
+
+interface SidebarMenuProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onPlaySound: () => void;
+}
+
+export function SidebarMenu({ isOpen, onClose, onPlaySound }: SidebarMenuProps) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="lovable-menu-overlay" onClick={onClose}>
+      <div className="lovable-side-menu" onClick={(e) => e.stopPropagation()}>
+        <div className="lovable-menu-header">
+          <span className="lovable-menu-kicker">EXPLORAR ERAS</span>
+          <button onClick={() => { onPlaySound(); onClose(); }} className="p-2 font-bold uppercase text-sm hover:text-[#c95139]">
+            Fechar [X]
+          </button>
+        </div>
+        <div className="lovable-menu-links">
+          <Link href="/" onClick={() => { onPlaySound(); onClose(); }}>Início</Link>
+          <Link href="/archive" onClick={() => { onPlaySound(); onClose(); }}>Arquivo de Eras</Link>
+          <Link href="/manifesto" onClick={() => { onPlaySound(); onClose(); }}>Manifesto Completo</Link>
+          <Link href="/events" onClick={() => { onPlaySound(); onClose(); }}>Eventos</Link>
+          <Link href="/contact" onClick={() => { onPlaySound(); onClose(); }}>Contato</Link>
+          <a href="https://whatsapp.com" target="_blank" rel="noreferrer" onClick={onPlaySound} className="vip-whatsapp">
+            Grupo VIP no WhatsApp
+          </a>
+        </div>
+        <div className="lovable-menu-section">
+          <span className="lovable-menu-kicker">CATEGORIAS</span>
+          <div className="lovable-menu-sublinks">
+            <Link href="/" onClick={() => { onPlaySound(); onClose(); }}>Todos os Produtos</Link>
+            <Link href="/category/camisetas" onClick={() => { onPlaySound(); onClose(); }}>Camisetas</Link>
+            <Link href="/category/bones" onClick={() => { onPlaySound(); onClose(); }}>Bonés</Link>
+          </div>
+        </div>
+        <div className="lovable-menu-section">
+          <span className="lovable-menu-kicker">COLEÇÕES</span>
+          <div className="lovable-menu-sublinks">
+            <Link href="/collection/paradox" onClick={() => { onPlaySound(); onClose(); }}>Paradox Collection</Link>
+            <Link href="/collection/lost" onClick={() => { onPlaySound(); onClose(); }}>Lost Between Eras</Link>
+            <Link href="/collection/raizes" onClick={() => { onPlaySound(); onClose(); }}>Raízes — Recife & La Ursa</Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
