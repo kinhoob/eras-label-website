@@ -582,3 +582,8 @@ td { border-top: 1px solid #e1dacf; padding: 15px 17px; color: #6f675e; font-siz
 .undo-banner { display: flex; justify-content: space-between; align-items: center; background: #23221e; color: #f6f3ee; padding: 10px 14px; margin-bottom: 15px; font-size: 11px; animation: drawer-in .2s ease; }
 .undo-banner button { background: transparent; border: none; color: #e5dec9; font-weight: 700; font-size: 11px; cursor: pointer; letter-spacing: .1em; text-transform: uppercase; }
 .undo-banner button:hover { color: #fff; text-decoration: underline; }
+
+/* Estilos para o badge numérico da sacola em tempo real */
+.bag-button { position: relative; display: inline-flex; align-items: center; gap: 6px; }
+.bag-badge { display: inline-grid; place-items: center; background: #c84b31; color: #fff; border-radius: 9999px; font-size: 10px; font-weight: 700; padding: 1px 6px; min-width: 18px; height: 18px; margin-left: 4px; animation: scale-in .2s ease; }
+@keyframes scale-in { 0% { transform: scale(0.6); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }

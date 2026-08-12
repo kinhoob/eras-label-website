@@ -319,7 +319,7 @@ export default function Home() {
             <CircleUserRound size={18} />
           </Link>
           <button className="bag-button" onClick={() => { playClick(soundsOn); setIsCartOpen(true); }}>
-            SACOLA ({cartCount})
+            SACOLA {cartCount > 0 && <span className="bag-badge">{cartCount}</span>}
           </button>
         </div>
       </header>
