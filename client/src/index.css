@@ -202,12 +202,57 @@ img { max-width: 100%; display: block; }
 .cart-summary > div { display: flex; justify-content: space-between; padding: 5px 0; color: #71695f; font-size: 13px; }
 .cart-summary .summary-total { margin-top: 8px; border-top: 1px solid #d7cfc4; padding-top: 14px; color: #23221e; font-size: 18px; }
 .checkout-button { flex-shrink: 0; }
-.checkout-modal { padding: 30px; }
-.checkout-modal .drawer-head { margin-bottom: 10px; }
-.checkout-form { padding-top: 22px; }
-.checkout-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-.checkout-grid label { display: grid; gap: 7px; color: #686057; font-size: 11px; }
-.checkout-grid label input { border: 1px solid #d3cabe; border-radius: 0; background: transparent; }
+/* Checkout redesign: cria uma superfície editorial mais refinada, com contraste, profundidade e foco no fluxo de pagamento. */
+.checkout-modal { width: min(760px, 96vw); max-height: 92vh; padding: clamp(24px, 4vw, 46px); border: 1px solid rgba(255,255,255,.72); border-radius: 24px; background: linear-gradient(145deg, #fbf9f5 0%, #f2ede5 100%); box-shadow: 0 30px 90px rgba(24,22,19,.24), 0 2px 0 rgba(255,255,255,.8) inset; animation: checkout-modal-in .36s cubic-bezier(.23,1,.32,1); }
+.checkout-modal .drawer-head { align-items: center; margin-bottom: 18px; padding: 0 48px 18px 2px; border-bottom: 1px solid rgba(119,112,103,.18); }
+.checkout-modal .drawer-head h2 { margin-top: 8px; color: #25241f; font-family: Georgia, serif; font-size: clamp(28px, 4vw, 40px); font-weight: 400; letter-spacing: -.055em; }
+.checkout-modal .drawer-head .section-kicker { color: #c95139; }
+.checkout-modal > .drawer-head .close-button { top: 22px; right: 22px; width: 38px; height: 38px; border: 1px solid rgba(119,112,103,.22); border-radius: 50%; background: rgba(255,255,255,.46); transition: transform .18s cubic-bezier(.23,1,.32,1), background .18s ease, color .18s ease; }
+.checkout-modal > .drawer-head .close-button:hover:not(:disabled) { transform: rotate(8deg) scale(1.04); background: #25241f; color: #f6f3ee; }
+.checkout-progress { display: grid; grid-template-columns: auto minmax(24px, 1fr) auto minmax(24px, 1fr) auto; align-items: center; gap: 9px; margin: 1px 2px 24px; }
+.checkout-step { display: grid; justify-items: center; gap: 6px; color: #9b9388; }
+.checkout-step span { display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid #d4cbc0; border-radius: 50%; background: rgba(255,255,255,.5); font-size: 9px; font-weight: 700; letter-spacing: .08em; transition: background .2s ease, border-color .2s ease, color .2s ease, transform .2s cubic-bezier(.23,1,.32,1); }
+.checkout-step small { font-size: 8px; font-weight: 700; letter-spacing: .15em; }
+.checkout-step.is-complete, .checkout-step.is-active { color: #25241f; }
+.checkout-step.is-complete span { border-color: #4f7657; background: #e3eee4; color: #4f7657; }
+.checkout-step.is-active span { border-color: #c95139; background: #c95139; color: #fff8ef; box-shadow: 0 0 0 5px rgba(201,81,57,.11); animation: checkout-step-pop .34s cubic-bezier(.23,1,.32,1) both; }
+.checkout-progress-line { height: 1px; background: #d4cbc0; transition: background .25s ease; }
+.checkout-progress.is-complete .checkout-progress-line { background: #8dab92; }
+.checkout-form { padding-top: 0; }
+.checkout-grid { gap: 17px 14px; }
+.checkout-grid label { gap: 8px; color: #5f584f; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.checkout-grid label input { min-height: 50px; padding: 0 15px; border: 1px solid #d4cbc0; border-radius: 12px; background: rgba(255,255,255,.48); color: #25241f; box-shadow: 0 1px 0 rgba(255,255,255,.8) inset; transition: border-color .18s ease, box-shadow .18s ease, background .18s ease, transform .18s cubic-bezier(.23,1,.32,1); }
+.checkout-grid label input:hover:not(:disabled) { border-color: #b9aa9b; background: rgba(255,255,255,.7); }
+.checkout-grid label input:focus { border-color: #c95139; background: #fffdfa; box-shadow: 0 0 0 4px rgba(201,81,57,.12); transform: translateY(-1px); }
+.shipping-placeholder, .payment-placeholder { margin: 22px 0; padding: 16px 17px; border: 1px solid rgba(119,112,103,.12); border-radius: 16px; background: rgba(235,228,217,.76); box-shadow: 0 8px 24px rgba(65,55,45,.05); }
+.shipping-placeholder { align-items: center; }
+.shipping-placeholder svg { flex: 0 0 auto; color: #c95139; }
+.payment-placeholder { margin-bottom: 20px; }
+.payment-placeholder .eyebrow { color: #c95139; }
+.payment-placeholder p { color: #686057; line-height: 1.55; }
+.checkout-processing-banner, .checkout-error-banner { border-radius: 14px; box-shadow: 0 8px 22px rgba(65,55,45,.05); }
+.checkout-submit-button { min-height: 54px; border-radius: 13px; box-shadow: 0 12px 24px rgba(37,36,31,.16); transition: transform .2s cubic-bezier(.23,1,.32,1), background .2s ease, box-shadow .2s ease, opacity .2s ease; }
+.checkout-submit-button:hover:not(:disabled) { box-shadow: 0 17px 30px rgba(37,36,31,.2); transform: translateY(-3px); }
+.checkout-submit-button:active:not(:disabled) { box-shadow: 0 7px 14px rgba(37,36,31,.15); transform: scale(.985) translateY(0); }
+.checkout-processing-note { margin-top: 13px; }
+.checkout-modal-success { width: min(780px, 96vw); }
+.checkout-success-state { padding: 30px clamp(4px, 2vw, 18px) 8px; }
+.checkout-success-icon { box-shadow: 0 12px 26px rgba(79,118,87,.14); }
+.checkout-order-summary { border: 1px solid rgba(119,112,103,.2); border-radius: 18px; background: rgba(255,255,255,.44); box-shadow: 0 14px 34px rgba(65,55,45,.07); overflow: hidden; }
+.checkout-order-summary-heading { background: rgba(235,228,217,.5); }
+.checkout-order-item { transition: background .18s ease; }
+.checkout-order-item:hover { background: rgba(255,255,255,.5); }
+.checkout-order-item img { border-radius: 10px; }
+.checkout-order-totals .checkout-order-total { font-size: 15px; }
+.checkout-success-meta { border: 1px solid rgba(119,112,103,.11); border-radius: 16px; background: rgba(235,228,217,.7); box-shadow: 0 8px 22px rgba(65,55,45,.04); }
+@keyframes checkout-modal-in { from { transform: translateY(18px) scale(.97); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+@keyframes checkout-step-pop { from { transform: scale(.82); opacity: .3; } to { transform: scale(1); opacity: 1; } }
+.checkout-modal { padding: clamp(24px, 4vw, 46px); }
+.checkout-modal .drawer-head { margin-bottom: 18px; }
+.checkout-form { padding-top: 0; }
+.checkout-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 17px 14px; }
+.checkout-grid label { display: grid; gap: 8px; color: #5f584f; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.checkout-grid label input { min-height: 50px; padding: 0 15px; border: 1px solid #d4cbc0; border-radius: 12px; background: rgba(255,255,255,.48); color: #25241f; box-shadow: 0 1px 0 rgba(255,255,255,.8) inset; transition: border-color .18s ease, box-shadow .18s ease, background .18s ease, transform .18s cubic-bezier(.23,1,.32,1); }
 .checkout-grid .wide { grid-column: 1 / -1; }
 .shipping-placeholder, .payment-placeholder { display: flex; gap: 10px; align-items: start; margin: 22px 0; padding: 15px; background: #ebe4d9; color: #777067; font-size: 12px; line-height: 1.5; }
 .payment-placeholder { display: block; }
@@ -218,10 +263,10 @@ img { max-width: 100%; display: block; }
 .checkout-error-banner { border-color: #dfb8aa; background: #f7e8e2; color: #ad4c36; }
 .checkout-error-banner strong { color: #8f3f2d; }
 .checkout-error-banner small { margin-top: 5px; }
-.checkout-submit-button { transition: transform .16s ease-out, background .16s ease-out, opacity .16s ease-out; }
+.checkout-submit-button { min-height: 54px; border-radius: 13px; box-shadow: 0 12px 24px rgba(37,36,31,.16); transition: transform .2s cubic-bezier(.23,1,.32,1), background .2s ease, box-shadow .2s ease, opacity .2s ease; }
 .checkout-submit-button .spinner-icon { animation: spin-slow .8s linear infinite; }
 .checkout-processing-note { margin: 10px 0 0; color: #93897d; font-size: 10px; text-align: center; letter-spacing: .04em; }
-.checkout-modal-success { width: min(560px, 94vw); }
+.checkout-modal-success { width: min(780px, 96vw); }
 .checkout-success-state { display: flex; flex-direction: column; align-items: center; padding: 48px 36px 32px; text-align: center; animation: checkout-success-in .42s cubic-bezier(.23,1,.32,1); }
 .checkout-success-icon { display: grid; place-items: center; width: 82px; height: 82px; margin-bottom: 23px; border: 1px solid #85a28b; border-radius: 50%; background: #e5eee5; color: #4f7657; animation: checkout-success-icon-in .5s cubic-bezier(.23,1,.32,1) both; }
 .checkout-success-state .section-kicker { color: #4f7657; }
@@ -260,7 +305,7 @@ img { max-width: 100%; display: block; }
 .loading-hint span { display: inline-flex; gap: 6px; align-items: center; }
 
 @media (prefers-reduced-motion: reduce) {
-  .checkout-processing-banner, .checkout-error-banner, .checkout-success-state, .checkout-success-icon, .checkout-submit-button .spinner-icon { animation: none; }
+  .checkout-processing-banner, .checkout-error-banner, .checkout-success-state, .checkout-success-icon, .checkout-submit-button .spinner-icon, .checkout-modal, .checkout-step.is-active span { animation: none; }
 }
 
 @media (max-width: 850px) {
@@ -1137,4 +1182,38 @@ td { border-top: 1px solid #e1dacf; padding: 15px 17px; color: #6f675e; font-siz
 .copy-tracking-btn:hover {
   background: rgba(255, 255, 255, 0.15);
   border-color: rgba(255, 255, 255, 0.3);
+}
+
+
+/* Checkout refinement: transforma os métodos de pagamento em escolhas claras, com estados ativos e foco acessível. */
+.checkout-modal ~ * .payment-methods-section,
+.payment-methods-section { margin-top: 20px; padding-top: 18px; border-top-color: rgba(119,112,103,.18); }
+.payment-methods-section h4 { margin-bottom: 10px; color: #5f584f; font-size: 9px; letter-spacing: .18em; }
+.payment-methods-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.payment-chip { position: relative; min-height: 62px; gap: 5px; padding: 11px 10px; overflow: hidden; border: 1px solid #d4cbc0; border-radius: 13px; background: rgba(255,255,255,.54); color: #524e46; box-shadow: 0 1px 0 rgba(255,255,255,.8) inset; transition: transform .2s cubic-bezier(.23,1,.32,1), border-color .2s ease, background .2s ease, box-shadow .2s ease, color .2s ease; }
+.payment-chip::after { position: absolute; inset: 0; content: ""; background: linear-gradient(110deg, transparent 20%, rgba(255,255,255,.45) 50%, transparent 80%); transform: translateX(-120%); transition: transform .45s cubic-bezier(.23,1,.32,1); }
+.payment-chip:hover { border-color: #b9aa9b; background: #fffdfa; box-shadow: 0 8px 20px rgba(65,55,45,.08); transform: translateY(-2px); }
+.payment-chip:hover::after { transform: translateX(120%); }
+.payment-chip:focus-visible { outline: none; border-color: #c95139; box-shadow: 0 0 0 4px rgba(201,81,57,.12); }
+.payment-chip.active { border-color: #25241f; background: #25241f; box-shadow: 0 9px 20px rgba(37,36,31,.16); color: #f6f3ee; transform: translateY(-1px); }
+.payment-chip.active::after { display: none; }
+.payment-chip span.highlight { margin-top: 1px; color: #c95139; }
+.payment-chip.active span.highlight { color: #e5a08d; }
+
+/* Checkout refinement: deixa o CTA secundário intencional e mantém uma área de toque confortável no mobile. */
+.checkout-success-actions { gap: 11px; max-width: 380px; }
+.checkout-success-actions .primary-button { min-height: 52px; border-radius: 13px; box-shadow: 0 12px 24px rgba(37,36,31,.14); }
+.checkout-success-actions .text-link { min-height: 42px; align-items: center; border-bottom: 1px solid rgba(201,81,57,.55); color: #c95139; transition: color .18s ease, gap .2s cubic-bezier(.23,1,.32,1), border-color .18s ease; }
+.checkout-success-actions .text-link:hover { border-color: #25241f; color: #25241f; }
+
+@media (max-width: 480px) {
+  /* Em telas estreitas, os chips ocupam duas colunas equilibradas e não comprimem o texto. */
+  .payment-methods-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .payment-chip { min-height: 58px; font-size: 9px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Remove o brilho e deslocamento decorativos sem eliminar os estados visuais de foco e seleção. */
+  .payment-chip::after { display: none; }
+  .payment-chip:hover, .payment-chip.active, .checkout-success-actions .primary-button:hover { transform: none; }
 }

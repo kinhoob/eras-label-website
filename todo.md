@@ -62,3 +62,31 @@
 - [x] Exibir prazo estimado de entrega de forma clara e responsiva
 - [x] Criar testes Vitest para o calculo e a apresentacao dos dados do resumo
 - [x] Validar TypeScript, build e layout responsivo da confirmacao
+
+
+## Melhoria solicitada — checkout moderno e animado
+
+- [x] Modernizar o cabeçalho e a hierarquia visual do modal de checkout
+- [x] Melhorar campos, seleção de pagamento, resumo e ações principais
+- [x] Adicionar microinterações suaves para entrada, foco, hover, progresso e confirmação
+- [x] Preservar acessibilidade e reduzir animações com prefers-reduced-motion
+- [x] Validar TypeScript, testes, build e responsividade do checkout
+
+
+## Ajustes complementares do redesign
+
+- [x] Modernizar visualmente a selecao de pagamento (chips Pix e Cartao) para alinhar ao novo checkout
+- [x] Ajustar os botoes de acao secundaria da confirmacao para manter consistencia visual
+- [x] Validar a selecao de pagamento e as acoes da confirmacao em desktop e mobile
+
+
+## Validacao complementar da confirmacao
+
+- [x] Validar visualmente e funcionalmente os botoes da confirmacao (checkout-success-actions) em desktop e mobile
+- [x] Avancar o QA automatizado ate o estado de sucesso e confirmar a presenca e o layout dos CTAs
+
+
+## Validacao funcional dos CTAs
+
+- [x] Clicar em ACOMPANHAR PEDIDO no desktop e mobile e verificar a navegacao para a conta
+- [x] Clicar em CONTINUAR COMPRANDO no desktop e mobile e verificar o fechamento do modal e retorno ao fluxo

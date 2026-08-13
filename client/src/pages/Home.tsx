@@ -717,6 +717,14 @@ export default function Home() {
               <button className="close-button" onClick={() => { if (!loading) setIsCheckoutOpen(false); }} disabled={loading} aria-label="Fechar checkout"><X /></button>
             </div>
 
+            {/* Trilha visual que orienta o cliente entre sacola, dados e confirmação sem alterar a lógica do pagamento. */}
+            <div className={`checkout-progress ${checkoutStatus === "success" ? "is-complete" : ""}`} aria-label="Etapas do checkout">
+              <div className="checkout-step is-complete"><span>01</span><small>SACOLA</small></div>
+              <span className="checkout-progress-line" aria-hidden="true" />
+              <div className={`checkout-step ${checkoutStatus === "success" ? "is-complete" : "is-active"}`}><span>02</span><small>DADOS</small></div>
+              <span className="checkout-progress-line" aria-hidden="true" />
+              <div className={`checkout-step ${checkoutStatus === "success" ? "is-active" : ""}`}><span>03</span><small>CONFIRMAÇÃO</small></div>
+            </div>
             {checkoutStatus === "success" ? (
               <div className="checkout-success-state" role="status" aria-live="polite">
                 <div className="checkout-success-icon"><CheckCircle2 size={42} strokeWidth={1.5} /></div>
