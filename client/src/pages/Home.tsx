@@ -1,4 +1,4 @@
-import { useMemo, useReducer, useState } from "react";
+import { useState, useMemo, useReducer } from "react";
 import { Link } from "wouter";
 import {
   ArrowDown,
@@ -178,8 +178,6 @@ export default function Home() {
   const { data: commercialConfig } = trpc.catalog.getConfig.useQuery();
   const pixDiscountPercent = commercialConfig?.pixDiscountPercent ?? 5;
   const freeShippingThreshold = commercialConfig?.freeShippingThreshold ?? 350;
-
-
 
   const newsletterMutation = trpc.newsletter.subscribe.useMutation();
   const checkoutMutation = trpc.checkout.create.useMutation();
@@ -370,42 +368,10 @@ export default function Home() {
         </div>
       </header>
 
-      <main>
-        <section className="hero-section" style={{ backgroundImage: `linear-gradient(90deg, rgba(11,11,10,.58), rgba(11,11,10,.05)), url(${heroImage})` }}>
-          <div className="hero-copy">
-            <p className="eyebrow">COLEÇÃO EM CURSO · 2026</p>
-            <h1>REVIVER.<br /><em>REINVENTAR</em><br />ERAS.</h1>
-            <a className="text-link hero-link" href="#shop" onClick={() => playClick(soundsOn)}>VER A ERA ATUAL <ArrowRight size={16} /></a>
-          </div>
-          <div className="hero-footer"><span>PARADOX COLLECTION</span><span>ROLE <ArrowDown size={15} /></span></div>
-        </section>
-
-        <section className="manifesto-section" id="manifesto">
-          <div className="section-kicker">01 / MANIFESTO</div>
-          <div className="manifesto-grid">
-            <h2>Nada é inventado<br /><em>do zero.</em></h2>
-            <div>
-              <p className="lead-copy">Tudo volta — com outro corpo, outro som, outra cidade.</p>
-              <p>Trabalhamos com memória brasileira: som, rua, arquivo familiar, imprensa antiga, gíria. Cada era é um recorte de tempo transformado em roupa — não em fantasia.</p>
-              <a className="text-link" href="#archive" onClick={() => playClick(soundsOn)}>LER O MANIFESTO COMPLETO <ArrowRight size={16} /></a>
-            </div>
-          </div>
-        </section>
-
-        <section className="collection-feature" id="collections">
-          <div className="feature-image" style={{ backgroundImage: `url(${editorialImage})` }} />
-          <div className="feature-copy">
-            <p className="eyebrow">A ERA EM CURSO</p>
-            <p className="feature-year">2026</p>
-            <h2>PARADOX<br /><em>COLLECTION</em></h2>
-            <p>Travessia, Dissociação, Ressonador, Vórtex e Time Break. Estar em dois tempos ao mesmo tempo.</p>
-            <a className="text-link" href="#shop" onClick={() => playClick(soundsOn)}>EXPLORAR A COLEÇÃO <ArrowRight size={16} /></a>
-          </div>
-        </section>
-
+      <main className="pt-8">
         <section className="shop-section" id="shop">
           <div className="section-heading">
-            <div><span className="section-kicker">02 / SHOP</span><h2>A ERA ATUAL</h2></div>
+            <div><span className="section-kicker">01 / SHOP</span><h2>PRODUTOS DA ERA</h2></div>
             <div className="filter-tabs" role="tablist" aria-label="Filtrar produtos">
               {(["Todos", "Camisetas", "Bonés"] as Category[]).map((item) => (
                 <button key={item} className={category === item ? "active" : ""} onClick={() => { playClick(soundsOn); setCategory(item); }}>{item}</button>
@@ -428,40 +394,29 @@ export default function Home() {
             ))}
           </div>
         </section>
-
-        <section className="archive-section" id="archive">
-          <div className="section-kicker">03 / ARQUIVO DE ERAS</div>
-          <div className="archive-list">
-            {[['2026', 'PARADOX COLLECTION', 'Travessia, Dissociação, Ressonador, Vórtex e Time Break.'], ['2025', 'LOST BETWEEN ERAS', 'Cápsula de headwear com a frase-manifesto bordada em tom sobre tom.'], ['2024', 'RAÍZES — RECIFE & LA URSA', 'O primeiro drop. Recife como origem e o folclore de rua como vocabulário visual.']].map(([year, title, description]) => (
-              <a href="#shop" className="archive-row" key={year} onClick={() => playClick(soundsOn)}><span>{year}</span><div><h3>{title}</h3><p>{description}</p></div><ArrowRight size={18} /></a>
-            ))}
-          </div>
-        </section>
-
-        <section className="events-section" id="events">
-          <div className="section-kicker">04 / PRÓXIMOS ENCONTROS</div>
-          <div className="events-grid">
-            {[['14.08.26', 'LANÇAMENTO PARADOX', 'Recife', 'Bairro do Recife · listening set · lista fechada'], ['27.09.26', 'SESSÃO DE ARQUIVO', 'São Paulo', 'Exibição do editorial + peças de arquivo em exposição'], ['12.11.26', 'LISTENING ROOM', 'Rio de Janeiro', 'Set analógico e apresentação da cápsula de encerramento']].map(([date, title, city, detail]) => (
-              <div className="event-card" key={date}><span className="event-date">{date}</span><h3>{title}</h3><p className="event-city">{city}</p><p>{detail}</p></div>
-            ))}
-          </div>
-        </section>
-
-        <section className="newsletter-section" id="contact">
-          <div><span className="section-kicker">05 / LISTA DE ESPERA</span><h2>SEJA AVISADO<br /><em>ANTES DA PRÓXIMA ERA.</em></h2></div>
-          {newsletterSent ? <div className="newsletter-success"><Check size={25} /><p>A sua inscrição está confirmada.<br />Verifique o e-mail para receber o cupom.</p></div> : <form className="newsletter-form" onSubmit={submitNewsletter}><Input value={newsletterName} onChange={(event) => setNewsletterName(event.target.value)} placeholder="Seu nome" aria-label="Seu nome" /><Input value={newsletterEmail} onChange={(event) => setNewsletterEmail(event.target.value)} placeholder="Seu e-mail" type="email" aria-label="Seu e-mail" /><button type="submit" onClick={() => playClick(soundsOn)}>ENVIAR <ArrowRight size={16} /></button></form>}
-        </section>
       </main>
 
       <footer className="site-footer">
         <div><div className="footer-brand">ERAS<span>.</span></div><p>Reviver. Reinventar Eras.<br />Cada coleção é um capítulo fechado — produzido em lotes limitados, no Brasil.</p></div>
-        <div className="footer-column"><strong>NAVEGAÇÃO</strong><a href="#manifesto" onClick={() => playClick(soundsOn)}>Início</a><a href="#shop" onClick={() => playClick(soundsOn)}>Shop</a><a href="#collections" onClick={() => playClick(soundsOn)}>Coleções</a><a href="#archive" onClick={() => playClick(soundsOn)}>Arquivo</a><a href="#events" onClick={() => playClick(soundsOn)}>Eventos</a></div>
-        <div className="footer-column"><strong>SUPORTE</strong><a href="mailto:atelie@eraslabel.com" onClick={() => playClick(soundsOn)}>Contato</a><a href="#contact" onClick={() => playClick(soundsOn)}>Envios</a><a href="#contact" onClick={() => playClick(soundsOn)}>Trocas e Devoluções</a></div>
+        <div className="footer-column">
+          <strong>NAVEGAÇÃO</strong>
+          <Link href="/" onClick={() => playClick(soundsOn)}>Início</Link>
+          <a href="#shop" onClick={() => playClick(soundsOn)}>Shop</a>
+          <Link href="/collection/paradox" onClick={() => playClick(soundsOn)}>Coleções</Link>
+          <Link href="/archive" onClick={() => playClick(soundsOn)}>Arquivo</Link>
+          <Link href="/events" onClick={() => playClick(soundsOn)}>Eventos</Link>
+        </div>
+        <div className="footer-column">
+          <strong>SUPORTE</strong>
+          <Link href="/contact" onClick={() => playClick(soundsOn)}>Contato</Link>
+          <Link href="/contact" onClick={() => playClick(soundsOn)}>Envios</Link>
+          <Link href="/contact" onClick={() => playClick(soundsOn)}>Trocas e Devoluções</Link>
+        </div>
         <div className="footer-column"><strong>CONTATO</strong><a href="mailto:atelie@eraslabel.com">atelie@eraslabel.com</a><span>São Paulo · Brasil</span><span>Seg–Sex · 10h às 18h</span></div>
         <div className="footer-bottom"><span>© 2026 ERAS LABEL</span><span>PARADOX COLLECTION</span></div>
       </footer>
 
-      {/* Side Menu identical to Lovable */}
+      {/* Side Menu identical to Lovable with direct routing to Manifesto and Events */}
       {isMenuOpen && (
         <div className="overlay lovable-menu-overlay" onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }}>
           <aside className="lovable-side-menu" onClick={(event) => event.stopPropagation()}>
@@ -473,11 +428,11 @@ export default function Home() {
             </div>
             
             <nav className="lovable-menu-links">
-              <a href="#" onClick={() => { playClick(soundsOn); setIsMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>INÍCIO</a>
-              <a href="#archive" onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }}>ARQUIVO DE ERAS</a>
-              <a href="#manifesto" onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }}>MANIFESTO COMPLETO</a>
-              <a href="#events" onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }}>EVENTOS</a>
-              <a href="#contact" onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }}>CONTATO</a>
+              <Link href="/" onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }}>INÍCIO</Link>
+              <Link href="/archive" onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }}>ARQUIVO DE ERAS</Link>
+              <Link href="/manifesto" onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }}>MANIFESTO COMPLETO</Link>
+              <Link href="/events" onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }}>EVENTOS</Link>
+              <Link href="/contact" onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }}>CONTATO</Link>
               <a href="https://whatsapp.com" target="_blank" rel="noreferrer" className="vip-whatsapp" onClick={() => playClick(soundsOn)}>
                 GRUPO VIP NO<br />WHATSAPP
               </a>
@@ -495,215 +450,188 @@ export default function Home() {
             <div className="lovable-menu-section">
               <span className="lovable-menu-kicker">COLEÇÕES</span>
               <div className="lovable-menu-sublinks">
-                <a href="#collections" onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }}>PARADOX COLLECTION</a>
-                <a href="#archive" onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }}>LOST BETWEEN ERAS</a>
-                <a href="#archive" onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }}>RAÍZES — RECIFE & LA URSA</a>
+                <Link href="/collection/paradox" onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }}>PARADOX COLLECTION</Link>
+                <Link href="/archive" onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }}>LOST BETWEEN ERAS</Link>
+                <Link href="/archive" onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }}>RAÍZES — RECIFE & LA URSA</Link>
               </div>
             </div>
           </aside>
         </div>
       )}
 
-      {selectedProduct && (
-        <div className="overlay" onClick={() => setSelectedProduct(null)}>
-          <div className="product-modal" onClick={(event) => event.stopPropagation()}>
-            <button className="close-button" onClick={() => setSelectedProduct(null)}><X /></button>
-            <div className="modal-image"><img src={selectedProduct.image} alt={selectedProduct.alt} /></div>
-            <div className="modal-copy">
-              <span className="eyebrow">{selectedProduct.collection}</span>
-              <h2>{selectedProduct.name}</h2>
-              <p className="modal-price">{formatPrice(selectedProduct.price)}</p>
-              <p>{selectedProduct.detail}</p>
-              <div className="size-picker">
-                <span>TAMANHO</span>
-                <div>
-                  {selectedProduct.sizes.map((size) => (
-                    <button key={size} className={selectedSize === size ? "selected" : ""} onClick={() => setSelectedSize(size)} disabled={selectedProduct.stock === 0}>{size}</button>
-                  ))}
-                </div>
-              </div>
-              <button className="primary-button" onClick={() => addToCart(selectedProduct, selectedSize)} disabled={selectedProduct.stock === 0}>
-                {selectedProduct.stock === 0 ? "ESGOTADO" : "ADICIONAR À SACOLA"} <ArrowRight size={16} />
-              </button>
-              <p className="stock-note"><Sparkles size={13} /> Estoque gerido no painel administrativo.</p>
-            </div>
-          </div>
-        </div>
-      )}
-
+      {/* Persistent Side Cart with recommended items, progress bar, coupons, undo and payment badges */}
       {isCartOpen && (
-        <div className="overlay cart-overlay" onClick={() => setIsCartOpen(false)}>
-          <aside className="cart-drawer" onClick={(event) => event.stopPropagation()}>
+        <div className="overlay" onClick={() => setIsCartOpen(false)}>
+          <aside className="side-cart" onClick={(event) => event.stopPropagation()}>
             <div className="drawer-head">
-              <div><span className="section-kicker">SACOLA</span><h2>{cartCount} {cartCount === 1 ? "peça" : "peças"}</h2></div>
-              <button className="close-button" onClick={() => setIsCartOpen(false)}><X /></button>
+              <div>
+                <span className="section-kicker">SACOLA</span>
+                <h2>Seu Carrinho ({cartCount})</h2>
+              </div>
+              <button className="close-button" onClick={() => setIsCartOpen(false)} aria-label="Fechar carrinho"><X /></button>
             </div>
-            {cart.length > 0 && (
-              <div className="free-shipping-progress">
+
+            <div className="free-shipping-progress" aria-label="Progresso de frete grátis">
+              <div className="shipping-progress-text">
                 {subtotal >= freeShippingThreshold ? (
-                  <p className="shipping-msg"><Sparkles size={14} /> PARABÉNS! VOCÊ GANHOU FRETE GRÁTIS.</p>
+                  <span><strong>Parabéns!</strong> Você conquistou frete grátis.</span>
                 ) : (
-                  <p className="shipping-msg">FALTAM {formatPrice(freeShippingThreshold - subtotal)} PARA GANHAR FRETE GRÁTIS</p>
+                  <span>Faltam <strong>{formatPrice(freeShippingThreshold - subtotal)}</strong> para frete grátis.</span>
                 )}
-                <div className="shipping-bar-track">
-                  <div className="shipping-bar-fill" style={{ width: `${Math.min(100, (subtotal / freeShippingThreshold) * 100)}%` }} />
-                </div>
+                <span>{Math.min(100, Math.round((subtotal / freeShippingThreshold) * 100))}%</span>
               </div>
-            )}
-            {lastRemovedItem && (
-              <div className="undo-banner">
-                <span>Item removido da sacola.</span>
-                <button onClick={() => {
-                  playClick(soundsOn);
-                  setCart((current) => [...current, lastRemovedItem]);
-                  setLastRemovedItem(null);
-                  toast.success("Item restaurado com sucesso.");
-                }}>Desfazer</button>
+              <div className="progress-bar-track">
+                <div className="progress-bar-fill" style={{ width: `${Math.min(100, (subtotal / freeShippingThreshold) * 100)}%` }} />
               </div>
-            )}
+            </div>
+
             {cart.length === 0 ? (
-              <div className="empty-cart"><ShoppingBag size={33} /><p>Ainda não há peças aqui.</p><button className="text-link" onClick={() => setIsCartOpen(false)}>CONTINUAR A EXPLORAR <ArrowRight size={16} /></button></div>
+              <div className="empty-cart">
+                <ShoppingBag size={48} strokeWidth={1} />
+                <p>Sua sacola está vazia.</p>
+                <button className="primary-button" onClick={() => setIsCartOpen(false)}>EXPLORAR PRODUTOS</button>
+              </div>
             ) : (
               <>
-                <div className="cart-lines">
+                <div className="cart-items-list">
                   {cart.map((item) => (
-                    <div className="cart-line" key={`${item.id}-${item.size}`}>
+                    <div className="cart-item" key={`${item.id}-${item.size}`}>
                       <img src={item.image} alt={item.alt} />
-                      <div>
-                        <p>{item.name}</p>
-                        <span>Tamanho {item.size}</span>
-                        <strong>{formatPrice(item.price)}</strong>
-                        <div className="quantity">
-                          <button onClick={() => changeQuantity(item.id, item.size, -1)} aria-label="Diminuir quantidade"><Minus size={12} /></button>
-                          <span>{item.quantity}</span>
-                          <button onClick={() => changeQuantity(item.id, item.size, 1)} aria-label="Aumentar quantidade"><Plus size={12} /></button>
+                      <div className="cart-item-details">
+                        <p className="cart-item-name">{item.name}</p>
+                        <p className="cart-item-variant">Tamanho: {item.size}</p>
+                        <div className="cart-item-bottom">
+                          <div className="quantity-stepper">
+                            <button onClick={() => changeQuantity(item.id, item.size, -1)} aria-label="Diminuir quantidade"><Minus size={13} /></button>
+                            <span>{item.quantity}</span>
+                            <button onClick={() => changeQuantity(item.id, item.size, 1)} aria-label="Aumentar quantidade"><Plus size={13} /></button>
+                          </div>
+                          <strong>{formatPrice(item.price * item.quantity)}</strong>
                         </div>
-                        <button className="cart-line-remove" onClick={() => {
+                      </div>
+                      <button
+                        className="cart-item-remove"
+                        onClick={() => {
                           playClick(soundsOn);
                           setLastRemovedItem(item);
                           setCart((current) => current.filter((i) => !(i.id === item.id && i.size === item.size)));
-                          toast.success("Peça removida da sacola.", {
+                          toast.success("Item removido da sacola.", {
                             action: {
                               label: "Desfazer",
                               onClick: () => {
+                                playClick(soundsOn);
                                 setCart((current) => [...current, item]);
                                 setLastRemovedItem(null);
-                              }
-                            }
+                                toast.success("Item restaurado.");
+                              },
+                            },
                           });
-                        }}>Remover</button>
-                      </div>
+                        }}
+                        aria-label="Remover item"
+                      >
+                        <X size={15} />
+                      </button>
                     </div>
                   ))}
                 </div>
-                <div className="coupon-section">
-                  <div className="coupon-row">
-                    <Input value={coupon} onChange={(event) => setCoupon(event.target.value)} placeholder="Código do cupom (ex: ERAS10)" disabled={couponLoading} />
-                    <button onClick={applyCoupon} disabled={couponLoading}>
-                      {couponLoading ? <Loader2 size={14} className="spinner-icon" /> : "APLICAR"}
-                    </button>
-                  </div>
-                  {couponApplied === true && (
-                    <div className="coupon-feedback success">
-                      <Check size={14} /> Cupom <strong>ERAS10</strong> aplicado com sucesso (10% OFF)
-                    </div>
-                  )}
-                  {couponApplied === false && coupon.trim() !== "" && (
-                    <div className="coupon-feedback error">
-                      <X size={14} /> Cupom inválido ou expirado. Tente ERAS10.
-                    </div>
-                  )}
-                </div>
 
-                <div className="shipping-cep-section">
-                  <label>Calcular Frete e Prazo</label>
-                  <div className="coupon-row">
-                    <Input
-                      value={cepInput}
-                      onChange={(event) => setCepInput(event.target.value.replace(/\D/g, "").slice(0, 8))}
-                      placeholder="Digite seu CEP (ex: 01001000)"
-                      maxLength={8}
-                    />
-                    <button
-                      onClick={() => {
-                        playClick(soundsOn);
-                        if (cepInput.length !== 8) {
-                          toast.error("Digite um CEP válido com 8 dígitos.");
-                          return;
-                        }
-                        setShippingCep(cepInput);
-                        toast.success("Calculando frete...");
-                      }}
-                      disabled={shippingLoading}
-                    >
-                      {shippingLoading ? <Loader2 size={14} className="spinner-icon" /> : "CALCULAR"}
-                    </button>
+                <div className="cart-footer">
+                  <div className="coupon-box">
+                    <div className="coupon-input-group">
+                      <Input
+                        value={coupon}
+                        onChange={(event) => setCoupon(event.target.value)}
+                        placeholder="Cupom (ex: ERAS10)"
+                        disabled={couponLoading}
+                        aria-label="Código do cupom"
+                      />
+                      <button className="coupon-apply-btn" onClick={applyCoupon} disabled={couponLoading}>
+                        {couponLoading ? <Loader2 size={16} className="spinner-icon" /> : "APLICAR"}
+                      </button>
+                    </div>
+                    {couponApplied === true && <p className="coupon-feedback success">Cupom ERAS10 aplicado (10% OFF)</p>}
+                    {couponApplied === false && <p className="coupon-feedback error">Cupom inválido ou expirado</p>}
                   </div>
-                  {shippingData && (
-                    <div className="shipping-result-box">
-                      <div className="shipping-info">
-                        <strong>{shippingData.service}</strong>
-                        <span>Prazo: {shippingData.deadline}</span>
+
+                  <div className="cep-calc-box">
+                    <div className="coupon-input-group">
+                      <Input
+                        value={cepInput}
+                        onChange={(event) => setCepInput(event.target.value.replace(/\D/g, "").slice(0, 8))}
+                        placeholder="Digite o CEP (ex: 01311000)"
+                        maxLength={8}
+                        aria-label="CEP para cálculo de frete"
+                      />
+                      <button className="coupon-apply-btn" onClick={() => { playClick(soundsOn); setShippingCep(cepInput); }}>
+                        CALCULAR
+                      </button>
+                    </div>
+                    {shippingLoading && <p className="shipping-info-text">Calculando frete...</p>}
+                    {shippingData && !shippingLoading && (
+                      <p className="shipping-info-text success">
+                        {shippingData.free ? "Frete Grátis" : `Frete: ${formatPrice(shippingData.cost)}`} · Prazo: {shippingData.deadline}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="payment-methods-selector">
+                    <span className="eyebrow">MÉTODO DE PAGAMENTO</span>
+                    <div className="payment-chips">
+                      <button
+                        type="button"
+                        className={`payment-chip ${selectedPaymentMethod === "pix" ? "active" : ""}`}
+                        onClick={() => { playClick(soundsOn); setSelectedPaymentMethod("pix"); }}
+                      >
+                        <strong>Pix</strong>
+                        <span>{pixDiscountPercent}% OFF</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={`payment-chip ${selectedPaymentMethod === "credit_card" ? "active" : ""}`}
+                        onClick={() => { playClick(soundsOn); setSelectedPaymentMethod("credit_card"); }}
+                      >
+                        <strong>Cartão</strong>
+                        <span>Até 6x</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="cart-totals">
+                    <div className="cart-total-row"><span>Subtotal</span><strong>{formatPrice(subtotal)}</strong></div>
+                    {discount > 0 && <div className="cart-total-row discount"><span>Desconto cupom</span><strong>- {formatPrice(discount)}</strong></div>}
+                    <div className="cart-total-row"><span>Frete</span><strong>{shippingCost === 0 ? "Grátis" : formatPrice(shippingCost)}</strong></div>
+                    {selectedPaymentMethod === "pix" && (
+                      <div className="cart-total-row pix-savings">
+                        <span>Economia no Pix ({pixDiscountPercent}%)</span>
+                        <strong>- {formatPrice(subtotal * (pixDiscountPercent / 100))}</strong>
                       </div>
-                      <strong className="shipping-price">
-                        {shippingData.free ? "GRÁTIS" : formatPrice(shippingData.cost)}
-                      </strong>
-                    </div>
-                  )}
-                </div>
-                <div className="cart-summary">
-                  <div><span>Subtotal</span><strong>{formatPrice(subtotal)}</strong></div>
-                  {couponApplied && <div><span>Desconto</span><strong>-{formatPrice(discount)}</strong></div>}
-                  <div>
-                    <span>Frete {shippingData ? `(${shippingData.service})` : ""}</span>
-                    <strong>{shippingData ? (shippingData.free ? "GRÁTIS" : formatPrice(shippingData.cost)) : "A calcular"}</strong>
+                    )}
+                    <div className="cart-total-row final"><span>Total</span><strong>{formatPrice(total)}</strong></div>
                   </div>
-                  {selectedPaymentMethod === "pix" && (
-                    <div className="pix-saving-highlight">
-                      <span>Economia Pix ({pixDiscountPercent}%)</span>
-                      <strong className="saving-value">-{formatPrice(total * (pixDiscountPercent / 100))}</strong>
-                    </div>
-                  )}
-                  <div className="summary-total">
-                    <span>Total {selectedPaymentMethod === "pix" ? "(no Pix)" : ""}</span>
-                    <strong>{formatPrice(selectedPaymentMethod === "pix" ? total * (1 - pixDiscountPercent / 100) : total)}</strong>
-                  </div>
-                </div>
 
-                <div className="payment-methods-section">
-                  <h4>Forma de Pagamento</h4>
-                  <div className="payment-methods-grid">
-                    <button type="button" className={`payment-chip ${selectedPaymentMethod === "pix" ? "active" : ""}`} onClick={() => { playClick(soundsOn); setSelectedPaymentMethod("pix"); }}>
-                      Pix <span className="highlight">5% OFF</span>
-                    </button>
-                    <button type="button" className={`payment-chip ${selectedPaymentMethod === "credit_card" ? "active" : ""}`} onClick={() => { playClick(soundsOn); setSelectedPaymentMethod("credit_card"); }}>
-                      Cartão <span>Até 6x</span>
-                    </button>
-
-                  </div>
-                </div>
-
-                <button className="primary-button checkout-button" onClick={() => { playClick(soundsOn); setConfirmedOrderSummary(null); setCheckoutFlow({ type: "reset" }); setIsCheckoutOpen(true); }}>
-                  IR PARA CHECKOUT ({selectedPaymentMethod === "pix" ? "Pix" : "Cartão"}) <ArrowRight size={16} />
-                </button>
-                <div className="cart-recommendations">
-                  <h3>VOCÊ TAMBÉM PODE GOSTAR</h3>
-                  <div className="recommendations-grid">
-                    {products.slice(0, 2).map((rec) => (
-                      <div className="recommendation-card" key={rec.id}>
-                        <img src={rec.image} alt={rec.alt} />
-                        <div>
-                          <p>{rec.name}</p>
-                          <span className="rec-price">{formatPrice(rec.price)}</span>
-                        </div>
-                        <button className="rec-add" onClick={() => addToCart(rec, rec.sizes[0] ?? "P")}>
-                          ADICIONAR <Plus size={12} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+                  <button className="primary-button checkout-button" onClick={() => { playClick(soundsOn); setIsCartOpen(false); setIsCheckoutOpen(true); }}>
+                    IR PARA CHECKOUT ({selectedPaymentMethod === "pix" ? "Pix" : "Cartão"}) <ArrowRight size={16} />
+                  </button>
                 </div>
               </>
+            )}
+
+            {cart.length === 0 && (
+              <div className="side-cart-recommendations">
+                <span className="section-kicker">VOCÊ TAMBÉM PODE GOSTAR</span>
+                <div className="recommendations-list">
+                  {products.slice(0, 2).map((rec) => (
+                    <div className="recommendation-item" key={rec.id}>
+                      <img src={rec.image} alt={rec.alt} />
+                      <div>
+                        <strong>{rec.name}</strong>
+                        <span>{formatPrice(rec.price)}</span>
+                      </div>
+                      <button onClick={() => addToCart(rec, rec.sizes[0])}>ADICIONAR</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
           </aside>
         </div>
@@ -717,7 +645,6 @@ export default function Home() {
               <button className="close-button" onClick={() => { if (!loading) setIsCheckoutOpen(false); }} disabled={loading} aria-label="Fechar checkout"><X /></button>
             </div>
 
-            {/* Trilha visual que orienta o cliente entre sacola, dados e confirmação sem alterar a lógica do pagamento. */}
             <div className={`checkout-progress ${checkoutStatus === "success" ? "is-complete" : ""}`} aria-label="Etapas do checkout">
               <div className="checkout-step is-complete"><span>01</span><small>SACOLA</small></div>
               <span className="checkout-progress-line" aria-hidden="true" />
@@ -725,6 +652,7 @@ export default function Home() {
               <span className="checkout-progress-line" aria-hidden="true" />
               <div className={`checkout-step ${checkoutStatus === "success" ? "is-active" : ""}`}><span>03</span><small>CONFIRMAÇÃO</small></div>
             </div>
+
             {checkoutStatus === "success" ? (
               <div className="checkout-success-state" role="status" aria-live="polite">
                 <div className="checkout-success-icon"><CheckCircle2 size={42} strokeWidth={1.5} /></div>
@@ -803,13 +731,40 @@ export default function Home() {
                   <label>Estado<Input name="state" required placeholder="UF" disabled={loading} /></label>
                 </div>
                 <div className="shipping-placeholder"><Clock3 size={16} /><span>O cálculo de frete e as opções do Melhor Envio aparecerão após o CEP.</span></div>
-                <div className="payment-placeholder"><span className="eyebrow">PAGAMENTO</span><p>Ambiente seguro. Pix, cartão e outros métodos habilitados.</p></div>
+                <div className="payment-placeholder"><span className="eyebrow">PAGAMENTO SELECIONADO</span><p>Método escolhido: <strong>{selectedPaymentMethod === "pix" ? "Pix (com desconto)" : "Cartão de Crédito"}</strong></p></div>
                 <button type="submit" className="primary-button checkout-submit-button" disabled={loading}>
                   {loading ? <><Loader2 size={16} className="spinner-icon" /> CONFIRMANDO PAGAMENTO...</> : <>CONFIRMAR PAGAMENTO · {formatPrice(total)} <ArrowRight size={16} /></>}
                 </button>
                 {loading && <p className="checkout-processing-note">A confirmação pode levar alguns segundos.</p>}
               </form>
             )}
+          </div>
+        </div>
+      )}
+
+      {selectedProduct && (
+        <div className="overlay" onClick={() => setSelectedProduct(null)}>
+          <div className="product-modal" onClick={(event) => event.stopPropagation()}>
+            <button className="close-button" onClick={() => setSelectedProduct(null)}><X /></button>
+            <div className="modal-image"><img src={selectedProduct.image} alt={selectedProduct.alt} /></div>
+            <div className="modal-copy">
+              <span className="eyebrow">{selectedProduct.collection}</span>
+              <h2>{selectedProduct.name}</h2>
+              <p className="modal-price">{formatPrice(selectedProduct.price)}</p>
+              <p>{selectedProduct.detail}</p>
+              <div className="size-picker">
+                <span>TAMANHO</span>
+                <div>
+                  {selectedProduct.sizes.map((size) => (
+                    <button key={size} className={selectedSize === size ? "selected" : ""} onClick={() => setSelectedSize(size)} disabled={selectedProduct.stock === 0}>{size}</button>
+                  ))}
+                </div>
+              </div>
+              <button className="primary-button" onClick={() => addToCart(selectedProduct, selectedSize)} disabled={selectedProduct.stock === 0}>
+                {selectedProduct.stock === 0 ? "ESGOTADO" : "ADICIONAR À SACOLA"} <ArrowRight size={16} />
+              </button>
+              <p className="stock-note"><Sparkles size={13} /> Estoque gerido no painel administrativo.</p>
+            </div>
           </div>
         </div>
       )}

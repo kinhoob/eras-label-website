@@ -90,3 +90,22 @@
 
 - [x] Clicar em ACOMPANHAR PEDIDO no desktop e mobile e verificar a navegacao para a conta
 - [x] Clicar em CONTINUAR COMPRANDO no desktop e mobile e verificar o fechamento do modal e retorno ao fluxo
+
+
+## Ajuste solicitado — Home, ampulheta e páginas institucionais
+
+- [x] Comparar a animação de ampulheta atual com a referência do Lovable
+- [x] Reproduzir o comportamento visual e a duração da ampulheta de acordo com a referência
+- [x] Simplificar a Home para manter apenas produtos e categorias
+- [x] Remover manifesto e eventos da Home sem apagar suas rotas próprias
+- [x] Validar navegação, responsividade, TypeScript, testes e build
+
+
+## Réplica da Referência Autenticada do Lovable
+
+- [x] Auditar a estrutura e as páginas da referência autenticada no Lovable
+- [x] Mapear fontes, abas, transições e a animação de ampulheta exata
+- [x] Simplificar a Home da Eras Label para exibir exclusivamente produtos e categorias
+- [x] Isolar Manifesto e Eventos em páginas dedicadas com roteamento próprio
+- [x] Reproduzir o menu lateral unificado (desktop e mobile) idêntico ao Lovable
+- [x] Validar rotas, responsividade, testes e build de produção limpos
