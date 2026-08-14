@@ -17,6 +17,7 @@ import {
   Volume2,
   VolumeX,
   Loader2,
+  Instagram,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -189,6 +190,14 @@ function formatPrice(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+function TikTokIcon({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.4.08-2.79-.3-3.99-1.03-1.99-1.2-3.44-3.22-3.74-5.54-.06-.5-.09-1-.08-1.5.03-1.7.7-3.4 1.83-4.68 1.03-1.17 2.46-1.96 3.95-2.28.38-.08.76-.13 1.14-.13.15-.01.3-.01.45-.01.01 1.27-.02 2.54.01 3.81-.84-.27-1.78-.19-2.58.14-.95.4-1.76 1.16-2.22 2.08-.37.73-.53 1.57-.43 2.38.18 1.24.93 2.4 1.98 3.08.67.44 1.44.64 2.21.63.51-.01 1.02-.12 1.5-.36.92-.46 1.62-1.3 1.85-2.3.08-.36.12-.72.11-1.08V.02z" />
+    </svg>
+  );
+}
+
 function playClick(enabled: boolean) {
   if (!enabled) return;
   try {
@@ -224,9 +233,6 @@ export default function Home() {
   const [soundsOn, setSoundsOn] = useState(true);
   const [coupon, setCoupon] = useState("");
   const [couponApplied, setCouponApplied] = useState<boolean | null>(null);
-  const [newsletterName, setNewsletterName] = useState("");
-  const [newsletterEmail, setNewsletterEmail] = useState("");
-  const [newsletterSent, setNewsletterSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [confirmedOrderSummary, setConfirmedOrderSummary] = useState<OrderSummary | null>(null);
   const [checkoutFlow, setCheckoutFlow] = useReducer(checkoutFlowReducer, initialCheckoutFlowState);
@@ -257,7 +263,6 @@ export default function Home() {
   const pixDiscountPercent = commercialConfig?.pixDiscountPercent ?? 5;
   const freeShippingThreshold = commercialConfig?.freeShippingThreshold ?? 350;
 
-  const newsletterMutation = trpc.newsletter.subscribe.useMutation();
   const checkoutMutation = trpc.checkout.create.useMutation();
 
   const filteredProducts = useMemo(
@@ -348,27 +353,6 @@ export default function Home() {
         toast.error("Cupom não encontrado ou expirado.");
       }
     }, 600);
-  }
-
-  function submitNewsletter(event: React.FormEvent) {
-    event.preventDefault();
-    if (!newsletterEmail.includes("@")) {
-      toast.error("Digite um e-mail válido para entrar na lista.");
-      return;
-    }
-    playClick(soundsOn);
-    newsletterMutation.mutate({ name: "Newsletter", email: newsletterEmail.trim() }, {
-      onSuccess: (result) => {
-        setNewsletterSent(true);
-        setNewsletterName("");
-        setNewsletterEmail("");
-        toast.success(`Inscrição realizada. Cupom ${result.couponCode} gerado para si.`);
-      },
-      onError: () => {
-        setNewsletterSent(true);
-        toast.success("Inscrição confirmada na lista de espera!");
-      }
-    });
   }
 
   function submitCheckout(event: React.FormEvent<HTMLFormElement>) {
@@ -558,14 +542,13 @@ export default function Home() {
       {showBackToTop && <button className="back-to-top" aria-label="Voltar ao topo" onClick={() => { playClick(soundsOn); window.scrollTo({ top: 0, behavior: "smooth" }); }}><ArrowDown size={17} /></button>}
 
       <footer className="site-footer official-footer">
-        <div className="footer-newsletter">
-          <span className="section-kicker">RECEBA AS NOVIDADES</span>
-          <h2>Uma nova era começa aqui.</h2>
-          <form onSubmit={submitNewsletter}>
-            <Input value={newsletterEmail} onChange={(event) => setNewsletterEmail(event.target.value)} placeholder="Seu melhor e-mail" aria-label="Seu melhor e-mail" type="email" />
-            <Button type="submit">{newsletterSent ? "INSCRITO" : "ENTRAR NA LISTA"} <ArrowRight size={14} /></Button>
-          </form>
-          <div className="footer-socials"><a href="https://www.instagram.com/eraslabel/" target="_blank" rel="noreferrer">INSTAGRAM ↗</a><a href="https://www.tiktok.com/@eraslabel" target="_blank" rel="noreferrer">TIKTOK ↗</a></div>
+        <div className="footer-socials" aria-label="Redes sociais da Eras Label">
+          <a className="footer-social-link" href="https://www.instagram.com/eraslabel/" target="_blank" rel="noreferrer" aria-label="Instagram da Eras Label" title="Instagram">
+            <Instagram size={20} strokeWidth={1.7} aria-hidden="true" />
+          </a>
+          <a className="footer-social-link" href="https://www.tiktok.com/@eraslabel" target="_blank" rel="noreferrer" aria-label="TikTok da Eras Label" title="TikTok">
+            <TikTokIcon size={20} />
+          </a>
         </div>
         <div className="footer-column"><strong>PRINCIPAL</strong><Link href="/" onClick={() => playClick(soundsOn)}>Início</Link><a href="#shop" onClick={() => playClick(soundsOn)}>Produtos</a><div className="footer-collection-wrap"><button onClick={() => setCollectionsOpen((value) => !value)}>Coleções <ArrowDown size={12} /></button>{collectionsOpen && <div className="footer-collection-menu"><Link href="/collection/paradox">Paradox Collection</Link><Link href="/archive">Raízes 2025 S'1</Link></div>}</div><a href="#shop" onClick={() => { playClick(soundsOn); setCategory("Camisetas"); }}>Camisetas</a><a href="#shop" onClick={() => { playClick(soundsOn); setCategory("Bonés"); }}>Bonés</a></div>
         <div className="footer-column"><strong>INFORMAÇÕES</strong><Link href="/contact" onClick={() => playClick(soundsOn)}>Contato</Link><Link href="/contact" onClick={() => playClick(soundsOn)}>Envios</Link><Link href="/contact" onClick={() => playClick(soundsOn)}>Política de Privacidade</Link><Link href="/manifesto" onClick={() => playClick(soundsOn)}>Quem Somos</Link><Link href="/contact" onClick={() => playClick(soundsOn)}>Trocas e Devoluções</Link></div>

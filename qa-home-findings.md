@@ -57,3 +57,11 @@ Na validação manual visível em mobile, a rolagem até ao rodapé mostrou o bo
 ## Hover desktop
 
 Com o cursor colocado manualmente sobre o botão `COLEÇÕES` na área DOM do cabeçalho desktop, o dropdown abriu por hover. O navegador expôs um elemento `role="menu"` com os links `PARADOX COLLECTION`, `LOST BETWEEN ERAS` e `RAÍZES — RECIFE & LA URSA`; o estado visual confirmou o painel suspenso sob o cabeçalho.
+
+## Refinamento do Rodapé (Remoção da Newsletter e Ícones Sociais)
+
+- **Remoção da Newsletter**: A caixa de subscrição de e-mail e o bloco editorial de novidades foram removidos do rodapé da Home, conferindo um layout mais limpo e direto.
+- **Ícones Sociais**: Os links textuais de `INSTAGRAM ↗` e `TIKTOK ↗` foram substituídos por botões em formato de ícone (`Instagram` do Lucide e ícone SVG proprietário do TikTok), com bordas discretas, efeito de transição ao passar o cursor e rótulos de acessibilidade (`aria-label` e `title`).
+- **Validação Responsiva**: O rodapé foi reorganizado numa grelha limpa com as colunas principais, informações e contactos, mantendo a responsividade perfeita tanto em desktop quanto em mobile.
+
+- **Validação Mobile do Rodapé**: A captura em viewport 375x812 confirma que o rodapé em dispositivos móveis apresenta os ícones de Instagram e TikTok alinhados no topo do rodapé, sem a antiga caixa de newsletter, seguido pelas colunas institucionais perfeitamente empilhadas e legíveis.

@@ -139,3 +139,13 @@
 - [x] Validar manualmente em viewport mobile visível no navegador a abertura do menu de Coleções, o botão Voltar ao topo e um link principal, documentando passos e resultado
 - [x] Validar explicitamente no desktop a abertura do dropdown de Coleções por hover, além do foco e clique já cobertos
 - [x] Completar qa-home-findings.md com a seção desktop de hover e uma seção mobile com interação manual visível
+
+## Refinamento do Rodapé (Remoção da Newsletter e Ícones Sociais)
+- [x] Remover a caixa de subscrição de newsletter do rodapé da Home
+- [x] Substituir os textos de Instagram e TikTok por ícones visuais interativos no rodapé
+- [x] Validar o layout do rodapé em desktop e mobile
+- [ ] Guardar checkpoint e entregar as alterações
+
+- [x] Validar visualmente no navegador o rodapé atualizado em desktop, confirmando ausência da newsletter, alinhamento das colunas e ícones sociais clicáveis
+- [x] Validar no navegador em viewport mobile real o rodapé atualizado, confirmando ausência da newsletter, alinhamento/empilhamento das colunas, espaçamento e legibilidade
+- [x] Registrar em qa-home-findings.md as evidências da validação do rodapé após a remoção da newsletter e troca para ícones sociais
