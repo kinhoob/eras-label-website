@@ -6,6 +6,7 @@ import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_
 import { storagePut } from "./storage";
 import {
   getAdminSummary,
+  getAdminProducts,
   getProductWithVariations,
   listNewsletterSubscribers,
   listProducts,
@@ -14,6 +15,8 @@ import {
   validateCoupon,
   getCommercialConfig,
   saveCommercialConfig,
+  getHomeContent,
+  saveHomeContent,
   listNotifications,
   createNotification,
   markNotificationAsRead,
@@ -38,6 +41,7 @@ export const appRouter = router({
     list: publicProcedure.input(z.object({ category: z.string().optional() }).optional()).query(({ input }) => listProducts(input?.category)),
     getById: publicProcedure.input(z.object({ id: z.number().int().positive() })).query(({ input }) => getProductWithVariations(input.id)),
     getConfig: publicProcedure.query(() => getCommercialConfig()),
+    getHomeContent: publicProcedure.query(() => getHomeContent()),
     calculateShipping: publicProcedure.input(z.object({
       cep: z.string().min(8),
       subtotal: z.number().nonnegative(),
@@ -177,6 +181,7 @@ export const appRouter = router({
   }),
   admin: router({
     summary: adminProcedure.query(() => getAdminSummary()),
+    listProducts: adminProcedure.query(() => getAdminProducts()),
     canAccess: protectedProcedure.query(({ ctx }) => ({ isAdmin: ctx.user.role === "admin" })),
     uploadImage: adminProcedure.input(z.object({
       fileName: z.string(),
@@ -213,6 +218,33 @@ export const appRouter = router({
     })).mutation(async ({ input }) => {
       const saved = await saveCommercialConfig(input);
       return { success: true, config: saved };
+    }),
+    saveHomeContent: adminProcedure.input(z.object({
+      banners: z.array(z.object({
+        id: z.string().min(1),
+        eyebrow: z.string(),
+        title: z.string(),
+        subtitle: z.string(),
+        imageUrl: z.string().url(),
+        href: z.string().min(1),
+        cta: z.string(),
+      })).min(1).max(6),
+      highlights: z.array(z.object({
+        id: z.string().min(1),
+        productId: z.number().int().positive(),
+        label: z.string().min(1).max(40),
+      })).min(1).max(6),
+      vipBanner: z.object({
+        eyebrow: z.string(),
+        title: z.string(),
+        subtitle: z.string(),
+        imageUrl: z.string().url(),
+        href: z.string().min(1),
+        cta: z.string(),
+      }),
+    })).mutation(async ({ input }) => {
+      const saved = await saveHomeContent(input);
+      return { success: true, content: saved };
     }),
   }),
 });

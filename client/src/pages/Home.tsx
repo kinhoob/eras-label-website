@@ -1,4 +1,4 @@
-import { useState, useMemo, useReducer } from "react";
+import { useEffect, useState, useMemo, useReducer } from "react";
 import { Link } from "wouter";
 import {
   ArrowDown,
@@ -35,6 +35,7 @@ type Product = {
   price: number;
   pixPrice: number;
   image: string;
+  fallbackImage?: string;
   alt: string;
   sizes: string[];
   stock: number;
@@ -42,8 +43,45 @@ type Product = {
 };
 
 type CartLine = Product & { size: string; quantity: number };
+type HomeBanner = { id: string; eyebrow: string; title: string; subtitle: string; imageUrl: string; href: string; cta: string };
+type HomeHighlight = { id: string; productId: number; label: string };
+type VipBanner = { eyebrow: string; title: string; subtitle: string; imageUrl: string; href: string; cta: string };
 
-const products: Product[] = [
+const fallbackBanners: HomeBanner[] = [
+  {
+    id: "drafts",
+    eyebrow: "NOVA ERA · 2026",
+    title: "DRAFTS JÁ DISPONÍVEL",
+    subtitle: "Uma nova coleção em movimento.",
+    imageUrl: "https://images.unsplash.com/photo-1485230895905-ec40ba36b9bc?auto=format&fit=crop&w=2000&q=90",
+    href: "#shop",
+    cta: "EXPLORAR AGORA",
+  },
+  {
+    id: "paradox",
+    eyebrow: "PARADOX COLLECTION",
+    title: "REVIVER. REINVENTAR.",
+    subtitle: "Peças para atravessar o tempo presente.",
+    imageUrl: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=2000&q=90",
+    href: "#shop",
+    cta: "VER COLEÇÃO",
+  },
+];
+const fallbackVipBanner: VipBanner = {
+  eyebrow: "ACESSO ANTECIPADO",
+  title: "ENTRE PARA O GRUPO VIP",
+  subtitle: "Lançamentos, bastidores e as próximas eras primeiro.",
+  imageUrl: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1800&q=90",
+  href: "https://wa.me/5500000000000",
+  cta: "ENTRAR NO WHATSAPP",
+};
+const fallbackHighlights: HomeHighlight[] = [
+  { id: "highlight-1", productId: 1, label: "PEÇA-CHAVE" },
+  { id: "highlight-2", productId: 2, label: "MAIS VISTO" },
+  { id: "highlight-3", productId: 5, label: "ARQUIVO" },
+];
+
+const fallbackProducts: Product[] = [
   {
     id: 1,
     name: "T-Shirt Travessia",
@@ -125,6 +163,26 @@ const products: Product[] = [
 ];
 
 const heroImage = "https://images.unsplash.com/photo-1485230895905-ec40ba36b9bc?auto=format&fit=crop&w=2000&q=90";
+
+function mapCatalogProduct(row: { id: number; name: string; collection: string; category: string; price: unknown; pixPrice: unknown; description: string | null; images: unknown; status: string }): Product {
+  const images = Array.isArray(row.images) ? row.images.filter((image): image is string => typeof image === "string") : [];
+  const fallbackImage = fallbackProducts.find((product) => product.id === row.id)?.image || editorialImage;
+  const category: Exclude<Category, "Todos"> = row.category === "Bonés" ? "Bonés" : "Camisetas";
+  return {
+    id: row.id,
+    name: row.name,
+    category,
+    collection: row.collection,
+    price: Number(row.price),
+    pixPrice: Number(row.pixPrice),
+    image: images[0] || fallbackImage,
+    fallbackImage,
+    alt: row.name,
+    sizes: category === "Bonés" ? ["Único"] : ["P", "M", "G", "GG"],
+    stock: row.status === "soldout" ? 0 : 1,
+    detail: row.description || "Peça Eras Label com acabamento premium.",
+  };
+}
 const editorialImage = "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=1400&q=85";
 
 function formatPrice(value: number) {
@@ -160,6 +218,9 @@ export default function Home() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [activeBanner, setActiveBanner] = useState(0);
+  const [collectionsOpen, setCollectionsOpen] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false);
   const [soundsOn, setSoundsOn] = useState(true);
   const [coupon, setCoupon] = useState("");
   const [couponApplied, setCouponApplied] = useState<boolean | null>(null);
@@ -176,6 +237,23 @@ export default function Home() {
   const [cepInput, setCepInput] = useState("");
   const [shippingCep, setShippingCep] = useState("");
   const { data: commercialConfig } = trpc.catalog.getConfig.useQuery();
+  const { data: homeContent } = trpc.catalog.getHomeContent.useQuery();
+  const { data: catalogRows = [] } = trpc.catalog.list.useQuery();
+  const products = useMemo<Product[]>(() => catalogRows.length ? catalogRows.map(mapCatalogProduct) : fallbackProducts, [catalogRows]);
+  const banners = (homeContent?.banners?.length ? homeContent.banners : fallbackBanners) as HomeBanner[];
+  const highlights = useMemo<HomeHighlight[]>(() => {
+    const configured = (homeContent?.highlights?.length ? homeContent.highlights : fallbackHighlights) as HomeHighlight[];
+    const available = configured.filter((highlight) => products.some((product) => product.id === highlight.productId));
+    const usedIds = new Set(available.map((highlight) => highlight.productId));
+    const supplement = products.filter((product) => !usedIds.has(product.id)).slice(0, Math.max(0, 3 - available.length)).map((product, index) => ({
+      id: `fallback-highlight-${product.id}`,
+      productId: product.id,
+      label: index === 0 && available.length === 0 ? "PEÇA-CHAVE" : "EM DESTAQUE",
+    }));
+    return [...available, ...supplement].slice(0, 3);
+  }, [homeContent?.highlights, products]);
+  const vipBanner = (homeContent?.vipBanner ?? fallbackVipBanner) as VipBanner;
+  const currentBanner = banners[activeBanner % banners.length] ?? fallbackBanners[0];
   const pixDiscountPercent = commercialConfig?.pixDiscountPercent ?? 5;
   const freeShippingThreshold = commercialConfig?.freeShippingThreshold ?? 350;
 
@@ -184,7 +262,7 @@ export default function Home() {
 
   const filteredProducts = useMemo(
     () => (category === "Todos" ? products : products.filter((product) => product.category === category)),
-    [category],
+    [category, products],
   );
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -198,6 +276,19 @@ export default function Home() {
   const shippingCost = shippingData?.free ? 0 : (shippingData?.cost ?? 0);
   const total = subtotal - discount + shippingCost;
   const checkoutFeedback = getCheckoutFeedback(checkoutStatus, confirmedOrderNumber, checkoutError);
+
+  useEffect(() => {
+    if (banners.length < 2) return;
+    const interval = window.setInterval(() => setActiveBanner((value) => (value + 1) % banners.length), 5200);
+    return () => window.clearInterval(interval);
+  }, [banners.length]);
+
+  useEffect(() => {
+    const handleScroll = () => setShowBackToTop(window.scrollY > 560);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   function openProduct(product: Product) {
     playClick(soundsOn);
@@ -261,12 +352,12 @@ export default function Home() {
 
   function submitNewsletter(event: React.FormEvent) {
     event.preventDefault();
-    if (!newsletterName.trim() || !newsletterEmail.includes("@")) {
-      toast.error("Preencha nome e e-mail para entrar na lista.");
+    if (!newsletterEmail.includes("@")) {
+      toast.error("Digite um e-mail válido para entrar na lista.");
       return;
     }
     playClick(soundsOn);
-    newsletterMutation.mutate({ name: newsletterName.trim(), email: newsletterEmail.trim() }, {
+    newsletterMutation.mutate({ name: "Newsletter", email: newsletterEmail.trim() }, {
       onSuccess: (result) => {
         setNewsletterSent(true);
         setNewsletterName("");
@@ -351,7 +442,14 @@ export default function Home() {
         <Link href="/" className="brand-mark" onClick={() => playClick(soundsOn)}>ERAS<span>.</span></Link>
         <nav className="desktop-nav" aria-label="Navegação principal">
           <a href="#shop" onClick={() => playClick(soundsOn)}>PRODUTOS</a>
-          <a href="#collections" onClick={() => playClick(soundsOn)}>COLEÇÕES</a>
+          <div className={`collections-nav ${collectionsOpen ? "open" : ""}`} onMouseEnter={() => setCollectionsOpen(true)} onMouseLeave={() => setCollectionsOpen(false)}>
+            <button className="collections-trigger" aria-expanded={collectionsOpen} onFocus={() => setCollectionsOpen(true)} onClick={() => { playClick(soundsOn); setCollectionsOpen((value) => !value); }}>COLEÇÕES <ArrowDown size={13} /></button>
+            {collectionsOpen && <div className="collections-dropdown" role="menu">
+              <Link href="/collection/paradox" onClick={() => { playClick(soundsOn); setCollectionsOpen(false); }}>PARADOX COLLECTION <span>↗</span></Link>
+              <Link href="/archive" onClick={() => { playClick(soundsOn); setCollectionsOpen(false); }}>LOST BETWEEN ERAS <span>↗</span></Link>
+              <Link href="/archive" onClick={() => { playClick(soundsOn); setCollectionsOpen(false); }}>RAÍZES — RECIFE & LA URSA <span>↗</span></Link>
+            </div>}
+          </div>
           <a href="#shop" onClick={() => { playClick(soundsOn); setCategory("Camisetas"); }}>CAMISETAS</a>
           <a href="#shop" onClick={() => { playClick(soundsOn); setCategory("Bonés"); }}>BONÉS</a>
         </nav>
@@ -368,10 +466,59 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="pt-8">
+      <main className="home-main">
+        <section className="home-hero" aria-label="Destaque da Eras Label">
+          <div className="home-hero-media" style={{ backgroundImage: `url(${currentBanner.imageUrl})` }} />
+          <div className="home-hero-overlay" />
+          <div className="home-hero-content">
+            <span className="home-hero-eyebrow">{currentBanner.eyebrow}</span>
+            <h1>{currentBanner.title}</h1>
+            <p>{currentBanner.subtitle}</p>
+            <a className="home-hero-cta" href={currentBanner.href} onClick={() => playClick(soundsOn)}>{currentBanner.cta} <ArrowRight size={15} /></a>
+          </div>
+          <div className="home-hero-controls" aria-label="Controles do banner">
+            <span>{String((activeBanner % banners.length) + 1).padStart(2, "0")}</span>
+            <div className="home-hero-dots">
+              {banners.map((banner, index) => <button key={banner.id} className={index === activeBanner % banners.length ? "active" : ""} aria-label={`Ver banner ${index + 1}`} onClick={() => { playClick(soundsOn); setActiveBanner(index); }} />)}
+            </div>
+            <span>{String(banners.length).padStart(2, "0")}</span>
+          </div>
+        </section>
+
+        <section className="highlights-section" id="highlights">
+          <div className="section-heading">
+            <div><span className="section-kicker">01 / CURADORIA</span><h2>DESTAQUES</h2></div>
+            <a className="text-link" href="#shop" onClick={() => playClick(soundsOn)}>VER TUDO <ArrowRight size={14} /></a>
+          </div>
+          <div className="product-grid highlights-grid">
+            {highlights.map((highlight) => {
+              const product = products.find((item) => item.id === highlight.productId);
+              if (!product) return null;
+              return (
+                <article className="product-card" key={highlight.id}>
+                  <button className="product-image-button" onClick={() => openProduct(product)} aria-label={`Ver ${product.name}`}>
+                    <img src={product.image} alt={product.alt} onError={(event) => {
+                      if (!product.fallbackImage || event.currentTarget.dataset.fallbackApplied) return;
+                      event.currentTarget.dataset.fallbackApplied = "true";
+                      event.currentTarget.src = product.fallbackImage;
+                    }} />
+                    <span className="highlight-label">{highlight.label}</span>
+                    {product.stock === 0 && <span className="soldout-tag">ESGOTADO</span>}
+                    <span className="product-arrow"><ArrowRight size={15} /></span>
+                  </button>
+                  <div className="product-meta">
+                    <div><p className="product-name">{product.name}</p><p className="product-collection">{product.collection}</p></div>
+                    <div className="product-price"><strong>{formatPrice(product.price)}</strong><span>{formatPrice(product.pixPrice)} NO PIX</span></div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+
         <section className="shop-section" id="shop">
           <div className="section-heading">
-            <div><span className="section-kicker">01 / SHOP</span><h2>PRODUTOS DA ERA</h2></div>
+            <div><span className="section-kicker">02 / SHOP</span><h2>PRODUTOS DA ERA</h2></div>
             <div className="filter-tabs" role="tablist" aria-label="Filtrar produtos">
               {(["Todos", "Camisetas", "Bonés"] as Category[]).map((item) => (
                 <button key={item} className={category === item ? "active" : ""} onClick={() => { playClick(soundsOn); setCategory(item); }}>{item}</button>
@@ -382,7 +529,11 @@ export default function Home() {
             {filteredProducts.map((product) => (
               <article className="product-card" key={product.id}>
                 <button className="product-image-button" onClick={() => openProduct(product)} aria-label={`Ver ${product.name}`}>
-                  <img src={product.image} alt={product.alt} />
+                  <img src={product.image} alt={product.alt} onError={(event) => {
+                    if (!product.fallbackImage || event.currentTarget.dataset.fallbackApplied) return;
+                    event.currentTarget.dataset.fallbackApplied = "true";
+                    event.currentTarget.src = product.fallbackImage;
+                  }} />
                   {product.stock === 0 && <span className="soldout-tag">ESGOTADO</span>}
                   <span className="product-arrow"><ArrowRight size={15} /></span>
                 </button>
@@ -394,26 +545,32 @@ export default function Home() {
             ))}
           </div>
         </section>
+
+        <section className="vip-home-banner" aria-label="Grupo VIP">
+          <a href={vipBanner.href} target={vipBanner.href.startsWith("http") ? "_blank" : undefined} rel={vipBanner.href.startsWith("http") ? "noreferrer" : undefined} onClick={() => playClick(soundsOn)}>
+            <div className="vip-home-media" style={{ backgroundImage: `url(${vipBanner.imageUrl})` }} />
+            <div className="vip-home-overlay" />
+            <div className="vip-home-content"><span>{vipBanner.eyebrow}</span><h2>{vipBanner.title}</h2><p>{vipBanner.subtitle}</p><strong>{vipBanner.cta} <ArrowRight size={15} /></strong></div>
+          </a>
+        </section>
       </main>
 
-      <footer className="site-footer">
-        <div><div className="footer-brand">ERAS<span>.</span></div><p>Reviver. Reinventar Eras.<br />Cada coleção é um capítulo fechado — produzido em lotes limitados, no Brasil.</p></div>
-        <div className="footer-column">
-          <strong>NAVEGAÇÃO</strong>
-          <Link href="/" onClick={() => playClick(soundsOn)}>Início</Link>
-          <a href="#shop" onClick={() => playClick(soundsOn)}>Shop</a>
-          <Link href="/collection/paradox" onClick={() => playClick(soundsOn)}>Coleções</Link>
-          <Link href="/archive" onClick={() => playClick(soundsOn)}>Arquivo</Link>
-          <Link href="/events" onClick={() => playClick(soundsOn)}>Eventos</Link>
+      {showBackToTop && <button className="back-to-top" aria-label="Voltar ao topo" onClick={() => { playClick(soundsOn); window.scrollTo({ top: 0, behavior: "smooth" }); }}><ArrowDown size={17} /></button>}
+
+      <footer className="site-footer official-footer">
+        <div className="footer-newsletter">
+          <span className="section-kicker">RECEBA AS NOVIDADES</span>
+          <h2>Uma nova era começa aqui.</h2>
+          <form onSubmit={submitNewsletter}>
+            <Input value={newsletterEmail} onChange={(event) => setNewsletterEmail(event.target.value)} placeholder="Seu melhor e-mail" aria-label="Seu melhor e-mail" type="email" />
+            <Button type="submit">{newsletterSent ? "INSCRITO" : "ENTRAR NA LISTA"} <ArrowRight size={14} /></Button>
+          </form>
+          <div className="footer-socials"><a href="https://www.instagram.com/eraslabel/" target="_blank" rel="noreferrer">INSTAGRAM ↗</a><a href="https://www.tiktok.com/@eraslabel" target="_blank" rel="noreferrer">TIKTOK ↗</a></div>
         </div>
-        <div className="footer-column">
-          <strong>SUPORTE</strong>
-          <Link href="/contact" onClick={() => playClick(soundsOn)}>Contato</Link>
-          <Link href="/contact" onClick={() => playClick(soundsOn)}>Envios</Link>
-          <Link href="/contact" onClick={() => playClick(soundsOn)}>Trocas e Devoluções</Link>
-        </div>
-        <div className="footer-column"><strong>CONTATO</strong><a href="mailto:atelie@eraslabel.com">atelie@eraslabel.com</a><span>São Paulo · Brasil</span><span>Seg–Sex · 10h às 18h</span></div>
-        <div className="footer-bottom"><span>© 2026 ERAS LABEL</span><span>PARADOX COLLECTION</span></div>
+        <div className="footer-column"><strong>PRINCIPAL</strong><Link href="/" onClick={() => playClick(soundsOn)}>Início</Link><a href="#shop" onClick={() => playClick(soundsOn)}>Produtos</a><div className="footer-collection-wrap"><button onClick={() => setCollectionsOpen((value) => !value)}>Coleções <ArrowDown size={12} /></button>{collectionsOpen && <div className="footer-collection-menu"><Link href="/collection/paradox">Paradox Collection</Link><Link href="/archive">Raízes 2025 S'1</Link></div>}</div><a href="#shop" onClick={() => { playClick(soundsOn); setCategory("Camisetas"); }}>Camisetas</a><a href="#shop" onClick={() => { playClick(soundsOn); setCategory("Bonés"); }}>Bonés</a></div>
+        <div className="footer-column"><strong>INFORMAÇÕES</strong><Link href="/contact" onClick={() => playClick(soundsOn)}>Contato</Link><Link href="/contact" onClick={() => playClick(soundsOn)}>Envios</Link><Link href="/contact" onClick={() => playClick(soundsOn)}>Política de Privacidade</Link><Link href="/manifesto" onClick={() => playClick(soundsOn)}>Quem Somos</Link><Link href="/contact" onClick={() => playClick(soundsOn)}>Trocas e Devoluções</Link></div>
+        <div className="footer-column footer-contact"><strong>FALE COM A ERAS</strong><a href="https://wa.me/5500000000000" target="_blank" rel="noreferrer">WhatsApp ↗</a><a href="mailto:atelie@eraslabel.com">atelie@eraslabel.com</a><span>São Paulo · Brasil</span><span>Seg–Sex · 10h às 18h</span></div>
+        <div className="footer-bottom"><span>© 2026 ERAS LABEL</span><span>REVIVER. REINVENTAR ERAS.</span><span>DESENVOLVIDO COM INTENÇÃO</span></div>
       </footer>
 
       {/* Side Menu identical to Lovable with direct routing to Manifesto and Events */}
@@ -746,7 +903,11 @@ export default function Home() {
         <div className="overlay" onClick={() => setSelectedProduct(null)}>
           <div className="product-modal" onClick={(event) => event.stopPropagation()}>
             <button className="close-button" onClick={() => setSelectedProduct(null)}><X /></button>
-            <div className="modal-image"><img src={selectedProduct.image} alt={selectedProduct.alt} /></div>
+            <div className="modal-image"><img src={selectedProduct.image} alt={selectedProduct.alt} onError={(event) => {
+            if (!selectedProduct.fallbackImage || event.currentTarget.dataset.fallbackApplied) return;
+            event.currentTarget.dataset.fallbackApplied = "true";
+            event.currentTarget.src = selectedProduct.fallbackImage;
+          }} /></div>
             <div className="modal-copy">
               <span className="eyebrow">{selectedProduct.collection}</span>
               <h2>{selectedProduct.name}</h2>

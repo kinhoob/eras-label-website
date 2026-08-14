@@ -26,19 +26,26 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 
-const adminProducts = [
-  { name: "T-Shirt Travessia", collection: "PARADOX COLLECTION", category: "Camisetas", price: "R$ 154,90", stock: 18, status: "Publicado" },
-  { name: "T-Shirt Dissociação", collection: "PARADOX COLLECTION", category: "Camisetas", price: "R$ 154,90", stock: 12, status: "Publicado" },
-  { name: "T-Shirt Ressonador", collection: "PARADOX COLLECTION", category: "Camisetas", price: "R$ 152,90", stock: 8, status: "Publicado" },
-  { name: "Boné Lost Between Eras Off", collection: "LOST BETWEEN ERAS", category: "Bonés", price: "R$ 117,50", stock: 4, status: "Publicado" },
-  { name: "Boné Lost Between Eras Marinho", collection: "LOST BETWEEN ERAS", category: "Bonés", price: "R$ 117,50", stock: 0, status: "Esgotado" },
-];
-
 const orders = [
   { id: "#ER-0108", customer: "Marina Oliveira", date: "Hoje, 14:32", total: "R$ 312,80", payment: "Pago", status: "Em preparação" },
   { id: "#ER-0107", customer: "Caio Nascimento", date: "Hoje, 11:08", total: "R$ 117,50", payment: "Pago", status: "Enviado" },
   { id: "#ER-0106", customer: "Lara Martins", date: "Ontem, 18:45", total: "R$ 154,90", payment: "Pendente", status: "Aguardando pagamento" },
   { id: "#ER-0105", customer: "João Pedro", date: "12 Ago, 09:17", total: "R$ 470,20", payment: "Pago", status: "Entregue" },
+];
+
+type AdminProductOption = { id: number; name: string; collection: string; category: string; price: string; stock: number | null; status: string };
+type EditableBanner = { id: string; eyebrow: string; title: string; subtitle: string; imageUrl: string; href: string; cta: string };
+type EditableHighlight = { id: string; productId: number; label: string };
+type EditableVipBanner = Omit<EditableBanner, "id">;
+const defaultEditableBanners: EditableBanner[] = [
+  { id: "drafts", eyebrow: "NOVA ERA · 2026", title: "DRAFTS JÁ DISPONÍVEL", subtitle: "Uma nova coleção em movimento.", imageUrl: "https://images.unsplash.com/photo-1485230895905-ec40ba36b9bc?auto=format&fit=crop&w=2000&q=90", href: "#shop", cta: "EXPLORAR AGORA" },
+  { id: "paradox", eyebrow: "PARADOX COLLECTION", title: "REVIVER. REINVENTAR.", subtitle: "Peças para atravessar o tempo presente.", imageUrl: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=2000&q=90", href: "#shop", cta: "VER COLEÇÃO" },
+];
+const defaultEditableVipBanner: EditableVipBanner = { eyebrow: "ACESSO ANTECIPADO", title: "ENTRE PARA O GRUPO VIP", subtitle: "Lançamentos, bastidores e as próximas eras primeiro.", imageUrl: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1800&q=90", href: "https://wa.me/5500000000000", cta: "ENTRAR NO WHATSAPP" };
+const defaultEditableHighlights: EditableHighlight[] = [
+  { id: "highlight-1", productId: 1, label: "PEÇA-CHAVE" },
+  { id: "highlight-2", productId: 2, label: "MAIS VISTO" },
+  { id: "highlight-3", productId: 5, label: "ARQUIVO" },
 ];
 
 export default function Admin() {
@@ -48,8 +55,13 @@ export default function Admin() {
   const [couponActive, setCouponActive] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [heroImage, setHeroImage] = useState("https://images.unsplash.com/photo-1554412933-514a83d2f3c8?auto=format&fit=crop&q=80&w=1200");
+  const [homeBanners, setHomeBanners] = useState<EditableBanner[]>(defaultEditableBanners);
+  const [homeHighlights, setHomeHighlights] = useState<EditableHighlight[]>(defaultEditableHighlights);
+  const [homeVipBanner, setHomeVipBanner] = useState<EditableVipBanner>(defaultEditableVipBanner);
 
   const { data: commercialConfig } = trpc.catalog.getConfig.useQuery();
+  const { data: homeContent } = trpc.catalog.getHomeContent.useQuery();
+  const { data: catalogProducts = [], isLoading: catalogProductsLoading } = trpc.admin.listProducts.useQuery();
   const [pixDiscountPercent, setPixDiscountPercent] = useState<number>(5);
   const [freeShippingThreshold, setFreeShippingThreshold] = useState<number>(350);
 
@@ -60,8 +72,16 @@ export default function Admin() {
       setFreeShippingThreshold(commercialConfig.freeShippingThreshold);
     }
   }, [commercialConfig]);
+  useEffect(() => {
+    if (homeContent) {
+      if (homeContent.banners?.length) setHomeBanners(homeContent.banners as EditableBanner[]);
+      if (homeContent.highlights?.length) setHomeHighlights(homeContent.highlights as EditableHighlight[]);
+      if (homeContent.vipBanner) setHomeVipBanner(homeContent.vipBanner as EditableVipBanner);
+    }
+  }, [homeContent]);
 
   const saveConfigMutation = trpc.admin.saveConfig.useMutation();
+  const saveHomeContentMutation = trpc.admin.saveHomeContent.useMutation();
   const [uploading, setUploading] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any | null>(null);
   const [productImages, setProductImages] = useState<string[]>([]);
@@ -71,6 +91,30 @@ export default function Admin() {
 
   const uploadMutation = trpc.admin.uploadImage.useMutation();
   const saveProductMutation = trpc.admin.saveProduct.useMutation();
+
+  function handleHomeImageUpload(event: React.ChangeEvent<HTMLInputElement>, target: "banner" | "vip", index?: number) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("O ficheiro é muito grande. Escolha uma imagem de até 5MB.");
+      return;
+    }
+    const reader = new FileReader();
+    setUploading(true);
+    reader.onload = () => {
+      uploadMutation.mutate({ fileName: file.name, fileBase64: reader.result as string, contentType: file.type || "image/png" }, {
+        onSuccess: (res) => {
+          setUploading(false);
+          if (target === "vip") setHomeVipBanner((current) => ({ ...current, imageUrl: res.url }));
+          if (target === "banner" && typeof index === "number") setHomeBanners((current) => current.map((banner, bannerIndex) => bannerIndex === index ? { ...banner, imageUrl: res.url } : banner));
+          toast.success("Imagem da Home carregada com sucesso.");
+        },
+        onError: () => { setUploading(false); toast.error("Não foi possível carregar a imagem."); },
+      });
+    };
+    reader.readAsDataURL(file);
+    event.target.value = "";
+  }
 
   function handleImageUpload(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -143,7 +187,16 @@ export default function Admin() {
     });
   }
 
-  const filteredProducts = useMemo(() => adminProducts.filter((product) => product.name.toLowerCase().includes(query.toLowerCase())), [query]);
+  const adminProducts = useMemo<AdminProductOption[]>(() => catalogProducts.map((product) => ({
+    id: product.id,
+    name: product.name,
+    collection: product.collection,
+    category: product.category,
+    price: Number(product.price).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }),
+    stock: null,
+    status: product.status === "active" ? "Publicado" : product.status === "soldout" ? "Esgotado" : "Rascunho",
+  })), [catalogProducts]);
+  const filteredProducts = useMemo(() => adminProducts.filter((product) => product.name.toLowerCase().includes(query.toLowerCase())), [adminProducts, query]);
   const navItems = [
     { label: "Visão geral", icon: LayoutDashboard },
     { label: "Pedidos", icon: ClipboardList },
@@ -177,7 +230,7 @@ export default function Admin() {
         {active === "Produtos" && <section className="admin-content"><div className="content-toolbar"><div className="search-box"><Search size={15} /><Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar produto" /></div><Button onClick={() => {
           setEditingProduct({ name: "", collection: "PARADOX COLLECTION", category: "Camisetas", price: 154.90, pixPrice: 147.15, description: "Peça de vestuário streetwear com acabamento premium.", status: "Publicado" });
           setProductImages(["https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&q=80&w=800"]);
-        }}><Plus size={16} /> Novo produto</Button></div><div className="admin-panel table-panel"><table><thead><tr><th>Produto</th><th>Categoria</th><th>Preço</th><th>Estoque</th><th>Status</th><th /></tr></thead><tbody>{filteredProducts.map((product) => <tr key={product.name}><td><div className="table-product"><div className="table-thumb"><Package size={16} /></div><div><strong>{product.name}</strong><span>{product.collection}</span></div></div></td><td>{product.category}</td><td>{product.price}</td><td><span className={product.stock === 0 ? "stock-danger" : product.stock < 6 ? "stock-warning" : "stock-ok"}>{product.stock} un.</span></td><td><span className={`status-pill ${product.status === "Esgotado" ? "danger" : "success"}`}>{product.status}</span></td><td><button className="table-more" onClick={() => {
+        }}><Plus size={16} /> Novo produto</Button></div><div className="admin-panel table-panel"><table><thead><tr><th>Produto</th><th>Categoria</th><th>Preço</th><th>Estoque</th><th>Status</th><th /></tr></thead><tbody>{filteredProducts.map((product) => <tr key={product.name}><td><div className="table-product"><div className="table-thumb"><Package size={16} /></div><div><strong>{product.name}</strong><span>{product.collection}</span></div></div></td><td>{product.category}</td><td>{product.price}</td><td><span className="stock-ok">{product.stock === null ? "Consultar variações" : `${product.stock} un.`}</span></td><td><span className={`status-pill ${product.status === "Esgotado" ? "danger" : "success"}`}>{product.status}</span></td><td><button className="table-more" onClick={() => {
           setEditingProduct({ name: product.name, collection: product.collection, category: product.category, price: 154.90, pixPrice: 147.15, description: "Peça de vestuário streetwear com acabamento premium.", status: product.status });
           setProductImages(["https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&q=80&w=800"]);
         }}><MoreHorizontal size={18} /></button></td></tr>)}</tbody></table></div></section>}
@@ -312,18 +365,10 @@ export default function Admin() {
         )}
         {active === "Pedidos" && <section className="admin-content"><div className="order-cards"><div className="metric-card"><span>Todos os pedidos</span><strong>108</strong></div><div className="metric-card"><span>Aguardando pagamento</span><strong>6</strong></div><div className="metric-card"><span>Em preparação</span><strong>11</strong></div><div className="metric-card"><span>Enviados</span><strong>21</strong></div></div><div className="admin-panel table-panel"><table><thead><tr><th>Pedido</th><th>Cliente</th><th>Data</th><th>Total</th><th>Pagamento</th><th>Status</th><th /></tr></thead><tbody>{orders.map((order) => <tr key={order.id}><td><strong>{order.id}</strong></td><td>{order.customer}</td><td>{order.date}</td><td>{order.total}</td><td><span className={order.payment === "Pago" ? "stock-ok" : "stock-warning"}>{order.payment}</span></td><td><span className="status-pill success">{order.status}</span></td><td><button className="table-more" onClick={() => toast.info(`Detalhes do pedido ${order.id}`)}><Eye size={17} /></button></td></tr>)}</tbody></table></div></section>}
         {active === "Cupons" && <section className="admin-content"><div className="content-toolbar"><div><span className="section-kicker">DESCONTOS</span><h2 className="content-title">Cupons de desconto</h2></div><Button onClick={() => toast.success("Novo cupom criado.")}><Plus size={16} /> Criar cupom</Button></div><div className="coupon-admin-grid"><div className="admin-panel coupon-admin-card"><div className="coupon-code">ERAS10 <span className="status-pill success">Ativo</span></div><p>10% de desconto para novos inscritos da newsletter.</p><div className="coupon-info"><span>Usos <strong>34 / ilimitado</strong></span><span>Válido até <strong>31 Dez 2026</strong></span></div><button className="coupon-toggle" onClick={() => setCouponActive((value) => !value)}>{couponActive ? "Desativar cupom" : "Ativar cupom"}</button></div><div className="admin-panel coupon-admin-card"><div className="coupon-code">PARADOX20 <span className="status-pill warning">Rascunho</span></div><p>20% no lançamento da coleção Paradox.</p><div className="coupon-info"><span>Usos <strong>0 / 100</strong></span><span>Válido até <strong>14 Ago 2026</strong></span></div><button className="coupon-toggle" onClick={() => toast.success("Cupom publicado.")}>Publicar cupom</button></div></div></section>}
-        {active === "Aparência" && <section className="admin-content"><div className="content-toolbar"><div><span className="section-kicker">EDITOR DA LOJA</span><h2 className="content-title">Aparência e Gestão de Banners</h2></div><Button onClick={() => {
-          saveConfigMutation.mutate({
-            pixDiscountPercent: Number(pixDiscountPercent),
-            freeShippingThreshold: Number(freeShippingThreshold),
-          }, {
-            onSuccess: () => {
-              setAppearanceSaved(true);
-              toast.success("Configurações comerciais e aparência guardadas!");
-            },
-            onError: () => toast.error("Erro ao guardar configurações.")
-          });
-        }}>Guardar alterações</Button></div><div className="appearance-grid"><div className="admin-panel appearance-panel"><div className="panel-heading"><div><span className="section-kicker">CONFIGURAÇÕES COMERCIAIS</span><h3>Pix e Frete Grátis</h3></div></div><div className="editor-field"><label>Porcentagem de Desconto no Pix (%)</label><Input type="number" min="0" max="100" value={pixDiscountPercent} onChange={(event) => setPixDiscountPercent(Number(event.target.value))} /></div><div className="editor-field"><label>Valor Mínimo para Frete Grátis (R$)</label><Input type="number" min="0" step="10" value={freeShippingThreshold} onChange={(event) => setFreeShippingThreshold(Number(event.target.value))} /></div></div><div className="admin-panel appearance-panel"><div className="panel-heading"><div><span className="section-kicker">HOME</span><h3>Hero principal e Banners</h3></div><button className="inline-link"><Eye size={15} /> Pré-visualizar</button></div><div className="appearance-preview" style={{ backgroundImage: `url(${heroImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }}><div className="preview-label">REVIVER.<br /><em>REINVENTAR</em><br />ERAS.</div><div className="preview-controls"><input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="image/*" onChange={handleImageUpload} /><button onClick={() => fileInputRef.current?.click()} disabled={uploading}><Upload size={15} /> {uploading ? "A carregar..." : "Carregar nova foto"}</button></div></div><div className="editor-field"><label>URL da imagem atual</label><Input value={heroImage} onChange={(event) => setHeroImage(event.target.value)} /></div><div className="editor-field"><label>Título principal</label><Input defaultValue="REVIVER. REINVENTAR ERAS." /></div><div className="editor-field"><label>Texto de apoio</label><Input defaultValue="A ERA EM CURSO · 2026" /></div></div><div className="admin-panel appearance-panel"><div className="panel-heading"><div><span className="section-kicker">EDITORIAIS</span><h3>Galeria da home</h3></div><button className="icon-button" onClick={() => toast.success("Novo bloco de editorial adicionado.")}><Plus size={18} /></button></div><div className="editorial-list">{['Editorial Paradox', 'Arquivo Lost Between Eras', 'Próximo encontro'].map((item, index) => <div className="editorial-item" draggable key={item}><span className="drag-handle">⋮⋮</span><div className={`editorial-swatch swatch-${index}`} /><span>{item}</span><button className="table-more" onClick={() => fileInputRef.current?.click()}><Upload size={14} /></button></div>)}</div><p className="editor-help">Carregue novas imagens e arraste os blocos para reordenar os conteúdos da página inicial.</p></div></div>{appearanceSaved && <p className="saved-note"><Check size={14} /> As últimas alterações foram guardadas agora.</p>}</section>}
+        {active === "Aparência" && <section className="admin-content"><div className="content-toolbar"><div><span className="section-kicker">EDITOR DA LOJA</span><h2 className="content-title">Home oficial e banners</h2></div><Button onClick={() => {
+          saveConfigMutation.mutate({ pixDiscountPercent: Number(pixDiscountPercent), freeShippingThreshold: Number(freeShippingThreshold) }, { onSuccess: () => setAppearanceSaved(true), onError: () => toast.error("Erro ao guardar configurações comerciais.") });
+          saveHomeContentMutation.mutate({ banners: homeBanners, highlights: homeHighlights, vipBanner: homeVipBanner }, { onSuccess: () => { setAppearanceSaved(true); toast.success("Home, banners e bloco VIP guardados."); }, onError: () => toast.error("Erro ao guardar o conteúdo da Home.") });
+        }}>Guardar alterações</Button></div><div className="appearance-grid"><div className="admin-panel appearance-panel"><div className="panel-heading"><div><span className="section-kicker">CONFIGURAÇÕES COMERCIAIS</span><h3>Pix e Frete Grátis</h3></div></div><div className="editor-field"><label>Porcentagem de Desconto no Pix (%)</label><Input type="number" min="0" max="100" value={pixDiscountPercent} onChange={(event) => setPixDiscountPercent(Number(event.target.value))} /></div><div className="editor-field"><label>Valor Mínimo para Frete Grátis (R$)</label><Input type="number" min="0" step="10" value={freeShippingThreshold} onChange={(event) => setFreeShippingThreshold(Number(event.target.value))} /></div></div><div className="admin-panel appearance-panel home-editor-panel"><div className="panel-heading"><div><span className="section-kicker">BANNER ROTATIVO</span><h3>Carrossel principal da Home</h3></div><span className="editor-help">{homeBanners.length} slides</span></div>{homeBanners.map((banner, index) => <div className="home-editor-banner" key={banner.id}><div className="home-editor-banner-preview" style={{ backgroundImage: "url(" + banner.imageUrl + ")" }}><span>{String(index + 1).padStart(2, "0")}</span><label><input type="file" accept="image/*" onChange={(event) => handleHomeImageUpload(event, "banner", index)} />{uploading ? "A carregar..." : "Trocar imagem"}</label></div><div className="home-editor-fields"><Input value={banner.eyebrow} onChange={(event) => setHomeBanners((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, eyebrow: event.target.value } : item))} placeholder="Etiqueta" /><Input value={banner.title} onChange={(event) => setHomeBanners((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, title: event.target.value } : item))} placeholder="Título" /><Input value={banner.subtitle} onChange={(event) => setHomeBanners((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, subtitle: event.target.value } : item))} placeholder="Texto de apoio" /><div className="home-editor-inline"><Input value={banner.cta} onChange={(event) => setHomeBanners((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, cta: event.target.value } : item))} placeholder="CTA" /><Input value={banner.href} onChange={(event) => setHomeBanners((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, href: event.target.value } : item))} placeholder="Link" /></div></div></div>)}</div><div className="admin-panel appearance-panel home-editor-panel"><div className="panel-heading"><div><span className="section-kicker">DESTAQUES</span><h3>Curadoria da Home</h3></div><span className="editor-help">{homeHighlights.length} cards</span></div><p className="editor-description">Escolha os produtos que aparecem no bloco Destaques e defina a etiqueta exibida sobre cada peça.</p>{catalogProductsLoading && <p className="editor-description">A carregar o catálogo real…</p>}{!catalogProductsLoading && adminProducts.length === 0 && <p className="editor-description">Ainda não existem produtos persistidos no catálogo para selecionar.</p>}{homeHighlights.map((highlight, index) => <div className="highlight-editor-row" key={highlight.id}><span className="highlight-editor-index">{String(index + 1).padStart(2, "0")}</span><select value={highlight.productId} onChange={(event) => setHomeHighlights((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, productId: Number(event.target.value) } : item))} aria-label={`Produto do destaque ${index + 1}`}>{adminProducts.length > 0 ? adminProducts.map((product) => <option key={product.id} value={product.id}>{product.name} · {product.collection}</option>) : <option value={highlight.productId}>Produto não disponível (ID {highlight.productId})</option>}</select><Input value={highlight.label} onChange={(event) => setHomeHighlights((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, label: event.target.value.toUpperCase() } : item))} placeholder="Etiqueta" aria-label={`Etiqueta do destaque ${index + 1}`} /><button type="button" className="highlight-remove-button" onClick={() => setHomeHighlights((current) => current.length > 1 ? current.filter((_, itemIndex) => itemIndex !== index) : current)} aria-label={`Remover destaque ${index + 1}`}>×</button></div>)}<button type="button" className="highlight-add-button" onClick={() => setHomeHighlights((current) => [...current, { id: `highlight-${Date.now()}`, productId: adminProducts[current.length % adminProducts.length].id, label: "NOVA PEÇA" }])} disabled={homeHighlights.length >= 6 || adminProducts.length === 0}><Plus size={15} /> Adicionar destaque</button></div><div className="admin-panel appearance-panel home-editor-panel"><div className="panel-heading"><div><span className="section-kicker">BANNER VIP</span><h3>Grupo e acesso antecipado</h3></div></div><div className="home-editor-banner vip-editor-banner"><div className="home-editor-banner-preview" style={{ backgroundImage: "url(" + homeVipBanner.imageUrl + ")" }}><label><input type="file" accept="image/*" onChange={(event) => handleHomeImageUpload(event, "vip")} />{uploading ? "A carregar..." : "Trocar imagem"}</label></div><div className="home-editor-fields"><Input value={homeVipBanner.eyebrow} onChange={(event) => setHomeVipBanner((current) => ({ ...current, eyebrow: event.target.value }))} placeholder="Etiqueta" /><Input value={homeVipBanner.title} onChange={(event) => setHomeVipBanner((current) => ({ ...current, title: event.target.value }))} placeholder="Título" /><Input value={homeVipBanner.subtitle} onChange={(event) => setHomeVipBanner((current) => ({ ...current, subtitle: event.target.value }))} placeholder="Texto de apoio" /><div className="home-editor-inline"><Input value={homeVipBanner.cta} onChange={(event) => setHomeVipBanner((current) => ({ ...current, cta: event.target.value }))} placeholder="CTA" /><Input value={homeVipBanner.href} onChange={(event) => setHomeVipBanner((current) => ({ ...current, href: event.target.value }))} placeholder="Link do grupo VIP" /></div></div></div></div></div>{appearanceSaved && <p className="saved-note"><Check size={14} /> As alterações da Home foram guardadas.</p>}</section>}
         {active === "Newsletter" && <section className="admin-content"><div className="content-toolbar"><div><span className="section-kicker">RELACIONAMENTO</span><h2 className="content-title">Newsletter</h2></div><Button onClick={() => toast.success("Exportação preparada.")}>Exportar lista</Button></div><div className="newsletter-admin-top"><div className="metric-card"><span>Total de inscritos</span><strong>1.284</strong><small className="positive">+83 este mês</small></div><div className="metric-card"><span>Cupons enviados</span><strong>1.276</strong><small>ERAS10 · 10% OFF</small></div><div className="metric-card"><span>Taxa de abertura</span><strong>68,4%</strong><small className="positive">acima da média</small></div></div><div className="admin-panel table-panel"><table><thead><tr><th>Nome</th><th>E-mail</th><th>Inscrição</th><th>Cupom</th><th>Status</th></tr></thead><tbody>{[['Marina Oliveira','marina@email.com','Hoje, 13:48'],['Caio Nascimento','caio@email.com','Hoje, 11:02'],['Lara Martins','lara@email.com','Ontem, 18:45'],['João Pedro','joao@email.com','12 Ago, 09:17']].map(([name, email, date]) => <tr key={email}><td><strong>{name}</strong></td><td>{email}</td><td>{date}</td><td><span className="coupon-mini">ERAS10</span></td><td><span className="status-pill success">Enviado</span></td></tr>)}</tbody></table></div></section>}
         {active === "Clientes" && <section className="admin-content"><div className="empty-admin"><Users size={31} /><h2>Base de clientes</h2><p>Os clientes que criarem uma conta e realizarem pedidos aparecerão aqui.</p><Button onClick={() => toast.info("Exportação de clientes em breve.")}>Exportar clientes</Button></div></section>}
       </main>

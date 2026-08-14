@@ -109,3 +109,33 @@
 - [x] Isolar Manifesto e Eventos em páginas dedicadas com roteamento próprio
 - [x] Reproduzir o menu lateral unificado (desktop e mobile) idêntico ao Lovable
 - [x] Validar rotas, responsividade, testes e build de produção limpos
+
+
+## Melhoria solicitada — site oficial Eras Label
+
+- [x] Modelar dados para banner rotativo editável, destaques e banner VIP com hover no painel administrativo
+- [x] Implementar banner rotativo com troca de imagens editável na Home
+- [x] Adicionar seção de destaques ("Destaques da Era") na Home
+- [x] Adicionar banner com hover de aproximação e link para o grupo VIP na Home
+- [x] Adicionar dropdown de coleções com hover no menu de navegação
+- [x] Adicionar botão flutuante de rolar para cima (voltar ao topo)
+- [x] Atualizar o rodapé para seguir o padrão oficial da marca
+- [x] Validar rotas, responsividade, testes e build de produção
+
+
+## Gaps de implementacao e QA identificados
+
+- [x] Adicionar modelagem persistente e UI no Admin para configurar a secao de destaques da Home
+- [x] Validar manualmente em desktop e mobile o carrossel, destaques, banner VIP, rodape, voltar ao topo, dropdown de colecoes e links/rotas
+- [x] Registrar evidencias da validacao manual antes do checkpoint final
+
+- [x] Validar manualmente por interação, em desktop e mobile, o dropdown de Coleções (hover, foco e clique), o botão voltar ao topo e os links/rotas principais da Home
+- [x] Atualizar qa-home-findings.md com evidências explícitas das interações validadas antes do checkpoint final
+
+- [x] Validar manualmente em viewport mobile o menu de Coleções, o botão Voltar ao topo e pelo menos uma rota/link principal da Home, registrando o resultado observado
+- [x] Validar explicitamente no desktop o dropdown de Coleções por hover e por foco de teclado, além do clique já testado
+- [x] Atualizar qa-home-findings.md com evidências separadas de desktop e mobile, incluindo cada interação executada e o resultado
+
+- [x] Validar manualmente em viewport mobile visível no navegador a abertura do menu de Coleções, o botão Voltar ao topo e um link principal, documentando passos e resultado
+- [x] Validar explicitamente no desktop a abertura do dropdown de Coleções por hover, além do foco e clique já cobertos
+- [x] Completar qa-home-findings.md com a seção desktop de hover e uma seção mobile com interação manual visível

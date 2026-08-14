@@ -18,7 +18,7 @@ export type InsertUser = typeof users.$inferInsert;
 export const products = mysqlTable("products", {
   id: int("id").autoincrement().primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
-  collection: varchar("collection", { length: 100 }).notNull(),
+  collection: varchar("collectionName", { length: 100 }).notNull(),
   category: varchar("category", { length: 100 }).notNull(),
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   pixPrice: decimal("pixPrice", { precision: 10, scale: 2 }).notNull(),

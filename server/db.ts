@@ -184,6 +184,67 @@ export async function saveCommercialConfig(config: { pixDiscountPercent: number;
   return config;
 }
 
+export type HomeContent = {
+  banners: Array<{ id: string; eyebrow: string; title: string; subtitle: string; imageUrl: string; href: string; cta: string }>;
+  highlights: Array<{ id: string; productId: number; label: string }>;
+  vipBanner: { eyebrow: string; title: string; subtitle: string; imageUrl: string; href: string; cta: string };
+};
+
+export const defaultHomeContent: HomeContent = {
+  banners: [
+    {
+      id: "drafts",
+      eyebrow: "NOVA ERA · 2026",
+      title: "DRAFTS JÁ DISPONÍVEL",
+      subtitle: "Uma nova coleção em movimento.",
+      imageUrl: "https://images.unsplash.com/photo-1485230895905-ec40ba36b9bc?auto=format&fit=crop&w=2000&q=90",
+      href: "#shop",
+      cta: "EXPLORAR AGORA",
+    },
+    {
+      id: "paradox",
+      eyebrow: "PARADOX COLLECTION",
+      title: "REVIVER. REINVENTAR.",
+      subtitle: "Peças para atravessar o tempo presente.",
+      imageUrl: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=2000&q=90",
+      href: "#shop",
+      cta: "VER COLEÇÃO",
+    },
+  ],
+  highlights: [
+    { id: "highlight-1", productId: 1, label: "PEÇA-CHAVE" },
+    { id: "highlight-2", productId: 2, label: "MAIS VISTO" },
+    { id: "highlight-3", productId: 5, label: "ARQUIVO" },
+  ],
+  vipBanner: {
+    eyebrow: "ACESSO ANTECIPADO",
+    title: "ENTRE PARA O GRUPO VIP",
+    subtitle: "Lançamentos, bastidores e as próximas eras primeiro.",
+    imageUrl: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1800&q=90",
+    href: "https://wa.me/5500000000000",
+    cta: "ENTRAR NO WHATSAPP",
+  },
+};
+
+export async function getHomeContent(): Promise<HomeContent> {
+  const db = await getDb();
+  if (!db) return defaultHomeContent;
+  const rows = await db.select().from(siteAppearance).where(eq(siteAppearance.sectionKey, "home_content")).limit(1);
+  return (rows[0]?.content as HomeContent) || defaultHomeContent;
+}
+
+export async function saveHomeContent(content: HomeContent) {
+  const db = await getDb();
+  if (!db) return content;
+  const existing = await db.select().from(siteAppearance).where(eq(siteAppearance.sectionKey, "home_content")).limit(1);
+  if (existing[0]) {
+    await db.update(siteAppearance).set({ content: content as any }).where(eq(siteAppearance.sectionKey, "home_content"));
+  } else {
+    await db.insert(siteAppearance).values({ sectionKey: "home_content", content: content as any });
+  }
+  return content;
+}
+
 export async function saveProductData(data: {
   id?: number;
   name: string;
