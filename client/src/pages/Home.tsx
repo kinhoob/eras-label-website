@@ -225,6 +225,16 @@ function playClick(enabled: boolean) {
 }
 
 export default function Home() {
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setSelectedProduct(null);
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   const [category, setCategory] = useState<Category>("Todos");
   const [cart, setCart] = useState<CartLine[]>(() => loadCart<CartLine>());
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -995,7 +1005,12 @@ export default function Home() {
               <span className="eyebrow">{selectedProduct.collection}</span>
               <h2 id="quick-view-title">{selectedProduct.name}</h2>
               <p className="modal-price">{formatPrice(selectedProduct.price)}</p>
-              <p>{selectedProduct.detail}</p>
+              <p className="modal-detail-text">{selectedProduct.detail}</p>
+              <div className="modal-availability-row">
+                <span className={`availability-badge ${selectedProduct.stock > 0 ? "in-stock" : "out-of-stock"}`}>
+                  {selectedProduct.stock > 0 ? `Disponível em estoque (${selectedProduct.stock} unidades)` : "Esgotado no momento"}
+                </span>
+              </div>
               <div className="size-picker">
                 <span>TAMANHO</span>
                 <div>
