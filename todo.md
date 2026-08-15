@@ -189,3 +189,12 @@
 - [x] Refinar a animação de reaparecimento da navbar para uma transição suave e acessível
 - [x] Validar uploads, renderização de imagens, navbar e responsividade em desktop e mobile
 - [x] Guardar checkpoint e entregar as melhorias
+
+
+## Zoom de produtos e contador da Sacola
+- [x] Adicionar zoom suave nas imagens dos cards de produto ao passar o rato, sem alterar a grelha
+- [x] Garantir que o zoom respeita overflow, toque mobile e movimento reduzido
+- [x] Adicionar contador visual acessível na Sacola da navbar com a quantidade total de itens
+- [x] Atualizar o contador instantaneamente ao adicionar, remover ou alterar quantidades no carrinho
+- [x] Validar a interação em desktop e mobile e cobrir a lógica com testes
+- [x] Guardar checkpoint e entregar as melhorias

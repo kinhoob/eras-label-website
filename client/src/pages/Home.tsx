@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
+import { getCartItemCount } from "@/lib/cart";
 import { getCheckoutFeedback } from "@/lib/checkout-feedback";
 import { ERAS_COLLECTION_PATHS, ERAS_VIP_WHATSAPP_URL } from "../../../shared/const";
 import { checkoutFlowReducer, initialCheckoutFlowState } from "@/lib/checkout-flow";
@@ -273,7 +274,7 @@ export default function Home() {
     () => (category === "Todos" ? products : products.filter((product) => product.category === category)),
     [category, products],
   );
-  const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const cartCount = getCartItemCount(cart);
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const discount = couponApplied ? subtotal * 0.1 : 0;
 
@@ -494,8 +495,8 @@ export default function Home() {
           <Link href="/account" className="icon-button" aria-label="Minha Conta e Pedidos" onClick={() => playClick(soundsOn)}>
             <CircleUserRound size={18} />
           </Link>
-          <button className="bag-button" onClick={() => { playClick(soundsOn); setIsCartOpen(true); }}>
-            SACOLA {cartCount > 0 && <span className="bag-badge">{cartCount}</span>}
+          <button className="bag-button" aria-label={`Abrir sacola${cartCount > 0 ? ` com ${cartCount} ${cartCount === 1 ? "item" : "itens"}` : " vazia"}`} onClick={() => { playClick(soundsOn); setIsCartOpen(true); }}>
+            SACOLA {cartCount > 0 && <span key={cartCount} className="bag-badge" aria-hidden="true">{cartCount}</span>}
           </button>
         </div>
       </header>
