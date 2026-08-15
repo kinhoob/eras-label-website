@@ -52,3 +52,10 @@
 - [x] Implementar controlos visuais de busca por texto, filtro de status/tipo e ordenação na aba admin
 - [x] Validar estados vazios, teclado e responsividade
 - [x] Executar TypeScript, Vitest, build e guardar checkpoint
+
+## Templates Branded e Admin Expandido (Clientes & Email Marketing)
+- [x] Criar templates de e-mail refinados com a cor #b22222 para boas-vindas, compra e código de rastreio
+- [x] Criar procedimento tRPC para enviar e-mail de rastreio de pedido com o código fornecido pelo admin
+- [x] Criar rota de listagem de clientes no painel administrativo e respetiva aba
+- [x] Criar aba "E-mail Marketing" no painel administrativo logo abaixo de Clientes com disparo de campanhas aos subscritores e histórico via Resend
+- [x] Executar TypeScript, Vitest, build e guardar checkpoint

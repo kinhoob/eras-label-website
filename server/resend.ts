@@ -89,3 +89,25 @@ export async function sendResendEmail(message: ResendMessage, templateType = "tr
 export function resetResendClientForTests() {
   client = null;
 }
+
+import { newsletterWelcomeEmail, orderTrackingEmail } from "./email-templates";
+
+export async function sendWelcomeEmail(recipientEmail: string, name: string, couponCode: string) {
+  const tpl = newsletterWelcomeEmail(name, couponCode);
+  return sendResendEmail({
+    to: recipientEmail,
+    subject: tpl.subject,
+    html: tpl.html,
+    text: tpl.text,
+  }, "newsletter_welcome");
+}
+
+export async function sendTrackingEmail(recipientEmail: string, orderNumber: string, customerName: string, trackingCode: string, carrier?: string) {
+  const tpl = orderTrackingEmail(orderNumber, customerName, trackingCode, carrier);
+  return sendResendEmail({
+    to: recipientEmail,
+    subject: tpl.subject,
+    html: tpl.html,
+    text: tpl.text,
+  }, "order_tracking");
+}

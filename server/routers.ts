@@ -22,6 +22,9 @@ import {
   createNotification,
   markNotificationAsRead,
   listResendEmailLogs,
+  listClients,
+  listOrders,
+  updateOrderTracking,
 } from "./db";
 import { adminOrderEmail, newsletterWelcomeEmail, orderConfirmationEmail, paymentConfirmationEmail } from "./email-templates";
 import { ENV } from "./_core/env";
@@ -307,6 +310,73 @@ export const appRouter = router({
       sort: z.enum(["newest", "oldest"]).optional(),
     }).optional()).query(async ({ input }) => {
       return listResendEmailLogs(input);
+    }),
+    listClients: adminProcedure.query(async () => {
+      return listClients();
+    }),
+    listOrders: adminProcedure.query(async () => {
+      return listOrders();
+    }),
+    updateOrderTracking: adminProcedure.input(z.object({
+      orderId: z.number().int().positive(),
+      trackingCode: z.string().min(3),
+      carrier: z.string().optional(),
+      customerEmail: z.string().email(),
+      customerName: z.string().min(2),
+      orderNumber: z.string(),
+    })).mutation(async ({ input }) => {
+      await updateOrderTracking(input.orderId, input.trackingCode, input.carrier);
+      try {
+        const { orderTrackingEmail } = await import("./email-templates");
+        const tpl = orderTrackingEmail(input.orderNumber, input.customerName, input.trackingCode, input.carrier);
+        await sendResendEmail({
+          to: input.customerEmail,
+          replyTo: ENV.resendAdminEmail || undefined,
+          ...tpl,
+        }, "order_tracking");
+      } catch (err) {
+        console.warn("Failed to send tracking email:", err);
+      }
+      return { success: true };
+    }),
+    sendMarketingCampaign: adminProcedure.input(z.object({
+      subject: z.string().min(3),
+      htmlContent: z.string().min(10),
+      targetGroup: z.enum(["all_subscribers", "all_clients", "all"]).default("all_subscribers"),
+    })).mutation(async ({ input }) => {
+      const subscribers = await listNewsletterSubscribers();
+      const clients = await listClients();
+      
+      const recipientSet = new Set<string>();
+      if (input.targetGroup === "all_subscribers" || input.targetGroup === "all") {
+        for (const s of subscribers) if (s.email) recipientSet.add(s.email);
+      }
+      if (input.targetGroup === "all_clients" || input.targetGroup === "all") {
+        for (const c of clients) if (c.email) recipientSet.add(c.email);
+      }
+
+      const recipients = Array.from(recipientSet);
+      let sentCount = 0;
+      let failedCount = 0;
+
+      const brandedHtml = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>${input.subject}</title></head><body style="margin:0;background:#0d0d0d;color:#1b1b1b;font-family:Arial,sans-serif"><main style="max-width:640px;margin:0 auto;padding:32px 16px"><section style="background:#ffffff;border-radius:6px;overflow:hidden;border:1px solid #e5e5e5"><header style="padding:32px 36px;background:#0d0d0d;color:#ffffff;border-bottom:3px solid #b22222"><p style="margin:0;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#b22222;font-weight:700">Eras Label · Campanha</p><h1 style="margin:16px 0 0;font-size:24px;font-weight:600;color:#ffffff">${input.subject}</h1></header><div style="padding:36px;background:#ffffff">${input.htmlContent}</div><footer style="padding:24px 36px;background:#f9f9f9;border-top:1px solid #eeeeee;color:#666666;font-size:12px">Reviver ou reinventar eras. Você recebeu esta mensagem porque se inscreveu na Eras Label.</footer></section></main></body></html>`;
+
+      for (const email of recipients) {
+        try {
+          const res = await sendResendEmail({
+            to: email,
+            subject: input.subject,
+            html: brandedHtml,
+            text: input.htmlContent.replace(/<[^>]*>?/gm, ""),
+          }, "marketing_campaign");
+          if (res.sent) sentCount++;
+          else failedCount++;
+        } catch {
+          failedCount++;
+        }
+      }
+
+      return { success: true, sentCount, failedCount, totalRecipients: recipients.length };
     }),
   }),
 });

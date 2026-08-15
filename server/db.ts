@@ -358,3 +358,21 @@ export async function saveProductData(data: {
     return { id: (inserted as any).insertId || 1, ...data };
   }
 }
+
+export async function listClients() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(users).orderBy(desc(users.lastSignedIn));
+}
+
+export async function listOrders() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(orders).orderBy(desc(orders.id));
+}
+
+export async function updateOrderTracking(orderId: number, trackingCode: string, _carrier?: string) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(orders).set({ trackingCode }).where(eq(orders.id, orderId));
+}
