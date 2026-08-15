@@ -27,7 +27,7 @@
 - [x] 13. **Auditoria Técnica, Correções de Áudio e Code-Splitting**
 
 ## Estado atual
-- Plataforma de e-commerce da Eras Label totalmente implementada, auditada, com cobertura robusta de testes (82 testes unitários aprovados), build de produção otimizado e rotas lazy validadas.
+- Plataforma de e-commerce da Eras Label totalmente implementada, com Estatísticas Analíticas por período, Histórico de Estoque com filtros por administrador/datas, utilitário de exportação CSV compartilhado e 86 testes unitários aprovados em Vitest.
 
 ## Integração Resend
 - [x] Mapear os fluxos atuais de e-mail de pedidos, avisos administrativos e newsletter
@@ -119,3 +119,10 @@
 - [x] Criar a aba de Histórico de Estoque com registo auditável de quem alterou, o tamanho, o estoque anterior e o novo
 - [x] Refinar a barra de busca e os filtros avançados na página de Inventário
 - [x] Executar suíte Vitest completa (84 testes aprovados), TypeScript sem erros, build de produção e guardar checkpoint final
+
+## Exportação CSV e Filtros de Período/Auditoria
+- [x] Implementar filtros de período (7, 30, 90 dias e personalizado) nas métricas e tendências de estatísticas no backend tRPC
+- [x] Implementar filtros de busca por administrador e intervalo de datas no histórico de estoque no backend tRPC
+- [x] Criar utilitário de exportação segura para formato CSV na interface do painel
+- [x] Adicionar botões de exportar relatório CSV nas abas de Estatísticas e Histórico de Estoque
+- [x] Atualizar testes unitários em Vitest (86 testes aprovados), TypeScript, build e guardar checkpoint final

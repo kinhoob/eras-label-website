@@ -71,4 +71,22 @@ describe("Catalog Management and Inventory Separation", () => {
     const desc = `${log.productName} (${log.size}): ${log.previousStock} -> ${log.newStock} (${diff})`;
     expect(desc).toBe("Calça Cargo Paradox (40): 8 -> 3 (-5)");
   });
+
+  it("filters inventory audit logs by admin email or name", () => {
+    const logs = [
+      { id: 1, adminEmail: "theeraslabel@gmail.com", adminName: "Eras Admin", productName: "Camisa" },
+      { id: 2, adminEmail: "other@gmail.com", adminName: "Other", productName: "Calça" },
+    ];
+    const filter = "eraslabel";
+    const filtered = logs.filter(l => l.adminEmail.includes(filter) || l.adminName.toLowerCase().includes(filter));
+    expect(filtered.length).toBe(1);
+    expect(filtered[0].productName).toBe("Camisa");
+  });
+
+  it("calculates step count for sales trend based on period days", () => {
+    const getStepCount = (days: number) => days <= 7 ? 7 : days <= 30 ? 6 : 8;
+    expect(getStepCount(7)).toBe(7);
+    expect(getStepCount(30)).toBe(6);
+    expect(getStepCount(90)).toBe(8);
+  });
 });

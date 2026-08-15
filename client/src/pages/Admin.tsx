@@ -23,6 +23,7 @@ import {
   Users,
   Upload,
   Check,
+  Download,
   LockKeyhole,
   LoaderCircle,
   ShieldCheck,
@@ -34,6 +35,7 @@ import { trpc } from "@/lib/trpc";
 import { getInventorySizeOptions } from "@shared/inventory";
 import { AdminProductThumbnail } from "@/components/AdminProductThumbnail";
 import AdminCategoriesSection from "@/pages/AdminCategoriesSection";
+import { exportToCSV } from "@/lib/csv-export";
 
 const orders = [
   { id: "#ER-0108", customer: "Marina Oliveira", date: "Hoje, 14:32", total: "R$ 312,80", payment: "Pago", status: "Em preparação" },
@@ -927,9 +929,30 @@ export default function Admin() {
   );
 }
 
-// Componente de Estatísticas Avançadas (Inspiração Nuvemshop)
+// Componente de Estatísticas Avançadas com Filtros de Período e Exportação CSV
 function AdminAnalyticsSection() {
-  const { data: analytics, isLoading, refetch } = trpc.admin.getAnalytics.useQuery();
+  const [periodDays, setPeriodDays] = useState<number>(7);
+  const { data: analytics, isLoading, refetch } = trpc.admin.getAnalytics.useQuery({ periodDays });
+
+  const exportAnalyticsCSV = () => {
+    if (!analytics) return;
+    const summary = analytics.summary;
+    const headers = ["Métrica", "Valor"];
+    const rows = [
+      ["Período (dias)", periodDays],
+      ["Visitas", summary.visits],
+      ["Vendas", summary.sales],
+      ["Receita (R$)", summary.revenue.toFixed(2)],
+      ["Ticket Médio (R$)", summary.averageTicket.toFixed(2)],
+      ["Taxa de Conversão (%)", summary.conversionRate],
+    ];
+    const success = exportToCSV(`estatisticas_eras_label_${periodDays}dias.csv`, headers, rows);
+    if (success) {
+      toast.success("Relatório de estatísticas exportado em CSV com sucesso!");
+    } else {
+      toast.error("Erro ao exportar relatório CSV.");
+    }
+  };
 
   if (isLoading) {
     return (
@@ -949,9 +972,18 @@ function AdminAnalyticsSection() {
         <div>
           <span className="section-kicker">ANÁLISE DE DADOS E DESEMPENHO</span>
           <h2 className="content-title">Visão Geral de Estatísticas</h2>
-          <p>Acompanhe o comportamento dos visitantes, faturamento e conversões da Eras Label em tempo real.</p>
+          <p>Acompanhe o comportamento dos visitantes, faturamento e conversões da Eras Label.</p>
         </div>
-        <Button variant="outline" onClick={() => void refetch()}>Atualizar dados</Button>
+        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", background: "#f0ece6", padding: "0.2rem", borderRadius: "8px", gap: "0.2rem" }}>
+            <button className={`period-btn ${periodDays === 7 ? "active" : ""}`} onClick={() => setPeriodDays(7)} style={{ padding: "0.35rem 0.7rem", fontSize: "0.8rem", borderRadius: "6px", border: "none", background: periodDays === 7 ? "#b22222" : "transparent", color: periodDays === 7 ? "#fff" : "#444", cursor: "pointer", fontWeight: 600 }}>7 dias</button>
+            <button className={`period-btn ${periodDays === 30 ? "active" : ""}`} onClick={() => setPeriodDays(30)} style={{ padding: "0.35rem 0.7rem", fontSize: "0.8rem", borderRadius: "6px", border: "none", background: periodDays === 30 ? "#b22222" : "transparent", color: periodDays === 30 ? "#fff" : "#444", cursor: "pointer", fontWeight: 600 }}>30 dias</button>
+            <button className={`period-btn ${periodDays === 90 ? "active" : ""}`} onClick={() => setPeriodDays(90)} style={{ padding: "0.35rem 0.7rem", fontSize: "0.8rem", borderRadius: "6px", border: "none", background: periodDays === 90 ? "#b22222" : "transparent", color: periodDays === 90 ? "#fff" : "#444", cursor: "pointer", fontWeight: 600 }}>90 dias</button>
+            <button className={`period-btn ${periodDays === 180 ? "active" : ""}`} onClick={() => setPeriodDays(180)} style={{ padding: "0.35rem 0.7rem", fontSize: "0.8rem", borderRadius: "6px", border: "none", background: periodDays === 180 ? "#b22222" : "transparent", color: periodDays === 180 ? "#fff" : "#444", cursor: "pointer", fontWeight: 600 }}>180 dias</button>
+          </div>
+          <Button variant="outline" onClick={exportAnalyticsCSV}><Download size={15} /> Exportar CSV</Button>
+          <Button variant="outline" onClick={() => void refetch()}>Atualizar</Button>
+        </div>
       </div>
 
       <div className="metric-grid" style={{ marginBottom: "1.75rem" }}>
@@ -1048,9 +1080,41 @@ function AdminAnalyticsSection() {
   );
 }
 
-// Componente de Histórico de Alterações de Estoque (Auditoria)
+// Componente de Histórico de Alterações de Estoque (Auditoria com Filtros e Exportação CSV)
 function InventoryAuditSection() {
-  const { data: auditLogs = [], isLoading, refetch } = trpc.admin.listInventoryAudit.useQuery();
+  const [adminFilter, setAdminFilter] = useState<string>("");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+
+  const { data: auditLogs = [], isLoading, refetch } = trpc.admin.listInventoryAudit.useQuery({
+    adminFilter: adminFilter || undefined,
+    startDate: startDate || undefined,
+    endDate: endDate || undefined,
+  });
+
+  const exportAuditCSV = () => {
+    if (!auditLogs.length) {
+      toast.error("Não há registos de auditoria para exportar.");
+      return;
+    }
+    const headers = ["Data/Hora", "Produto", "Variação", "Estoque Anterior", "Novo Estoque", "Diferença", "Admin Nome", "Admin E-mail"];
+    const rows = auditLogs.map((log: any) => [
+      new Date(log.createdAt).toLocaleString("pt-BR"),
+      log.productName,
+      log.size,
+      log.previousStock,
+      log.newStock,
+      log.newStock - log.previousStock,
+      log.adminName || "Admin",
+      log.adminEmail,
+    ]);
+    const success = exportToCSV("historico_estoque_eras_label.csv", headers, rows);
+    if (success) {
+      toast.success("Histórico de estoque exportado em CSV com sucesso!");
+    } else {
+      toast.error("Erro ao exportar histórico de estoque.");
+    }
+  };
 
   return (
     <section className="admin-content">
@@ -1060,7 +1124,30 @@ function InventoryAuditSection() {
           <h2 className="content-title">Histórico de Alterações de Estoque</h2>
           <p>Registo imutável de todas as modificações de quantidades por variação realizadas pelos administradores.</p>
         </div>
-        <Button variant="outline" onClick={() => void refetch()}>Atualizar registos</Button>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <Button variant="outline" onClick={exportAuditCSV}><Download size={15} /> Exportar CSV</Button>
+          <Button variant="outline" onClick={() => void refetch()}>Atualizar</Button>
+        </div>
+      </div>
+
+      <div className="admin-panel" style={{ padding: "1rem", marginBottom: "1.25rem", display: "flex", gap: "1rem", flexWrap: "wrap", alignItems: "center" }}>
+        <div style={{ flex: 1, minWidth: "220px" }}>
+          <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 600, marginBottom: "0.3rem", color: "#555" }}>Filtrar por Administrador (Nome ou E-mail)</label>
+          <Input placeholder="Ex: theeraslabel@gmail.com" value={adminFilter} onChange={(e) => setAdminFilter(e.target.value)} style={{ background: "#fff" }} />
+        </div>
+        <div style={{ width: "160px" }}>
+          <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 600, marginBottom: "0.3rem", color: "#555" }}>Data Inicial</label>
+          <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} style={{ background: "#fff" }} />
+        </div>
+        <div style={{ width: "160px" }}>
+          <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 600, marginBottom: "0.3rem", color: "#555" }}>Data Final</label>
+          <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} style={{ background: "#fff" }} />
+        </div>
+        {(adminFilter || startDate || endDate) && (
+          <div style={{ alignSelf: "flex-end" }}>
+            <Button variant="outline" onClick={() => { setAdminFilter(""); setStartDate(""); setEndDate(""); }} style={{ fontSize: "0.8rem", height: "38px" }}>Limpar filtros</Button>
+          </div>
+        )}
       </div>
 
       <div className="admin-panel table-panel">

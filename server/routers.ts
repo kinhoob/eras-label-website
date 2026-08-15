@@ -427,11 +427,17 @@ export const appRouter = router({
     listClients: adminProcedure.query(async () => {
       return listClients();
     }),
-    getAnalytics: adminProcedure.query(async () => {
-      return getAdminAnalytics();
+    getAnalytics: adminProcedure.input(z.object({
+      periodDays: z.number().int().positive().default(7),
+    }).optional()).query(async ({ input }) => {
+      return getAdminAnalytics(input?.periodDays ?? 7);
     }),
-    listInventoryAudit: adminProcedure.query(async () => {
-      return listInventoryAuditLogs();
+    listInventoryAudit: adminProcedure.input(z.object({
+      adminFilter: z.string().optional(),
+      startDate: z.string().optional(),
+      endDate: z.string().optional(),
+    }).optional()).query(async ({ input }) => {
+      return listInventoryAuditLogs(input);
     }),
     listMarketingCollections: adminProcedure.query(async () => {
       return listMarketingCollections();
