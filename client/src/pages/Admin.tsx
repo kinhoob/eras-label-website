@@ -20,6 +20,9 @@ import {
   Users,
   Upload,
   Check,
+  LockKeyhole,
+  LoaderCircle,
+  ShieldCheck,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -307,7 +310,83 @@ const defaultEditableHighlights: EditableHighlight[] = [
   { id: "highlight-3", productId: 5, label: "ARQUIVO" },
 ];
 
+function AdminAccessLoading() {
+  return (
+    <div className="admin-auth-screen" role="status" aria-live="polite">
+      <div className="admin-auth-card admin-auth-loading-card">
+        <LoaderCircle className="admin-auth-spinner" size={22} aria-hidden="true" />
+        <span>Verificando acesso administrativo...</span>
+      </div>
+    </div>
+  );
+}
+
+function AdminLoginScreen() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const loginMutation = trpc.auth.adminLogin.useMutation({
+    onSuccess: () => {
+      toast.success("Acesso autorizado. A abrir o painel...");
+      window.location.assign("/admin");
+    },
+    onError: (error) => {
+      setErrorMessage(error.message || "Não foi possível validar o acesso.");
+    },
+  });
+
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setErrorMessage("");
+    loginMutation.mutate({ email, password });
+  }
+
+  return (
+    <main className="admin-auth-screen">
+      <section className="admin-auth-card" aria-labelledby="admin-login-title">
+        <div className="admin-auth-brand">ERAS<span>.</span><small>ADMIN</small></div>
+        <div className="admin-auth-icon" aria-hidden="true"><ShieldCheck size={23} /></div>
+        <p className="section-kicker">ÁREA RESTRITA</p>
+        <h1 id="admin-login-title">Acesso administrativo</h1>
+        <p className="admin-auth-description">Entre com as credenciais autorizadas para gerir produtos, pedidos, clientes e comunicações da Eras Label.</p>
+        <form className="admin-auth-form" onSubmit={handleSubmit}>
+          <label>
+            <span>E-mail</span>
+            <input
+              type="email"
+              autoComplete="username"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="seu@email.com"
+              required
+              autoFocus
+            />
+          </label>
+          <label>
+            <span>Senha</span>
+            <input
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="Digite a sua senha"
+              required
+            />
+          </label>
+          {errorMessage && <p className="admin-auth-error" role="alert">{errorMessage}</p>}
+          <Button className="admin-auth-submit" type="submit" disabled={loginMutation.isPending}>
+            {loginMutation.isPending ? <><LoaderCircle className="admin-auth-spinner" size={16} /> VALIDANDO...</> : <><LockKeyhole size={16} /> ENTRAR NO PAINEL</>}
+          </Button>
+        </form>
+        <Link href="/" className="admin-auth-back">Voltar à loja</Link>
+      </section>
+    </main>
+  );
+}
+
 export default function Admin() {
+  const { data: authUser, isLoading: authLoading } = trpc.auth.me.useQuery();
+
   const [active, setActive] = useState("Visão geral");
   const [query, setQuery] = useState("");
   const [appearanceSaved, setAppearanceSaved] = useState(false);
@@ -320,7 +399,7 @@ export default function Admin() {
 
   const { data: commercialConfig } = trpc.catalog.getConfig.useQuery();
   const { data: homeContent } = trpc.catalog.getHomeContent.useQuery();
-  const { data: catalogProducts = [], isLoading: catalogProductsLoading } = trpc.admin.listProducts.useQuery();
+  const { data: catalogProducts = [], isLoading: catalogProductsLoading } = trpc.admin.listProducts.useQuery(undefined, { enabled: authUser?.role === "admin" });
   const utils = trpc.useUtils();
   const [pixDiscountPercent, setPixDiscountPercent] = useState<number>(5);
   const [freeShippingThreshold, setFreeShippingThreshold] = useState<number>(350);
@@ -475,6 +554,12 @@ export default function Admin() {
     setMenuOpen(false);
   }
 
+  const adminName = authUser?.name?.trim() || "Eras Label Admin";
+  const adminInitial = adminName.charAt(0).toUpperCase();
+
+  if (authLoading) return <AdminAccessLoading />;
+  if (!authUser || authUser.role !== "admin") return <AdminLoginScreen />;
+
   return (
     <div className="admin-shell">
       <aside className={`admin-sidebar ${menuOpen ? "open" : ""}`}>
@@ -483,9 +568,9 @@ export default function Admin() {
         <div className="admin-sidebar-bottom"><button onClick={() => toast.info("Configurações do painel em breve.")}><Settings2 size={17} />Configurações</button><Link href="/" className="back-store"><ArrowLeft size={17} />Voltar à loja</Link></div>
       </aside>
       <main className="admin-main">
-        <header className="admin-header"><button className="admin-mobile-menu" onClick={() => setMenuOpen((value) => !value)}><MoreHorizontal size={20} /></button><div><span className="section-kicker">PAINEL ERAS LABEL</span><h1>{active}</h1></div><div className="admin-header-actions"><span className="admin-avatar">K</span><span>Kinho</span><ChevronDown size={15} /></div></header>
+        <header className="admin-header"><button className="admin-mobile-menu" onClick={() => setMenuOpen((value) => !value)}><MoreHorizontal size={20} /></button><div><span className="section-kicker">PAINEL ERAS LABEL</span><h1>{active}</h1></div><div className="admin-header-actions"><span className="admin-avatar">{adminInitial}</span><span>{adminName}</span><ChevronDown size={15} /></div></header>
         {active === "Visão geral" && <>
-          <div className="admin-welcome"><div><p className="section-kicker">QUARTA-FEIRA, 13 DE AGOSTO</p><h2>Bom dia, Kinho.</h2><p>A sua loja está em movimento. Aqui está o resumo da operação.</p></div><Button onClick={() => selectNav("Produtos")}><Plus size={16} /> Novo produto</Button></div>
+          <div className="admin-welcome"><div><p className="section-kicker">PAINEL SEGURO</p><h2>Bom dia, {adminName.split(" ")[0]}.</h2><p>A sua loja está em movimento. Aqui está o resumo da operação.</p></div><Button onClick={() => selectNav("Produtos")}><Plus size={16} /> Novo produto</Button></div>
           <div className="metric-grid"><div className="metric-card"><span>Faturamento (30 dias)</span><strong>R$ 8.492,40</strong><small className="positive">+18,4% comparado ao período anterior</small></div><div className="metric-card"><span>Pedidos</span><strong>48</strong><small className="positive">+12,1% comparado ao período anterior</small></div><div className="metric-card"><span>Ticket médio</span><strong>R$ 176,92</strong><small>estável nas últimas 4 semanas</small></div><div className="metric-card"><span>Clientes ativos</span><strong>274</strong><small className="positive">+32 novos este mês</small></div></div>
           <div className="admin-dashboard-grid"><section className="admin-panel chart-panel"><div className="panel-heading"><div><span className="section-kicker">VENDAS</span><h3>Faturamento por período</h3></div><button className="period-button">Últimos 30 dias <ChevronDown size={14} /></button></div><div className="fake-chart"><div className="chart-axis"><span>10k</span><span>7,5k</span><span>5k</span><span>2,5k</span><span>0</span></div><div className="chart-bars">{[32, 45, 39, 62, 48, 76, 55, 68, 53, 82, 63, 91].map((height, index) => <div className="chart-bar-wrap" key={index}><div className="chart-bar" style={{ height: `${height}%` }} /><span>{index + 1}–{index + 3}</span></div>)}</div></div></section><section className="admin-panel"><div className="panel-heading"><div><span className="section-kicker">ATENÇÃO</span><h3>Pedidos recentes</h3></div><button className="inline-link" onClick={() => selectNav("Pedidos")}>Ver todos <ArrowLeft size={13} className="rotate-180" /></button></div><div className="mini-orders">{orders.slice(0, 3).map((order) => <div className="mini-order" key={order.id}><div className="order-icon"><ShoppingCart size={15} /></div><div><strong>{order.id} · {order.customer}</strong><span>{order.date}</span></div><b>{order.total}</b></div>)}</div></section></div>
           <section className="admin-panel quick-panel"><div className="panel-heading"><div><span className="section-kicker">ATALHOS</span><h3>Próximos passos</h3></div></div><div className="quick-actions"><button onClick={() => selectNav("Produtos")}><Package size={19} /><span><strong>Adicionar produto</strong><small>Cadastre uma nova peça no catálogo</small></span><ArrowLeft className="rotate-180" size={16} /></button><button onClick={() => selectNav("Aparência")}><ImagePlus size={19} /><span><strong>Atualizar home</strong><small>Troque o editorial ou reorganize a galeria</small></span><ArrowLeft className="rotate-180" size={16} /></button><button onClick={() => selectNav("Newsletter")}><Mail size={19} /><span><strong>Ver inscritos</strong><small>Acompanhe a lista e os cupons enviados</small></span><ArrowLeft className="rotate-180" size={16} /></button></div></section>

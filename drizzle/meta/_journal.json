@@ -25,9 +25,16 @@
     },
     {
       "idx": 3,
-      "version": "5",
+      "version": 5,
       "when": 1786557803926,
       "tag": "0003_supreme_epoch",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": 5,
+      "when": 1786817000000,
+      "tag": "0004_resend_email_logs",
       "breakpoints": true
     }
   ]

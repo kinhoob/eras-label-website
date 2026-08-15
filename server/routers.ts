@@ -1,6 +1,9 @@
 import { z } from "zod";
-import { COOKIE_NAME } from "@shared/const";
+import { TRPCError } from "@trpc/server";
+import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
+import { sdk } from "./_core/sdk";
+import { ADMIN_DISPLAY_NAME, getAdminOpenId, validateAdminCredentials } from "./admin-auth";
 import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { storagePut } from "./storage";
@@ -25,6 +28,7 @@ import {
   listClients,
   listOrders,
   updateOrderTracking,
+  upsertUser,
 } from "./db";
 import { adminOrderEmail, newsletterWelcomeEmail, orderConfirmationEmail, paymentConfirmationEmail } from "./email-templates";
 import { ENV } from "./_core/env";
@@ -51,6 +55,45 @@ export const appRouter = router({
   system: systemRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
+    adminLogin: publicProcedure
+      .input(z.object({
+        email: z.string().email().max(320),
+        password: z.string().min(1).max(200),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        if (!validateAdminCredentials(input.email, input.password)) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Credenciais administrativas inválidas." });
+        }
+
+        const adminEmail = ENV.adminLoginEmail.trim().toLowerCase();
+        const openId = getAdminOpenId(adminEmail);
+        await upsertUser({
+          openId,
+          name: ADMIN_DISPLAY_NAME,
+          email: adminEmail,
+          loginMethod: "admin-password",
+          role: "admin",
+          lastSignedIn: new Date(),
+        });
+
+        const sessionToken = await sdk.createSessionToken(openId, {
+          name: ADMIN_DISPLAY_NAME,
+          expiresInMs: ONE_YEAR_MS,
+        });
+        ctx.res.cookie(COOKIE_NAME, sessionToken, {
+          ...getSessionCookieOptions(ctx.req),
+          maxAge: ONE_YEAR_MS,
+        });
+
+        return {
+          success: true as const,
+          user: {
+            email: adminEmail,
+            name: ADMIN_DISPLAY_NAME,
+            role: "admin" as const,
+          },
+        };
+      }),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });

@@ -10,4 +10,6 @@ export const ENV = {
   resendApiKey: process.env.RESEND_API_KEY ?? "",
   resendFromEmail: process.env.RESEND_FROM_EMAIL ?? "",
   resendAdminEmail: process.env.RESEND_ADMIN_EMAIL ?? "",
+  adminLoginEmail: process.env.ADMIN_LOGIN_EMAIL ?? "",
+  adminLoginPassword: process.env.ADMIN_LOGIN_PASSWORD ?? "",
 };
