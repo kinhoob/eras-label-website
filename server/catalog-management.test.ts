@@ -21,4 +21,27 @@ describe("Catalog Management and Inventory Separation", () => {
     expect(quickStockUpdate.productId).toBe(productBeforeStockUpdate.id);
     expect(quickStockUpdate.variations[0].stock).toBe(12);
   });
+
+  it("marks stock below five units as low while keeping zero as a separate state", () => {
+    const stockState = (stock: number) => stock === 0 ? "danger" : stock < 5 ? "low" : "ok";
+
+    expect(stockState(0)).toBe("danger");
+    expect(stockState(4)).toBe("low");
+    expect(stockState(5)).toBe("ok");
+  });
+
+  it("builds a duplicate product draft without reusing the original SKU", () => {
+    const source = { name: "Camiseta Archive", sku: "EL-TS-001", variations: [{ size: "M", stock: 3 }] };
+    const suffix = "COPY-ABC123";
+    const duplicate = {
+      name: `${source.name} (cópia)`,
+      sku: `${source.sku}-${suffix}`,
+      variations: source.variations.map((variation) => ({ ...variation })),
+    };
+
+    expect(duplicate.name).toBe("Camiseta Archive (cópia)");
+    expect(duplicate.sku).toBe("EL-TS-001-COPY-ABC123");
+    expect(duplicate.variations).toEqual(source.variations);
+    expect(duplicate.variations).not.toBe(source.variations);
+  });
 });

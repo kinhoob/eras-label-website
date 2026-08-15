@@ -220,6 +220,33 @@ export async function getAdminProducts() {
   }));
 }
 
+export async function duplicateProductData(productId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Banco de dados indisponível.");
+  const [source] = await db.select().from(products).where(eq(products.id, productId)).limit(1);
+  if (!source) throw new Error("Produto não encontrado para duplicação.");
+  const sourceVariations = await db
+    .select({ size: productVariations.size, stock: productVariations.stock })
+    .from(productVariations)
+    .where(eq(productVariations.productId, productId))
+    .orderBy(asc(productVariations.size));
+  const sourceSku = source.sku?.trim();
+  const suffix = Date.now().toString(36).slice(-6).toUpperCase();
+  return saveProductData({
+    name: `${source.name} (cópia)`,
+    collection: source.collection,
+    category: source.category,
+    subcategory: source.subcategory,
+    sku: sourceSku ? `${sourceSku}-COPY-${suffix}` : null,
+    price: Number(source.price),
+    pixPrice: Number(source.pixPrice),
+    description: source.description ?? "",
+    images: Array.isArray(source.images) ? source.images : [],
+    status: source.status === "active" ? "Publicado" : source.status === "soldout" ? "Esgotado" : "Rascunho",
+    variations: sourceVariations.map((variation) => ({ size: variation.size, stock: Number(variation.stock ?? 0) })),
+  });
+}
+
 /** Lista categorias no painel e inclui a quantidade de produtos associados pelo nome atual. */
 export async function listAdminCategories() {
   const db = await getDb();

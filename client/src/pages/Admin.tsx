@@ -5,6 +5,7 @@ import {
   BarChart3,
   ChevronDown,
   ClipboardList,
+  Copy,
   Eye,
   History,
   ImagePlus,
@@ -480,6 +481,8 @@ export default function Admin() {
   const uploadMutation = trpc.admin.uploadImage.useMutation();
   const saveProductMutation = trpc.admin.saveProduct.useMutation();
   const updateInventoryStockMutation = trpc.admin.updateInventoryStock.useMutation();
+  const duplicateProductMutation = trpc.admin.duplicateProduct.useMutation();
+  const [stockFeedbackProductId, setStockFeedbackProductId] = useState<number | null>(null);
 
   function handleHomeImageUpload(event: React.ChangeEvent<HTMLInputElement>, target: "banner" | "vip", index?: number) {
     const file = event.target.files?.[0];
@@ -682,12 +685,23 @@ export default function Admin() {
             {catalogProductsLoading && <tr><td colSpan={6}><div className="inventory-state"><LoaderCircle className="spin" size={20} /><strong>Carregando produtos</strong><span>Estamos consultando o catálogo persistido.</span></div></td></tr>}
             {catalogProductsError && !catalogProductsLoading && <tr><td colSpan={6}><div className="inventory-state error"><strong>Não foi possível carregar os produtos</strong><span>Verifique a conexão e tente novamente.</span><Button type="button" variant="outline" onClick={() => void refetchCatalogProducts()}>Tentar novamente</Button></div></td></tr>}
             {!catalogProductsLoading && !catalogProductsError && filteredProducts.length === 0 && <tr><td colSpan={6}><div className="inventory-state"><Package size={22} /><strong>{query ? "Nenhum produto encontrado" : "O catálogo está vazio"}</strong><span>{query ? "Tente buscar por outro nome, SKU ou coleção." : "Cadastre o primeiro produto para começar."}</span>{query && <Button type="button" variant="outline" onClick={() => setQuery("")}>Limpar busca</Button>}</div></td></tr>}
-            {!catalogProductsLoading && !catalogProductsError && filteredProducts.map((product) => <tr key={product.id}><td><div className="table-product"><AdminProductThumbnail src={product.images[0]} alt={`Imagem de ${product.name}`} /><div><strong>{product.name}</strong><span>{product.collection}</span></div></div></td><td><span className="inventory-sku">{product.sku || "Sem SKU"}</span></td><td><span>{product.category}</span>{product.subcategory && <small className="inventory-unit">{product.subcategory}</small>}</td><td><strong className={product.stock === 0 ? "inventory-stock-zero" : "inventory-stock-value"}>{product.stock}</strong><span className="inventory-unit">unidades</span></td><td><span className={`status-pill ${product.status === "Publicado" ? "success" : product.status === "Esgotado" ? "danger" : "warning"}`}>{product.status}</span></td><td><button className="table-more" aria-label={`Editar produto ${product.name}`} onClick={() => {
-              setEditorMode("product");
-              const numericPrice = Number(product.price.replace(/[^0-9,]/g, "").replace(",", ".")) || 0;
-              setEditingProduct({ id: product.id, name: product.name, collection: product.collection, category: product.category, subcategory: product.subcategory ?? null, sku: product.sku ?? "", price: numericPrice, pixPrice: numericPrice, description: "Peça de vestuário streetwear com acabamento premium.", status: product.status, variations: product.variations.map((variation) => ({ ...variation })) });
-              setProductImages(product.images);
-            }}><Pencil size={16} /></button></td></tr>)}
+            {!catalogProductsLoading && !catalogProductsError && filteredProducts.map((product) => <tr key={product.id}><td><div className="table-product"><AdminProductThumbnail src={product.images[0]} alt={`Imagem de ${product.name}`} /><div><strong>{product.name}</strong><span>{product.collection}</span></div></div></td><td><span className="inventory-sku">{product.sku || "Sem SKU"}</span></td><td><span>{product.category}</span>{product.subcategory && <small className="inventory-unit">{product.subcategory}</small>}</td><td><strong className={product.stock === 0 ? "inventory-stock-zero" : "inventory-stock-value"}>{product.stock}</strong><span className="inventory-unit">unidades</span></td><td><span className={`status-pill ${product.status === "Publicado" ? "success" : product.status === "Esgotado" ? "danger" : "warning"}`}>{product.status}</span></td><td><div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "0.35rem" }}>
+              <button className="table-more" aria-label={`Editar produto ${product.name}`} title="Editar produto" onClick={() => {
+                setEditorMode("product");
+                const numericPrice = Number(product.price.replace(/[^0-9,]/g, "").replace(",", ".")) || 0;
+                setEditingProduct({ id: product.id, name: product.name, collection: product.collection, category: product.category, subcategory: product.subcategory ?? null, sku: product.sku ?? "", price: numericPrice, pixPrice: numericPrice, description: "Peça de vestuário streetwear com acabamento premium.", status: product.status, variations: product.variations.map((variation) => ({ ...variation })) });
+                setProductImages(product.images);
+              }}><Pencil size={16} /></button>
+              <button className="table-more" aria-label={`Duplicar produto ${product.name}`} title="Duplicar produto" disabled={duplicateProductMutation.isPending} onClick={() => {
+                duplicateProductMutation.mutate({ productId: product.id }, {
+                  onSuccess: (result) => {
+                    void Promise.all([utils.admin.listProducts.invalidate(), utils.catalog.list.invalidate()]);
+                    toast.success(result.message);
+                  },
+                  onError: () => toast.error("Não foi possível duplicar o produto. Tente novamente."),
+                });
+              }}><Copy size={16} /></button>
+            </div></td></tr>)}
           </tbody></table></div>
         </section>}
 
@@ -700,7 +714,7 @@ export default function Admin() {
             {catalogProductsLoading && <tr><td colSpan={6}><div className="inventory-state"><LoaderCircle className="spin" size={20} /><strong>Carregando inventário</strong><span>Estamos consultando os produtos e as variações salvas.</span></div></td></tr>}
             {catalogProductsError && !catalogProductsLoading && <tr><td colSpan={6}><div className="inventory-state error"><strong>Não foi possível carregar o inventário</strong><span>Verifique a conexão e tente novamente.</span><Button type="button" variant="outline" onClick={() => void refetchCatalogProducts()}>Tentar novamente</Button></div></td></tr>}
             {!catalogProductsLoading && !catalogProductsError && filteredProducts.length === 0 && <tr><td colSpan={6}><div className="inventory-state"><Package size={22} /><strong>{query || inventoryCategoryFilter !== "all" ? "Nenhum item encontrado" : "O inventário está vazio"}</strong><span>{query || inventoryCategoryFilter !== "all" ? "Ajuste a busca ou o filtro de categoria." : "Cadastre um produto em Produtos para começar."}</span>{(query || inventoryCategoryFilter !== "all") && <Button type="button" variant="outline" onClick={() => { setQuery(""); setInventoryCategoryFilter("all"); }}>Limpar filtros</Button>}</div></td></tr>}
-            {!catalogProductsLoading && !catalogProductsError && filteredProducts.map((product) => <tr key={product.id}><td><div className="table-product"><AdminProductThumbnail src={product.images[0]} alt={`Imagem de ${product.name}`} /><div><strong>{product.name}</strong><span>{product.collection}</span></div></div></td><td><strong className={product.stock === 0 ? "inventory-stock-zero" : "inventory-stock-value"}>{product.stock}</strong><span className="inventory-unit">unidades</span></td><td><div className="inventory-variation-summary">{product.variations.length > 0 ? product.variations.map((variation) => <span key={`${product.id}-${variation.size}`} className={variation.stock === 0 ? "variation-chip zero" : "variation-chip"}>{variation.size}: {variation.stock}</span>) : <span className="inventory-empty">Sem tamanhos</span>}</div></td><td><span className="inventory-sku">{product.sku || "Sem SKU"}</span></td><td><span>{product.category}</span>{product.subcategory && <small className="inventory-unit">{product.subcategory}</small>}</td><td><button className="table-more" aria-label={`Editar quantidades de ${product.name}`} onClick={() => {
+            {!catalogProductsLoading && !catalogProductsError && filteredProducts.map((product) => <tr key={product.id}><td><div className="table-product"><AdminProductThumbnail src={product.images[0]} alt={`Imagem de ${product.name}`} /><div><strong>{product.name}</strong><span>{product.collection}</span></div></div></td><td><div className="inventory-stock-cell"><strong className={product.stock === 0 ? "inventory-stock-zero" : product.stock < 5 ? "inventory-stock-low" : "inventory-stock-value"}>{product.stock}</strong><span className="inventory-unit">unidades</span>{product.stock === 0 ? <span className="inventory-low-stock-badge danger">Sem estoque</span> : product.stock < 5 ? <span className="inventory-low-stock-badge">Estoque baixo</span> : null}{stockFeedbackProductId === product.id && <span className="inventory-save-feedback" role="status"><Check size={12} /> Salvo</span>}</div></td><td><div className="inventory-variation-summary">{product.variations.length > 0 ? product.variations.map((variation) => <span key={`${product.id}-${variation.size}`} className={variation.stock === 0 ? "variation-chip zero" : variation.stock < 5 ? "variation-chip low" : "variation-chip"}>{variation.size}: {variation.stock}</span>) : <span className="inventory-empty">Sem tamanhos</span>}</div></td><td><span className="inventory-sku">{product.sku || "Sem SKU"}</span></td><td><span>{product.category}</span>{product.subcategory && <small className="inventory-unit">{product.subcategory}</small>}</td><td><button className="table-more" aria-label={`Editar quantidades de ${product.name}`} onClick={() => {
               setEditorMode("inventory");
               setEditingProduct({ id: product.id, name: product.name, collection: product.collection, category: product.category, subcategory: product.subcategory ?? null, sku: product.sku ?? "", price: 0, pixPrice: 0, description: "", status: product.status, variations: product.variations.map((variation) => ({ ...variation })) });
               setProductImages([]);
@@ -861,7 +875,10 @@ export default function Admin() {
                   if (editorMode === "inventory") {
                     updateInventoryStockMutation.mutate({ productId: Number(editingProduct.id), variations }, {
                       onSuccess: () => {
+                        const savedProductId = Number(editingProduct.id);
                         void utils.admin.listProducts.invalidate();
+                        setStockFeedbackProductId(savedProductId);
+                        window.setTimeout(() => setStockFeedbackProductId((current) => current === savedProductId ? null : current), 2200);
                         toast.success("Estoque atualizado com sucesso.");
                         setEditingProduct(null);
                       },
@@ -886,7 +903,7 @@ export default function Admin() {
                       toast.error("Erro ao guardar o produto. Tente novamente.");
                     }
                   });
-                }}>{editorMode === "inventory" ? "Guardar estoque" : "Guardar produto"}</Button>
+                }}>{editorMode === "inventory" ? (updateInventoryStockMutation.isPending ? <><LoaderCircle className="spin" size={15} /> Salvando estoque...</> : "Guardar estoque") : (saveProductMutation.isPending ? <><LoaderCircle className="spin" size={15} /> Salvando produto...</> : "Guardar produto")}</Button>
               </div>
             </div>
           </div>

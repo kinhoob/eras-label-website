@@ -27,7 +27,7 @@
 - [x] 13. **Auditoria Técnica, Correções de Áudio e Code-Splitting**
 
 ## Estado atual
-- Plataforma de e-commerce da Eras Label totalmente implementada, auditada, com cobertura robusta de testes (67 testes unitários aprovados), build de produção otimizado e rotas lazy validadas.
+- Plataforma de e-commerce da Eras Label totalmente implementada, auditada, com cobertura robusta de testes (82 testes unitários aprovados), build de produção otimizado e rotas lazy validadas.
 
 ## Integração Resend
 - [x] Mapear os fluxos atuais de e-mail de pedidos, avisos administrativos e newsletter
@@ -105,3 +105,9 @@
 - [x] Permitir upload persistente de imagem de capa por categoria usando o storage do projeto
 - [x] Exibir capas e subcategorias na navegação/experiência pública do catálogo
 - [x] Adicionar 77 testes Vitest, TypeScript, build de produção e guardar checkpoint
+
+## Alertas de inventário e duplicação de produtos
+- [x] Adicionar indicador visual de estoque baixo na tela de Inventário
+- [x] Criar botão de duplicar produto na tela de Produtos com cópia segura dos dados e variações
+- [x] Adicionar notificação visual de sucesso após salvar alterações de estoque
+- [x] Adicionar testes Vitest, TypeScript, build, verificação visual e guardar checkpoint

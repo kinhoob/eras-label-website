@@ -1962,15 +1962,69 @@ td { border-top: 1px solid #e1dacf; padding: 15px 17px; color: #6f675e; font-siz
   min-width: 920px;
 }
 
+/* A célula reúne valor, alerta operacional e confirmação sem alterar a altura da tabela de forma brusca. */
+.inventory-stock-cell {
+  display: flex;
+  min-width: 7.5rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.08rem;
+}
+
 .inventory-stock-value,
+.inventory-stock-low,
 .inventory-stock-zero {
   display: block;
   font-size: 1rem;
   line-height: 1.1;
 }
 
+.inventory-stock-low {
+  color: #a16e34;
+}
+
 .inventory-stock-zero {
   color: #b22222;
+}
+
+/* Badge de alerta para reposição: âmbar indica nível baixo e vermelho indica ruptura. */
+.inventory-low-stock-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 0.18rem;
+  padding: 0.18rem 0.42rem;
+  border: 1px solid #e6c58d;
+  border-radius: 999px;
+  background: #fff8e8;
+  color: #9b6a2c;
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.035em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.inventory-low-stock-badge.danger {
+  border-color: #e4a6a6;
+  background: #fff1f1;
+  color: #a11d1d;
+}
+
+/* Feedback curto, acessível e não intrusivo após a persistência do estoque. */
+.inventory-save-feedback {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin-top: 0.22rem;
+  color: #507154;
+  font-size: 0.68rem;
+  font-weight: 700;
+  animation: inventory-feedback-in 180ms ease-out both;
+}
+
+@keyframes inventory-feedback-in {
+  from { opacity: 0; transform: translateY(2px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .inventory-unit {
@@ -2004,6 +2058,12 @@ td { border-top: 1px solid #e1dacf; padding: 15px 17px; color: #6f675e; font-siz
   border-color: #e4a6a6;
   background: #fff1f1;
   color: #a11d1d;
+}
+
+.variation-chip.low {
+  border-color: #e6c58d;
+  background: #fff8e8;
+  color: #9b6a2c;
 }
 
 .inventory-empty,

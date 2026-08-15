@@ -10,6 +10,7 @@ import { storagePut } from "./storage";
 import {
   getAdminSummary,
   getAdminProducts,
+  duplicateProductData,
   getProductWithVariations,
   listNewsletterSubscribers,
   getNewsletterSubscriber,
@@ -349,6 +350,10 @@ export const appRouter = router({
         stock: z.number().int().min(0).max(100000),
       })).max(20),
     })).mutation(({ input }) => updateInventoryStock(input)),
+    duplicateProduct: adminProcedure.input(z.object({ productId: z.number().int().positive() })).mutation(async ({ input }) => {
+      const product = await duplicateProductData(input.productId);
+      return { success: true, message: "Produto duplicado com sucesso!", product };
+    }),
     saveConfig: adminProcedure.input(z.object({
       pixDiscountPercent: z.number().min(0).max(100),
       freeShippingThreshold: z.number().nonnegative(),
