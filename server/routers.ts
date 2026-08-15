@@ -9,6 +9,7 @@ import {
   getAdminProducts,
   getProductWithVariations,
   listNewsletterSubscribers,
+  getNewsletterSubscriber,
   listProducts,
   saveProductData,
   subscribeToNewsletter,
@@ -21,6 +22,9 @@ import {
   createNotification,
   markNotificationAsRead,
 } from "./db";
+import { adminOrderEmail, newsletterWelcomeEmail, orderConfirmationEmail, paymentConfirmationEmail } from "./email-templates";
+import { ENV } from "./_core/env";
+import { sendResendEmail } from "./resend";
 
 const newsletterInput = z.object({
   name: z.string().min(2).max(255),
@@ -79,7 +83,25 @@ export const appRouter = router({
     }),
   }),
   newsletter: router({
-    subscribe: publicProcedure.input(newsletterInput).mutation(({ input }) => subscribeToNewsletter(input.name, input.email)),
+    subscribe: publicProcedure.input(newsletterInput).mutation(async ({ input }) => {
+      const existing = await getNewsletterSubscriber(input.email);
+      const subscriber = await subscribeToNewsletter(input.name, input.email);
+
+      if (!existing && subscriber.couponCode) {
+        try {
+          const template = newsletterWelcomeEmail(subscriber.name ?? input.name, subscriber.couponCode);
+          await sendResendEmail({
+            to: subscriber.email,
+            replyTo: ENV.resendAdminEmail || undefined,
+            ...template,
+          });
+        } catch (error) {
+          console.warn("Newsletter welcome email failed:", error instanceof Error ? error.message : "unknown error");
+        }
+      }
+
+      return subscriber;
+    }),
     list: adminProcedure.query(() => listNewsletterSubscribers()),
   }),
   coupons: router({
@@ -92,7 +114,7 @@ export const appRouter = router({
       customerCpf: z.string().min(11),
       phone: z.string().min(8),
       address: z.record(z.string(), z.string()),
-      items: z.array(z.object({ productId: z.number(), size: z.string(), quantity: z.number().int().positive(), price: z.number().nonnegative() })).min(1),
+      items: z.array(z.object({ productId: z.number(), name: z.string().max(255).optional(), size: z.string(), quantity: z.number().int().positive(), price: z.number().nonnegative() })).min(1),
       subtotal: z.number().nonnegative(),
       shippingCost: z.number().nonnegative(),
       discount: z.number().nonnegative(),
@@ -129,6 +151,25 @@ export const appRouter = router({
         }
       } catch (err) {
         console.warn("Failed to create automatic notification:", err);
+      }
+
+      const emailOrder = {
+        ...input,
+        orderNumber,
+        items: input.items.map(item => ({
+          ...item,
+          name: item.name ?? `Produto #${item.productId}`,
+        })),
+      };
+      const emailJobs = [
+        sendResendEmail({ to: input.customerEmail, ...orderConfirmationEmail(emailOrder) }),
+        sendResendEmail({ to: input.customerEmail, ...paymentConfirmationEmail(emailOrder) }),
+        ...(ENV.resendAdminEmail ? [sendResendEmail({ to: ENV.resendAdminEmail, ...adminOrderEmail(emailOrder) })] : []),
+      ];
+      const emailResults = await Promise.allSettled(emailJobs);
+      const failedEmails = emailResults.filter(result => result.status === "rejected");
+      if (failedEmails.length > 0) {
+        console.warn(`Resend could not deliver ${failedEmails.length} email(s) for order ${orderNumber}.`);
       }
 
       return {

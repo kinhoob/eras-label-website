@@ -1,5 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { appRouter } from "./routers";
+import { ENV } from "./_core/env";
 import type { TrpcContext } from "./_core/context";
 
 function createContext(): TrpcContext {
@@ -11,6 +12,19 @@ function createContext(): TrpcContext {
 }
 
 describe("store procedures", () => {
+  const originalResendApiKey = ENV.resendApiKey;
+  const originalResendFromEmail = ENV.resendFromEmail;
+
+  beforeEach(() => {
+    ENV.resendApiKey = "";
+    ENV.resendFromEmail = "";
+  });
+
+  afterEach(() => {
+    ENV.resendApiKey = originalResendApiKey;
+    ENV.resendFromEmail = originalResendFromEmail;
+  });
+
   it("generates a unique subscriber coupon", async () => {
     const caller = appRouter.createCaller(createContext());
     const result = await caller.newsletter.subscribe({ name: "Pessoa Teste", email: "teste@example.com" });

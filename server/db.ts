@@ -93,6 +93,14 @@ export async function getProductWithVariations(id: number) {
   return { ...product[0], variations };
 }
 
+export async function getNewsletterSubscriber(email: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const normalizedEmail = email.trim().toLowerCase();
+  const existing = await db.select().from(newsletterSubscribers).where(eq(newsletterSubscribers.email, normalizedEmail)).limit(1);
+  return existing[0];
+}
+
 export async function subscribeToNewsletter(name: string, email: string) {
   const db = await getDb();
   if (!db) return { email, name, couponCode: "ERAS10" };

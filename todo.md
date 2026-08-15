@@ -28,3 +28,13 @@
 
 ## Estado atual
 - Plataforma de e-commerce da Eras Label totalmente implementada, auditada, com cobertura de testes (51 testes unitários aprovados), build de produção otimizado e rotas lazy validadas.
+
+## Integração Resend
+- [x] Mapear os fluxos atuais de e-mail de pedidos, avisos administrativos e newsletter
+- [x] Configurar a chave da API Resend de forma segura no backend
+- [x] Implementar cliente Resend e templates de e-mail da Eras Label
+- [x] Ligar confirmação de pedido, aviso administrativo e newsletter ao envio real
+- [x] Cobrir sucesso, falha, fallback sem credencial e não exposição da chave em testes
+- [x] Documentar domínio/remetente, variáveis de ambiente e operação da integração
+- [x] Executar TypeScript, Vitest e build de produção
+- [x] Guardar checkpoint final da integração Resend

@@ -175,7 +175,7 @@ export default function CheckoutPage() {
         city: fields.city.trim(),
         state: fields.state.trim().toUpperCase(),
       },
-      items: cart.map((item) => ({ productId: item.id, size: item.size, quantity: item.quantity, price: item.price })),
+      items: cart.map((item) => ({ productId: item.id, name: item.name, size: item.size, quantity: item.quantity, price: item.price })),
       subtotal,
       shippingCost,
       discount: discount + pixSavings,

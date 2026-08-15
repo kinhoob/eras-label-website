@@ -615,7 +615,7 @@ export default function Home() {
         city: String(form.get("city") ?? ""),
         state: String(form.get("state") ?? ""),
       },
-      items: cart.map((item) => ({ productId: item.id, size: item.size, quantity: item.quantity, price: item.price })),
+      items: cart.map((item) => ({ productId: item.id, name: item.name, size: item.size, quantity: item.quantity, price: item.price })),
       subtotal,
       shippingCost,
       discount,
