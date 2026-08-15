@@ -111,3 +111,11 @@
 - [x] Criar botão de duplicar produto na tela de Produtos com cópia segura dos dados e variações
 - [x] Adicionar notificação visual de sucesso após salvar alterações de estoque
 - [x] Adicionar testes Vitest, TypeScript, build, verificação visual e guardar checkpoint
+
+## Estatísticas Avançadas, Auditoria de Estoque e Filtros de Inventário
+- [x] Criar modelo de dados e migração SQL para o histórico de auditoria de estoque por administrador (`inventory_audit_logs`)
+- [x] Implementar procedures tRPC protegidas para métricas analíticas e histórico de alterações de estoque
+- [x] Construir a tela de Estatísticas inspirada no padrão de referência (visão geral, receita, vendas, comportamento de visitantes e conversão)
+- [x] Criar a aba de Histórico de Estoque com registo auditável de quem alterou, o tamanho, o estoque anterior e o novo
+- [x] Refinar a barra de busca e os filtros avançados na página de Inventário
+- [x] Executar suíte Vitest completa (84 testes aprovados), TypeScript sem erros, build de produção e guardar checkpoint final

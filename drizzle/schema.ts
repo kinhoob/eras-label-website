@@ -174,3 +174,18 @@ export const resendEmailLogs = mysqlTable("resend_email_logs", {
 
 export type ResendEmailLog = typeof resendEmailLogs.$inferSelect;
 export type InsertResendEmailLog = typeof resendEmailLogs.$inferInsert;
+
+export const inventoryAuditLogs = mysqlTable("inventory_audit_logs", {
+  id: int("id").autoincrement().primaryKey(),
+  productId: int("productId").notNull(),
+  productName: varchar("productName", { length: 255 }).notNull(),
+  size: varchar("size", { length: 20 }).notNull(),
+  previousStock: int("previousStock").notNull(),
+  newStock: int("newStock").notNull(),
+  adminEmail: varchar("adminEmail", { length: 320 }).notNull(),
+  adminName: varchar("adminName", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type InventoryAuditLog = typeof inventoryAuditLogs.$inferSelect;
+export type InsertInventoryAuditLog = typeof inventoryAuditLogs.$inferInsert;

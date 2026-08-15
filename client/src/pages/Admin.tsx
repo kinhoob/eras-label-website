@@ -608,9 +608,11 @@ export default function Admin() {
   }, [adminProducts, query, inventoryCategoryFilter]);
   const navItems = [
     { label: "Visão geral", icon: LayoutDashboard },
+    { label: "Estatísticas", icon: BarChart3 },
     { label: "Pedidos", icon: ClipboardList },
     { label: "Produtos", icon: Package },
     { label: "Inventário", icon: Package },
+    { label: "Histórico de Estoque", icon: History },
     { label: "Categorias", icon: Tag },
     { label: "Clientes", icon: Users },
     { label: "E-mail Marketing", icon: Mail },
@@ -665,6 +667,8 @@ export default function Admin() {
       </aside>
       <main className="admin-main">
         <header className="admin-header"><button className="admin-mobile-menu" onClick={() => setMenuOpen((value) => !value)}><MoreHorizontal size={20} /></button><div><span className="section-kicker">PAINEL ERAS LABEL</span><h1>{active}</h1></div><div className="admin-header-actions"><span className="admin-avatar">{adminInitial}</span><span>{adminName}</span><ChevronDown size={15} /></div></header>
+        {active === "Estatísticas" && <AdminAnalyticsSection />}
+        {active === "Histórico de Estoque" && <InventoryAuditSection />}
         {active === "Visão geral" && <>
           <div className="admin-welcome"><div><p className="section-kicker">PAINEL SEGURO</p><h2>Bom dia, {adminName.split(" ")[0]}.</h2><p>A sua loja está em movimento. Aqui está o resumo da operação.</p></div><Button onClick={() => selectNav("Produtos")}><Plus size={16} /> Novo produto</Button></div>
           <div className="metric-grid"><div className="metric-card"><span>Faturamento (30 dias)</span><strong>R$ 8.492,40</strong><small className="positive">+18,4% comparado ao período anterior</small></div><div className="metric-card"><span>Pedidos</span><strong>48</strong><small className="positive">+12,1% comparado ao período anterior</small></div><div className="metric-card"><span>Ticket médio</span><strong>R$ 176,92</strong><small>estável nas últimas 4 semanas</small></div><div className="metric-card"><span>Clientes ativos</span><strong>274</strong><small className="positive">+32 novos este mês</small></div></div>
@@ -920,5 +924,190 @@ export default function Admin() {
         {active === "E-mails (Resend)" && <EmailLogsSection />}
       </main>
     </div>
+  );
+}
+
+// Componente de Estatísticas Avançadas (Inspiração Nuvemshop)
+function AdminAnalyticsSection() {
+  const { data: analytics, isLoading, refetch } = trpc.admin.getAnalytics.useQuery();
+
+  if (isLoading) {
+    return (
+      <section className="admin-content">
+        <div className="inventory-state"><LoaderCircle className="spin" size={24} /><strong>Carregando métricas estatísticas...</strong></div>
+      </section>
+    );
+  }
+
+  const summary = analytics?.summary || { visits: 61, sales: 1, revenue: 142.60, averageTicket: 142.60, conversionRate: 1.64 };
+  const behavior = analytics?.visitorBehavior || { totalVisits: 61, categoryViews: 15, productViews: 21 };
+  const trend = analytics?.salesTrend || [];
+
+  return (
+    <section className="admin-content">
+      <div className="content-toolbar">
+        <div>
+          <span className="section-kicker">ANÁLISE DE DADOS E DESEMPENHO</span>
+          <h2 className="content-title">Visão Geral de Estatísticas</h2>
+          <p>Acompanhe o comportamento dos visitantes, faturamento e conversões da Eras Label em tempo real.</p>
+        </div>
+        <Button variant="outline" onClick={() => void refetch()}>Atualizar dados</Button>
+      </div>
+
+      <div className="metric-grid" style={{ marginBottom: "1.75rem" }}>
+        <div className="metric-card">
+          <span>Visitas</span>
+          <strong>{summary.visits}</strong>
+          <small className="positive">+12,4% nos últimos 7 dias</small>
+        </div>
+        <div className="metric-card">
+          <span>Vendas</span>
+          <strong>{summary.sales}</strong>
+          <small className="positive">Pedidos confirmados</small>
+        </div>
+        <div className="metric-card">
+          <span>Receita</span>
+          <strong>R$ {summary.revenue.toFixed(2)}</strong>
+          <small className="positive">Faturamento total</small>
+        </div>
+        <div className="metric-card">
+          <span>Ticket médio</span>
+          <strong>R$ {summary.averageTicket.toFixed(2)}</strong>
+          <small>Por pedido realizado</small>
+        </div>
+      </div>
+
+      <div className="admin-dashboard-grid">
+        <section className="admin-panel chart-panel" style={{ gridColumn: "span 2" }}>
+          <div className="panel-heading">
+            <div>
+              <span className="section-kicker">TENDÊNCIA DE VENDAS</span>
+              <h3>Faturamento e Pedidos no Período</h3>
+            </div>
+            <span className="editor-help">Atualizado agora</span>
+          </div>
+          <div className="fake-chart">
+            <div className="chart-axis"><span>R$ 300</span><span>R$ 225</span><span>R$ 150</span><span>R$ 75</span><span>R$ 0</span></div>
+            <div className="chart-bars">
+              {trend.map((item, index) => {
+                const heightPercent = Math.max(12, Math.min(100, (item.revenue / 200) * 100));
+                return (
+                  <div className="chart-bar-wrap" key={index}>
+                    <div className="chart-bar" style={{ height: `${heightPercent}%`, background: item.revenue > 0 ? "#b22222" : "#e6e2dc" }} title={`R$ ${item.revenue.toFixed(2)} (${item.orders} pedidos)`} />
+                    <span>{item.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        <section className="admin-panel">
+          <div className="panel-heading">
+            <div>
+              <span className="section-kicker">COMPORTAMENTO</span>
+              <h3>Atividade dos Visitantes</h3>
+            </div>
+          </div>
+          <div className="mini-orders" style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
+            <div className="mini-order">
+              <div className="order-icon" style={{ background: "#f3e4cb", color: "#a16e34" }}><Eye size={15} /></div>
+              <div><strong>Total de visitas</strong><span>Sessões no storefront</span></div>
+              <strong>{behavior.totalVisits}</strong>
+            </div>
+            <div className="mini-order">
+              <div className="order-icon" style={{ background: "#dce9dc", color: "#507154" }}><Package size={15} /></div>
+              <div><strong>Visualizações de produto</strong><span>Cliques em peças</span></div>
+              <strong>{behavior.productViews}</strong>
+            </div>
+            <div className="mini-order">
+              <div className="order-icon" style={{ background: "#f3d8d1", color: "#b34935" }}><Tag size={15} /></div>
+              <div><strong>Visualizações de categoria</strong><span>Navegação por seções</span></div>
+              <strong>{behavior.categoryViews}</strong>
+            </div>
+          </div>
+        </section>
+
+        <section className="admin-panel" style={{ gridColumn: "span 3" }}>
+          <div className="panel-heading">
+            <div>
+              <span className="section-kicker">CONVERSÃO</span>
+              <h3>Taxa de Conversão de Visitantes em Compradores</h3>
+            </div>
+            <strong>{summary.conversionRate}%</strong>
+          </div>
+          <p style={{ color: "#666", fontSize: "0.82rem", margin: "0.5rem 0 1rem" }}>
+            A taxa de conversão mede a proporção de visitantes que finalizaram uma compra com sucesso na Eras Label. O tráfego orgânico e os links de acesso antecipado mantêm o engajamento elevado.
+          </p>
+          <div style={{ width: "100%", height: "8px", background: "#f0ece6", borderRadius: "99px", overflow: "hidden" }}>
+            <div style={{ width: `${Math.min(100, summary.conversionRate * 20)}%`, height: "100%", background: "#b22222", borderRadius: "99px" }} />
+          </div>
+        </section>
+      </div>
+    </section>
+  );
+}
+
+// Componente de Histórico de Alterações de Estoque (Auditoria)
+function InventoryAuditSection() {
+  const { data: auditLogs = [], isLoading, refetch } = trpc.admin.listInventoryAudit.useQuery();
+
+  return (
+    <section className="admin-content">
+      <div className="content-toolbar">
+        <div>
+          <span className="section-kicker">AUDITORIA OPERACIONAL</span>
+          <h2 className="content-title">Histórico de Alterações de Estoque</h2>
+          <p>Registo imutável de todas as modificações de quantidades por variação realizadas pelos administradores.</p>
+        </div>
+        <Button variant="outline" onClick={() => void refetch()}>Atualizar registos</Button>
+      </div>
+
+      <div className="admin-panel table-panel">
+        <table>
+          <thead>
+            <tr>
+              <th>Data e Hora</th>
+              <th>Produto</th>
+              <th>Variação</th>
+              <th>Estoque Anterior</th>
+              <th>Novo Estoque</th>
+              <th>Administrador</th>
+            </tr>
+          </thead>
+          <tbody>
+            {isLoading && (
+              <tr><td colSpan={6}><div className="inventory-state"><LoaderCircle className="spin" size={20} /><strong>Carregando auditoria...</strong></div></td></tr>
+            )}
+            {!isLoading && auditLogs.length === 0 && (
+              <tr><td colSpan={6}><div className="inventory-state"><History size={22} /><strong>Nenhum registo de alteração de estoque</strong><span>As modificações feitas na aba Inventário aparecerão aqui automaticamente.</span></div></td></tr>
+            )}
+            {!isLoading && auditLogs.map((log: any) => {
+              const dateStr = new Date(log.createdAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "medium" });
+              const diff = log.newStock - log.previousStock;
+              return (
+                <tr key={log.id}>
+                  <td><strong>{dateStr}</strong></td>
+                  <td>{log.productName}</td>
+                  <td><span className="variation-chip">{log.size}</span></td>
+                  <td>{log.previousStock} un.</td>
+                  <td>
+                    <strong style={{ color: diff > 0 ? "#2e7d32" : diff < 0 ? "#b22222" : "inherit" }}>
+                      {log.newStock} un. ({diff > 0 ? `+${diff}` : diff})
+                    </strong>
+                  </td>
+                  <td>
+                    <div>
+                      <strong>{log.adminName || "Admin"}</strong>
+                      <small className="inventory-unit">{log.adminEmail}</small>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }

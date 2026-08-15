@@ -15,6 +15,9 @@ import {
   listNewsletterSubscribers,
   getNewsletterSubscriber,
   listProducts,
+  getAdminAnalytics,
+  listInventoryAuditLogs,
+  logInventoryAudit,
   saveProductData,
   subscribeToNewsletter,
   validateCoupon,
@@ -349,7 +352,32 @@ export const appRouter = router({
         size: z.string().trim().min(1).max(20),
         stock: z.number().int().min(0).max(100000),
       })).max(20),
-    })).mutation(({ input }) => updateInventoryStock(input)),
+    })).mutation(async ({ input, ctx }) => {
+      // Registrar log de auditoria para cada variação atualizada
+      try {
+        const prod = await getProductWithVariations(input.productId);
+        if (prod) {
+          for (const newVar of input.variations) {
+            const existingVar = prod.variations.find((v) => v.size === newVar.size);
+            const prevStock = existingVar ? existingVar.stock : 0;
+            if (prevStock !== newVar.stock) {
+              await logInventoryAudit({
+                productId: input.productId,
+                productName: prod.name,
+                size: newVar.size,
+                previousStock: prevStock,
+                newStock: newVar.stock,
+                adminEmail: ctx.user?.email || "theeraslabel@gmail.com",
+                adminName: ctx.user?.name || "Administrador",
+              });
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("[Audit] Failed to log inventory change:", err);
+      }
+      return updateInventoryStock(input);
+    }),
     duplicateProduct: adminProcedure.input(z.object({ productId: z.number().int().positive() })).mutation(async ({ input }) => {
       const product = await duplicateProductData(input.productId);
       return { success: true, message: "Produto duplicado com sucesso!", product };
@@ -398,6 +426,12 @@ export const appRouter = router({
     }),
     listClients: adminProcedure.query(async () => {
       return listClients();
+    }),
+    getAnalytics: adminProcedure.query(async () => {
+      return getAdminAnalytics();
+    }),
+    listInventoryAudit: adminProcedure.query(async () => {
+      return listInventoryAuditLogs();
     }),
     listMarketingCollections: adminProcedure.query(async () => {
       return listMarketingCollections();

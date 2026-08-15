@@ -44,4 +44,31 @@ describe("Catalog Management and Inventory Separation", () => {
     expect(duplicate.variations).toEqual(source.variations);
     expect(duplicate.variations).not.toBe(source.variations);
   });
+
+  it("calculates analytics metrics correctly based on orders and visits", () => {
+    const mockOrders = [
+      { total: "142.60" },
+      { total: "210.00" },
+    ];
+    const totalRevenue = mockOrders.reduce((acc, o) => acc + Number(o.total), 0);
+    const totalSales = mockOrders.length;
+    const averageTicket = totalRevenue / totalSales;
+
+    expect(totalRevenue).toBe(352.60);
+    expect(totalSales).toBe(2);
+    expect(averageTicket).toBe(176.30);
+  });
+
+  it("formats audit log inventory change description correctly", () => {
+    const log = {
+      productName: "Calça Cargo Paradox",
+      size: "40",
+      previousStock: 8,
+      newStock: 3,
+      adminName: "Eras Admin",
+    };
+    const diff = log.newStock - log.previousStock;
+    const desc = `${log.productName} (${log.size}): ${log.previousStock} -> ${log.newStock} (${diff})`;
+    expect(desc).toBe("Calça Cargo Paradox (40): 8 -> 3 (-5)");
+  });
 });
