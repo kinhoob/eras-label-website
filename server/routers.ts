@@ -32,6 +32,7 @@ import {
   listPublicCategories,
   saveCategoryData,
   archiveCategory,
+  updateInventoryStock,
   listOrders,
   updateOrderTracking,
   upsertUser,
@@ -294,6 +295,8 @@ export const appRouter = router({
       id: z.number().int().positive().optional(),
       name: z.string().trim().min(2).max(100),
       description: z.string().max(500).optional(),
+      parentId: z.number().int().positive().nullable().optional(),
+      coverImageUrl: z.string().trim().max(1000).nullable().optional(),
       active: z.number().int().min(0).max(1).default(1),
       sortOrder: z.number().int().min(0).max(10000).default(0),
     })).mutation(async ({ input }) => {
@@ -320,6 +323,8 @@ export const appRouter = router({
       name: z.string().min(2),
       collection: z.string(),
       category: z.string(),
+      subcategory: z.string().trim().max(100).nullable().optional(),
+      sku: z.string().trim().max(100).nullable().optional(),
       price: z.number().positive(),
       pixPrice: z.number().positive(),
       description: z.string(),
@@ -337,6 +342,13 @@ export const appRouter = router({
         product: saved,
       };
     }),
+    updateInventoryStock: adminProcedure.input(z.object({
+      productId: z.number().int().positive(),
+      variations: z.array(z.object({
+        size: z.string().trim().min(1).max(20),
+        stock: z.number().int().min(0).max(100000),
+      })).max(20),
+    })).mutation(({ input }) => updateInventoryStock(input)),
     saveConfig: adminProcedure.input(z.object({
       pixDiscountPercent: z.number().min(0).max(100),
       freeShippingThreshold: z.number().nonnegative(),

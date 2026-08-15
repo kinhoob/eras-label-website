@@ -43,6 +43,13 @@
       "when": 1786819300000,
       "tag": "0005_categories",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": 5,
+      "when": 1786819600000,
+      "tag": "0006_catalog_management",
+      "breakpoints": true
     }
   ]
 }

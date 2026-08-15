@@ -342,7 +342,7 @@ function EmailMarketingSection() {
 }
 
 type AdminVariation = { id?: number; size: string; stock: number };
-type AdminProductOption = { id: number; name: string; collection: string; category: string; price: string; stock: number; variations: AdminVariation[]; status: string; images: string[] };
+type AdminProductOption = { id: number; name: string; collection: string; category: string; subcategory?: string | null; sku?: string | null; price: string; stock: number; variations: AdminVariation[]; status: string; images: string[] };
 type EditableBanner = { id: string; eyebrow: string; title: string; subtitle: string; imageUrl: string; href: string; cta: string };
 type EditableHighlight = { id: string; productId: number; label: string };
 type EditableVipBanner = Omit<EditableBanner, "id">;
@@ -434,7 +434,7 @@ function AdminLoginScreen() {
 export default function Admin() {
   const { data: authUser, isLoading: authLoading } = trpc.auth.me.useQuery();
 
-  const [active, setActive] = useState("Inventário");
+  const [active, setActive] = useState("Produtos");
   const [query, setQuery] = useState("");
   const [appearanceSaved, setAppearanceSaved] = useState(false);
   const [couponActive, setCouponActive] = useState(true);
@@ -447,6 +447,7 @@ export default function Admin() {
   const { data: commercialConfig } = trpc.catalog.getConfig.useQuery();
   const { data: homeContent } = trpc.catalog.getHomeContent.useQuery();
   const { data: catalogProducts, isLoading: catalogProductsLoading, isError: catalogProductsError, refetch: refetchCatalogProducts } = trpc.admin.listProducts.useQuery(undefined, { enabled: authUser?.role === "admin" });
+  const { data: adminCategories = [] } = trpc.admin.listCategories.useQuery(undefined, { enabled: authUser?.role === "admin" });
   const utils = trpc.useUtils();
   const [pixDiscountPercent, setPixDiscountPercent] = useState<number>(5);
   const [freeShippingThreshold, setFreeShippingThreshold] = useState<number>(350);
@@ -470,6 +471,7 @@ export default function Admin() {
   const saveHomeContentMutation = trpc.admin.saveHomeContent.useMutation();
   const [uploading, setUploading] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any | null>(null);
+  const [editorMode, setEditorMode] = useState<"product" | "inventory">("product");
   const [productImages, setProductImages] = useState<string[]>([]);
   const [productUploading, setProductUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -477,6 +479,7 @@ export default function Admin() {
 
   const uploadMutation = trpc.admin.uploadImage.useMutation();
   const saveProductMutation = trpc.admin.saveProduct.useMutation();
+  const updateInventoryStockMutation = trpc.admin.updateInventoryStock.useMutation();
 
   function handleHomeImageUpload(event: React.ChangeEvent<HTMLInputElement>, target: "banner" | "vip", index?: number) {
     const file = event.target.files?.[0];
@@ -582,6 +585,8 @@ export default function Admin() {
       name: product.name,
       collection: product.collection,
       category: product.category,
+      subcategory: product.subcategory,
+      sku: product.sku,
       price: Number(product.price).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }),
       stock: Number(product.totalStock ?? variations.reduce((total, variation) => total + variation.stock, 0)),
       variations,
@@ -589,7 +594,15 @@ export default function Admin() {
       images: Array.isArray(product.images) ? product.images.filter((image): image is string => typeof image === "string" && image.length > 0) : [],
     };
   }), [catalogProducts]);
-  const filteredProducts = useMemo(() => adminProducts.filter((product) => product.name.toLowerCase().includes(query.toLowerCase())), [adminProducts, query]);
+  const [inventoryCategoryFilter, setInventoryCategoryFilter] = useState("all");
+  const filteredProducts = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    return adminProducts.filter((product) => {
+      const matchesQuery = !normalizedQuery || [product.name, product.collection, product.category, product.subcategory ?? "", product.sku ?? ""].some((value) => value.toLowerCase().includes(normalizedQuery));
+      const matchesCategory = inventoryCategoryFilter === "all" || product.category === inventoryCategoryFilter || product.subcategory === inventoryCategoryFilter;
+      return matchesQuery && matchesCategory;
+    });
+  }, [adminProducts, query, inventoryCategoryFilter]);
   const navItems = [
     { label: "Visão geral", icon: LayoutDashboard },
     { label: "Pedidos", icon: ClipboardList },
@@ -655,25 +668,44 @@ export default function Admin() {
           <div className="admin-dashboard-grid"><section className="admin-panel chart-panel"><div className="panel-heading"><div><span className="section-kicker">VENDAS</span><h3>Faturamento por período</h3></div><button className="period-button">Últimos 30 dias <ChevronDown size={14} /></button></div><div className="fake-chart"><div className="chart-axis"><span>10k</span><span>7,5k</span><span>5k</span><span>2,5k</span><span>0</span></div><div className="chart-bars">{[32, 45, 39, 62, 48, 76, 55, 68, 53, 82, 63, 91].map((height, index) => <div className="chart-bar-wrap" key={index}><div className="chart-bar" style={{ height: `${height}%` }} /><span>{index + 1}–{index + 3}</span></div>)}</div></div></section><section className="admin-panel"><div className="panel-heading"><div><span className="section-kicker">ATENÇÃO</span><h3>Pedidos recentes</h3></div><button className="inline-link" onClick={() => selectNav("Pedidos")}>Ver todos <ArrowLeft size={13} className="rotate-180" /></button></div><div className="mini-orders">{orders.slice(0, 3).map((order) => <div className="mini-order" key={order.id}><div className="order-icon"><ShoppingCart size={15} /></div><div><strong>{order.id} · {order.customer}</strong><span>{order.date}</span></div><b>{order.total}</b></div>)}</div></section></div>
           <section className="admin-panel quick-panel"><div className="panel-heading"><div><span className="section-kicker">ATALHOS</span><h3>Próximos passos</h3></div></div><div className="quick-actions"><button onClick={() => selectNav("Produtos")}><Package size={19} /><span><strong>Adicionar produto</strong><small>Cadastre uma nova peça no catálogo</small></span><ArrowLeft className="rotate-180" size={16} /></button><button onClick={() => selectNav("Aparência")}><ImagePlus size={19} /><span><strong>Atualizar home</strong><small>Troque o editorial ou reorganize a galeria</small></span><ArrowLeft className="rotate-180" size={16} /></button><button onClick={() => selectNav("Newsletter")}><Mail size={19} /><span><strong>Ver inscritos</strong><small>Acompanhe a lista e os cupons enviados</small></span><ArrowLeft className="rotate-180" size={16} /></button></div></section>
         </>}
-        {(active === "Produtos" || active === "Inventário") && <section className="admin-content">
+        {active === "Produtos" && <section className="admin-content">
           <div className="inventory-heading">
-            <div><span className="section-kicker">PRODUTOS · INVENTÁRIO</span><h2 className="content-title">Inventário</h2><p>Controle o estoque por produto, tamanho e variação sem sair do painel.</p></div>
+            <div><span className="section-kicker">CATÁLOGO</span><h2 className="content-title">Produtos</h2><p>Cadastre e edite os dados completos das peças, incluindo SKU, categoria, imagens e preços.</p></div>
             <Button onClick={() => {
-              setEditingProduct({ name: "", collection: "PARADOX COLLECTION", category: "Camisetas", price: 154.90, pixPrice: 147.15, description: "Peça de vestuário streetwear com acabamento premium.", status: "Publicado", variations: [] });
+              setEditorMode("product");
+              setEditingProduct({ name: "", collection: "PARADOX COLLECTION", category: "Camisetas", subcategory: null, sku: "", price: 154.90, pixPrice: 147.15, description: "Peça de vestuário streetwear com acabamento premium.", status: "Publicado", variations: [] });
               setProductImages([]);
             }}><Plus size={16} /> Novo produto</Button>
           </div>
           <div className="content-toolbar inventory-toolbar"><div className="search-box"><Search size={15} /><Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por nome, SKU ou coleção" /></div><span className="inventory-count">{filteredProducts.length} {filteredProducts.length === 1 ? "produto" : "produtos"}</span></div>
-          <div className="admin-panel table-panel inventory-table-panel"><table><thead><tr><th>Produto</th><th>Estoque</th><th>Variações</th><th>SKU</th><th>Histórico</th><th /></tr></thead><tbody>
-                    {catalogProductsLoading && <tr><td colSpan={6}><div className="inventory-state"><LoaderCircle className="spin" size={20} /><strong>Carregando inventário</strong><span>Estamos consultando os produtos e as variações salvas.</span></div></td></tr>}
-                    {catalogProductsError && !catalogProductsLoading && <tr><td colSpan={6}><div className="inventory-state error"><strong>Não foi possível carregar o inventário</strong><span>Verifique a conexão e tente novamente.</span><Button type="button" variant="outline" onClick={() => void refetchCatalogProducts()}>Tentar novamente</Button></div></td></tr>}
-                    {!catalogProductsLoading && !catalogProductsError && filteredProducts.length === 0 && <tr><td colSpan={6}><div className="inventory-state"><Package size={22} /><strong>{query ? "Nenhum produto encontrado" : "O inventário está vazio"}</strong><span>{query ? "Tente buscar por outro nome, SKU ou coleção." : "Cadastre o primeiro produto para começar a controlar o estoque."}</span>{query && <Button type="button" variant="outline" onClick={() => setQuery("")}>Limpar busca</Button>}</div></td></tr>}
-                    {!catalogProductsLoading && !catalogProductsError && filteredProducts.map((product) => <tr key={product.id}><td><div className="table-product"><AdminProductThumbnail src={product.images[0]} alt={`Imagem de ${product.name}`} /><div><strong>{product.name}</strong><span>{product.collection} · {product.category}</span></div></div></td><td><strong className={product.stock === 0 ? "inventory-stock-zero" : "inventory-stock-value"}>{product.stock}</strong><span className="inventory-unit">unidades</span></td><td><div className="inventory-variation-summary">{product.variations.length > 0 ? product.variations.map((variation) => <span key={`${product.id}-${variation.size}`} className={variation.stock === 0 ? "variation-chip zero" : "variation-chip"}>{variation.size}: {variation.stock}</span>) : <span className="inventory-empty">Sem tamanhos</span>}</div></td><td><span className="inventory-sku">EL-{String(product.id).padStart(4, "0")}</span></td><td><button className="history-button" type="button" onClick={() => toast.info(`Histórico de estoque de ${product.name} disponível após os próximos lançamentos.`)}><History size={16} /></button></td><td><button className="table-more" aria-label={`Editar estoque de ${product.name}`} onClick={() => {
-          const numericPrice = Number(product.price.replace(/[^0-9,]/g, "").replace(",", ".")) || 0;
-          setEditingProduct({ id: product.id, name: product.name, collection: product.collection, category: product.category, price: numericPrice, pixPrice: numericPrice, description: "Peça de vestuário streetwear com acabamento premium.", status: product.status, variations: product.variations.map((variation) => ({ ...variation })) });
-          setProductImages(product.images);
-        }}><Pencil size={16} /></button></td></tr>)}
-                  </tbody></table></div>
+          <div className="admin-panel table-panel inventory-table-panel"><table><thead><tr><th>Produto</th><th>SKU</th><th>Categoria</th><th>Estoque</th><th>Status</th><th /></tr></thead><tbody>
+            {catalogProductsLoading && <tr><td colSpan={6}><div className="inventory-state"><LoaderCircle className="spin" size={20} /><strong>Carregando produtos</strong><span>Estamos consultando o catálogo persistido.</span></div></td></tr>}
+            {catalogProductsError && !catalogProductsLoading && <tr><td colSpan={6}><div className="inventory-state error"><strong>Não foi possível carregar os produtos</strong><span>Verifique a conexão e tente novamente.</span><Button type="button" variant="outline" onClick={() => void refetchCatalogProducts()}>Tentar novamente</Button></div></td></tr>}
+            {!catalogProductsLoading && !catalogProductsError && filteredProducts.length === 0 && <tr><td colSpan={6}><div className="inventory-state"><Package size={22} /><strong>{query ? "Nenhum produto encontrado" : "O catálogo está vazio"}</strong><span>{query ? "Tente buscar por outro nome, SKU ou coleção." : "Cadastre o primeiro produto para começar."}</span>{query && <Button type="button" variant="outline" onClick={() => setQuery("")}>Limpar busca</Button>}</div></td></tr>}
+            {!catalogProductsLoading && !catalogProductsError && filteredProducts.map((product) => <tr key={product.id}><td><div className="table-product"><AdminProductThumbnail src={product.images[0]} alt={`Imagem de ${product.name}`} /><div><strong>{product.name}</strong><span>{product.collection}</span></div></div></td><td><span className="inventory-sku">{product.sku || "Sem SKU"}</span></td><td><span>{product.category}</span>{product.subcategory && <small className="inventory-unit">{product.subcategory}</small>}</td><td><strong className={product.stock === 0 ? "inventory-stock-zero" : "inventory-stock-value"}>{product.stock}</strong><span className="inventory-unit">unidades</span></td><td><span className={`status-pill ${product.status === "Publicado" ? "success" : product.status === "Esgotado" ? "danger" : "warning"}`}>{product.status}</span></td><td><button className="table-more" aria-label={`Editar produto ${product.name}`} onClick={() => {
+              setEditorMode("product");
+              const numericPrice = Number(product.price.replace(/[^0-9,]/g, "").replace(",", ".")) || 0;
+              setEditingProduct({ id: product.id, name: product.name, collection: product.collection, category: product.category, subcategory: product.subcategory ?? null, sku: product.sku ?? "", price: numericPrice, pixPrice: numericPrice, description: "Peça de vestuário streetwear com acabamento premium.", status: product.status, variations: product.variations.map((variation) => ({ ...variation })) });
+              setProductImages(product.images);
+            }}><Pencil size={16} /></button></td></tr>)}
+          </tbody></table></div>
+        </section>}
+
+        {active === "Inventário" && <section className="admin-content">
+          <div className="inventory-heading">
+            <div><span className="section-kicker">OPERAÇÃO · ATALHO RÁPIDO</span><h2 className="content-title">Inventário</h2><p>Altere somente a quantidade de peças por tamanho ou variação. Para editar o produto completo, use Produtos.</p></div>
+          </div>
+          <div className="content-toolbar inventory-toolbar"><div className="search-box"><Search size={15} /><Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por nome, SKU ou coleção" /></div><select className="inventory-category-filter" value={inventoryCategoryFilter} onChange={(event) => setInventoryCategoryFilter(event.target.value)} aria-label="Filtrar inventário por categoria"><option value="all">Todas as categorias</option>{adminCategories.map((category) => <option key={category.id} value={category.name}>{category.parentId ? `↳ ${category.name}` : category.name}</option>)}</select><span className="inventory-count">{filteredProducts.length} {filteredProducts.length === 1 ? "produto" : "produtos"}</span></div>
+          <div className="admin-panel table-panel inventory-table-panel"><table><thead><tr><th>Produto</th><th>Estoque</th><th>Variações</th><th>SKU</th><th>Categoria</th><th /></tr></thead><tbody>
+            {catalogProductsLoading && <tr><td colSpan={6}><div className="inventory-state"><LoaderCircle className="spin" size={20} /><strong>Carregando inventário</strong><span>Estamos consultando os produtos e as variações salvas.</span></div></td></tr>}
+            {catalogProductsError && !catalogProductsLoading && <tr><td colSpan={6}><div className="inventory-state error"><strong>Não foi possível carregar o inventário</strong><span>Verifique a conexão e tente novamente.</span><Button type="button" variant="outline" onClick={() => void refetchCatalogProducts()}>Tentar novamente</Button></div></td></tr>}
+            {!catalogProductsLoading && !catalogProductsError && filteredProducts.length === 0 && <tr><td colSpan={6}><div className="inventory-state"><Package size={22} /><strong>{query || inventoryCategoryFilter !== "all" ? "Nenhum item encontrado" : "O inventário está vazio"}</strong><span>{query || inventoryCategoryFilter !== "all" ? "Ajuste a busca ou o filtro de categoria." : "Cadastre um produto em Produtos para começar."}</span>{(query || inventoryCategoryFilter !== "all") && <Button type="button" variant="outline" onClick={() => { setQuery(""); setInventoryCategoryFilter("all"); }}>Limpar filtros</Button>}</div></td></tr>}
+            {!catalogProductsLoading && !catalogProductsError && filteredProducts.map((product) => <tr key={product.id}><td><div className="table-product"><AdminProductThumbnail src={product.images[0]} alt={`Imagem de ${product.name}`} /><div><strong>{product.name}</strong><span>{product.collection}</span></div></div></td><td><strong className={product.stock === 0 ? "inventory-stock-zero" : "inventory-stock-value"}>{product.stock}</strong><span className="inventory-unit">unidades</span></td><td><div className="inventory-variation-summary">{product.variations.length > 0 ? product.variations.map((variation) => <span key={`${product.id}-${variation.size}`} className={variation.stock === 0 ? "variation-chip zero" : "variation-chip"}>{variation.size}: {variation.stock}</span>) : <span className="inventory-empty">Sem tamanhos</span>}</div></td><td><span className="inventory-sku">{product.sku || "Sem SKU"}</span></td><td><span>{product.category}</span>{product.subcategory && <small className="inventory-unit">{product.subcategory}</small>}</td><td><button className="table-more" aria-label={`Editar quantidades de ${product.name}`} onClick={() => {
+              setEditorMode("inventory");
+              setEditingProduct({ id: product.id, name: product.name, collection: product.collection, category: product.category, subcategory: product.subcategory ?? null, sku: product.sku ?? "", price: 0, pixPrice: 0, description: "", status: product.status, variations: product.variations.map((variation) => ({ ...variation })) });
+              setProductImages([]);
+            }}><Pencil size={16} /></button></td></tr>)}
+          </tbody></table></div>
         </section>}
 
         {active === "Categorias" && <AdminCategoriesSection />}
@@ -683,42 +715,52 @@ export default function Admin() {
             <div className="admin-panel" style={{ width: '100%', maxWidth: '700px', maxHeight: '90vh', overflowY: 'auto', background: '#fff', padding: '2rem' }}>
               <div className="panel-heading">
                 <div>
-                  <span className="section-kicker">GESTÃO DE CATÁLOGO</span>
-                  <h3>{editingProduct.name ? `Editar: ${editingProduct.name}` : "Novo Produto"}</h3>
+                  <span className="section-kicker">{editorMode === "inventory" ? "ATUALIZAÇÃO RÁPIDA" : "GESTÃO DE CATÁLOGO"}</span>
+                  <h3>{editorMode === "inventory" ? `Estoque: ${editingProduct.name}` : editingProduct.name ? `Editar: ${editingProduct.name}` : "Novo Produto"}</h3>
                 </div>
                 <button onClick={() => setEditingProduct(null)} className="table-more">✕</button>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
-                <div className="editor-field">
-                  <label>Nome do produto</label>
-                  <Input value={editingProduct.name} onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })} />
+              {editorMode === "product" && <>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
+                  <div className="editor-field">
+                    <label>Nome do produto</label>
+                    <Input value={editingProduct.name} onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })} />
+                  </div>
+                  <div className="editor-field">
+                    <label>SKU</label>
+                    <Input value={editingProduct.sku ?? ""} onChange={(e) => setEditingProduct({ ...editingProduct, sku: e.target.value })} placeholder="Ex.: EL-TS-001" />
+                  </div>
+                  <div className="editor-field">
+                    <label>Coleção</label>
+                    <Input value={editingProduct.collection} onChange={(e) => setEditingProduct({ ...editingProduct, collection: e.target.value })} />
+                  </div>
+                  <div className="editor-field">
+                    <label>Categoria</label>
+                    <Input value={editingProduct.category} onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })} />
+                  </div>
+                  <div className="editor-field">
+                    <label>Subcategoria</label>
+                    <Input value={editingProduct.subcategory ?? ""} onChange={(e) => setEditingProduct({ ...editingProduct, subcategory: e.target.value || null })} placeholder="Ex.: Oversized" />
+                  </div>
+                  <div className="editor-field">
+                    <label>Preço normal (R$)</label>
+                    <Input type="number" value={editingProduct.price} onChange={(e) => setEditingProduct({ ...editingProduct, price: parseFloat(e.target.value) || 0 })} />
+                  </div>
+                  <div className="editor-field">
+                    <label>Preço PIX (R$)</label>
+                    <Input type="number" value={editingProduct.pixPrice} onChange={(e) => setEditingProduct({ ...editingProduct, pixPrice: parseFloat(e.target.value) || 0 })} />
+                  </div>
+                  <div className="editor-field">
+                    <label>Status</label>
+                    <select style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }} value={editingProduct.status} onChange={(e) => setEditingProduct({ ...editingProduct, status: e.target.value })}>
+                      <option value="Publicado">Publicado</option>
+                      <option value="Rascunho">Rascunho</option>
+                      <option value="Esgotado">Esgotado</option>
+                    </select>
+                  </div>
                 </div>
-                <div className="editor-field">
-                  <label>Coleção</label>
-                  <Input value={editingProduct.collection} onChange={(e) => setEditingProduct({ ...editingProduct, collection: e.target.value })} />
-                </div>
-                <div className="editor-field">
-                  <label>Categoria</label>
-                  <Input value={editingProduct.category} onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })} />
-                </div>
-                <div className="editor-field">
-                  <label>Preço normal (R$)</label>
-                  <Input type="number" value={editingProduct.price} onChange={(e) => setEditingProduct({ ...editingProduct, price: parseFloat(e.target.value) || 0 })} />
-                </div>
-                <div className="editor-field">
-                  <label>Preço PIX (R$)</label>
-                  <Input type="number" value={editingProduct.pixPrice} onChange={(e) => setEditingProduct({ ...editingProduct, pixPrice: parseFloat(e.target.value) || 0 })} />
-                </div>
-                <div className="editor-field">
-                  <label>Status</label>
-                  <select style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }} value={editingProduct.status} onChange={(e) => setEditingProduct({ ...editingProduct, status: e.target.value })}>
-                    <option value="Publicado">Publicado</option>
-                    <option value="Rascunho">Rascunho</option>
-                    <option value="Esgotado">Esgotado</option>
-                  </select>
-                </div>
-              </div>
+              </>}
 
               <section className="inventory-variation-editor" aria-labelledby="variation-editor-title">
                 <div className="inventory-section-heading">
@@ -743,8 +785,9 @@ export default function Admin() {
                 </div>
               </section>
 
-              <div className="editor-field" style={{ marginTop: '1rem' }}>
-                <label>Descrição do produto</label>
+              {editorMode === "product" && <>
+                <div className="editor-field" style={{ marginTop: '1rem' }}>
+                  <label>Descrição do produto</label>
                 <textarea style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', minHeight: '80px' }} value={editingProduct.description} onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })} />
               </div>
 
@@ -809,13 +852,27 @@ export default function Admin() {
                 </div>
               </div>
 
+              </>}
+
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
                 <Button variant="outline" onClick={() => setEditingProduct(null)}>Cancelar</Button>
-                <Button disabled={saveProductMutation.isPending} onClick={() => {
+                <Button disabled={saveProductMutation.isPending || updateInventoryStockMutation.isPending} onClick={() => {
+                  const variations = (editingProduct.variations ?? []).map((variation: AdminVariation) => ({ size: variation.size, stock: Math.max(0, Math.floor(Number(variation.stock) || 0)) }));
+                  if (editorMode === "inventory") {
+                    updateInventoryStockMutation.mutate({ productId: Number(editingProduct.id), variations }, {
+                      onSuccess: () => {
+                        void utils.admin.listProducts.invalidate();
+                        toast.success("Estoque atualizado com sucesso.");
+                        setEditingProduct(null);
+                      },
+                      onError: () => toast.error("Erro ao atualizar o estoque. Tente novamente."),
+                    });
+                    return;
+                  }
                   saveProductMutation.mutate({
                     ...editingProduct,
                     images: productImages,
-                    variations: (editingProduct.variations ?? []).map((variation: AdminVariation) => ({ size: variation.size, stock: Math.max(0, Math.floor(Number(variation.stock) || 0)) })),
+                    variations,
                   }, {
                     onSuccess: (res) => {
                       void Promise.all([
@@ -829,7 +886,7 @@ export default function Admin() {
                       toast.error("Erro ao guardar o produto. Tente novamente.");
                     }
                   });
-                }}>Guardar produto</Button>
+                }}>{editorMode === "inventory" ? "Guardar estoque" : "Guardar produto"}</Button>
               </div>
             </div>
           </div>

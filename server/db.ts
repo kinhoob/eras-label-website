@@ -76,7 +76,7 @@ export async function listProducts(category?: string) {
   if (!db) return [];
   const resolvedCategory = category && category !== "Todos" ? await resolveCategoryName(category) : undefined;
   const rows = resolvedCategory
-    ? await db.select().from(products).where(and(eq(products.status, "active"), eq(products.category, resolvedCategory)))
+    ? await db.select().from(products).where(and(eq(products.status, "active"), or(eq(products.category, resolvedCategory), eq(products.subcategory, resolvedCategory))))
     : await db.select().from(products).where(eq(products.status, "active"));
 
   // The storefront needs available sizes to filter accurately. Keep this enrichment
@@ -229,7 +229,7 @@ export async function listAdminCategories() {
     const [countRow] = await db
       .select({ count: sql<number>`count(*)` })
       .from(products)
-      .where(eq(products.category, category.name));
+      .where(or(eq(products.category, category.name), eq(products.subcategory, category.name)));
     return { ...category, productCount: Number(countRow?.count ?? 0) };
   }));
 }
@@ -264,21 +264,34 @@ export async function saveCategoryData(data: {
   id?: number;
   name: string;
   description?: string;
+  parentId?: number | null;
+  coverImageUrl?: string | null;
   active: number;
   sortOrder: number;
 }) {
   const name = normalizeCategoryName(data.name);
   const slug = slugifyCategory(name);
-  const normalized = { ...data, name, slug, description: data.description?.trim() || null };
+  const normalized = {
+    ...data,
+    name,
+    slug,
+    description: data.description?.trim() || null,
+    parentId: data.parentId ?? null,
+    coverImageUrl: data.coverImageUrl?.trim() || null,
+  };
   const db = await getDb();
   if (!db) return { id: data.id ?? Math.floor(Math.random() * 1000 + 10), ...normalized, productCount: 0 };
 
   if (data.id) {
-    const previousRows = await db.select({ name: categories.name }).from(categories).where(eq(categories.id, data.id)).limit(1);
+    const previousRows = await db.select({ name: categories.name, parentId: categories.parentId }).from(categories).where(eq(categories.id, data.id)).limit(1);
     await db.update(categories).set(normalized).where(eq(categories.id, data.id));
     const previousName = previousRows[0]?.name;
     if (previousName && previousName !== name) {
-      await db.update(products).set({ category: name }).where(eq(products.category, previousName));
+      if (previousRows[0]?.parentId) {
+        await db.update(products).set({ subcategory: name }).where(eq(products.subcategory, previousName));
+      } else {
+        await db.update(products).set({ category: name }).where(eq(products.category, previousName));
+      }
     }
   } else {
     await db.insert(categories).values(normalized);
@@ -286,7 +299,7 @@ export async function saveCategoryData(data: {
   const rows = await db.select().from(categories).where(eq(categories.slug, slug)).limit(1);
   const saved = rows[0];
   if (!saved) throw new Error("Categoria não encontrada após o salvamento.");
-  const [countRow] = await db.select({ count: sql<number>`count(*)` }).from(products).where(eq(products.category, saved.name));
+  const [countRow] = await db.select({ count: sql<number>`count(*)` }).from(products).where(or(eq(products.category, saved.name), eq(products.subcategory, saved.name)));
   return { ...saved, productCount: Number(countRow?.count ?? 0) };
 }
 
@@ -415,6 +428,8 @@ export async function saveProductData(data: {
   description: string;
   images: string[];
   status: string;
+  sku?: string | null;
+  subcategory?: string | null;
   variations?: Array<{ size: string; stock: number }>;
 }) {
   const normalizedVariations = normalizeInventoryVariations(data.variations ?? []);
@@ -436,6 +451,8 @@ export async function saveProductData(data: {
       name: data.name,
       collection: data.collection,
       category: data.category,
+      subcategory: data.subcategory?.trim() || null,
+      sku: data.sku?.trim() || null,
       price: String(data.price),
       pixPrice: String(data.pixPrice),
       description: data.description,
@@ -447,6 +464,8 @@ export async function saveProductData(data: {
       name: data.name,
       collection: data.collection,
       category: data.category,
+      subcategory: data.subcategory?.trim() || null,
+      sku: data.sku?.trim() || null,
       price: String(data.price),
       pixPrice: String(data.pixPrice),
       description: data.description,
@@ -474,6 +493,21 @@ export async function saveProductData(data: {
     variations: normalizedVariations,
     totalStock: normalizedVariations.reduce((total, variation) => total + variation.stock, 0),
   };
+}
+
+export async function updateInventoryStock(data: { productId: number; variations: Array<{ size: string; stock: number }> }) {
+  const db = await getDb();
+  const normalizedVariations = normalizeInventoryVariations(data.variations);
+  if (!db) {
+    return { productId: data.productId, variations: normalizedVariations, totalStock: sumInventoryStock(normalizedVariations) };
+  }
+  const existing = await db.select({ id: products.id }).from(products).where(eq(products.id, data.productId)).limit(1);
+  if (!existing[0]) throw new Error("Produto não encontrado.");
+  await db.delete(productVariations).where(eq(productVariations.productId, data.productId));
+  if (normalizedVariations.length > 0) {
+    await db.insert(productVariations).values(normalizedVariations.map((variation) => ({ productId: data.productId, size: variation.size, stock: variation.stock })));
+  }
+  return { productId: data.productId, variations: normalizedVariations, totalStock: sumInventoryStock(normalizedVariations) };
 }
 
 export async function listClients() {

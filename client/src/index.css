@@ -2289,3 +2289,44 @@ td { border-top: 1px solid #e1dacf; padding: 15px 17px; color: #6f675e; font-siz
   .admin-categories-table { overflow-x: auto; }
   .admin-categories-table table { min-width: 700px; }
 }
+
+/* Separação operacional: Produtos mantém o cadastro completo; Inventário é um atalho de estoque. */
+.inventory-category-filter {
+  min-height: 38px;
+  min-width: 210px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  background: #fff;
+  color: #202020;
+  padding: 0 0.7rem;
+  font: inherit;
+}
+.inventory-category-filter:focus-visible {
+  outline: 2px solid rgba(178, 34, 34, 0.35);
+  outline-offset: 2px;
+  border-color: #b22222;
+}
+.inventory-unit {
+  display: block;
+  margin-top: 0.15rem;
+  color: #777;
+  font-size: 0.72rem;
+}
+.inventory-sku {
+  color: #3d3d3d;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.78rem;
+}
+@media (max-width: 760px) {
+  .inventory-category-filter {
+    width: 100%;
+    min-width: 0;
+  }
+  .inventory-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .inventory-toolbar .search-box {
+    width: 100%;
+  }
+}

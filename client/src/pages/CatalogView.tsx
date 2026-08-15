@@ -87,12 +87,35 @@ export default function CatalogViewPage() {
 
       {/* Content */}
       <main className="flex-1 max-w-6xl mx-auto px-6 py-16 w-full">
-        <span className="text-xs uppercase tracking-widest text-[#8c8378] block mb-2">
-          {filterType === "category" ? "CATEGORIA" : "COLEÇÃO"} / {filterSlug.toUpperCase()}
-        </span>
-        <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tight mb-12">
-          {filterSlug.replace(/-/g, " ")}
-        </h1>
+        {(() => {
+          const matchedCategory = filterType === "category" ? categories.find((c: any) => c.slug.toLowerCase() === filterSlug.toLowerCase()) : null;
+          const subcategories = matchedCategory ? categories.filter((c: any) => c.parentId === matchedCategory.id && c.active) : [];
+          return (
+            <>
+              <span className="text-xs uppercase tracking-widest text-[#8c8378] block mb-2">
+                {filterType === "category" ? "Categoria" : "Coleção"}
+              </span>
+              <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tight mb-6">
+                {filterSlug.replace(/-/g, " ")}
+              </h1>
+              {matchedCategory?.coverImageUrl && (
+                <div className="w-full h-56 md:h-72 rounded-lg overflow-hidden mb-8 bg-[#ded8cf]">
+                  <img src={matchedCategory.coverImageUrl} alt={`Capa da categoria ${matchedCategory.name}`} className="w-full h-full object-cover" />
+                </div>
+              )}
+              {subcategories.length > 0 && (
+                <div className="flex items-center gap-3 flex-wrap mb-10">
+                  <span className="text-xs uppercase tracking-widest text-[#666] font-bold">Subcategorias:</span>
+                  {subcategories.map((sub: any) => (
+                    <Link key={sub.id} href={`/category/${sub.slug}`} onClick={playClickSound} className="px-3 py-1 bg-[#ede8df] hover:bg-[#c95139] hover:text-[#fff] text-xs font-bold uppercase transition-colors border border-[#d4cabf]">
+                      {sub.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </>
+          );
+        })()}
 
         {isLoading ? (
           <div className="text-center py-20 uppercase tracking-widest text-sm">Carregando era...</div>

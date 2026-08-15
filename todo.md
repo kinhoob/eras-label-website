@@ -92,3 +92,16 @@
 ## Ajustes finais do inventário identificados na revisão
 - [x] Adicionar estados explícitos de carregamento, erro e resultado vazio na lista de inventário
 - [x] Verificar visualmente o inventário em desktop e mobile e guardar checkpoint específico desta entrega
+
+## Separação de Produtos e Inventário
+- [x] Manter Produtos como cadastro completo e remover a duplicação visual com Inventário
+- [x] Transformar Inventário em atalho operacional para editar somente quantidades por variação
+- [x] Adicionar filtro por categoria na tela de Inventário
+- [x] Adicionar campo SKU ao cadastro completo de Produtos e persistir no backend
+
+## Subcategorias e capas de categorias
+- [x] Adicionar subcategorias persistidas com associação à categoria pai
+- [x] Implementar CRUD de subcategorias no painel de Categorias
+- [x] Permitir upload persistente de imagem de capa por categoria usando o storage do projeto
+- [x] Exibir capas e subcategorias na navegação/experiência pública do catálogo
+- [x] Adicionar 77 testes Vitest, TypeScript, build de produção e guardar checkpoint
