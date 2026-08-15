@@ -189,3 +189,18 @@ export const inventoryAuditLogs = mysqlTable("inventory_audit_logs", {
 
 export type InventoryAuditLog = typeof inventoryAuditLogs.$inferSelect;
 export type InsertInventoryAuditLog = typeof inventoryAuditLogs.$inferInsert;
+
+export const adminUsers = mysqlTable("admin_users", {
+  id: int("id").primaryKey().autoincrement(),
+  email: varchar("email", { length: 320 }).notNull().unique(),
+  name: varchar("name", { length: 255 }).notNull(),
+  passwordHash: varchar("passwordHash", { length: 255 }).notNull(),
+  roleTitle: varchar("roleTitle", { length: 100 }).notNull().default("Assistente"),
+  permissions: text("permissions").notNull().default("products,inventory,categories,stats,emails,settings"),
+  isActive: int("isActive").notNull().default(1),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+export type AdminUser = typeof adminUsers.$inferSelect;
+export type InsertAdminUser = typeof adminUsers.$inferInsert;

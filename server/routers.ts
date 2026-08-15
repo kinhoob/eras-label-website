@@ -21,6 +21,11 @@ import {
   getLowStockAlerts,
   listInventoryAuditLogs,
   logInventoryAudit,
+  listAdminUsers,
+  getAdminUserByEmail,
+  createAdminUser,
+  updateAdminUser,
+  deleteAdminUser,
   saveProductData,
   subscribeToNewsletter,
   validateCoupon,
@@ -75,15 +80,32 @@ export const appRouter = router({
         password: z.string().min(1).max(200),
       }))
       .mutation(async ({ input, ctx }) => {
-        if (!validateAdminCredentials(input.email, input.password)) {
-          throw new TRPCError({ code: "FORBIDDEN", message: "Credenciais administrativas inválidas." });
+        const inputEmail = input.email.trim().toLowerCase();
+        let isAdminValid = validateAdminCredentials(inputEmail, input.password);
+        let adminName = ADMIN_DISPLAY_NAME;
+        let adminEmail = ENV.adminLoginEmail.trim().toLowerCase();
+
+        if (!isAdminValid) {
+          const subAdmin = await getAdminUserByEmail(inputEmail);
+          if (subAdmin && subAdmin.isActive === 1) {
+            const crypto = await import("crypto");
+            const hashed = crypto.createHash("sha256").update(input.password).digest("hex");
+            if (subAdmin.passwordHash === hashed) {
+              isAdminValid = true;
+              adminName = subAdmin.name;
+              adminEmail = subAdmin.email;
+            }
+          }
         }
 
-        const adminEmail = ENV.adminLoginEmail.trim().toLowerCase();
+        if (!isAdminValid) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Credenciais administrativas inválidas ou conta inativa." });
+        }
+
         const openId = getAdminOpenId(adminEmail);
         await upsertUser({
           openId,
-          name: ADMIN_DISPLAY_NAME,
+          name: adminName,
           email: adminEmail,
           loginMethod: "admin-password",
           role: "admin",
@@ -91,7 +113,7 @@ export const appRouter = router({
         });
 
         const sessionToken = await sdk.createSessionToken(openId, {
-          name: ADMIN_DISPLAY_NAME,
+          name: adminName,
           expiresInMs: ONE_YEAR_MS,
         });
         ctx.res.cookie(COOKIE_NAME, sessionToken, {
@@ -103,7 +125,7 @@ export const appRouter = router({
           success: true as const,
           user: {
             email: adminEmail,
-            name: ADMIN_DISPLAY_NAME,
+            name: adminName,
             role: "admin" as const,
           },
         };
@@ -564,6 +586,67 @@ Seja objetivo, elegante e direto ao ponto.`;
       }
 
       return { success: true, sentCount, failedCount, totalRecipients: recipients.length };
+    }),
+    listSubAdmins: adminProcedure.query(async () => {
+      const admins = await listAdminUsers();
+      return admins.map(a => ({
+        id: a.id,
+        email: a.email,
+        name: a.name,
+        roleTitle: a.roleTitle,
+        permissions: a.permissions,
+        isActive: a.isActive,
+        createdAt: a.createdAt,
+      }));
+    }),
+    createSubAdmin: adminProcedure.input(z.object({
+      email: z.string().email(),
+      name: z.string().min(2),
+      password: z.string().min(6),
+      roleTitle: z.string().min(2),
+      permissions: z.string(),
+    })).mutation(async ({ input }) => {
+      const existing = await getAdminUserByEmail(input.email);
+      if (existing) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Já existe um administrador cadastrado com este e-mail." });
+      }
+      const crypto = await import("crypto");
+      const passwordHash = crypto.createHash("sha256").update(input.password).digest("hex");
+      await createAdminUser({
+        email: input.email,
+        name: input.name,
+        passwordHash,
+        roleTitle: input.roleTitle,
+        permissions: input.permissions,
+        isActive: 1,
+      });
+      return { success: true };
+    }),
+    updateSubAdmin: adminProcedure.input(z.object({
+      id: z.number().int().positive(),
+      name: z.string().min(2).optional(),
+      roleTitle: z.string().min(2).optional(),
+      permissions: z.string().optional(),
+      isActive: z.number().int().min(0).max(1).optional(),
+      password: z.string().min(6).optional(),
+    })).mutation(async ({ input }) => {
+      const updateData: any = {};
+      if (input.name) updateData.name = input.name;
+      if (input.roleTitle) updateData.roleTitle = input.roleTitle;
+      if (input.permissions) updateData.permissions = input.permissions;
+      if (input.isActive !== undefined) updateData.isActive = input.isActive;
+      if (input.password) {
+        const crypto = await import("crypto");
+        updateData.passwordHash = crypto.createHash("sha256").update(input.password).digest("hex");
+      }
+      await updateAdminUser(input.id, updateData);
+      return { success: true };
+    }),
+    deleteSubAdmin: adminProcedure.input(z.object({
+      id: z.number().int().positive(),
+    })).mutation(async ({ input }) => {
+      await deleteAdminUser(input.id);
+      return { success: true };
     }),
   }),
 });

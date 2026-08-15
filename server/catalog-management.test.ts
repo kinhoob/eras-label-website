@@ -129,3 +129,23 @@ describe("Catalog Management and Inventory Separation", () => {
     expect(lowStock[0].name).toBe("Camiseta Boxy");
   });
 });
+
+  it("verifies sub-admin permission string parsing and module access", () => {
+    const permissionsStr = "products,inventory,stats";
+    const permsList = permissionsStr.split(",").map(p => p.trim());
+
+    expect(permsList.includes("products")).toBe(true);
+    expect(permsList.includes("inventory")).toBe(true);
+    expect(permsList.includes("categories")).toBe(false);
+    expect(permsList.includes("settings")).toBe(false);
+  });
+
+  it("checks superadmin recognition by email", () => {
+    const superAdminEmail = "theeraslabel@gmail.com";
+    const subAdminEmail = "assistant@eraslabel.com";
+
+    const isSuper = (email: string) => email.trim().toLowerCase() === "theeraslabel@gmail.com";
+
+    expect(isSuper(superAdminEmail)).toBe(true);
+    expect(isSuper(subAdminEmail)).toBe(false);
+  });

@@ -611,6 +611,7 @@ export default function Admin() {
       return matchesQuery && matchesCategory;
     });
   }, [adminProducts, query, inventoryCategoryFilter]);
+  const isSuperAdmin = authUser?.email?.trim().toLowerCase() === "theeraslabel@gmail.com";
   const navItems = [
     { label: "Visão geral", icon: LayoutDashboard },
     { label: "Estatísticas", icon: BarChart3 },
@@ -626,6 +627,7 @@ export default function Admin() {
     { label: "Aparência", icon: Palette },
     { label: "Newsletter", icon: Mail },
     { label: "E-mails (Resend)", icon: Mail },
+    ...(isSuperAdmin ? [{ label: "Gestão de Equipe", icon: ShieldCheck }] : []),
   ];
 
   function selectNav(label: string) {
@@ -928,6 +930,7 @@ export default function Admin() {
         {active === "Clientes" && <ClientsSection />}
         {active === "E-mail Marketing" && <EmailMarketingSection />}
         {active === "E-mails (Resend)" && <EmailLogsSection />}
+        {active === "Gestão de Equipe" && <SubAdminsManagementSection />}
       </main>
     </div>
   );
@@ -1298,6 +1301,308 @@ function InventoryAuditSection() {
             <Button variant="outline" size="sm" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>
               Próxima
             </Button>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+// Componente de Gestão de Sub-administradores e Permissões por Módulo (Exclusivo Superadmin)
+function SubAdminsManagementSection() {
+  const { data: subAdmins = [], isLoading, refetch } = trpc.admin.listSubAdmins.useQuery();
+  const createMutation = trpc.admin.createSubAdmin.useMutation({
+    onSuccess: () => {
+      toast.success("Sub-administrador criado com sucesso!");
+      setNewAdmin({ email: "", name: "", password: "", roleTitle: "Assistente", permissions: "products,inventory,categories,stats,emails,settings" });
+      setShowCreateModal(false);
+      refetch();
+    },
+    onError: (err) => {
+      toast.error(err.message || "Erro ao criar administrador.");
+    }
+  });
+
+  const updateMutation = trpc.admin.updateSubAdmin.useMutation({
+    onSuccess: () => {
+      toast.success("Administrador atualizado com sucesso!");
+      setEditingAdmin(null);
+      refetch();
+    },
+    onError: (err) => {
+      toast.error(err.message || "Erro ao atualizar administrador.");
+    }
+  });
+
+  const deleteMutation = trpc.admin.deleteSubAdmin.useMutation({
+    onSuccess: () => {
+      toast.success("Administrador removido com sucesso!");
+      refetch();
+    },
+    onError: (err) => {
+      toast.error(err.message || "Erro ao remover administrador.");
+    }
+  });
+
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingAdmin, setEditingAdmin] = useState<any | null>(null);
+
+  const [newAdmin, setNewAdmin] = useState({
+    email: "",
+    name: "",
+    password: "",
+    roleTitle: "Gerente de Loja",
+    permissions: "products,inventory,categories,stats,emails,settings",
+  });
+
+  const availableModules = [
+    { key: "products", label: "Produtos" },
+    { key: "inventory", label: "Inventário & Estoque" },
+    { key: "categories", label: "Categorias" },
+    { key: "stats", label: "Estatísticas & IA" },
+    { key: "emails", label: "E-mails & Marketing" },
+    { key: "settings", label: "Configurações & Equipe" },
+  ];
+
+  const handleTogglePerm = (modKey: string, currentPermsStr: string, setter: any) => {
+    const list = currentPermsStr ? currentPermsStr.split(",").map(s => s.trim()).filter(Boolean) : [];
+    const exists = list.includes(modKey);
+    let nextList = exists ? list.filter(k => k !== modKey) : [...list, modKey];
+    setter((prev: any) => ({ ...prev, permissions: nextList.join(",") }));
+  };
+
+  return (
+    <section className="admin-content">
+      <div className="content-toolbar">
+        <div>
+          <span className="section-kicker">CONTROLE DE ACESSO RBAC</span>
+          <h2 className="content-title">Gestão de Equipe e Permissões</h2>
+          <p>Crie e gerencie contas de administradores secundários com acesso restrito a módulos específicos do painel.</p>
+        </div>
+        <Button onClick={() => setShowCreateModal(true)} style={{ background: "#111", color: "#fff" }}>
+          + Novo Administrador
+        </Button>
+      </div>
+
+      {isLoading && (
+        <div className="inventory-state"><LoaderCircle className="spin" size={22} /><strong>Carregando equipe...</strong></div>
+      )}
+
+      {!isLoading && (
+        <div className="admin-table-wrapper" style={{ marginTop: "1.5rem" }}>
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Nome / E-mail</th>
+                <th>Cargo / Função</th>
+                <th>Módulos Permitidos</th>
+                <th>Status</th>
+                <th style={{ textAlign: "right" }}>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {subAdmins.map((admin: any) => (
+                <tr key={admin.id}>
+                  <td>
+                    <strong>{admin.name}</strong>
+                    <div style={{ fontSize: "0.8rem", color: "#666" }}>{admin.email}</div>
+                  </td>
+                  <td>
+                    <span style={{ background: "#f0f0f0", padding: "0.2rem 0.5rem", borderRadius: "4px", fontSize: "0.85rem", fontWeight: 600 }}>
+                      {admin.roleTitle}
+                    </span>
+                  </td>
+                  <td>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "0.25rem", maxWidth: "320px" }}>
+                      {admin.permissions.split(",").map((p: string) => (
+                        <span key={p} style={{ background: "#e8f0fe", color: "#1a73e8", fontSize: "0.75rem", padding: "0.1rem 0.4rem", borderRadius: "3px" }}>
+                          {p.trim()}
+                        </span>
+                      ))}
+                    </div>
+                  </td>
+                  <td>
+                    <span style={{ color: admin.isActive ? "#2e7d32" : "#c62828", fontWeight: 600, fontSize: "0.85rem" }}>
+                      {admin.isActive ? "Ativo" : "Inativo"}
+                    </span>
+                  </td>
+                  <td style={{ textAlign: "right" }}>
+                    <div style={{ display: "inline-flex", gap: "0.5rem" }}>
+                      <Button size="sm" variant="outline" onClick={() => setEditingAdmin(admin)}>Editar</Button>
+                      <Button size="sm" variant="outline" style={{ color: "#c62828", borderColor: "#c62828" }} onClick={() => {
+                        if (confirm(`Tem certeza que deseja remover o acesso de ${admin.name}?`)) {
+                          deleteMutation.mutate({ id: admin.id });
+                        }
+                      }}>Remover</Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {subAdmins.length === 0 && (
+                <tr>
+                  <td colSpan={5} style={{ textAlign: "center", padding: "2rem", color: "#666" }}>
+                    Nenhum administrador secundário cadastrado ainda. Use o botão acima para criar o primeiro.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Modal Criar Administrador */}
+      {showCreateModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+          <div style={{ background: "#fff", width: "100%", maxWidth: "520px", borderRadius: "10px", padding: "2rem", boxShadow: "0 10px 25px rgba(0,0,0,0.15)" }}>
+            <h3 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.5rem" }}>Adicionar Novo Administrador</h3>
+            <p style={{ fontSize: "0.9rem", color: "#666", marginBottom: "1.5rem" }}>Defina as credenciais e escolha quais abas o membro da equipe poderá visualizar.</p>
+
+            <div style={{ display: "grid", gap: "1rem", marginBottom: "1.5rem" }}>
+              <div>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.3rem" }}>Nome Completo</label>
+                <input
+                  type="text"
+                  value={newAdmin.name}
+                  onChange={e => setNewAdmin({ ...newAdmin, name: e.target.value })}
+                  placeholder="Ex: Carlos Assistente"
+                  style={{ width: "100%", padding: "0.6rem 0.8rem", borderRadius: "6px", border: "1px solid #ccc" }}
+                />
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.3rem" }}>E-mail de Acesso</label>
+                <input
+                  type="email"
+                  value={newAdmin.email}
+                  onChange={e => setNewAdmin({ ...newAdmin, email: e.target.value })}
+                  placeholder="carlos@eraslabel.com"
+                  style={{ width: "100%", padding: "0.6rem 0.8rem", borderRadius: "6px", border: "1px solid #ccc" }}
+                />
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.3rem" }}>Senha Provisória</label>
+                <input
+                  type="password"
+                  value={newAdmin.password}
+                  onChange={e => setNewAdmin({ ...newAdmin, password: e.target.value })}
+                  placeholder="Mínimo 6 caracteres"
+                  style={{ width: "100%", padding: "0.6rem 0.8rem", borderRadius: "6px", border: "1px solid #ccc" }}
+                />
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.3rem" }}>Título do Cargo</label>
+                <input
+                  type="text"
+                  value={newAdmin.roleTitle}
+                  onChange={e => setNewAdmin({ ...newAdmin, roleTitle: e.target.value })}
+                  placeholder="Ex: Estoquista / Operador"
+                  style={{ width: "100%", padding: "0.6rem 0.8rem", borderRadius: "6px", border: "1px solid #ccc" }}
+                />
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.5rem" }}>Permissões por Módulo</label>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+                  {availableModules.map(mod => {
+                    const isChecked = newAdmin.permissions.split(",").map(s => s.trim()).includes(mod.key);
+                    return (
+                      <label key={mod.key} style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem", cursor: "pointer" }}>
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => handleTogglePerm(mod.key, newAdmin.permissions, setNewAdmin)}
+                        />
+                        {mod.label}
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem" }}>
+              <Button variant="outline" onClick={() => setShowCreateModal(false)}>Cancelar</Button>
+              <Button
+                onClick={() => createMutation.mutate(newAdmin)}
+                disabled={createMutation.isPending || !newAdmin.email || !newAdmin.name || !newAdmin.password}
+                style={{ background: "#b22222", color: "#fff" }}
+              >
+                {createMutation.isPending ? "Salvando..." : "Salvar Administrador"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Editar Administrador */}
+      {editingAdmin && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+          <div style={{ background: "#fff", width: "100%", maxWidth: "520px", borderRadius: "10px", padding: "2rem", boxShadow: "0 10px 25px rgba(0,0,0,0.15)" }}>
+            <h3 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.5rem" }}>Editar Administrador</h3>
+            <p style={{ fontSize: "0.9rem", color: "#666", marginBottom: "1.5rem" }}>Modifique as permissões de acesso ou redefina a senha para {editingAdmin.email}</p>
+
+            <div style={{ display: "grid", gap: "1rem", marginBottom: "1.5rem" }}>
+              <div>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.3rem" }}>Nome Completo</label>
+                <input
+                  type="text"
+                  value={editingAdmin.name}
+                  onChange={e => setEditingAdmin({ ...editingAdmin, name: e.target.value })}
+                  style={{ width: "100%", padding: "0.6rem 0.8rem", borderRadius: "6px", border: "1px solid #ccc" }}
+                />
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.3rem" }}>Título do Cargo</label>
+                <input
+                  type="text"
+                  value={editingAdmin.roleTitle}
+                  onChange={e => setEditingAdmin({ ...editingAdmin, roleTitle: e.target.value })}
+                  style={{ width: "100%", padding: "0.6rem 0.8rem", borderRadius: "6px", border: "1px solid #ccc" }}
+                />
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.3rem" }}>Nova Senha (opcional)</label>
+                <input
+                  type="password"
+                  placeholder="Deixe em branco para manter a atual"
+                  onChange={e => setEditingAdmin({ ...editingAdmin, password: e.target.value })}
+                  style={{ width: "100%", padding: "0.6rem 0.8rem", borderRadius: "6px", border: "1px solid #ccc" }}
+                />
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.5rem" }}>Permissões por Módulo</label>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+                  {availableModules.map(mod => {
+                    const isChecked = editingAdmin.permissions.split(",").map((s: string) => s.trim()).includes(mod.key);
+                    return (
+                      <label key={mod.key} style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem", cursor: "pointer" }}>
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => handleTogglePerm(mod.key, editingAdmin.permissions, (fn: any) => setEditingAdmin((prev: any) => ({ ...prev, permissions: fn(prev).permissions })))}
+                        />
+                        {mod.label}
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem" }}>
+              <Button variant="outline" onClick={() => setEditingAdmin(null)}>Cancelar</Button>
+              <Button
+                onClick={() => updateMutation.mutate({
+                  id: editingAdmin.id,
+                  name: editingAdmin.name,
+                  roleTitle: editingAdmin.roleTitle,
+                  permissions: editingAdmin.permissions,
+                  password: editingAdmin.password,
+                })}
+                disabled={updateMutation.isPending}
+                style={{ background: "#b22222", color: "#fff" }}
+              >
+                {updateMutation.isPending ? "Salvando..." : "Salvar Alterações"}
+              </Button>
+            </div>
           </div>
         </div>
       )}

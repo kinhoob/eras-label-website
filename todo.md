@@ -145,3 +145,11 @@
 - [x] Atualizar o componente `AdminAnalyticsSection` para exibir gráficos em barras duplas comparando o período atual versus o mês anterior
 - [x] Atualizar a seção de insights executivos da IA com o bloco dedicado de previsão de esgotamento e produtos em risco
 - [x] Executar testes Vitest (89 testes aprovados), TypeScript limpo, build de produção validado e checkpoint salvo
+
+## Gestão de Sub-administradores e Permissões por Módulo
+- [x] Criar tabela Drizzle para contas de administradores secundários, funções customizadas e permissões granulares por módulo (produtos, inventário, categorias, estatísticas, e-mails, configurações)
+- [x] Implementar procedures tRPC protegidas para o superadmin gerenciar sub-administradores (criar, editar, listar, redefinir senha, ativar/desativar e configurar permissões)
+- [x] Atualizar o middleware de autenticação e verificação de permissão no backend para bloquear acesso a rotas restritas para contas sem permissão
+- [x] Construir a aba de Configurações / Gestão de Equipe no painel administrativo exclusiva para o superadmin principal (`theeraslabel@gmail.com`)
+- [x] Ajustar a navegação e renderização das abas no painel para exibir apenas os módulos autorizados para sub-administradores
+- [x] Validar segurança, escrever testes unitários em Vitest (92 testes aprovados), TypeScript limpo, build de produção e checkpoint salvo

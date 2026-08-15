@@ -15,6 +15,7 @@ import {
   resendEmailLogs,
   categories,
   inventoryAuditLogs,
+  adminUsers,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 import { collectCollectionRecipients } from "./marketing-audience";
@@ -778,4 +779,50 @@ export async function listInventoryAuditLogs(filters?: {
   const items = filtered.slice(start, start + pageSize);
 
   return { items, total, page, pageSize };
+}
+
+export async function listAdminUsers() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(adminUsers);
+}
+
+export async function getAdminUserByEmail(email: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(adminUsers).where(eq(adminUsers.email, email));
+  return rows[0] || null;
+}
+
+export async function createAdminUser(data: { email: string; name: string; passwordHash: string; roleTitle: string; permissions: string; isActive?: number }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [result] = await db.insert(adminUsers).values({
+    email: data.email.toLowerCase().trim(),
+    name: data.name,
+    passwordHash: data.passwordHash,
+    roleTitle: data.roleTitle || "Assistente",
+    permissions: data.permissions || "products,inventory,categories,stats,emails,settings",
+    isActive: data.isActive ?? 1,
+  });
+  return { id: result.insertId };
+}
+
+export async function updateAdminUser(id: number, data: { name?: string; roleTitle?: string; permissions?: string; isActive?: number; passwordHash?: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const updateData: any = { updatedAt: new Date() };
+  if (data.name !== undefined) updateData.name = data.name;
+  if (data.roleTitle !== undefined) updateData.roleTitle = data.roleTitle;
+  if (data.permissions !== undefined) updateData.permissions = data.permissions;
+  if (data.isActive !== undefined) updateData.isActive = data.isActive;
+  if (data.passwordHash !== undefined) updateData.passwordHash = data.passwordHash;
+
+  await db.update(adminUsers).set(updateData).where(eq(adminUsers.id, id));
+}
+
+export async function deleteAdminUser(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(adminUsers).where(eq(adminUsers.id, id));
 }
