@@ -283,3 +283,12 @@ Todos os itens acima devem ser marcados como concluídos após a validação fin
 - [x] Atualizar testes, documentação de QA e guardar checkpoint da ordenação
 
 Todos os itens acima devem ser marcados como concluídos após a validação final.
+
+## Limpeza global e etiquetas de filtros da pesquisa
+- [x] Mapear os estados atuais de pesquisa, filtros e ordenação
+- [x] Implementar botão para limpar pesquisa, filtros e ordenação de uma vez
+- [x] Exibir etiquetas visuais removíveis para cada critério ativo acima dos resultados
+- [x] Validar remoção individual, limpeza global, teclado e responsividade
+- [x] Atualizar testes, documentação de QA e guardar checkpoint da melhoria
+
+Todos os itens acima devem ser marcados como concluídos após a validação final.

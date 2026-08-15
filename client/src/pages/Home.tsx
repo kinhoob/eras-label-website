@@ -37,6 +37,7 @@ import { getSearchSuggestionText, searchStorefrontProducts, sortStorefrontProduc
 
 type Category = "Todos" | "Camisetas" | "Bonés";
 type PriceRange = "all" | "under150" | "150to200" | "over200";
+type SearchFilterKey = "query" | "category" | "price" | "size" | "color" | "sort";
 type Product = {
   id: number;
   name: string;
@@ -332,7 +333,37 @@ export default function Home() {
     return searchQuery.trim() ? sortStorefrontProducts(searchedProducts, searchSort) : searchedProducts;
   }, [category, colorFilter, priceRange, products, searchQuery, searchSort, sizeFilter]);
   const searchSuggestions = useMemo(() => filteredProducts.slice(0, 6), [filteredProducts]);
+  const activeSearchFilters = useMemo(() => {
+    const filters: Array<{ key: SearchFilterKey; label: string }> = [];
+    if (searchQuery.trim()) filters.push({ key: "query", label: `Pesquisa: ${searchQuery.trim()}` });
+    if (category !== "Todos") filters.push({ key: "category", label: `Categoria: ${category}` });
+    if (priceRange !== "all") filters.push({ key: "price", label: `Preço: ${priceRange === "under150" ? "Até R$ 150" : priceRange === "150to200" ? "R$ 150–200" : "Acima de R$ 200"}` });
+    if (sizeFilter !== "Todos") filters.push({ key: "size", label: `Tamanho: ${sizeFilter}` });
+    if (colorFilter !== "Todas") filters.push({ key: "color", label: `Cor: ${colorFilter}` });
+    if (searchQuery.trim() && searchSort !== "newest") filters.push({ key: "sort", label: `Ordenação: ${searchSort === "price-asc" ? "menor preço" : "maior preço"}` });
+    return filters;
+  }, [category, colorFilter, priceRange, searchQuery, searchSort, sizeFilter]);
   const hasAdvancedFilters = sizeFilter !== "Todos" || colorFilter !== "Todas" || priceRange !== "all";
+  function clearSearchCriterion(key: SearchFilterKey) {
+    if (key === "query") setSearchQuery("");
+    if (key === "category") setCategory("Todos");
+    if (key === "price") setPriceRange("all");
+    if (key === "size") setSizeFilter("Todos");
+    if (key === "color") setColorFilter("Todas");
+    if (key === "sort") setSearchSort("newest");
+    setActiveSearchSuggestion(-1);
+    window.setTimeout(() => searchInputRef.current?.focus(), 0);
+  }
+  function clearAllSearchCriteria() {
+    setSearchQuery("");
+    setCategory("Todos");
+    setSizeFilter("Todos");
+    setColorFilter("Todas");
+    setPriceRange("all");
+    setSearchSort("newest");
+    setActiveSearchSuggestion(-1);
+    window.setTimeout(() => searchInputRef.current?.focus(), 0);
+  }
   function clearShopFilters() {
     setCategory("Todos");
     setSizeFilter("Todos");
@@ -713,6 +744,19 @@ export default function Home() {
                     <span>RESULTADOS DA PESQUISA</span>
                     <span aria-live="polite">{isSearchLoading ? "A procurar…" : `${filteredProducts.length} ${filteredProducts.length === 1 ? "peça" : "peças"}`}</span>
                   </div>
+                  {activeSearchFilters.length > 0 && (
+                    <div className="header-search-active-filters" aria-label="Filtros ativos" role="list">
+                      <span className="header-search-active-label">ATIVOS</span>
+                      {activeSearchFilters.map((filter) => (
+                        <div key={filter.key} role="listitem">
+                          <button type="button" className="header-search-filter-chip" onClick={() => { playClick(soundsOn); clearSearchCriterion(filter.key); }} aria-label={`Remover ${filter.label}`}>
+                            <span>{filter.label}</span><X size={11} aria-hidden="true" />
+                          </button>
+                        </div>
+                      ))}
+                      <button type="button" className="header-search-clear-all" onClick={() => { playClick(soundsOn); clearAllSearchCriteria(); }} aria-label="Limpar todos os filtros da pesquisa">Limpar tudo</button>
+                    </div>
+                  )}
                   <div className="header-search-filter-grid" aria-label="Filtrar resultados da pesquisa">
                     <label>
                       <span>Preço</span>
@@ -775,7 +819,7 @@ export default function Home() {
                     <div className="header-search-empty" role="status" aria-live="polite">
                       <strong>Não encontrámos essa era.</strong>
                       <span>Tente outro nome, coleção, cor ou tamanho.</span>
-                      {(hasAdvancedFilters || searchSort !== "newest") && <button type="button" onClick={() => { playClick(soundsOn); setSizeFilter("Todos"); setColorFilter("Todas"); setPriceRange("all"); setSearchSort("newest"); }}>Limpar filtros da pesquisa</button>}
+                      {activeSearchFilters.length > 0 && <button type="button" onClick={() => { playClick(soundsOn); clearAllSearchCriteria(); }}>Limpar filtros da pesquisa</button>}
                     </div>
                   )}
                 </div>
