@@ -630,23 +630,33 @@ export default function Home() {
     });
   }
 
-  function applyCoupon() {
+  const couponValidateQuery = trpc.coupons.validate.useQuery(
+    { code: coupon.trim(), subtotal },
+    { enabled: false }
+  );
+
+  async function applyCoupon() {
     playClick(soundsOn);
     if (!coupon.trim()) {
       toast.error("Digite o código do cupom.");
       return;
     }
     setCouponLoading(true);
-    setTimeout(() => {
+    try {
+      const result = await couponValidateQuery.refetch();
       setCouponLoading(false);
-      if (coupon.trim().toUpperCase() === "ERAS10") {
+      if (result.data?.valid && result.data.discount > 0) {
         setCouponApplied(true);
-        toast.success("Cupom ERAS10 aplicado: 10% de desconto.");
+        toast.success(`Cupom ${coupon.trim().toUpperCase()} aplicado: R$ ${result.data.discount.toFixed(2)} de desconto.`);
       } else {
         setCouponApplied(false);
-        toast.error("Cupom não encontrado ou expirado.");
+        toast.error("Cupom inválido, expirado ou valor mínimo não atingido.");
       }
-    }, 600);
+    } catch {
+      setCouponLoading(false);
+      setCouponApplied(false);
+      toast.error("Erro ao validar o cupom. Tente novamente.");
+    }
   }
 
   function submitCheckout(event: React.FormEvent<HTMLFormElement>) {
