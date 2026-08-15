@@ -172,3 +172,11 @@
 - [x] Ajustar o grid e o aspect-ratio dos cards de produtos na Home para exibi-los menores e mais refinados
 - [x] Validar o novo tamanho dos produtos em desktop e mobile
 - [x] Guardar checkpoint e entregar a alteração
+
+
+## Navbar reaparece ao parar o scroll
+- [x] Fazer a navbar reaparecer automaticamente quando o utilizador parar de fazer scroll
+- [x] Preservar acesso ao menu, sacola, conta e links principais em desktop e mobile
+- [x] Animar a entrada/saída da navbar sem causar deslocamento ou overflow no conteúdo
+- [x] Validar o comportamento em desktop e mobile, incluindo scroll contínuo e pausa
+- [x] Guardar checkpoint e entregar a atualização

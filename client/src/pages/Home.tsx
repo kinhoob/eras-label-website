@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useReducer } from "react";
+import { useEffect, useState, useMemo, useReducer, useRef } from "react";
 import { Link } from "wouter";
 import {
   ArrowDown,
@@ -231,6 +231,9 @@ export default function Home() {
   const [activeBanner, setActiveBanner] = useState(0);
   const [collectionsOpen, setCollectionsOpen] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const headerStopTimeoutRef = useRef<number | null>(null);
+  const previousScrollYRef = useRef(0);
   const [soundsOn, setSoundsOn] = useState(true);
   const [coupon, setCoupon] = useState("");
   const [couponApplied, setCouponApplied] = useState<boolean | null>(null);
@@ -290,10 +293,36 @@ export default function Home() {
   }, [banners.length]);
 
   useEffect(() => {
-    const handleScroll = () => setShowBackToTop(window.scrollY > 560);
-    window.addEventListener("scroll", handleScroll, { passive: true });
+    const revealAfterScrollStops = () => {
+      if (headerStopTimeoutRef.current !== null) window.clearTimeout(headerStopTimeoutRef.current);
+      headerStopTimeoutRef.current = window.setTimeout(() => {
+        setIsHeaderVisible(true);
+        headerStopTimeoutRef.current = null;
+      }, 180);
+    };
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const previousScrollY = previousScrollYRef.current;
+      const isAtTop = currentScrollY <= 12;
+      const isScrollingUp = currentScrollY < previousScrollY - 2;
+      const isScrollingDown = currentScrollY > previousScrollY + 2;
+
+      if (isAtTop || isScrollingUp) setIsHeaderVisible(true);
+      else if (isScrollingDown) setIsHeaderVisible(false);
+
+      previousScrollYRef.current = currentScrollY;
+      setShowBackToTop(currentScrollY > 560);
+      revealAfterScrollStops();
+    };
+
+    previousScrollYRef.current = window.scrollY;
     handleScroll();
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (headerStopTimeoutRef.current !== null) window.clearTimeout(headerStopTimeoutRef.current);
+    };
   }, []);
 
   function openProduct(product: Product) {
@@ -420,7 +449,7 @@ export default function Home() {
   return (
     <div className="eras-site">
       <div className="pix-strip">5% OFF PARA PAGAMENTOS NO PIX · UMA NOVA ERA COMEÇA AQUI</div>
-      <header className="site-header">
+      <header className={`site-header ${isHeaderVisible ? "is-visible" : "is-hidden"}`}>
         <button className="icon-button" aria-label="Abrir menu lateral" onClick={() => { playClick(soundsOn); setIsMenuOpen(true); }}>
           <Menu size={20} />
         </button>
