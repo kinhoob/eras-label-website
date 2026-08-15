@@ -252,9 +252,9 @@
 
 
 ## Lacunas de QA dos filtros e CEP
-- [ ] Validar limpeza individual explícita de cada filtro, além do botão global
-- [ ] Testar e documentar o estado vazio quando nenhum produto corresponde aos filtros
-- [ ] Validar funcionalmente os filtros em mobile real e confirmar dados carregados do backend
-- [ ] Cobrir no QA os estados loading e erro do CEP e comprovar edição manual posterior
-- [ ] Executar TypeScript, Vitest e build após esta rodada e registar as saídas
-- [ ] Guardar um checkpoint novo após resolver todas as lacunas
+- [x] Validar limpeza individual explícita de cada filtro, além do botão global
+- [x] Testar e documentar o estado vazio quando nenhum produto corresponde aos filtros
+- [x] Validar funcionalmente os filtros em mobile real e confirmar dados carregados do backend
+- [x] Cobrir no QA os estados loading e erro do CEP e comprovar edição manual posterior
+- [x] Executar TypeScript, Vitest e build após esta rodada e registar as saídas
+- [x] Guardar um checkpoint novo após resolver todas as lacunas
