@@ -198,3 +198,13 @@
 - [x] Atualizar o contador instantaneamente ao adicionar, remover ou alterar quantidades no carrinho
 - [x] Validar a interação em desktop e mobile e cobrir a lógica com testes
 - [x] Guardar checkpoint e entregar as melhorias
+
+
+## Feedback e persistência da Sacola
+- [ ] Persistir os itens da Sacola no armazenamento local com leitura segura ao iniciar
+- [ ] Guardar alterações da Sacola ao adicionar, remover e alterar quantidades
+- [ ] Adicionar estado visual animado de confirmação no botão de adicionar à Sacola
+- [ ] Exibir toast breve com o nome do produto adicionado
+- [ ] Respeitar movimento reduzido e preservar a acessibilidade do feedback
+- [ ] Validar persistência após recarregar, toast, animação e regressões em desktop/mobile
+- [ ] Guardar checkpoint e entregar as melhorias

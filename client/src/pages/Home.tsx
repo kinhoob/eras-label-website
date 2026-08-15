@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { getCartItemCount } from "@/lib/cart";
+import { loadCart, saveCart } from "@/lib/cart-storage";
 import { getCheckoutFeedback } from "@/lib/checkout-feedback";
 import { ERAS_COLLECTION_PATHS, ERAS_VIP_WHATSAPP_URL } from "../../../shared/const";
 import { checkoutFlowReducer, initialCheckoutFlowState } from "@/lib/checkout-flow";
@@ -223,8 +224,9 @@ function playClick(enabled: boolean) {
 
 export default function Home() {
   const [category, setCategory] = useState<Category>("Todos");
-  const [cart, setCart] = useState<CartLine[]>([]);
+  const [cart, setCart] = useState<CartLine[]>(() => loadCart<CartLine>());
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [addedProductId, setAddedProductId] = useState<number | null>(null);
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -234,6 +236,7 @@ export default function Home() {
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const headerStopTimeoutRef = useRef<number | null>(null);
+  const addedProductTimeoutRef = useRef<number | null>(null);
   const previousScrollYRef = useRef(0);
   const [soundsOn, setSoundsOn] = useState(true);
   const [coupon, setCoupon] = useState("");
@@ -286,6 +289,16 @@ export default function Home() {
   const shippingCost = shippingData?.free ? 0 : (shippingData?.cost ?? 0);
   const total = subtotal - discount + shippingCost;
   const checkoutFeedback = getCheckoutFeedback(checkoutStatus, confirmedOrderNumber, checkoutError);
+
+  useEffect(() => {
+    saveCart(cart);
+  }, [cart]);
+
+  useEffect(() => {
+    return () => {
+      if (addedProductTimeoutRef.current !== null) window.clearTimeout(addedProductTimeoutRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (banners.length < 2) return;
@@ -351,9 +364,15 @@ export default function Home() {
       }
       return [...current, { ...product, size, quantity: 1 }];
     });
-    setSelectedProduct(null);
-    setIsCartOpen(true);
-    toast.success("Peça adicionada à sacola.");
+    setAddedProductId(product.id);
+    if (addedProductTimeoutRef.current !== null) window.clearTimeout(addedProductTimeoutRef.current);
+    addedProductTimeoutRef.current = window.setTimeout(() => {
+      setAddedProductId(null);
+      setSelectedProduct(null);
+      setIsCartOpen(true);
+      addedProductTimeoutRef.current = null;
+    }, 620);
+    toast.success("Adicionado à sacola", { description: `${product.name} · tamanho ${size}`, duration: 2200 });
   }
 
   function changeQuantity(productId: number, size: string, delta: number) {
@@ -955,8 +974,13 @@ export default function Home() {
                   ))}
                 </div>
               </div>
-              <button className="primary-button" onClick={() => addToCart(selectedProduct, selectedSize)} disabled={selectedProduct.stock === 0}>
-                {selectedProduct.stock === 0 ? "ESGOTADO" : "ADICIONAR À SACOLA"} <ArrowRight size={16} />
+              <button
+                className={`primary-button add-to-cart-button ${addedProductId === selectedProduct.id ? "is-added" : ""}`}
+                onClick={() => addToCart(selectedProduct, selectedSize)}
+                disabled={selectedProduct.stock === 0 || addedProductId === selectedProduct.id}
+                aria-live="polite"
+              >
+                {selectedProduct.stock === 0 ? "ESGOTADO" : addedProductId === selectedProduct.id ? <><CheckCircle2 size={16} /> ADICIONADO À SACOLA</> : <>ADICIONAR À SACOLA <ArrowRight size={16} /></>}
               </button>
               <p className="stock-note"><Sparkles size={13} /> Estoque gerido no painel administrativo.</p>
             </div>
