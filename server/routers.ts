@@ -27,6 +27,18 @@ const newsletterInput = z.object({
   email: z.string().email().max(320),
 });
 
+export function isValidImageUrl(value: string) {
+  if (value.startsWith("/manus-storage/")) return true;
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+const imageUrlInput = z.string().refine(isValidImageUrl, "Informe uma URL de imagem válida ou um upload interno do armazenamento.");
+
 export const appRouter = router({
   system: systemRouter,
   auth: router({
@@ -225,7 +237,7 @@ export const appRouter = router({
         eyebrow: z.string(),
         title: z.string(),
         subtitle: z.string(),
-        imageUrl: z.string().url(),
+        imageUrl: imageUrlInput,
         href: z.string().min(1),
         cta: z.string(),
       })).min(1).max(6),
@@ -238,7 +250,7 @@ export const appRouter = router({
         eyebrow: z.string(),
         title: z.string(),
         subtitle: z.string(),
-        imageUrl: z.string().url(),
+        imageUrl: imageUrlInput,
         href: z.string().min(1),
         cta: z.string(),
       }),

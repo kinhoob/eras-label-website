@@ -180,3 +180,12 @@
 - [x] Animar a entrada/saída da navbar sem causar deslocamento ou overflow no conteúdo
 - [x] Validar o comportamento em desktop e mobile, incluindo scroll contínuo e pausa
 - [x] Guardar checkpoint e entregar a atualização
+
+
+## Imagens persistentes e transição da navbar
+- [x] Ligar banners da Home aos URLs persistentes gerados pelo upload do painel administrativo
+- [x] Ligar todas as imagens dos produtos aos uploads persistentes, preservando múltiplas fotos e fallback seguro
+- [x] Confirmar que alterações feitas no Admin são refletidas na Home e nas vistas de produto sem hardcodes de imagens
+- [x] Refinar a animação de reaparecimento da navbar para uma transição suave e acessível
+- [x] Validar uploads, renderização de imagens, navbar e responsividade em desktop e mobile
+- [x] Guardar checkpoint e entregar as melhorias
