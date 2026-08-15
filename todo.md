@@ -231,10 +231,10 @@
 
 
 ## Sucesso da compra, relacionados e validação do checkout
-- [ ] Criar ou consolidar uma confirmação de compra com resumo do pedido e botão Continuar a comprar
-- [ ] Garantir que o resumo mostra itens, quantidades, subtotal, descontos, frete, método de pagamento e total
-- [ ] Adicionar produtos relacionados no modal de visualização rápida com abertura de outro produto sem sair da Home
-- [ ] Validar nome, e-mail, telefone, CPF, CEP e morada antes de permitir finalizar o checkout
-- [ ] Mostrar mensagens de erro claras junto aos campos inválidos e impedir submissões incompletas
-- [ ] Validar os fluxos de erro, sucesso, recomendados e responsividade com testes
-- [ ] Guardar checkpoint e entregar a melhoria
+- [x] Criar ou consolidar uma confirmação de compra com resumo do pedido e botão Continuar a comprar
+- [x] Garantir que o resumo mostra itens, quantidades, subtotal, descontos, frete, método de pagamento e total
+- [x] Adicionar produtos relacionados no modal de visualização rápida com abertura de outro produto sem sair da Home
+- [x] Validar nome, e-mail, telefone, CPF, CEP e morada antes de permitir finalizar o checkout
+- [x] Mostrar mensagens de erro claras junto aos campos inválidos e impedir submissões incompletas
+- [x] Validar os fluxos de erro, sucesso, recomendados e responsividade com testes
+- [x] Guardar checkpoint e entregar a melhoria
