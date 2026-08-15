@@ -30,6 +30,7 @@ import { getCheckoutFeedback } from "@/lib/checkout-feedback";
 import { ERAS_COLLECTION_PATHS, ERAS_VIP_WHATSAPP_URL } from "../../../shared/const";
 import { checkoutFlowReducer, initialCheckoutFlowState } from "@/lib/checkout-flow";
 import { createOrderSummary, type OrderSummary } from "@/lib/order-summary";
+import { saveCheckoutDraft } from "@/lib/checkout-draft";
 
 type Category = "Todos" | "Camisetas" | "Bonés";
 type Product = {
@@ -311,6 +312,15 @@ export default function Home() {
   }, [isCartOpen]);
 
   useEffect(() => {
+    if (!selectedProduct) return;
+    const handleQuickViewKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSelectedProduct(null);
+    };
+    window.addEventListener("keydown", handleQuickViewKeyDown);
+    return () => window.removeEventListener("keydown", handleQuickViewKeyDown);
+  }, [selectedProduct]);
+
+  useEffect(() => {
     if (banners.length < 2) return;
     const interval = window.setInterval(() => setActiveBanner((value) => (value + 1) % banners.length), 5200);
     return () => window.clearInterval(interval);
@@ -383,6 +393,17 @@ export default function Home() {
       addedProductTimeoutRef.current = null;
     }, 620);
     toast.success("Adicionado à sacola", { description: `${product.name} · tamanho ${size}`, duration: 2200 });
+  }
+
+  function goToCheckout() {
+    playClick(soundsOn);
+    saveCheckoutDraft({
+      coupon,
+      couponApplied: couponApplied === true,
+      selectedPaymentMethod,
+      shippingCep,
+    });
+    window.setTimeout(() => window.location.assign("/checkout"), 0);
   }
 
   function changeQuantity(productId: number, size: string, delta: number) {
@@ -580,6 +601,7 @@ export default function Home() {
                     }} />
                     <span className="highlight-label">{highlight.label}</span>
                     {product.stock === 0 && <span className="soldout-tag">ESGOTADO</span>}
+                    <span className="quick-view-label">VISUALIZAÇÃO RÁPIDA</span>
                     <span className="product-arrow"><ArrowRight size={15} /></span>
                   </button>
                   <div className="product-meta">
@@ -611,6 +633,7 @@ export default function Home() {
                     event.currentTarget.src = product.fallbackImage;
                   }} />
                   {product.stock === 0 && <span className="soldout-tag">ESGOTADO</span>}
+                  <span className="quick-view-label">VISUALIZAÇÃO RÁPIDA</span>
                   <span className="product-arrow"><ArrowRight size={15} /></span>
                 </button>
                 <div className="product-meta">
@@ -826,8 +849,8 @@ export default function Home() {
                     <div className="cart-total-row final"><span>Total</span><strong>{formatPrice(total)}</strong></div>
                   </div>
 
-                  <button className="primary-button checkout-button" onClick={() => { playClick(soundsOn); setIsCartOpen(false); setIsCheckoutOpen(true); }}>
-                    IR PARA CHECKOUT ({selectedPaymentMethod === "pix" ? "Pix" : "Cartão"}) <ArrowRight size={16} />
+                  <button type="button" className="primary-button checkout-button" onClick={goToCheckout}>
+                    FINALIZAR COMPRA ({selectedPaymentMethod === "pix" ? "Pix" : "Cartão"}) <ArrowRight size={16} />
                   </button>
                 </div>
               </>
@@ -961,8 +984,8 @@ export default function Home() {
 
       {selectedProduct && (
         <div className="overlay" onClick={() => setSelectedProduct(null)}>
-          <div className="product-modal" onClick={(event) => event.stopPropagation()}>
-            <button className="close-button" onClick={() => setSelectedProduct(null)}><X /></button>
+          <div className="product-modal" role="dialog" aria-modal="true" aria-labelledby="quick-view-title" onClick={(event) => event.stopPropagation()}>
+            <button type="button" className="close-button" onClick={() => setSelectedProduct(null)} aria-label="Fechar visualização rápida"><X /></button>
             <div className="modal-image"><img src={selectedProduct.image} alt={selectedProduct.alt} onError={(event) => {
             if (!selectedProduct.fallbackImage || event.currentTarget.dataset.fallbackApplied) return;
             event.currentTarget.dataset.fallbackApplied = "true";
@@ -970,7 +993,7 @@ export default function Home() {
           }} /></div>
             <div className="modal-copy">
               <span className="eyebrow">{selectedProduct.collection}</span>
-              <h2>{selectedProduct.name}</h2>
+              <h2 id="quick-view-title">{selectedProduct.name}</h2>
               <p className="modal-price">{formatPrice(selectedProduct.price)}</p>
               <p>{selectedProduct.detail}</p>
               <div className="size-picker">

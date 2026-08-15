@@ -12,7 +12,8 @@ import ManifestoPage from "./pages/Manifesto";
 import EventsPage from "./pages/Events";
 import ContactPage from "./pages/Contact";
 import CatalogViewPage from "./pages/CatalogView";
-import AccountPage from "./pages/Account";
+import AccountPage from "@/pages/Account";
+import CheckoutPage from "@/pages/Checkout";
 
 function Router() {
   return (
@@ -27,6 +28,7 @@ function Router() {
       <Route path="/auth" component={Auth} />
       <Route path="/admin" component={Admin} />
       <Route path="/account" component={AccountPage} />
+      <Route path="/checkout" component={CheckoutPage} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

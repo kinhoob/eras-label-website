@@ -211,10 +211,20 @@
 
 
 ## Sacola lateral e gestão direta
-- [ ] Consolidar painel lateral deslizante da Sacola com abertura pela navbar e fecho por botão, overlay e Escape
-- [ ] Adicionar controlos acessíveis para aumentar e diminuir quantidades diretamente na Sacola
-- [ ] Adicionar remoção de itens diretamente na Sacola com feedback visual e desfazer quando aplicável
-- [ ] Atualizar subtotal, descontos, frete e total em tempo real após cada alteração
-- [ ] Preservar alterações na persistência local e sincronizar o contador da navbar
-- [ ] Validar a experiência em desktop e mobile e cobrir as operações com testes
+- [x] Consolidar painel lateral deslizante da Sacola com abertura pela navbar e fecho por botão, overlay e Escape
+- [x] Adicionar controlos acessíveis para aumentar e diminuir quantidades diretamente na Sacola
+- [x] Adicionar remoção de itens diretamente na Sacola com feedback visual e desfazer quando aplicável
+- [x] Atualizar subtotal, descontos, frete e total em tempo real após cada alteração
+- [x] Preservar alterações na persistência local e sincronizar o contador da navbar
+- [x] Validar a experiência em desktop e mobile e cobrir as operações com testes
+- [x] Guardar checkpoint e entregar a melhoria
+
+
+## Finalização e visualização rápida
+- [ ] Consolidar botão de finalizar compra na Sacola com encaminhamento claro para o checkout
+- [ ] Garantir que a Sacola fecha e o checkout abre sem perder itens, totais ou método de pagamento escolhido
+- [ ] Criar ou refinar modal de visualização rápida com imagem, nome, preço, descrição, tamanhos e disponibilidade
+- [ ] Permitir adicionar o produto diretamente à Sacola a partir da visualização rápida
+- [ ] Garantir fecho por botão, overlay e Escape, com foco e movimento reduzido respeitados
+- [ ] Validar fluxos de Sacola, checkout e visualização rápida em desktop e mobile com testes
 - [ ] Guardar checkpoint e entregar a melhoria
