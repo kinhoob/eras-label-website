@@ -266,3 +266,12 @@
 - [x] Executar testes, atualizar documentação e guardar checkpoint da pesquisa
 
 Todos os itens acima devem ser marcados como concluídos após a validação final.
+
+## Melhorias da pesquisa inteligente
+- [x] Mapear o estado atual dos resultados da pesquisa e os filtros existentes
+- [x] Implementar carregamento visual e mensagens amigáveis para ausência de resultados
+- [x] Adicionar filtros de preço, tamanho e cor diretamente nos resultados da pesquisa
+- [x] Validar combinações de pesquisa e filtros em desktop, mobile e teclado
+- [x] Atualizar testes, documentação de QA e guardar checkpoint da melhoria
+
+Todos os itens acima devem ser marcados como concluídos após a validação final.

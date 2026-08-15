@@ -271,7 +271,9 @@ export default function Home() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSearchSuggestion, setActiveSearchSuggestion] = useState(-1);
+  const [isSearchLoading, setIsSearchLoading] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchLoadingTimeoutRef = useRef<number | null>(null);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [activeBanner, setActiveBanner] = useState(0);
   const [collectionsOpen, setCollectionsOpen] = useState(false);
@@ -325,9 +327,7 @@ export default function Home() {
     });
     return searchStorefrontProducts(filterResults, searchQuery);
   }, [category, colorFilter, priceRange, products, searchQuery, sizeFilter]);
-  const searchSuggestions = useMemo(() => (
-    searchQuery.trim() ? searchStorefrontProducts(products, searchQuery).slice(0, 6) : []
-  ), [products, searchQuery]);
+  const searchSuggestions = useMemo(() => filteredProducts.slice(0, 6), [filteredProducts]);
   const hasAdvancedFilters = sizeFilter !== "Todos" || colorFilter !== "Todas" || priceRange !== "all";
   function clearShopFilters() {
     setCategory("Todos");
@@ -404,6 +404,25 @@ export default function Home() {
   useEffect(() => {
     saveCart(cart);
   }, [cart]);
+
+  useEffect(() => {
+    return () => {
+      if (searchLoadingTimeoutRef.current !== null) window.clearTimeout(searchLoadingTimeoutRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isSearchOpen || !searchQuery.trim()) {
+      setIsSearchLoading(false);
+      return;
+    }
+    setIsSearchLoading(true);
+    if (searchLoadingTimeoutRef.current !== null) window.clearTimeout(searchLoadingTimeoutRef.current);
+    searchLoadingTimeoutRef.current = window.setTimeout(() => {
+      setIsSearchLoading(false);
+      searchLoadingTimeoutRef.current = null;
+    }, 220);
+  }, [isSearchOpen, searchQuery, sizeFilter, colorFilter, priceRange]);
 
   useEffect(() => {
     return () => {
@@ -684,23 +703,68 @@ export default function Home() {
               />
               {searchQuery && <button className="header-search-clear" type="button" aria-label="Limpar pesquisa" onClick={() => { setSearchQuery(""); setActiveSearchSuggestion(-1); searchInputRef.current?.focus(); }}>×</button>}
               {searchQuery.trim() && (
-                <div className="header-search-suggestions" id="eras-search-suggestions" role="listbox" aria-label="Sugestões de produtos">
-                  {searchSuggestions.length > 0 ? searchSuggestions.map((product, index) => (
-                    <button
-                      key={product.id}
-                      id={`eras-search-suggestion-${index}`}
-                      className={activeSearchSuggestion === index ? "active" : ""}
-                      type="button"
-                      role="option"
-                      aria-selected={activeSearchSuggestion === index}
-                      onMouseDown={(event) => event.preventDefault()}
-                      onClick={() => chooseSearchSuggestion(product)}
-                    >
-                      <img src={product.image} alt="" aria-hidden="true" />
-                      <span><strong>{product.name}</strong><small>{getSearchSuggestionText(product)}</small></span>
-                      <ArrowRight size={14} aria-hidden="true" />
-                    </button>
-                  )) : <p className="header-search-empty">Nenhuma peça encontrada. Tente nome, coleção, cor ou tamanho.</p>}
+                <div className="header-search-results" id="eras-search-suggestions" aria-label="Resultados da pesquisa">
+                  <div className="header-search-results-heading">
+                    <span>RESULTADOS DA PESQUISA</span>
+                    <span aria-live="polite">{isSearchLoading ? "A procurar…" : `${filteredProducts.length} ${filteredProducts.length === 1 ? "peça" : "peças"}`}</span>
+                  </div>
+                  <div className="header-search-filter-grid" aria-label="Filtrar resultados da pesquisa">
+                    <label>
+                      <span>Preço</span>
+                      <select value={priceRange} onChange={(event) => { playClick(soundsOn); setPriceRange(event.target.value as PriceRange); }} aria-label="Filtrar pesquisa por preço">
+                        <option value="all">Todas</option>
+                        <option value="under150">Até R$ 150</option>
+                        <option value="150to200">R$ 150–200</option>
+                        <option value="over200">Acima de R$ 200</option>
+                      </select>
+                    </label>
+                    <label>
+                      <span>Tamanho</span>
+                      <select value={sizeFilter} onChange={(event) => { playClick(soundsOn); setSizeFilter(event.target.value); }} aria-label="Filtrar pesquisa por tamanho">
+                        <option value="Todos">Todos</option>
+                        {availableSizes.map((size) => <option key={size} value={size}>{size}</option>)}
+                      </select>
+                    </label>
+                    <label>
+                      <span>Cor</span>
+                      <select value={colorFilter} onChange={(event) => { playClick(soundsOn); setColorFilter(event.target.value); }} aria-label="Filtrar pesquisa por cor">
+                        <option value="Todas">Todas</option>
+                        {availableColors.map((color) => <option key={color} value={color}>{color}</option>)}
+                      </select>
+                    </label>
+                  </div>
+                  {isSearchLoading ? (
+                    <div className="header-search-loading" role="status" aria-live="polite">
+                      <Loader2 className="search-loading-icon" size={18} aria-hidden="true" />
+                      <span>A procurar peças para si…</span>
+                    </div>
+                  ) : searchSuggestions.length > 0 ? (
+                    <div className="header-search-suggestions" role="listbox" aria-label="Sugestões de produtos">
+                      {searchSuggestions.map((product, index) => (
+                        <button
+                          key={product.id}
+                          id={`eras-search-suggestion-${index}`}
+                          className={activeSearchSuggestion === index ? "active" : ""}
+                          type="button"
+                          role="option"
+                          aria-selected={activeSearchSuggestion === index}
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => chooseSearchSuggestion(product)}
+                        >
+                          <img src={product.image} alt="" aria-hidden="true" />
+                          <span><strong>{product.name}</strong><small>{getSearchSuggestionText(product)}</small></span>
+                          <ArrowRight size={14} aria-hidden="true" />
+                        </button>
+                      ))}
+                      {filteredProducts.length > searchSuggestions.length && <button className="header-search-see-all" type="submit">Ver todas as {filteredProducts.length} peças <ArrowRight size={14} /></button>}
+                    </div>
+                  ) : (
+                    <div className="header-search-empty" role="status" aria-live="polite">
+                      <strong>Não encontrámos essa era.</strong>
+                      <span>Tente outro nome, coleção, cor ou tamanho.</span>
+                      {hasAdvancedFilters && <button type="button" onClick={() => { playClick(soundsOn); setSizeFilter("Todos"); setColorFilter("Todas"); setPriceRange("all"); }}>Limpar filtros da pesquisa</button>}
+                    </div>
+                  )}
                 </div>
               )}
             </form>
