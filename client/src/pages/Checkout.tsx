@@ -7,6 +7,7 @@ import { loadCart, saveCart } from "@/lib/cart-storage";
 import { clearCheckoutDraft, loadCheckoutDraft, saveCheckoutDraft, type CheckoutPaymentMethod } from "@/lib/checkout-draft";
 import { updateCartLineQuantity, removeCartLine } from "@/lib/cart-operations";
 import { hasCheckoutFieldErrors, validateCheckoutFields, type CheckoutFieldErrors, type CheckoutFields } from "@/lib/checkout-validation";
+import { lookupCep, normalizeCep } from "@/lib/cep";
 
  type CheckoutLine = {
   id: number;
@@ -43,6 +44,8 @@ export default function CheckoutPage() {
   const [couponApplied, setCouponApplied] = useState(() => loadCheckoutDraft().couponApplied === true);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<CheckoutPaymentMethod>(() => loadCheckoutDraft().selectedPaymentMethod ?? "pix");
   const [cep, setCep] = useState(() => loadCheckoutDraft().shippingCep ?? "");
+  const [addressFields, setAddressFields] = useState({ street: "", neighborhood: "", city: "", state: "" });
+  const [cepLookupStatus, setCepLookupStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [couponLoading, setCouponLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
@@ -77,6 +80,30 @@ export default function CheckoutPage() {
       shippingCep: cep,
     });
   }, [cep, coupon, couponApplied, selectedPaymentMethod]);
+
+  useEffect(() => {
+    const normalizedCep = normalizeCep(cep);
+    if (normalizedCep.length !== 8) {
+      setCepLookupStatus("idle");
+      return;
+    }
+
+    const controller = new AbortController();
+    setCepLookupStatus("loading");
+    lookupCep(normalizedCep, controller.signal)
+      .then((address) => {
+        setAddressFields(address);
+        setCepLookupStatus("success");
+        toast.success("Morada encontrada", { description: `${address.city} · ${address.state}` });
+      })
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        setCepLookupStatus("error");
+        toast.error("Não foi possível encontrar este CEP", { description: "Confirme os números ou preencha a morada manualmente." });
+      });
+
+    return () => controller.abort();
+  }, [cep]);
 
   function changeQuantity(line: CheckoutLine, delta: number) {
     setCart((current) => updateCartLineQuantity(current, line.id, line.size, delta));
@@ -269,13 +296,13 @@ export default function CheckoutPage() {
               <div className="checkout-page-fields">
                 <label className={fieldErrors.cep ? "has-error" : undefined}>CEP<input name="cep" required value={cep} onChange={(event) => setCep(event.target.value.replace(/\D/g, "").slice(0, 8))} placeholder="00000-000" aria-invalid={Boolean(fieldErrors.cep)} aria-describedby={fieldErrors.cep ? "cep-error" : undefined} />{fieldErrors.cep && <span id="cep-error" className="field-error" role="alert">{fieldErrors.cep}</span>}</label>
                 <label className={fieldErrors.number ? "has-error" : undefined}>Número<input name="number" required placeholder="123" aria-invalid={Boolean(fieldErrors.number)} aria-describedby={fieldErrors.number ? "number-error" : undefined} />{fieldErrors.number && <span id="number-error" className="field-error" role="alert">{fieldErrors.number}</span>}</label>
-                <label className={`wide ${fieldErrors.street ? "has-error" : ""}`}>Endereço completo<input name="street" required placeholder="Rua, avenida ou travessa" aria-invalid={Boolean(fieldErrors.street)} aria-describedby={fieldErrors.street ? "street-error" : undefined} />{fieldErrors.street && <span id="street-error" className="field-error" role="alert">{fieldErrors.street}</span>}</label>
+                <label className={`wide ${fieldErrors.street ? "has-error" : ""}`}>Endereço completo<input name="street" required value={addressFields.street} onChange={(event) => setAddressFields((current) => ({ ...current, street: event.target.value }))} placeholder="Rua, avenida ou travessa" aria-invalid={Boolean(fieldErrors.street)} aria-describedby={fieldErrors.street ? "street-error" : undefined} />{fieldErrors.street && <span id="street-error" className="field-error" role="alert">{fieldErrors.street}</span>}</label>
                 <label>Complemento<input name="complement" placeholder="Apartamento, bloco" /></label>
-                <label className={fieldErrors.neighborhood ? "has-error" : undefined}>Bairro<input name="neighborhood" required placeholder="Seu bairro" aria-invalid={Boolean(fieldErrors.neighborhood)} aria-describedby={fieldErrors.neighborhood ? "neighborhood-error" : undefined} />{fieldErrors.neighborhood && <span id="neighborhood-error" className="field-error" role="alert">{fieldErrors.neighborhood}</span>}</label>
-                <label className={fieldErrors.city ? "has-error" : undefined}>Cidade<input name="city" required placeholder="Sua cidade" aria-invalid={Boolean(fieldErrors.city)} aria-describedby={fieldErrors.city ? "city-error" : undefined} />{fieldErrors.city && <span id="city-error" className="field-error" role="alert">{fieldErrors.city}</span>}</label>
-                <label className={fieldErrors.state ? "has-error" : undefined}>Estado<input name="state" required placeholder="UF" aria-invalid={Boolean(fieldErrors.state)} aria-describedby={fieldErrors.state ? "state-error" : undefined} />{fieldErrors.state && <span id="state-error" className="field-error" role="alert">{fieldErrors.state}</span>}</label>
+                <label className={fieldErrors.neighborhood ? "has-error" : undefined}>Bairro<input name="neighborhood" required value={addressFields.neighborhood} onChange={(event) => setAddressFields((current) => ({ ...current, neighborhood: event.target.value }))} placeholder="Seu bairro" aria-invalid={Boolean(fieldErrors.neighborhood)} aria-describedby={fieldErrors.neighborhood ? "neighborhood-error" : undefined} />{fieldErrors.neighborhood && <span id="neighborhood-error" className="field-error" role="alert">{fieldErrors.neighborhood}</span>}</label>
+                <label className={fieldErrors.city ? "has-error" : undefined}>Cidade<input name="city" required value={addressFields.city} onChange={(event) => setAddressFields((current) => ({ ...current, city: event.target.value }))} placeholder="Sua cidade" aria-invalid={Boolean(fieldErrors.city)} aria-describedby={fieldErrors.city ? "city-error" : undefined} />{fieldErrors.city && <span id="city-error" className="field-error" role="alert">{fieldErrors.city}</span>}</label>
+                <label className={fieldErrors.state ? "has-error" : undefined}>Estado<input name="state" required value={addressFields.state} onChange={(event) => setAddressFields((current) => ({ ...current, state: event.target.value.toUpperCase().slice(0, 2) }))} placeholder="UF" aria-invalid={Boolean(fieldErrors.state)} aria-describedby={fieldErrors.state ? "state-error" : undefined} />{fieldErrors.state && <span id="state-error" className="field-error" role="alert">{fieldErrors.state}</span>}</label>
               </div>
-              <p className="checkout-page-helper"><Clock3 size={15} /> {shippingQuery.isLoading ? "Calculando frete..." : shippingQuery.data?.deadline ? `Entrega estimada: ${shippingQuery.data.deadline}` : "O valor do frete será calculado após o CEP."}</p>
+              <p className={`checkout-page-helper ${cepLookupStatus === "error" ? "has-error" : ""}`}><Clock3 size={15} /> {cepLookupStatus === "loading" ? "A procurar a morada pelo CEP..." : cepLookupStatus === "success" ? "Morada preenchida automaticamente. Pode editar os campos se necessário." : cepLookupStatus === "error" ? "CEP não encontrado. Preencha a morada manualmente." : shippingQuery.isLoading ? "Calculando frete..." : shippingQuery.data?.deadline ? `Entrega estimada: ${shippingQuery.data.deadline}` : "O valor do frete será calculado após o CEP."}</p>
             </div>
 
             <div className="checkout-page-form-section">

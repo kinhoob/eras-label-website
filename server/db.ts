@@ -72,7 +72,16 @@ export async function listProducts(category?: string) {
   const rows = category && category !== "Todos"
     ? await db.select().from(products).where(and(eq(products.status, "active"), eq(products.category, category)))
     : await db.select().from(products).where(eq(products.status, "active"));
-  return rows;
+
+  // The storefront needs available sizes to filter accurately. Keep this enrichment
+  // server-side so the UI does not have to guess from a product category.
+  return Promise.all(rows.map(async (product) => {
+    const variations = await db
+      .select({ size: productVariations.size, stock: productVariations.stock })
+      .from(productVariations)
+      .where(eq(productVariations.productId, product.id));
+    return { ...product, variations };
+  }));
 }
 
 export async function getProductWithVariations(id: number) {

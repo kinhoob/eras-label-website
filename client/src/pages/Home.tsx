@@ -31,13 +31,16 @@ import { ERAS_COLLECTION_PATHS, ERAS_VIP_WHATSAPP_URL } from "../../../shared/co
 import { checkoutFlowReducer, initialCheckoutFlowState } from "@/lib/checkout-flow";
 import { createOrderSummary, type OrderSummary } from "@/lib/order-summary";
 import { saveCheckoutDraft } from "@/lib/checkout-draft";
+import { filterStorefrontProducts, getStorefrontFilterOptions } from "@/lib/storefront-filters";
 
 type Category = "Todos" | "Camisetas" | "Bonés";
+type PriceRange = "all" | "under150" | "150to200" | "over200";
 type Product = {
   id: number;
   name: string;
   category: Exclude<Category, "Todos">;
   collection: string;
+  color: string;
   price: number;
   pixPrice: number;
   image: string;
@@ -93,6 +96,7 @@ const fallbackProducts: Product[] = [
     name: "T-Shirt Travessia",
     category: "Camisetas",
     collection: "PARADOX COLLECTION",
+    color: "Branco",
     price: 154.9,
     pixPrice: 147.16,
     image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1200&q=85",
@@ -106,6 +110,7 @@ const fallbackProducts: Product[] = [
     name: "T-Shirt Dissociação",
     category: "Camisetas",
     collection: "PARADOX COLLECTION",
+    color: "Preto",
     price: 154.9,
     pixPrice: 147.16,
     image: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=1200&q=85",
@@ -119,6 +124,7 @@ const fallbackProducts: Product[] = [
     name: "T-Shirt Ressonador",
     category: "Camisetas",
     collection: "PARADOX COLLECTION",
+    color: "Cinza",
     price: 152.9,
     pixPrice: 145.26,
     image: "https://images.unsplash.com/photo-1523398002811-999ca8dec234?auto=format&fit=crop&w=1200&q=85",
@@ -132,6 +138,7 @@ const fallbackProducts: Product[] = [
     name: "T-Shirt Vórtex Off",
     category: "Camisetas",
     collection: "PARADOX COLLECTION",
+    color: "Off-white",
     price: 165.5,
     pixPrice: 157.23,
     image: "https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&fit=crop&w=1200&q=85",
@@ -145,6 +152,7 @@ const fallbackProducts: Product[] = [
     name: "Boné Lost Between Eras Off",
     category: "Bonés",
     collection: "LOST BETWEEN ERAS",
+    color: "Bege",
     price: 117.5,
     pixPrice: 111.63,
     image: "https://images.unsplash.com/photo-1521369909029-2afed882baee?auto=format&fit=crop&w=1200&q=85",
@@ -158,6 +166,7 @@ const fallbackProducts: Product[] = [
     name: "Boné Lost Between Eras Marinho",
     category: "Bonés",
     collection: "LOST BETWEEN ERAS",
+    color: "Marinho",
     price: 117.5,
     pixPrice: 111.63,
     image: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=1200&q=85",
@@ -170,22 +179,44 @@ const fallbackProducts: Product[] = [
 
 const heroImage = "https://images.unsplash.com/photo-1485230895905-ec40ba36b9bc?auto=format&fit=crop&w=2000&q=90";
 
-function mapCatalogProduct(row: { id: number; name: string; collection: string; category: string; price: unknown; pixPrice: unknown; description: string | null; images: unknown; status: string }): Product {
+function inferProductColor(name: string) {
+  const normalized = name.toLowerCase();
+  const knownColors = [
+    ["off-white", "Off-white"],
+    ["off white", "Off-white"],
+    ["marinho", "Marinho"],
+    ["bege", "Bege"],
+    ["branco", "Branco"],
+    ["preto", "Preto"],
+    ["cinza", "Cinza"],
+    ["verde", "Verde"],
+    ["azul", "Azul"],
+    ["vermelho", "Vermelho"],
+  ] as const;
+  return knownColors.find(([token]) => normalized.includes(token))?.[1] ?? "Neutro";
+}
+
+function mapCatalogProduct(row: { id: number; name: string; collection: string; category: string; color?: string | null; price: unknown; pixPrice: unknown; description: string | null; images: unknown; status: string; variations?: Array<{ size: string; stock: number | null }> }): Product {
   const images = Array.isArray(row.images) ? row.images.filter((image): image is string => typeof image === "string") : [];
   const fallbackImage = fallbackProducts.find((product) => product.id === row.id)?.image || editorialImage;
   const category: Exclude<Category, "Todos"> = row.category === "Bonés" ? "Bonés" : "Camisetas";
+  const availableVariations = (row.variations ?? []).filter((variation) => Number(variation.stock ?? 0) > 0);
+  const variationSizes = Array.from(new Set(availableVariations.map((variation) => variation.size).filter(Boolean)));
+  const sizes = variationSizes.length > 0 ? variationSizes : category === "Bonés" ? ["Único"] : ["P", "M", "G", "GG"];
+  const variationStock = (row.variations ?? []).reduce((sum, variation) => sum + Math.max(0, Number(variation.stock ?? 0)), 0);
   return {
     id: row.id,
     name: row.name,
     category,
     collection: row.collection,
+    color: row.color?.trim() || inferProductColor(row.name),
     price: Number(row.price),
     pixPrice: Number(row.pixPrice),
     image: images[0] || fallbackImage,
     fallbackImage,
     alt: row.name,
-    sizes: category === "Bonés" ? ["Único"] : ["P", "M", "G", "GG"],
-    stock: row.status === "soldout" ? 0 : 1,
+    sizes,
+    stock: row.status === "soldout" ? 0 : row.variations?.length ? variationStock : 1,
     detail: row.description || "Peça Eras Label com acabamento premium.",
   };
 }
@@ -226,6 +257,9 @@ function playClick(enabled: boolean) {
 
 export default function Home() {
   const [category, setCategory] = useState<Category>("Todos");
+  const [sizeFilter, setSizeFilter] = useState("Todos");
+  const [colorFilter, setColorFilter] = useState("Todas");
+  const [priceRange, setPriceRange] = useState<PriceRange>("all");
   const [cart, setCart] = useState<CartLine[]>(() => loadCart<CartLine>());
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [addedProductId, setAddedProductId] = useState<number | null>(null);
@@ -275,10 +309,20 @@ export default function Home() {
 
   const checkoutMutation = trpc.checkout.create.useMutation();
 
-  const filteredProducts = useMemo(
-    () => (category === "Todos" ? products : products.filter((product) => product.category === category)),
-    [category, products],
-  );
+  const { sizes: availableSizes, colors: availableColors } = useMemo(() => getStorefrontFilterOptions(products), [products]);
+  const filteredProducts = useMemo(() => filterStorefrontProducts(products, {
+    category,
+    size: sizeFilter,
+    color: colorFilter,
+    priceRange,
+  }), [category, colorFilter, priceRange, products, sizeFilter]);
+  const hasAdvancedFilters = sizeFilter !== "Todos" || colorFilter !== "Todas" || priceRange !== "all";
+  function clearShopFilters() {
+    setCategory("Todos");
+    setSizeFilter("Todos");
+    setColorFilter("Todas");
+    setPriceRange("all");
+  }
   const relatedProducts = useMemo(() => {
     if (!selectedProduct) return [];
     const candidates = products
@@ -628,11 +672,38 @@ export default function Home() {
         <section className="shop-section" id="shop">
           <div className="section-heading">
             <div><span className="section-kicker">02 / SHOP</span><h2>PRODUTOS DA ERA</h2></div>
-            <div className="filter-tabs" role="tablist" aria-label="Filtrar produtos">
+            <span className="shop-result-count" aria-live="polite">{filteredProducts.length} {filteredProducts.length === 1 ? "produto" : "produtos"}</span>
+          </div>
+          <div className="shop-filter-bar" aria-label="Filtros avançados da loja">
+            <div className="filter-tabs" role="tablist" aria-label="Filtrar por categoria">
               {(["Todos", "Camisetas", "Bonés"] as Category[]).map((item) => (
                 <button key={item} className={category === item ? "active" : ""} onClick={() => { playClick(soundsOn); setCategory(item); }}>{item}</button>
               ))}
             </div>
+            <label className="shop-filter-field">
+              <span className="shop-filter-label-row"><span>Tamanho</span>{sizeFilter !== "Todos" && <button type="button" className="shop-filter-reset" aria-label="Limpar filtro de tamanho" onClick={(event) => { event.preventDefault(); event.stopPropagation(); setSizeFilter("Todos"); }}>×</button>}</span>
+              <select value={sizeFilter} onChange={(event) => setSizeFilter(event.target.value)} aria-label="Filtrar por tamanho">
+                <option value="Todos">Todos</option>
+                {availableSizes.map((size) => <option key={size} value={size}>{size}</option>)}
+              </select>
+            </label>
+            <label className="shop-filter-field">
+              <span className="shop-filter-label-row"><span>Cor</span>{colorFilter !== "Todas" && <button type="button" className="shop-filter-reset" aria-label="Limpar filtro de cor" onClick={(event) => { event.preventDefault(); event.stopPropagation(); setColorFilter("Todas"); }}>×</button>}</span>
+              <select value={colorFilter} onChange={(event) => setColorFilter(event.target.value)} aria-label="Filtrar por cor">
+                <option value="Todas">Todas</option>
+                {availableColors.map((color) => <option key={color} value={color}>{color}</option>)}
+              </select>
+            </label>
+            <label className="shop-filter-field">
+              <span className="shop-filter-label-row"><span>Preço</span>{priceRange !== "all" && <button type="button" className="shop-filter-reset" aria-label="Limpar filtro de preço" onClick={(event) => { event.preventDefault(); event.stopPropagation(); setPriceRange("all"); }}>×</button>}</span>
+              <select value={priceRange} onChange={(event) => setPriceRange(event.target.value as PriceRange)} aria-label="Filtrar por faixa de preço">
+                <option value="all">Todas as faixas</option>
+                <option value="under150">Até R$ 150</option>
+                <option value="150to200">R$ 150 a R$ 200</option>
+                <option value="over200">Acima de R$ 200</option>
+              </select>
+            </label>
+            {hasAdvancedFilters && <button className="shop-filter-clear" type="button" onClick={clearShopFilters}>Limpar filtros</button>}
           </div>
           <div className="product-grid">
             {filteredProducts.map((product) => (
@@ -654,6 +725,12 @@ export default function Home() {
               </article>
             ))}
           </div>
+          {filteredProducts.length === 0 && (
+            <div className="shop-empty-state" role="status">
+              <p>Nenhum produto corresponde aos filtros selecionados.</p>
+              <button type="button" onClick={clearShopFilters}>Limpar filtros</button>
+            </div>
+          )}
         </section>
 
         <section className="vip-home-banner" aria-label="Grupo VIP">

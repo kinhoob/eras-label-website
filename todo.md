@@ -238,3 +238,23 @@
 - [x] Mostrar mensagens de erro claras junto aos campos inválidos e impedir submissões incompletas
 - [x] Validar os fluxos de erro, sucesso, recomendados e responsividade com testes
 - [x] Guardar checkpoint e entregar a melhoria
+
+
+## Filtros avançados e preenchimento automático por CEP
+- [x] Adicionar barra de filtros na loja para tamanho, cor e faixa de preço
+- [x] Filtrar produtos de forma combinada, com limpeza individual e botão para limpar tudo
+- [x] Mostrar contagem de resultados e estado vazio quando nenhum produto corresponder
+- [x] Garantir que os filtros funcionam em desktop, mobile e com catálogo carregado do backend
+- [x] Consultar um serviço público de CEP apenas após oito dígitos válidos e preencher rua, bairro, cidade e estado
+- [x] Mostrar carregamento, erro e possibilidade de edição manual após a consulta de CEP
+- [x] Validar filtros e preenchimento automático com testes unitários e QA responsivo
+- [x] Guardar checkpoint e entregar a melhoria
+
+
+## Lacunas de QA dos filtros e CEP
+- [ ] Validar limpeza individual explícita de cada filtro, além do botão global
+- [ ] Testar e documentar o estado vazio quando nenhum produto corresponde aos filtros
+- [ ] Validar funcionalmente os filtros em mobile real e confirmar dados carregados do backend
+- [ ] Cobrir no QA os estados loading e erro do CEP e comprovar edição manual posterior
+- [ ] Executar TypeScript, Vitest e build após esta rodada e registar as saídas
+- [ ] Guardar um checkpoint novo após resolver todas as lacunas
