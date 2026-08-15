@@ -263,6 +263,33 @@ export default function Home() {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [activeBanner, setActiveBanner] = useState(0);
   const [collectionsOpen, setCollectionsOpen] = useState(false);
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [newsletterName, setNewsletterName] = useState("");
+  const [newsletterSubmitting, setNewsletterSubmitting] = useState(false);
+  const [newsletterSuccess, setNewsletterSuccess] = useState<string | null>(null);
+
+  const subscribeNewsletterMutation = trpc.newsletter.subscribe.useMutation();
+
+  function handleNewsletterSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newsletterEmail.trim()) return;
+    playClick(soundsOn);
+    setNewsletterSubmitting(true);
+    subscribeNewsletterMutation.mutate({ email: newsletterEmail, name: newsletterName }, {
+      onSuccess: (res: any) => {
+        setNewsletterSubmitting(false);
+        const msg = res?.couponCode ? `Inscrição confirmada! O seu cupom de boas-vindas é ${res.couponCode}.` : "Inscrição efetuada com sucesso!";
+        setNewsletterSuccess(msg);
+        toast.success("Inscrição efetuada com sucesso!");
+        setNewsletterEmail("");
+        setNewsletterName("");
+      },
+      onError: (err: any) => {
+        setNewsletterSubmitting(false);
+        toast.error(err.message || "Erro ao subscrever. Tente novamente.");
+      }
+    });
+  }
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const headerStopTimeoutRef = useRef<number | null>(null);
@@ -947,6 +974,51 @@ export default function Home() {
       </main>
 
       {showBackToTop && <button className="back-to-top" aria-label="Voltar ao topo" onClick={() => { playClick(soundsOn); window.scrollTo({ top: 0, behavior: "smooth" }); }}><ArrowDown size={17} /></button>}
+
+      <section className="newsletter-banner-section" style={{ backgroundColor: '#111', color: '#fff', padding: '4rem 2rem', textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+          <span style={{ fontSize: '0.75rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#b34125', display: 'block', marginBottom: '0.5rem' }}>NEWSLETTER ERAS</span>
+          <h3 style={{ fontSize: '1.75rem', fontWeight: 600, marginBottom: '0.75rem', fontFamily: 'serif' }}>RECEBA ACESSO ANTECIPADO E 10% OFF</h3>
+          <p style={{ color: '#aaa', fontSize: '0.95rem', marginBottom: '1.5rem', lineHeight: 1.6 }}>Subscreva para receber lançamentos em primeira mão e um cupom exclusivo de boas-vindas na sua caixa de entrada.</p>
+
+          {newsletterSuccess ? (
+            <div style={{ background: 'rgba(179, 65, 37, 0.150)', border: '1px solid #b34125', padding: '1.25rem', borderRadius: '4px', color: '#fff' }}>
+              <p style={{ fontWeight: 600, marginBottom: '0.25rem', color: '#e05a3b' }}>Inscrição confirmada com sucesso!</p>
+              <p style={{ fontSize: '0.9rem', color: '#ddd' }}>{newsletterSuccess}</p>
+              <Button onClick={() => setNewsletterSuccess(null)} variant="outline" style={{ marginTop: '1rem', borderColor: '#444', color: '#fff' }}>Subscrever outro e-mail</Button>
+            </div>
+          ) : (
+            <form onSubmit={handleNewsletterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <Input 
+                  type="text" 
+                  placeholder="Seu nome (opcional)" 
+                  value={newsletterName} 
+                  onChange={(e) => setNewsletterName(e.target.value)} 
+                  style={{ flex: '1 1 180px', background: '#222', borderColor: '#333', color: '#fff' }} 
+                />
+                <Input 
+                  type="email" 
+                  required 
+                  placeholder="Seu melhor e-mail" 
+                  value={newsletterEmail} 
+                  onChange={(e) => setNewsletterEmail(e.target.value)} 
+                  style={{ flex: '2 1 240px', background: '#222', borderColor: '#333', color: '#fff' }} 
+                />
+                <Button type="submit" disabled={newsletterSubmitting} style={{ backgroundColor: '#b34125', color: '#fff', minWidth: '140px' }}>
+                  {newsletterSubmitting ? (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span className="spinner-mini" style={{ width: 14, height: 14, border: '2px solid #fff', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
+                      A subscrever...
+                    </span>
+                  ) : "SUBSCREVER"}
+                </Button>
+              </div>
+              <small style={{ color: '#777', fontSize: '0.8rem' }}>Sem spam. Pode cancelar a subscrição a qualquer momento.</small>
+            </form>
+          )}
+        </div>
+      </section>
 
       <footer className="site-footer official-footer">
         <div className="footer-socials" aria-label="Redes sociais da Eras Label">

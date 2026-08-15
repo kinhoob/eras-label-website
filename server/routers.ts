@@ -21,6 +21,7 @@ import {
   listNotifications,
   createNotification,
   markNotificationAsRead,
+  listResendEmailLogs,
 } from "./db";
 import { adminOrderEmail, newsletterWelcomeEmail, orderConfirmationEmail, paymentConfirmationEmail } from "./email-templates";
 import { ENV } from "./_core/env";
@@ -298,6 +299,9 @@ export const appRouter = router({
     })).mutation(async ({ input }) => {
       const saved = await saveHomeContent(input);
       return { success: true, content: saved };
+    }),
+    listEmailLogs: adminProcedure.query(async () => {
+      return listResendEmailLogs();
     }),
   }),
 });

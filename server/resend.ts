@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { ENV } from "./_core/env";
+import { logResendEmail } from "./db";
 
 export type ResendMessage = {
   to: string | string[];
@@ -25,24 +26,64 @@ function getClient() {
   return client;
 }
 
-export async function sendResendEmail(message: ResendMessage): Promise<ResendSendResult> {
+export async function sendResendEmail(message: ResendMessage, templateType = "transactional"): Promise<ResendSendResult> {
   const resend = getClient();
-  if (!resend) return { sent: false, reason: "not_configured" };
+  const recipientStr = Array.isArray(message.to) ? message.to.join(", ") : message.to;
 
-  const response = await resend.emails.send({
-    from: ENV.resendFromEmail,
-    to: message.to,
-    subject: message.subject,
-    html: message.html,
-    text: message.text,
-    ...(message.replyTo ? { replyTo: message.replyTo } : {}),
-  });
-
-  if (response.error) {
-    throw new Error(`Resend rejected the email: ${response.error.message}`);
+  if (!resend) {
+    await logResendEmail({
+      recipient: recipientStr,
+      subject: message.subject,
+      templateType,
+      status: "skipped_not_configured",
+      providerResponse: "Resend API key or sender email not configured.",
+    });
+    return { sent: false, reason: "not_configured" };
   }
 
-  return { sent: true, id: response.data?.id ?? null };
+  try {
+    const response = await resend.emails.send({
+      from: ENV.resendFromEmail,
+      to: message.to,
+      subject: message.subject,
+      html: message.html,
+      text: message.text,
+      ...(message.replyTo ? { replyTo: message.replyTo } : {}),
+    });
+
+    if (response.error) {
+      const errorMsg = response.error.message;
+      await logResendEmail({
+        recipient: recipientStr,
+        subject: message.subject,
+        templateType,
+        status: "failed",
+        providerResponse: errorMsg,
+      });
+      throw new Error(`Resend rejected the email: ${errorMsg}`);
+    }
+
+    const emailId = response.data?.id ?? null;
+    await logResendEmail({
+      recipient: recipientStr,
+      subject: message.subject,
+      templateType,
+      status: "sent",
+      providerResponse: emailId ? `ID: ${emailId}` : "Sent successfully",
+    });
+
+    return { sent: true, id: emailId };
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    await logResendEmail({
+      recipient: recipientStr,
+      subject: message.subject,
+      templateType,
+      status: "error",
+      providerResponse: errorMessage,
+    });
+    throw err;
+  }
 }
 
 export function resetResendClientForTests() {

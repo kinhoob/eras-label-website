@@ -142,3 +142,16 @@ export const notifications = mysqlTable("notifications", {
 
 export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = typeof notifications.$inferInsert;
+
+export const resendEmailLogs = mysqlTable("resend_email_logs", {
+  id: int("id").autoincrement().primaryKey(),
+  recipient: varchar("recipient", { length: 320 }).notNull(),
+  subject: varchar("subject", { length: 255 }).notNull(),
+  templateType: varchar("templateType", { length: 100 }).notNull(),
+  status: varchar("status", { length: 50 }).notNull(),
+  providerResponse: text("providerResponse"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ResendEmailLog = typeof resendEmailLogs.$inferSelect;
+export type InsertResendEmailLog = typeof resendEmailLogs.$inferInsert;

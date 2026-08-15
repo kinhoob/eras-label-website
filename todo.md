@@ -38,3 +38,11 @@
 - [x] Documentar domínio/remetente, variáveis de ambiente e operação da integração
 - [x] Executar TypeScript, Vitest e build de produção
 - [x] Guardar checkpoint final da integração Resend
+
+## Histórico Resend e Newsletter aprimorada
+- [ ] Criar tabela no Drizzle para persistir o histórico de e-mails enviados pelo Resend
+- [ ] Registar automaticamente cada envio (sucesso ou falha) nas rotas de checkout e newsletter
+- [ ] Adicionar procedimento administrativo tRPC protegido para listar o histórico com filtros
+- [ ] Construir a aba "E-mails (Resend)" no painel administrativo com status, destinatário, assunto e data
+- [ ] Aprimorar o formulário de newsletter na Home com estado de carregamento, sucesso claro e exibição do cupom gerado
+- [ ] Executar migração SQL, testes unitários, build de produção e guardar checkpoint final

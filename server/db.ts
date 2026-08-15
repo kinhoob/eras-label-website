@@ -12,6 +12,7 @@ import {
   siteAppearance,
   notifications,
   InsertNotification,
+  resendEmailLogs,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
@@ -118,6 +119,28 @@ export async function listNewsletterSubscribers() {
   const db = await getDb();
   if (!db) return [];
   return db.select().from(newsletterSubscribers).orderBy(desc(newsletterSubscribers.createdAt));
+}
+
+export async function logResendEmail(data: { recipient: string; subject: string; templateType: string; status: string; providerResponse?: string }) {
+  const db = await getDb();
+  if (!db) return;
+  try {
+    await db.insert(resendEmailLogs).values({
+      recipient: data.recipient,
+      subject: data.subject,
+      templateType: data.templateType,
+      status: data.status,
+      providerResponse: data.providerResponse ?? null,
+    });
+  } catch (error) {
+    console.warn("[Resend Log] Failed to save email log:", error);
+  }
+}
+
+export async function listResendEmailLogs() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(resendEmailLogs).orderBy(desc(resendEmailLogs.createdAt)).limit(100);
 }
 
 export async function validateCoupon(code: string, subtotal: number) {
