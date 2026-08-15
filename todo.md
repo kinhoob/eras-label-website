@@ -201,10 +201,20 @@
 
 
 ## Feedback e persistência da Sacola
-- [ ] Persistir os itens da Sacola no armazenamento local com leitura segura ao iniciar
-- [ ] Guardar alterações da Sacola ao adicionar, remover e alterar quantidades
-- [ ] Adicionar estado visual animado de confirmação no botão de adicionar à Sacola
-- [ ] Exibir toast breve com o nome do produto adicionado
-- [ ] Respeitar movimento reduzido e preservar a acessibilidade do feedback
-- [ ] Validar persistência após recarregar, toast, animação e regressões em desktop/mobile
-- [ ] Guardar checkpoint e entregar as melhorias
+- [x] Persistir os itens da Sacola no armazenamento local com leitura segura ao iniciar
+- [x] Guardar alterações da Sacola ao adicionar, remover e alterar quantidades
+- [x] Adicionar estado visual animado de confirmação no botão de adicionar à Sacola
+- [x] Exibir toast breve com o nome do produto adicionado
+- [x] Respeitar movimento reduzido e preservar a acessibilidade do feedback
+- [x] Validar persistência após recarregar, toast, animação e regressões em desktop/mobile
+- [x] Guardar checkpoint e entregar as melhorias
+
+
+## Sacola lateral e gestão direta
+- [ ] Consolidar painel lateral deslizante da Sacola com abertura pela navbar e fecho por botão, overlay e Escape
+- [ ] Adicionar controlos acessíveis para aumentar e diminuir quantidades diretamente na Sacola
+- [ ] Adicionar remoção de itens diretamente na Sacola com feedback visual e desfazer quando aplicável
+- [ ] Atualizar subtotal, descontos, frete e total em tempo real após cada alteração
+- [ ] Preservar alterações na persistência local e sincronizar o contador da navbar
+- [ ] Validar a experiência em desktop e mobile e cobrir as operações com testes
+- [ ] Guardar checkpoint e entregar a melhoria

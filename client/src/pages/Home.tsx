@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { getCartItemCount } from "@/lib/cart";
+import { updateCartLineQuantity, removeCartLine } from "@/lib/cart-operations";
 import { loadCart, saveCart } from "@/lib/cart-storage";
 import { getCheckoutFeedback } from "@/lib/checkout-feedback";
 import { ERAS_COLLECTION_PATHS, ERAS_VIP_WHATSAPP_URL } from "../../../shared/const";
@@ -301,6 +302,15 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    if (!isCartOpen) return;
+    const handleCartKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsCartOpen(false);
+    };
+    window.addEventListener("keydown", handleCartKeyDown);
+    return () => window.removeEventListener("keydown", handleCartKeyDown);
+  }, [isCartOpen]);
+
+  useEffect(() => {
     if (banners.length < 2) return;
     const interval = window.setInterval(() => setActiveBanner((value) => (value + 1) % banners.length), 5200);
     return () => window.clearInterval(interval);
@@ -377,13 +387,25 @@ export default function Home() {
 
   function changeQuantity(productId: number, size: string, delta: number) {
     playClick(soundsOn);
-    setCart((current) =>
-      current
-        .map((item) =>
-          item.id === productId && item.size === size ? { ...item, quantity: item.quantity + delta } : item,
-        )
-        .filter((item) => item.quantity > 0),
-    );
+    setCart((current) => updateCartLineQuantity(current, productId, size, delta));
+  }
+
+  function removeItem(item: CartLine) {
+    playClick(soundsOn);
+    setLastRemovedItem(item);
+    setCart((current) => removeCartLine(current, item.id, item.size));
+    toast.success("Item removido da sacola.", {
+      description: `${item.name} · tamanho ${item.size}`,
+      action: {
+        label: "Desfazer",
+        onClick: () => {
+          playClick(soundsOn);
+          setCart((current) => current.some((line) => line.id === item.id && line.size === item.size) ? current : [...current, item]);
+          setLastRemovedItem(null);
+          toast.success("Item restaurado.");
+        },
+      },
+    });
   }
 
   function applyCoupon() {
@@ -672,11 +694,11 @@ export default function Home() {
       {/* Persistent Side Cart with recommended items, progress bar, coupons, undo and payment badges */}
       {isCartOpen && (
         <div className="overlay" onClick={() => setIsCartOpen(false)}>
-          <aside className="side-cart" onClick={(event) => event.stopPropagation()}>
+          <aside className="side-cart" role="dialog" aria-modal="true" aria-labelledby="cart-drawer-title" onClick={(event) => event.stopPropagation()}>
             <div className="drawer-head">
               <div>
                 <span className="section-kicker">SACOLA</span>
-                <h2>Seu Carrinho ({cartCount})</h2>
+                <h2 id="cart-drawer-title" aria-live="polite">Seu Carrinho ({cartCount})</h2>
               </div>
               <button className="close-button" onClick={() => setIsCartOpen(false)} aria-label="Fechar carrinho"><X /></button>
             </div>
@@ -721,22 +743,7 @@ export default function Home() {
                       </div>
                       <button
                         className="cart-item-remove"
-                        onClick={() => {
-                          playClick(soundsOn);
-                          setLastRemovedItem(item);
-                          setCart((current) => current.filter((i) => !(i.id === item.id && i.size === item.size)));
-                          toast.success("Item removido da sacola.", {
-                            action: {
-                              label: "Desfazer",
-                              onClick: () => {
-                                playClick(soundsOn);
-                                setCart((current) => [...current, item]);
-                                setLastRemovedItem(null);
-                                toast.success("Item restaurado.");
-                              },
-                            },
-                          });
-                        }}
+                          onClick={() => removeItem(item)}
                         aria-label="Remover item"
                       >
                         <X size={15} />
