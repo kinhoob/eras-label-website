@@ -446,16 +446,21 @@ export const appRouter = router({
     }).optional()).query(async ({ input }) => {
       const days = input?.periodDays ?? 7;
       const analytics = await getAdminAnalytics(days);
+      const lowStockList = await getLowStockAlerts();
       try {
-        const prompt = `Analise os seguintes dados de e-commerce da marca de streetwear Eras Label para um período de ${days} dias:
+        const prompt = `Analise os seguintes dados operacionais e de e-commerce da marca de streetwear Eras Label para um período de ${days} dias:
 - Visitas: ${analytics.summary.visits}
 - Vendas: ${analytics.summary.sales}
 - Receita Total: R$ ${analytics.summary.revenue.toFixed(2)}
 - Ticket Médio: R$ ${analytics.summary.averageTicket.toFixed(2)}
 - Taxa de Conversão: ${analytics.summary.conversionRate}%
-- Comportamento: ${analytics.visitorBehavior.categoryViews} visualizações de categoria, ${analytics.visitorBehavior.productViews} visualizações de produto.
+- Peças em Destaque e Velocidade de Saída: ${analytics.topProducts.map((p: any) => `${p.name} (${p.category}, Estoque: ${p.stock} un., Saída Est.: ${p.velocity}/dia)`).join("; ") || "Nenhuma registrada"}
+- Peças com Estoque Crítico (< 5 un.): ${lowStockList.map((p: any) => `${p.name} (${p.stock} un.)`).join(", ") || "Nenhum no momento"}
 
-Por favor, forneça um resumo executivo inteligente e sofisticado em português (estilo consultoria de moda streetwear), destacando as principais tendências de consumo, o desempenho comercial e 2 recomendações práticas para aumentar as vendas e o engajamento dos clientes. Seja objetivo, elegante e direto ao ponto.`;
+Por favor, forneça um resumo executivo inteligente e sofisticado em português (estilo consultoria de moda streetwear) estruturado em duas partes:
+1. Resumo de Desempenho e Tendências de Vendas (comparando com o ritmo atual).
+2. Previsão de Risco de Ruptura e Esgotamento (cruzando o ritmo de vendas e velocidade de saída com o estoque atual de cada peça, projetando quais produtos esgotarão nos próximos dias e recomendando reposição imediata).
+Seja objetivo, elegante e direto ao ponto.`;
 
         const res = await invokeLLM({
           messages: [

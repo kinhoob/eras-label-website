@@ -138,3 +138,10 @@
 - [x] Criar o Centro de Alertas de Estoque Crítico na plataforma para monitorar peças em ruptura (< 5 unidades)
 - [x] Tornar os insights do resumo de IA acionáveis e interativos para redirecionamento direto ao inventário
 - [x] Concluir validação com 89 testes unitários aprovados em Vitest, TypeScript limpo e build de produção validado
+
+## Comparação de Períodos e Previsão de Ruptura por IA
+- [x] Atualizar o helper de analytics no backend para retornar a série comparativa do mês anterior (período equivalente anterior)
+- [x] Atualizar o prompt da procedure `aiSummary` para cruzar o ritmo de vendas atual com o estoque das peças e prever risco de ruptura
+- [x] Atualizar o componente `AdminAnalyticsSection` para exibir gráficos em barras duplas comparando o período atual versus o mês anterior
+- [x] Atualizar a seção de insights executivos da IA com o bloco dedicado de previsão de esgotamento e produtos em risco
+- [x] Executar testes Vitest (89 testes aprovados), TypeScript limpo, build de produção validado e checkpoint salvo
