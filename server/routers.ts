@@ -648,6 +648,27 @@ Seja objetivo, elegante e direto ao ponto.`;
       await deleteAdminUser(input.id);
       return { success: true };
     }),
+    myAdminDetails: adminProcedure.query(async ({ ctx }) => {
+      const email = (ctx.user?.email || "").toLowerCase().trim();
+      const isSuperAdmin = email === (process.env.ADMIN_LOGIN_EMAIL || "theeraslabel@gmail.com").toLowerCase().trim();
+      if (isSuperAdmin) {
+        return {
+          email,
+          name: ctx.user?.name || ADMIN_DISPLAY_NAME,
+          roleTitle: "Superadministrador",
+          permissions: "products,inventory,categories,stats,emails,settings",
+          isSuperAdmin: true,
+        };
+      }
+      const subAdmin = await getAdminUserByEmail(email);
+      return {
+        email,
+        name: ctx.user?.name || subAdmin?.name || "Administrador",
+        roleTitle: subAdmin?.roleTitle || "Assistente",
+        permissions: subAdmin?.permissions || "",
+        isSuperAdmin: false,
+      };
+    }),
   }),
 });
 

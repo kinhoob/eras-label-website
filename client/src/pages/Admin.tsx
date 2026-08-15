@@ -674,7 +674,7 @@ export default function Admin() {
         <div className="admin-sidebar-bottom"><button onClick={() => toast.info("Configurações do painel em breve.")}><Settings2 size={17} />Configurações</button><Link href="/" className="back-store"><ArrowLeft size={17} />Voltar à loja</Link></div>
       </aside>
       <main className="admin-main">
-        <header className="admin-header"><button className="admin-mobile-menu" onClick={() => setMenuOpen((value) => !value)}><MoreHorizontal size={20} /></button><div><span className="section-kicker">PAINEL ERAS LABEL</span><h1>{active}</h1></div><div className="admin-header-actions"><span className="admin-avatar">{adminInitial}</span><span>{adminName}</span><ChevronDown size={15} /></div></header>
+        <AdminHeaderBar authUser={authUser} active={active} setMenuOpen={setMenuOpen} adminInitial={adminInitial} adminName={adminName} />
         {active === "Estatísticas" && <AdminAnalyticsSection />}
         {active === "Histórico de Estoque" && <InventoryAuditSection />}
         {active === "Visão geral" && <>
@@ -1607,6 +1607,52 @@ function SubAdminsManagementSection() {
         </div>
       )}
     </section>
+  );
+}
+
+// Componente do Cabeçalho Superior com Indicador Visual de Cargo e Permissões Efetivas
+function AdminHeaderBar({ authUser, active, setMenuOpen, adminInitial, adminName }: any) {
+  const { data: myDetails } = trpc.admin.myAdminDetails.useQuery();
+
+  const roleTitle = myDetails?.roleTitle || (authUser?.email === "theeraslabel@gmail.com" ? "Superadministrador" : "Administrador");
+  const isSuper = myDetails?.isSuperAdmin ?? (authUser?.email === "theeraslabel@gmail.com");
+  const permissions = myDetails?.permissions ? myDetails.permissions.split(",").map(p => p.trim()).filter(Boolean) : [];
+
+  const permissionLabels: Record<string, string> = {
+    products: "Produtos",
+    inventory: "Inventário",
+    categories: "Categorias",
+    stats: "Estatísticas",
+    emails: "E-mails",
+    settings: "Configurações",
+  };
+
+  return (
+    <header className="admin-header">
+      <button className="admin-mobile-menu" onClick={() => setMenuOpen((value: boolean) => !value)}>
+        <MoreHorizontal size={20} />
+      </button>
+      <div>
+        <span className="section-kicker">PAINEL ERAS LABEL</span>
+        <h1>{active}</h1>
+      </div>
+      <div className="admin-header-actions" style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+            <span style={{ background: isSuper ? "#111" : "#b22222", color: "#fff", fontSize: "0.7rem", padding: "0.1rem 0.5rem", borderRadius: "10px", fontWeight: 700, letterSpacing: "0.02em" }}>
+              {roleTitle}
+            </span>
+          </div>
+          <span style={{ fontSize: "0.75rem", color: "#666", maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {isSuper ? "Acesso total a todos os módulos" : `Acessos: ${permissions.length > 0 ? permissions.map(p => permissionLabels[p] || p).join(", ") : "Nenhum módulo"}`}
+          </span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", borderLeft: "1px solid #ddd", paddingLeft: "0.75rem" }}>
+          <span className="admin-avatar">{adminInitial}</span>
+          <span style={{ fontWeight: 600, fontSize: "0.9rem" }}>{adminName}</span>
+        </div>
+      </div>
+    </header>
   );
 }
 

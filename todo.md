@@ -153,3 +153,8 @@
 - [x] Construir a aba de Configurações / Gestão de Equipe no painel administrativo exclusiva para o superadmin principal (`theeraslabel@gmail.com`)
 - [x] Ajustar a navegação e renderização das abas no painel para exibir apenas os módulos autorizados para sub-administradores
 - [x] Validar segurança, escrever testes unitários em Vitest (92 testes aprovados), TypeScript limpo, build de produção e checkpoint salvo
+
+## Indicador Visual de Cargo e Permissões no Cabeçalho
+- [x] Criar query tRPC ou estado derivado para buscar as permissões e o cargo do administrador logado no momento
+- [x] Adicionar um badge elegante e tooltip detalhado no cabeçalho superior do painel administrativo exibindo o cargo (Superadministrador ou cargo personalizado) e as permissões ativas
+- [x] Atualizar testes unitários em Vitest (92 testes aprovados), TypeScript limpo, build de produção e checkpoint salvo

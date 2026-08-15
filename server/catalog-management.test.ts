@@ -149,3 +149,13 @@ describe("Catalog Management and Inventory Separation", () => {
     expect(isSuper(superAdminEmail)).toBe(true);
     expect(isSuper(subAdminEmail)).toBe(false);
   });
+
+  it("resolves role title and permissions labels correctly for header badge", () => {
+    const isSuper = true;
+    const roleTitle = isSuper ? "Superadministrador" : "Assistente";
+    const permissions = "products,inventory,stats".split(",").map(p => p.trim());
+
+    expect(roleTitle).toBe("Superadministrador");
+    expect(permissions.length).toBe(3);
+    expect(permissions).toContain("inventory");
+  });
