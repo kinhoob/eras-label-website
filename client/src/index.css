@@ -107,8 +107,12 @@ img { max-width: 100%; display: block; }
 .filter-tabs { display: flex; gap: 18px; }
 .filter-tabs button { padding: 0 0 6px; background: transparent; border-bottom: 1px solid transparent; color: #686158; font-size: 11px; letter-spacing: .14em; cursor: pointer; }
 .filter-tabs button.active, .filter-tabs button:hover { border-color: #c95139; color: #23221e; }
-.product-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 34px 18px; }
-.product-image-button { position: relative; width: 100%; aspect-ratio: 3 / 4; overflow: hidden; background: #e2dcd2; padding: 0; cursor: pointer; }
+/* Mantém os produtos mais compactos no desktop, evitando que cada card ocupe toda a largura disponível. */
+.product-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); max-width: 1180px; margin-inline: auto; gap: 34px 18px; }
+/* Os três Destaques ficam centrados numa largura editorial menor, sem deixar um quarto espaço vazio. */
+.highlights-grid { grid-template-columns: repeat(3, minmax(0, 280px)); justify-content: center; }
+/* O formato ligeiramente menos alto reduz a sensação de produto oversized sem perder a leitura das peças. */
+.product-image-button { position: relative; width: 100%; aspect-ratio: 4 / 5; overflow: hidden; background: #e2dcd2; padding: 0; cursor: pointer; }
 .product-image-button img { width: 100%; height: 100%; object-fit: cover; filter: saturate(.78); transition: transform .45s cubic-bezier(.23,1,.32,1); }
 .product-image-button:hover img { transform: scale(1.045); }
 .product-arrow { position: absolute; right: 15px; bottom: 15px; display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: #f6f3ee; color: #23221e; opacity: 0; transform: translateY(7px); transition: opacity .2s ease-out, transform .2s ease-out; }
@@ -319,7 +323,10 @@ img { max-width: 100%; display: block; }
   .manifesto-grid, .newsletter-section { grid-template-columns: 1fr; gap: 42px; }
   .collection-feature { grid-template-columns: 1fr; }
   .feature-image { min-height: 420px; }
-  .product-grid { grid-template-columns: repeat(2, 1fr); gap: 28px 12px; }
+  /* Em tablet, os cards continuam menores sem comprimir o conteúdo textual. */
+  .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 12px; }
+  /* Os Destaques acompanham a grelha de duas colunas no mobile, evitando overflow horizontal. */
+  .highlights-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); justify-content: stretch; }
   .product-meta { flex-direction: column; gap: 9px; }
   .product-price { align-items: start; }
   .section-heading { align-items: start; flex-direction: column; }
@@ -348,7 +355,7 @@ img { max-width: 100%; display: block; }
   .bag-button { font-size: 9px; letter-spacing: .08em; }
   .hero-copy h1 { font-size: 60px; }
   .hero-footer { font-size: 8px; }
-  .product-grid { grid-template-columns: 1fr 1fr; }
+  .product-grid, .highlights-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .product-name { font-size: 11px; }
   .product-collection { font-size: 8px; }
   .archive-row { grid-template-columns: 52px 1fr 16px; gap: 12px; }

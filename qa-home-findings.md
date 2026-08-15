@@ -65,3 +65,12 @@ Com o cursor colocado manualmente sobre o botão `COLEÇÕES` na área DOM do ca
 - **Validação Responsiva**: O rodapé foi reorganizado numa grelha limpa com as colunas principais, informações e contactos, mantendo a responsividade perfeita tanto em desktop quanto em mobile.
 
 - **Validação Mobile do Rodapé**: A captura em viewport 375x812 confirma que o rodapé em dispositivos móveis apresenta os ícones de Instagram e TikTok alinhados no topo do rodapé, sem a antiga caixa de newsletter, seguido pelas colunas institucionais perfeitamente empilhadas e legíveis.
+
+
+## Redução do tamanho dos produtos — validação final
+
+A atualização de `client/src/index.css` passou a usar quatro colunas compactas no grid principal desktop, com largura máxima editorial de 1180 px, e um formato de imagem `4 / 5` em vez de `3 / 4`. A secção Destaques usa três colunas centradas com largura máxima individual de 280 px, evitando um quarto espaço vazio.
+
+Na captura de página inteira em desktop (1280×720), a secção `DESTAQUES` apresenta três cards menores e equilibrados, enquanto `PRODUTOS DA ERA` apresenta quatro cards por linha, com metadados e preços legíveis. O banner VIP e o rodapé permanecem alinhados; não foi observado overflow horizontal, sobreposição ou quebra de hierarquia.
+
+Na captura de página inteira em mobile (375×812), os Destaques e o catálogo usam duas colunas, com cards visualmente mais contidos e textos ainda legíveis. O banner VIP e as colunas do rodapé continuam dentro da viewport, sem overflow horizontal ou sobreposição. A alteração foi validada com TypeScript sem erros e build de produção concluído com apenas o aviso informativo preexistente de chunk JavaScript acima de 500 kB.

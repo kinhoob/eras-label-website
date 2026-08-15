@@ -156,7 +156,7 @@
 - [x] Atualizar o link do Grupo VIP no menu lateral e no banner da Home com `https://chat.whatsapp.com/I9UWZ9A6MmCLVm92mF86MK?mode=gi_t`
 - [x] Corrigir o comportamento e o posicionamento do dropdown de Coleções no desktop e no mobile
 - [x] Validar o funcionamento das coleções e do acesso VIP no navegador
-- [ ] Guardar checkpoint e entregar a correção
+- [x] Guardar checkpoint e entregar a correção
 
 - [x] Validar no navegador desktop e mobile o dropdown/menu de Coleções após a correção, cobrindo abertura, posicionamento, links e fechamento
 - [x] Verificar que o problema visual não persiste após ajustar JSX/CSS/handlers do dropdown de Coleções na Home e no menu mobile, com evidências em QA
@@ -165,3 +165,10 @@
 - [x] Executar validação interativa desktop do dropdown de Coleções após o ajuste final, cobrindo hover/foco/clique, posicionamento e fechamento com evidência em QA
 - [x] Executar validação interativa mobile do menu de Coleções após o ajuste final, cobrindo abertura, clique em pelo menos uma coleção, retorno e fechamento, com evidência em QA
 - [x] Atualizar qa-vip-collections.md com provas explícitas do dropdown/menu aberto e funcionando após o último ajuste visual
+
+- [x] Entregar ao usuário a correção do link VIP e do dropdown de Coleções com o checkpoint `66c9bb5b` anexado
+
+## Redução do Tamanho dos Produtos na Página Inicial
+- [x] Ajustar o grid e o aspect-ratio dos cards de produtos na Home para exibi-los menores e mais refinados
+- [x] Validar o novo tamanho dos produtos em desktop e mobile
+- [x] Guardar checkpoint e entregar a alteração
