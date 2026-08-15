@@ -4,6 +4,7 @@ import {
   normalizeSearchText,
   scoreStorefrontProduct,
   searchStorefrontProducts,
+  sortStorefrontProducts,
 } from "../client/src/lib/storefront-search";
 
 const products = [
@@ -15,6 +16,8 @@ const products = [
     color: "Branco",
     sizes: ["P", "M", "G"],
     detail: "Peça branca de algodão para atravessar o tempo.",
+    price: 154.9,
+    createdAt: "2026-08-12T04:23:32.000Z",
   },
   {
     id: 2,
@@ -24,6 +27,8 @@ const products = [
     color: "Marinho",
     sizes: ["Único"],
     detail: "Edição de arquivo.",
+    price: 99.9,
+    createdAt: "2026-08-15T01:06:00.000Z",
   },
   {
     id: 3,
@@ -33,6 +38,8 @@ const products = [
     color: "Preto",
     sizes: ["P", "M", "G", "GG"],
     detail: "Uma peça escura de acabamento premium.",
+    price: 220,
+    createdAt: "2026-08-15T02:16:11.000Z",
   },
 ];
 
@@ -58,6 +65,13 @@ describe("pesquisa inteligente do storefront", () => {
   it("devolve a lista original para consulta vazia e lista vazia para consulta sem correspondência", () => {
     expect(searchStorefrontProducts(products, " ")).toBe(products);
     expect(searchStorefrontProducts(products, "jaqueta vermelha")).toEqual([]);
+  });
+
+  it("ordena por preço crescente, preço decrescente e novidade sem alterar a lista original", () => {
+    expect(sortStorefrontProducts(products, "price-asc").map((product) => product.id)).toEqual([2, 1, 3]);
+    expect(sortStorefrontProducts(products, "price-desc").map((product) => product.id)).toEqual([3, 1, 2]);
+    expect(sortStorefrontProducts(products, "newest").map((product) => product.id)).toEqual([3, 2, 1]);
+    expect(products.map((product) => product.id)).toEqual([1, 2, 3]);
   });
 
   it("gera texto de sugestão consistente para o dropdown", () => {

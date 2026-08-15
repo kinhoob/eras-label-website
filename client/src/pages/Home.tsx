@@ -33,7 +33,7 @@ import { checkoutFlowReducer, initialCheckoutFlowState } from "@/lib/checkout-fl
 import { createOrderSummary, type OrderSummary } from "@/lib/order-summary";
 import { saveCheckoutDraft } from "@/lib/checkout-draft";
 import { filterStorefrontProducts, getStorefrontFilterOptions } from "@/lib/storefront-filters";
-import { getSearchSuggestionText, searchStorefrontProducts } from "@/lib/storefront-search";
+import { getSearchSuggestionText, searchStorefrontProducts, sortStorefrontProducts, type StorefrontSearchSort } from "@/lib/storefront-search";
 
 type Category = "Todos" | "Camisetas" | "Bonés";
 type PriceRange = "all" | "under150" | "150to200" | "over200";
@@ -51,6 +51,7 @@ type Product = {
   sizes: string[];
   stock: number;
   detail: string;
+  createdAt?: string | Date | null;
 };
 
 type CartLine = Product & { size: string; quantity: number };
@@ -198,7 +199,7 @@ function inferProductColor(name: string) {
   return knownColors.find(([token]) => normalized.includes(token))?.[1] ?? "Neutro";
 }
 
-function mapCatalogProduct(row: { id: number; name: string; collection: string; category: string; color?: string | null; price: unknown; pixPrice: unknown; description: string | null; images: unknown; status: string; variations?: Array<{ size: string; stock: number | null }> }): Product {
+function mapCatalogProduct(row: { id: number; name: string; collection: string; category: string; color?: string | null; price: unknown; pixPrice: unknown; description: string | null; images: unknown; status: string; createdAt?: string | Date | null; variations?: Array<{ size: string; stock: number | null }> }): Product {
   const images = Array.isArray(row.images) ? row.images.filter((image): image is string => typeof image === "string") : [];
   const fallbackImage = fallbackProducts.find((product) => product.id === row.id)?.image || editorialImage;
   const category: Exclude<Category, "Todos"> = row.category === "Bonés" ? "Bonés" : "Camisetas";
@@ -220,6 +221,7 @@ function mapCatalogProduct(row: { id: number; name: string; collection: string; 
     sizes,
     stock: row.status === "soldout" ? 0 : row.variations?.length ? variationStock : 1,
     detail: row.description || "Peça Eras Label com acabamento premium.",
+    createdAt: row.createdAt,
   };
 }
 const editorialImage = "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=1400&q=85";
@@ -262,6 +264,7 @@ export default function Home() {
   const [sizeFilter, setSizeFilter] = useState("Todos");
   const [colorFilter, setColorFilter] = useState("Todas");
   const [priceRange, setPriceRange] = useState<PriceRange>("all");
+  const [searchSort, setSearchSort] = useState<StorefrontSearchSort>("newest");
   const [cart, setCart] = useState<CartLine[]>(() => loadCart<CartLine>());
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [addedProductId, setAddedProductId] = useState<number | null>(null);
@@ -325,8 +328,9 @@ export default function Home() {
       color: colorFilter,
       priceRange,
     });
-    return searchStorefrontProducts(filterResults, searchQuery);
-  }, [category, colorFilter, priceRange, products, searchQuery, sizeFilter]);
+    const searchedProducts = searchStorefrontProducts(filterResults, searchQuery);
+    return searchQuery.trim() ? sortStorefrontProducts(searchedProducts, searchSort) : searchedProducts;
+  }, [category, colorFilter, priceRange, products, searchQuery, searchSort, sizeFilter]);
   const searchSuggestions = useMemo(() => filteredProducts.slice(0, 6), [filteredProducts]);
   const hasAdvancedFilters = sizeFilter !== "Todos" || colorFilter !== "Todas" || priceRange !== "all";
   function clearShopFilters() {
@@ -334,6 +338,7 @@ export default function Home() {
     setSizeFilter("Todos");
     setColorFilter("Todas");
     setPriceRange("all");
+    setSearchSort("newest");
   }
 
   function revealSearch() {
@@ -422,7 +427,7 @@ export default function Home() {
       setIsSearchLoading(false);
       searchLoadingTimeoutRef.current = null;
     }, 220);
-  }, [isSearchOpen, searchQuery, sizeFilter, colorFilter, priceRange]);
+  }, [isSearchOpen, searchQuery, sizeFilter, colorFilter, priceRange, searchSort]);
 
   useEffect(() => {
     return () => {
@@ -733,6 +738,14 @@ export default function Home() {
                       </select>
                     </label>
                   </div>
+                  <label className="header-search-sort-row">
+                    <span>Ordenar resultados</span>
+                    <select value={searchSort} onChange={(event) => { playClick(soundsOn); setSearchSort(event.target.value as StorefrontSearchSort); }} aria-label="Ordenar resultados da pesquisa">
+                      <option value="newest">Mais recentes</option>
+                      <option value="price-asc">Menor preço</option>
+                      <option value="price-desc">Maior preço</option>
+                    </select>
+                  </label>
                   {isSearchLoading ? (
                     <div className="header-search-loading" role="status" aria-live="polite">
                       <Loader2 className="search-loading-icon" size={18} aria-hidden="true" />
@@ -762,7 +775,7 @@ export default function Home() {
                     <div className="header-search-empty" role="status" aria-live="polite">
                       <strong>Não encontrámos essa era.</strong>
                       <span>Tente outro nome, coleção, cor ou tamanho.</span>
-                      {hasAdvancedFilters && <button type="button" onClick={() => { playClick(soundsOn); setSizeFilter("Todos"); setColorFilter("Todas"); setPriceRange("all"); }}>Limpar filtros da pesquisa</button>}
+                      {(hasAdvancedFilters || searchSort !== "newest") && <button type="button" onClick={() => { playClick(soundsOn); setSizeFilter("Todos"); setColorFilter("Todas"); setPriceRange("all"); setSearchSort("newest"); }}>Limpar filtros da pesquisa</button>}
                     </div>
                   )}
                 </div>

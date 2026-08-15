@@ -275,3 +275,11 @@ Todos os itens acima devem ser marcados como concluídos após a validação fin
 - [x] Atualizar testes, documentação de QA e guardar checkpoint da melhoria
 
 Todos os itens acima devem ser marcados como concluídos após a validação final.
+
+## Ordenação dos resultados da pesquisa
+- [x] Mapear o modelo de produto e a ordenação atual da pesquisa
+- [x] Implementar ordenação por novidade, preço crescente e preço decrescente
+- [x] Validar ordenação combinada com pesquisa, preço, tamanho e cor em desktop e mobile
+- [x] Atualizar testes, documentação de QA e guardar checkpoint da ordenação
+
+Todos os itens acima devem ser marcados como concluídos após a validação final.

@@ -7,6 +7,13 @@ export type SearchableStorefrontProduct = {
   detail: string;
 };
 
+export type StorefrontSearchSort = "newest" | "price-asc" | "price-desc";
+
+type SortableStorefrontProduct = SearchableStorefrontProduct & {
+  price: number;
+  createdAt?: string | Date | null;
+};
+
 export function normalizeSearchText(value: string) {
   return value
     .normalize("NFD")
@@ -70,4 +77,18 @@ export function searchStorefrontProducts<T extends SearchableStorefrontProduct>(
 
 export function getSearchSuggestionText(product: SearchableStorefrontProduct) {
   return `${product.name} · ${product.collection}`;
+}
+
+/** Ordena os produtos da pesquisa com uma cópia estável, sem alterar o catálogo original. */
+export function sortStorefrontProducts<T extends SortableStorefrontProduct>(products: T[], sort: StorefrontSearchSort) {
+  return products
+    .map((product, index) => ({ product, index }))
+    .sort((left, right) => {
+      if (sort === "price-asc") return left.product.price - right.product.price || left.index - right.index;
+      if (sort === "price-desc") return right.product.price - left.product.price || left.index - right.index;
+      const leftDate = left.product.createdAt ? new Date(left.product.createdAt).getTime() : 0;
+      const rightDate = right.product.createdAt ? new Date(right.product.createdAt).getTime() : 0;
+      return rightDate - leftDate || left.index - right.index;
+    })
+    .map(({ product }) => product);
 }
