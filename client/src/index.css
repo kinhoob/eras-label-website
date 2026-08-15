@@ -1921,3 +1921,334 @@ td { border-top: 1px solid #e1dacf; padding: 15px 17px; color: #6f675e; font-siz
     transition: none;
   }
 }
+
+/* Inventário: cabeçalho e barra de busca seguem a hierarquia visual do painel. */
+.inventory-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.inventory-heading h2 {
+  margin: 0.25rem 0 0;
+  font-size: clamp(1.7rem, 2.6vw, 2.4rem);
+  letter-spacing: -0.04em;
+}
+
+.inventory-heading p {
+  margin: 0.5rem 0 0;
+  color: #737373;
+  font-size: 0.88rem;
+}
+
+.inventory-toolbar {
+  align-items: center;
+  margin-bottom: 0.85rem;
+}
+
+.inventory-count {
+  color: #6a6a6a;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.inventory-table-panel {
+  overflow-x: auto;
+}
+
+.inventory-table-panel table {
+  min-width: 920px;
+}
+
+.inventory-stock-value,
+.inventory-stock-zero {
+  display: block;
+  font-size: 1rem;
+  line-height: 1.1;
+}
+
+.inventory-stock-zero {
+  color: #b22222;
+}
+
+.inventory-unit {
+  display: block;
+  margin-top: 0.18rem;
+  color: #8a8a8a;
+  font-size: 0.72rem;
+}
+
+.inventory-variation-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  max-width: 320px;
+}
+
+.variation-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.55rem;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid #dedede;
+  border-radius: 999px;
+  background: #fafafa;
+  color: #353535;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.variation-chip.zero {
+  border-color: #e4a6a6;
+  background: #fff1f1;
+  color: #a11d1d;
+}
+
+.inventory-empty,
+.inventory-empty-state {
+  color: #999;
+  font-size: 0.78rem;
+}
+
+.inventory-sku {
+  color: #656565;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.74rem;
+}
+
+.history-button {
+  display: inline-grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border: 1px solid #dedede;
+  border-radius: 999px;
+  background: #fff;
+  color: #444;
+  cursor: pointer;
+  transition: transform 180ms ease, border-color 180ms ease, color 180ms ease;
+}
+
+.history-button:hover,
+.history-button:focus-visible {
+  border-color: #b22222;
+  color: #b22222;
+  transform: translateY(-1px);
+}
+
+/* Editor de variações: os checkboxes funcionam como uma matriz rápida de tamanhos. */
+.inventory-variation-editor {
+  margin-top: 1.35rem;
+  padding: 1rem;
+  border: 1px solid #e7e2dc;
+  border-radius: 0.9rem;
+  background: #fcfbf9;
+}
+
+.inventory-section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.inventory-section-heading h4 {
+  margin: 0.2rem 0 0;
+  color: #202020;
+  font-size: 1.02rem;
+}
+
+.inventory-section-heading p {
+  margin: 0.35rem 0 0;
+  color: #757575;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.inventory-section-heading > strong {
+  color: #b22222;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+.size-checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.45rem;
+  margin-top: 1rem;
+}
+
+.size-checkbox {
+  position: relative;
+  display: flex;
+  min-height: 2.65rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #dcd8d2;
+  border-radius: 0.55rem;
+  background: #fff;
+  color: #4b4b4b;
+  cursor: pointer;
+  font-size: 0.82rem;
+  transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease;
+}
+
+.size-checkbox:hover {
+  border-color: #b22222;
+  transform: translateY(-1px);
+}
+
+.size-checkbox.selected {
+  border-color: #b22222;
+  background: #fff3f3;
+  color: #a61f1f;
+  font-weight: 700;
+}
+
+.size-checkbox input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.size-checkbox:has(input:focus-visible) {
+  outline: 2px solid rgba(178, 34, 34, 0.35);
+  outline-offset: 2px;
+}
+
+.inventory-variation-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin-top: 0.85rem;
+}
+
+.inventory-variation-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid #e6e2dc;
+  border-radius: 0.6rem;
+  background: #fff;
+}
+
+.variation-size-label {
+  min-width: 2.5rem;
+  color: #222;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.variation-stock-field {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  max-width: 10rem;
+}
+
+.variation-stock-field input {
+  min-width: 0;
+  text-align: right;
+}
+
+.variation-stock-field small {
+  color: #858585;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.inventory-empty-state {
+  grid-column: 1 / -1;
+  margin: 0.6rem 0 0;
+  padding: 0.75rem;
+  border: 1px dashed #d9d2ca;
+  border-radius: 0.6rem;
+  text-align: center;
+}
+
+@media (max-width: 760px) {
+  .inventory-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .inventory-heading > button {
+    width: 100%;
+  }
+
+  .inventory-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .inventory-count {
+    align-self: flex-start;
+  }
+
+  .size-checkbox-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .inventory-variation-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .history-button,
+  .size-checkbox {
+    transition: none;
+  }
+}
+
+/* Estados da tabela: deixam claro o que o sistema está fazendo e oferecem uma ação de recuperação. */
+.inventory-state {
+  display: flex;
+  min-height: 12rem;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 2rem 1rem;
+  color: #686868;
+  text-align: center;
+}
+
+.inventory-state strong {
+  color: #252525;
+  font-size: 0.95rem;
+}
+
+.inventory-state span {
+  max-width: 28rem;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.inventory-state.error strong {
+  color: #a11d1d;
+}
+
+.inventory-state button {
+  margin-top: 0.45rem;
+}
+
+.spin {
+  animation: inventory-spin 900ms linear infinite;
+  color: #b22222;
+}
+
+@keyframes inventory-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spin {
+    animation: none;
+  }
+}

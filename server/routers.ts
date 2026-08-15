@@ -306,6 +306,10 @@ export const appRouter = router({
       description: z.string(),
       images: z.array(z.string()),
       status: z.enum(["Publicado", "Rascunho", "Esgotado"]),
+      variations: z.array(z.object({
+        size: z.string().trim().min(1).max(20),
+        stock: z.number().int().min(0).max(100000),
+      })).max(20).optional(),
     })).mutation(async ({ input }) => {
       const saved = await saveProductData(input);
       return {

@@ -6,12 +6,14 @@ import {
   ChevronDown,
   ClipboardList,
   Eye,
+  History,
   ImagePlus,
   LayoutDashboard,
   Mail,
   MoreHorizontal,
   Package,
   Palette,
+  Pencil,
   Plus,
   Search,
   Settings2,
@@ -28,6 +30,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
+import { getInventorySizeOptions } from "@shared/inventory";
+import { AdminProductThumbnail } from "@/components/AdminProductThumbnail";
 
 const orders = [
   { id: "#ER-0108", customer: "Marina Oliveira", date: "Hoje, 14:32", total: "R$ 312,80", payment: "Pago", status: "Em preparação" },
@@ -336,7 +340,8 @@ function EmailMarketingSection() {
   );
 }
 
-type AdminProductOption = { id: number; name: string; collection: string; category: string; price: string; stock: number | null; status: string; images: string[] };
+type AdminVariation = { id?: number; size: string; stock: number };
+type AdminProductOption = { id: number; name: string; collection: string; category: string; price: string; stock: number; variations: AdminVariation[]; status: string; images: string[] };
 type EditableBanner = { id: string; eyebrow: string; title: string; subtitle: string; imageUrl: string; href: string; cta: string };
 type EditableHighlight = { id: string; productId: number; label: string };
 type EditableVipBanner = Omit<EditableBanner, "id">;
@@ -428,7 +433,7 @@ function AdminLoginScreen() {
 export default function Admin() {
   const { data: authUser, isLoading: authLoading } = trpc.auth.me.useQuery();
 
-  const [active, setActive] = useState("Visão geral");
+  const [active, setActive] = useState("Inventário");
   const [query, setQuery] = useState("");
   const [appearanceSaved, setAppearanceSaved] = useState(false);
   const [couponActive, setCouponActive] = useState(true);
@@ -440,7 +445,7 @@ export default function Admin() {
 
   const { data: commercialConfig } = trpc.catalog.getConfig.useQuery();
   const { data: homeContent } = trpc.catalog.getHomeContent.useQuery();
-  const { data: catalogProducts = [], isLoading: catalogProductsLoading } = trpc.admin.listProducts.useQuery(undefined, { enabled: authUser?.role === "admin" });
+  const { data: catalogProducts, isLoading: catalogProductsLoading, isError: catalogProductsError, refetch: refetchCatalogProducts } = trpc.admin.listProducts.useQuery(undefined, { enabled: authUser?.role === "admin" });
   const utils = trpc.useUtils();
   const [pixDiscountPercent, setPixDiscountPercent] = useState<number>(5);
   const [freeShippingThreshold, setFreeShippingThreshold] = useState<number>(350);
@@ -567,21 +572,28 @@ export default function Admin() {
     });
   }
 
-  const adminProducts = useMemo<AdminProductOption[]>(() => catalogProducts.map((product) => ({
-    id: product.id,
-    name: product.name,
-    collection: product.collection,
-    category: product.category,
-    price: Number(product.price).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }),
-    stock: null,
-    status: product.status === "active" ? "Publicado" : product.status === "soldout" ? "Esgotado" : "Rascunho",
-    images: Array.isArray(product.images) ? product.images.filter((image): image is string => typeof image === "string" && image.length > 0) : [],
-  })), [catalogProducts]);
+  const adminProducts = useMemo<AdminProductOption[]>(() => (catalogProducts ?? []).map((product) => {
+    const variations = Array.isArray(product.variations)
+      ? product.variations.map((variation) => ({ id: variation.id, size: String(variation.size), stock: Number(variation.stock ?? 0) }))
+      : [];
+    return {
+      id: product.id,
+      name: product.name,
+      collection: product.collection,
+      category: product.category,
+      price: Number(product.price).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }),
+      stock: Number(product.totalStock ?? variations.reduce((total, variation) => total + variation.stock, 0)),
+      variations,
+      status: product.status === "active" ? "Publicado" : product.status === "soldout" ? "Esgotado" : "Rascunho",
+      images: Array.isArray(product.images) ? product.images.filter((image): image is string => typeof image === "string" && image.length > 0) : [],
+    };
+  }), [catalogProducts]);
   const filteredProducts = useMemo(() => adminProducts.filter((product) => product.name.toLowerCase().includes(query.toLowerCase())), [adminProducts, query]);
   const navItems = [
     { label: "Visão geral", icon: LayoutDashboard },
     { label: "Pedidos", icon: ClipboardList },
     { label: "Produtos", icon: Package },
+    { label: "Inventário", icon: Package },
     { label: "Clientes", icon: Users },
     { label: "E-mail Marketing", icon: Mail },
     { label: "Cupons", icon: Tag },
@@ -597,6 +609,31 @@ export default function Admin() {
 
   const adminName = authUser?.name?.trim() || "Eras Label Admin";
   const adminInitial = adminName.charAt(0).toUpperCase();
+
+  function toggleEditingSize(size: string, checked: boolean) {
+    setEditingProduct((current: any) => {
+      if (!current) return current;
+      const variations: AdminVariation[] = Array.isArray(current.variations) ? current.variations : [];
+      if (checked && !variations.some((variation) => variation.size === size)) {
+        return { ...current, variations: [...variations, { size, stock: 0 }] };
+      }
+      if (!checked) {
+        return { ...current, variations: variations.filter((variation) => variation.size !== size) };
+      }
+      return current;
+    });
+  }
+
+  function updateEditingStock(size: string, value: string) {
+    const stock = Math.max(0, Math.floor(Number(value) || 0));
+    setEditingProduct((current: any) => {
+      if (!current) return current;
+      return {
+        ...current,
+        variations: (current.variations ?? []).map((variation: AdminVariation) => variation.size === size ? { ...variation, stock } : variation),
+      };
+    });
+  }
 
   if (authLoading) return <AdminAccessLoading />;
   if (!authUser || authUser.role !== "admin") return <AdminLoginScreen />;
@@ -616,13 +653,26 @@ export default function Admin() {
           <div className="admin-dashboard-grid"><section className="admin-panel chart-panel"><div className="panel-heading"><div><span className="section-kicker">VENDAS</span><h3>Faturamento por período</h3></div><button className="period-button">Últimos 30 dias <ChevronDown size={14} /></button></div><div className="fake-chart"><div className="chart-axis"><span>10k</span><span>7,5k</span><span>5k</span><span>2,5k</span><span>0</span></div><div className="chart-bars">{[32, 45, 39, 62, 48, 76, 55, 68, 53, 82, 63, 91].map((height, index) => <div className="chart-bar-wrap" key={index}><div className="chart-bar" style={{ height: `${height}%` }} /><span>{index + 1}–{index + 3}</span></div>)}</div></div></section><section className="admin-panel"><div className="panel-heading"><div><span className="section-kicker">ATENÇÃO</span><h3>Pedidos recentes</h3></div><button className="inline-link" onClick={() => selectNav("Pedidos")}>Ver todos <ArrowLeft size={13} className="rotate-180" /></button></div><div className="mini-orders">{orders.slice(0, 3).map((order) => <div className="mini-order" key={order.id}><div className="order-icon"><ShoppingCart size={15} /></div><div><strong>{order.id} · {order.customer}</strong><span>{order.date}</span></div><b>{order.total}</b></div>)}</div></section></div>
           <section className="admin-panel quick-panel"><div className="panel-heading"><div><span className="section-kicker">ATALHOS</span><h3>Próximos passos</h3></div></div><div className="quick-actions"><button onClick={() => selectNav("Produtos")}><Package size={19} /><span><strong>Adicionar produto</strong><small>Cadastre uma nova peça no catálogo</small></span><ArrowLeft className="rotate-180" size={16} /></button><button onClick={() => selectNav("Aparência")}><ImagePlus size={19} /><span><strong>Atualizar home</strong><small>Troque o editorial ou reorganize a galeria</small></span><ArrowLeft className="rotate-180" size={16} /></button><button onClick={() => selectNav("Newsletter")}><Mail size={19} /><span><strong>Ver inscritos</strong><small>Acompanhe a lista e os cupons enviados</small></span><ArrowLeft className="rotate-180" size={16} /></button></div></section>
         </>}
-        {active === "Produtos" && <section className="admin-content"><div className="content-toolbar"><div className="search-box"><Search size={15} /><Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar produto" /></div><Button onClick={() => {
-          setEditingProduct({ name: "", collection: "PARADOX COLLECTION", category: "Camisetas", price: 154.90, pixPrice: 147.15, description: "Peça de vestuário streetwear com acabamento premium.", status: "Publicado" });
-          setProductImages([]);
-        }}><Plus size={16} /> Novo produto</Button></div><div className="admin-panel table-panel"><table><thead><tr><th>Produto</th><th>Categoria</th><th>Preço</th><th>Estoque</th><th>Status</th><th /></tr></thead><tbody>{filteredProducts.map((product) => <tr key={product.name}><td><div className="table-product"><div className="table-thumb">{product.images[0] ? <img src={product.images[0]} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <Package size={16} />}</div><div><strong>{product.name}</strong><span>{product.collection}</span></div></div></td><td>{product.category}</td><td>{product.price}</td><td><span className="stock-ok">{product.stock === null ? "Consultar variações" : `${product.stock} un.`}</span></td><td><span className={`status-pill ${product.status === "Esgotado" ? "danger" : "success"}`}>{product.status}</span></td><td><button className="table-more" onClick={() => {
-          setEditingProduct({ id: product.id, name: product.name, collection: product.collection, category: product.category, price: 154.90, pixPrice: 147.15, description: "Peça de vestuário streetwear com acabamento premium.", status: product.status });
+        {(active === "Produtos" || active === "Inventário") && <section className="admin-content">
+          <div className="inventory-heading">
+            <div><span className="section-kicker">PRODUTOS · INVENTÁRIO</span><h2 className="content-title">Inventário</h2><p>Controle o estoque por produto, tamanho e variação sem sair do painel.</p></div>
+            <Button onClick={() => {
+              setEditingProduct({ name: "", collection: "PARADOX COLLECTION", category: "Camisetas", price: 154.90, pixPrice: 147.15, description: "Peça de vestuário streetwear com acabamento premium.", status: "Publicado", variations: [] });
+              setProductImages([]);
+            }}><Plus size={16} /> Novo produto</Button>
+          </div>
+          <div className="content-toolbar inventory-toolbar"><div className="search-box"><Search size={15} /><Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por nome, SKU ou coleção" /></div><span className="inventory-count">{filteredProducts.length} {filteredProducts.length === 1 ? "produto" : "produtos"}</span></div>
+          <div className="admin-panel table-panel inventory-table-panel"><table><thead><tr><th>Produto</th><th>Estoque</th><th>Variações</th><th>SKU</th><th>Histórico</th><th /></tr></thead><tbody>
+                    {catalogProductsLoading && <tr><td colSpan={6}><div className="inventory-state"><LoaderCircle className="spin" size={20} /><strong>Carregando inventário</strong><span>Estamos consultando os produtos e as variações salvas.</span></div></td></tr>}
+                    {catalogProductsError && !catalogProductsLoading && <tr><td colSpan={6}><div className="inventory-state error"><strong>Não foi possível carregar o inventário</strong><span>Verifique a conexão e tente novamente.</span><Button type="button" variant="outline" onClick={() => void refetchCatalogProducts()}>Tentar novamente</Button></div></td></tr>}
+                    {!catalogProductsLoading && !catalogProductsError && filteredProducts.length === 0 && <tr><td colSpan={6}><div className="inventory-state"><Package size={22} /><strong>{query ? "Nenhum produto encontrado" : "O inventário está vazio"}</strong><span>{query ? "Tente buscar por outro nome, SKU ou coleção." : "Cadastre o primeiro produto para começar a controlar o estoque."}</span>{query && <Button type="button" variant="outline" onClick={() => setQuery("")}>Limpar busca</Button>}</div></td></tr>}
+                    {!catalogProductsLoading && !catalogProductsError && filteredProducts.map((product) => <tr key={product.id}><td><div className="table-product"><AdminProductThumbnail src={product.images[0]} alt={`Imagem de ${product.name}`} /><div><strong>{product.name}</strong><span>{product.collection} · {product.category}</span></div></div></td><td><strong className={product.stock === 0 ? "inventory-stock-zero" : "inventory-stock-value"}>{product.stock}</strong><span className="inventory-unit">unidades</span></td><td><div className="inventory-variation-summary">{product.variations.length > 0 ? product.variations.map((variation) => <span key={`${product.id}-${variation.size}`} className={variation.stock === 0 ? "variation-chip zero" : "variation-chip"}>{variation.size}: {variation.stock}</span>) : <span className="inventory-empty">Sem tamanhos</span>}</div></td><td><span className="inventory-sku">EL-{String(product.id).padStart(4, "0")}</span></td><td><button className="history-button" type="button" onClick={() => toast.info(`Histórico de estoque de ${product.name} disponível após os próximos lançamentos.`)}><History size={16} /></button></td><td><button className="table-more" aria-label={`Editar estoque de ${product.name}`} onClick={() => {
+          const numericPrice = Number(product.price.replace(/[^0-9,]/g, "").replace(",", ".")) || 0;
+          setEditingProduct({ id: product.id, name: product.name, collection: product.collection, category: product.category, price: numericPrice, pixPrice: numericPrice, description: "Peça de vestuário streetwear com acabamento premium.", status: product.status, variations: product.variations.map((variation) => ({ ...variation })) });
           setProductImages(product.images);
-        }}><MoreHorizontal size={18} /></button></td></tr>)}</tbody></table></div></section>}
+        }}><Pencil size={16} /></button></td></tr>)}
+                  </tbody></table></div>
+        </section>}
 
         {editingProduct && (
           <div className="admin-modal-overlay" style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '1rem' }}>
@@ -665,6 +715,29 @@ export default function Admin() {
                   </select>
                 </div>
               </div>
+
+              <section className="inventory-variation-editor" aria-labelledby="variation-editor-title">
+                <div className="inventory-section-heading">
+                  <div><span className="section-kicker">INVENTÁRIO</span><h4 id="variation-editor-title">Tamanhos e estoque</h4><p>Selecione os tamanhos disponíveis e informe quantas peças existem em cada variação.</p></div>
+                  <strong>{(editingProduct.variations ?? []).reduce((total: number, variation: AdminVariation) => total + Number(variation.stock || 0), 0)} un.</strong>
+                </div>
+                <div className="size-checkbox-grid">
+                  {getInventorySizeOptions(String(editingProduct.category ?? "")).map((size) => {
+                    const variation = (editingProduct.variations ?? []).find((item: AdminVariation) => item.size === size);
+                    return <label className={`size-checkbox ${variation ? "selected" : ""}`} key={size}>
+                      <input type="checkbox" checked={Boolean(variation)} onChange={(event) => toggleEditingSize(size, event.target.checked)} />
+                      <span>{size}</span>
+                    </label>;
+                  })}
+                </div>
+                <div className="inventory-variation-list">
+                  {(editingProduct.variations ?? []).map((variation: AdminVariation) => <label className="inventory-variation-row" key={variation.size}>
+                    <span className="variation-size-label">{variation.size}</span>
+                    <span className="variation-stock-field"><Input type="number" min="0" step="1" value={variation.stock} aria-label={`Estoque tamanho ${variation.size}`} onChange={(event) => updateEditingStock(variation.size, event.target.value)} /><small>peças</small></span>
+                  </label>)}
+                  {(editingProduct.variations ?? []).length === 0 && <p className="inventory-empty-state">Nenhum tamanho selecionado. Escolha uma opção acima para começar.</p>}
+                </div>
+              </section>
 
               <div className="editor-field" style={{ marginTop: '1rem' }}>
                 <label>Descrição do produto</label>
@@ -734,10 +807,11 @@ export default function Admin() {
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
                 <Button variant="outline" onClick={() => setEditingProduct(null)}>Cancelar</Button>
-                <Button onClick={() => {
+                <Button disabled={saveProductMutation.isPending} onClick={() => {
                   saveProductMutation.mutate({
                     ...editingProduct,
                     images: productImages,
+                    variations: (editingProduct.variations ?? []).map((variation: AdminVariation) => ({ size: variation.size, stock: Math.max(0, Math.floor(Number(variation.stock) || 0)) })),
                   }, {
                     onSuccess: (res) => {
                       void Promise.all([

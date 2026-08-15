@@ -16,6 +16,7 @@ import {
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 import { collectCollectionRecipients } from "./marketing-audience";
+import { normalizeInventoryVariations, sumInventoryStock } from "../shared/inventory";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -201,7 +202,19 @@ export async function getAdminSummary() {
 export async function getAdminProducts() {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(products).orderBy(desc(products.id));
+  const rows = await db.select().from(products).orderBy(desc(products.id));
+  return Promise.all(rows.map(async (product) => {
+    const variations = await db
+      .select({ id: productVariations.id, size: productVariations.size, stock: productVariations.stock })
+      .from(productVariations)
+      .where(eq(productVariations.productId, product.id))
+      .orderBy(asc(productVariations.size));
+    return {
+      ...product,
+      variations,
+      totalStock: variations.reduce((total, variation) => total + Number(variation.stock ?? 0), 0),
+    };
+  }));
 }
 
 export async function getCommercialConfig() {
@@ -321,16 +334,21 @@ export async function saveProductData(data: {
   description: string;
   images: string[];
   status: string;
+  variations?: Array<{ size: string; stock: number }>;
 }) {
+  const normalizedVariations = normalizeInventoryVariations(data.variations ?? []);
   const db = await getDb();
   if (!db) {
     return {
       id: data.id || Math.floor(Math.random() * 1000 + 10),
       ...data,
+      variations: normalizedVariations,
+      totalStock: sumInventoryStock(normalizedVariations),
     };
   }
 
   const statusDb = data.status === "Publicado" ? "active" : data.status === "Esgotado" ? "soldout" : "hidden";
+  let productId = data.id;
 
   if (data.id) {
     await db.update(products).set({
@@ -343,8 +361,6 @@ export async function saveProductData(data: {
       images: data.images as any,
       status: statusDb as any,
     }).where(eq(products.id, data.id));
-
-    return { id: data.id, ...data };
   } else {
     const [inserted] = await db.insert(products).values({
       name: data.name,
@@ -356,8 +372,27 @@ export async function saveProductData(data: {
       images: data.images as any,
       status: statusDb as any,
     });
-    return { id: (inserted as any).insertId || 1, ...data };
+    productId = Number((inserted as any).insertId || 0);
   }
+
+  if (!productId) throw new Error("Não foi possível identificar o produto salvo.");
+  if (data.variations !== undefined) {
+    await db.delete(productVariations).where(eq(productVariations.productId, productId));
+    if (normalizedVariations.length > 0) {
+      await db.insert(productVariations).values(normalizedVariations.map((variation) => ({
+        productId,
+        size: variation.size,
+        stock: variation.stock,
+      })));
+    }
+  }
+
+  return {
+    id: productId,
+    ...data,
+    variations: normalizedVariations,
+    totalStock: normalizedVariations.reduce((total, variation) => total + variation.stock, 0),
+  };
 }
 
 export async function listClients() {

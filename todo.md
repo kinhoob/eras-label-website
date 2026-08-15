@@ -72,3 +72,19 @@
 - [x] Implementar histórico de buscas recentes no armazenamento local (`client/src/lib/recent-searches.ts` com testes em `server/recent-searches.test.ts`)
 - [x] Implementar segmentação de campanhas de e-mail por coleção (`server/marketing-audience.ts` com testes em `server/marketing-audience.test.ts` e UI integrada na aba E-mail Marketing)
 - [x] Preparar mapeamento do domínio próprio eraslabel.com para o lançamento oficial (`docs/domain-mapping-eraslabel.md`)
+
+## Inventário administrativo e variações
+- [x] Criar tela de inventário no painel com busca de produtos, total de itens, estoque e variações
+- [x] Permitir selecionar tamanhos por checkbox para roupas: PP, P, M, G e GG
+- [x] Permitir selecionar tamanhos por checkbox para calças e bermudas: 34, 36, 38, 40, 42, 44 e 46
+- [x] Permitir informar e salvar a quantidade de peças por tamanho/variação
+- [x] Persistir variações e estoque no banco com procedure admin protegida
+- [x] Mostrar estados de carregamento, sucesso, erro, estoque zerado e responsividade no inventário
+- [x] Adicionar testes Vitest, executar TypeScript, build, verificação visual e guardar checkpoint
+
+## Próxima etapa explicitamente solicitada
+- [ ] Implementar a seção de categorias no painel administrativo após concluir o inventário
+
+## Ajustes finais do inventário identificados na revisão
+- [x] Adicionar estados explícitos de carregamento, erro e resultado vazio na lista de inventário
+- [x] Verificar visualmente o inventário em desktop e mobile e guardar checkpoint específico desta entrega
