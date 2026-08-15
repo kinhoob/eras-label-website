@@ -8,6 +8,7 @@ import { ADMIN_DISPLAY_NAME, getAdminOpenId, validateAdminCredentials } from "./
 import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { storagePut } from "./storage";
+import { createMercadoPagoPayment } from "./mercadopago";
 import {
   getAdminSummary,
   getAdminProducts,
@@ -204,9 +205,45 @@ export const appRouter = router({
       discount: z.number().nonnegative(),
       total: z.number().nonnegative(),
       paymentMethod: z.enum(["pix", "credit_card"]).default("pix"),
+      cardToken: z.string().optional(),
+      installments: z.number().int().positive().optional(),
     })).mutation(async ({ input, ctx }) => {
       const orderNumber = `ER-${new Date().getFullYear()}-${Math.floor(Math.random() * 9000 + 1000)}`;
-      
+
+      // Chamar a API oficial do Mercado Pago para gerar a cobrança Pix ou Cartão Transparente
+      let mpResult: any = null;
+      let initialPaymentStatus = "pending";
+
+      const [firstName, ...lastNameParts] = input.customerName.trim().split(" ");
+      const lastName = lastNameParts.join(" ") || "Cliente";
+
+      try {
+        mpResult = await createMercadoPagoPayment({
+          transaction_amount: Number(input.total.toFixed(2)),
+          description: `Pedido ${orderNumber} - Eras Label`,
+          payment_method_id: input.paymentMethod === "pix" ? "pix" : "credit_card",
+          token: input.cardToken,
+          installments: input.installments || 1,
+          payer: {
+            email: input.customerEmail,
+            first_name: firstName,
+            last_name: lastName,
+            identification: {
+              type: "CPF",
+              number: input.customerCpf.replace(/\D/g, ""),
+            },
+          },
+          external_reference: orderNumber,
+        });
+
+        if (mpResult?.status === "approved") {
+          initialPaymentStatus = "approved";
+        }
+      } catch (mpError: any) {
+        console.error("[MercadoPago] Erro ao criar pagamento transparente:", mpError);
+        throw new TRPCError({ code: "BAD_REQUEST", message: mpError.message || "Erro ao processar pagamento com o Mercado Pago." });
+      }
+
       // Disparar notificação estilo Nuvemshop para o Administrador
       try {
         await createNotification({
@@ -216,20 +253,21 @@ export const appRouter = router({
           type: "new_order",
         });
 
-        // Simular notificação de pagamento confirmado (em ambiente real viria do webhook do gateway)
-        await createNotification({
-          targetRole: "admin",
-          title: "Pagamento Confirmado! 💳",
-          message: `O pagamento do pedido ${orderNumber} (R$ ${input.total.toFixed(2)}) foi aprovado com sucesso.`,
-          type: "payment_confirmed",
-        });
+        if (initialPaymentStatus === "approved") {
+          await createNotification({
+            targetRole: "admin",
+            title: "Pagamento Confirmado! 💳",
+            message: `O pagamento do pedido ${orderNumber} (R$ ${input.total.toFixed(2)}) foi aprovado via Mercado Pago.`,
+            type: "payment_confirmed",
+          });
+        }
 
         if (ctx.user) {
           await createNotification({
             userId: ctx.user.id,
             targetRole: "customer",
             title: "Pedido Realizado com Sucesso!",
-            message: `Recebemos o seu pedido ${orderNumber} no valor de R$ ${input.total.toFixed(2)}. Acompanhe o status na sua conta.`,
+            message: `Recebemos o seu pedido ${orderNumber} no valor de R$ ${input.total.toFixed(2)}. Status do pagamento: ${initialPaymentStatus}.`,
             type: "new_order",
           });
         }
@@ -245,22 +283,20 @@ export const appRouter = router({
           name: item.name ?? `Produto #${item.productId}`,
         })),
       };
+
       const emailJobs = [
         sendResendEmail({ to: input.customerEmail, ...orderConfirmationEmail(emailOrder) }),
-        sendResendEmail({ to: input.customerEmail, ...paymentConfirmationEmail(emailOrder) }),
+        ...(initialPaymentStatus === "approved" ? [sendResendEmail({ to: input.customerEmail, ...paymentConfirmationEmail(emailOrder) })] : []),
         ...(ENV.resendAdminEmail ? [sendResendEmail({ to: ENV.resendAdminEmail, ...adminOrderEmail(emailOrder) })] : []),
       ];
-      const emailResults = await Promise.allSettled(emailJobs);
-      const failedEmails = emailResults.filter(result => result.status === "rejected");
-      if (failedEmails.length > 0) {
-        console.warn(`Resend could not deliver ${failedEmails.length} email(s) for order ${orderNumber}.`);
-      }
+      await Promise.allSettled(emailJobs);
 
       return {
         success: true,
         orderNumber,
-        paymentStatus: "approved",
-        message: "Pedido criado e pagamento confirmado com sucesso! Notificações enviadas.",
+        paymentStatus: initialPaymentStatus,
+        pixData: mpResult?.point_of_interaction?.transaction_data || null,
+        message: initialPaymentStatus === "approved" ? "Pedido aprovado com sucesso!" : "Pedido gerado! Conclua o pagamento via Pix ou Cartão.",
         ...input,
       };
     }),

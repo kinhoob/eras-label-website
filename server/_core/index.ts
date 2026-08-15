@@ -44,6 +44,24 @@ async function startServer() {
       createContext,
     })
   );
+
+  // Webhook endpoint para notificações de pagamento do Mercado Pago
+  app.post("/api/mercadopago/webhook", async (req, res) => {
+    try {
+      const event = req.body;
+      console.log("[MercadoPago Webhook] Evento recebido:", JSON.stringify(event));
+      
+      if (event?.type === "payment" || event?.action === "payment.created" || event?.data?.id) {
+        const paymentId = event.data?.id || event.id;
+        console.log(`[MercadoPago Webhook] Notificação processada para o pagamento ID: ${paymentId}`);
+      }
+
+      res.status(200).json({ received: true });
+    } catch (err: any) {
+      console.error("[MercadoPago Webhook] Erro ao processar webhook:", err);
+      res.status(500).json({ error: err.message });
+    }
+  });
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);

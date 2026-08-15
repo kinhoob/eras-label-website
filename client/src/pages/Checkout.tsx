@@ -28,6 +28,12 @@ type CheckoutSuccess = {
   paymentMethod: CheckoutPaymentMethod;
   estimatedDelivery: string;
   total: number;
+  paymentStatus: string;
+  pixData?: {
+    qr_code?: string;
+    qr_code_base64?: string;
+    ticket_url?: string;
+  } | null;
 };
 
 function formatPrice(value: number) {
@@ -195,11 +201,17 @@ export default function CheckoutPage() {
           paymentMethod: selectedPaymentMethod,
           estimatedDelivery: shippingQuery.data?.deadline ?? "5 a 7 dias úteis",
           total,
+          paymentStatus: result.paymentStatus || "pending",
+          pixData: (result as any).pixData || null,
         });
         setCart([]);
         saveCart([]);
         clearCheckoutDraft();
-        toast.success(`Pagamento confirmado para o pedido ${result.orderNumber}.`);
+        if (result.paymentStatus === "approved") {
+          toast.success(`Pagamento aprovado para o pedido ${result.orderNumber}!`);
+        } else {
+          toast.success(`Pedido ${result.orderNumber} gerado! Conclua o pagamento via Pix.`);
+        }
       },
       onError: (error) => {
         setIsSubmitting(false);
@@ -211,14 +223,37 @@ export default function CheckoutPage() {
   }
 
   if (status === "success" && success) {
+    const isApproved = success.paymentStatus === "approved";
     return (
       <main className="checkout-page">
         <section className="checkout-success-page" aria-live="polite" aria-labelledby="checkout-success-title">
           <span className="checkout-success-icon"><Check size={30} /></span>
           <span className="section-kicker">UMA NOVA ERA COMEÇA AQUI</span>
-          <h1 id="checkout-success-title">Pagamento confirmado.</h1>
-          <p>O pedido <strong>{success.orderNumber}</strong> foi recebido pela Eras Label. Você poderá acompanhar cada etapa na sua conta.</p>
-          <div className="checkout-success-total"><span>Total pago</span><strong>{formatPrice(success.total)}</strong></div>
+          <h1 id="checkout-success-title">{isApproved ? "Pagamento confirmado." : "Pedido gerado com sucesso."}</h1>
+          <p>O pedido <strong>{success.orderNumber}</strong> foi registrado na Eras Label. {isApproved ? "O pagamento foi aprovado." : "Escaneie o QR Code Pix ou copie o código para concluir."}</p>
+          
+          {!isApproved && success.pixData?.qr_code && (
+            <div className="checkout-pix-box" style={{ background: "#f8f9fa", border: "1px solid #e5e7eb", borderRadius: "8px", padding: "20px", margin: "20px 0", textAlign: "center" }}>
+              <h3>Pagamento via Pix (Mercado Pago)</h3>
+              <p style={{ fontSize: "13px", color: "#6b7280", marginBottom: "12px" }}>Utilize o aplicativo do seu banco para ler o código abaixo:</p>
+              <div style={{ wordBreak: "break-all", background: "#fff", padding: "12px", border: "1px dashed #cbd5e1", borderRadius: "6px", fontFamily: "monospace", fontSize: "12px", marginBottom: "12px", maxHeight: "80px", overflowY: "auto" }}>
+                {success.pixData.qr_code}
+              </div>
+              <button 
+                type="button" 
+                className="primary-button" 
+                style={{ fontSize: "13px", padding: "8px 16px" }}
+                onClick={() => {
+                  navigator.clipboard.writeText(success.pixData!.qr_code!);
+                  toast.success("Código Pix Copia e Cola copiado para a área de transferência!");
+                }}
+              >
+                COPIAR CÓDIGO PIX
+              </button>
+            </div>
+          )}
+
+          <div className="checkout-success-total"><span>{isApproved ? "Total pago" : "Total a pagar"}</span><strong>{formatPrice(success.total)}</strong></div>
           <section className="checkout-success-order" aria-label="Resumo do pedido confirmado">
             <div className="checkout-success-order-heading"><span>RESUMO DO PEDIDO</span><strong>{success.items.reduce((sum, item) => sum + item.quantity, 0)} itens</strong></div>
             <div className="checkout-success-order-items">

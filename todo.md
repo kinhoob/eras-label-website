@@ -155,6 +155,15 @@
 - [x] Validar segurança, escrever testes unitários em Vitest (92 testes aprovados), TypeScript limpo, build de produção e checkpoint salvo
 
 ## Indicador Visual de Cargo e Permissões no Cabeçalho
-- [x] Criar query tRPC ou estado derivado para buscar as permissões e o cargo do administrador logado no momento
-- [x] Adicionar um badge elegante e tooltip detalhado no cabeçalho superior do painel administrativo exibindo o cargo (Superadministrador ou cargo personalizado) e as permissões ativas
-- [x] Atualizar testes unitários em Vitest (92 testes aprovados), TypeScript limpo, build de produção e checkpoint salvo
+- [x] Criar query tRPC ou stateless state no cabeçalho
+- [x] Adicionar badge de cargo e permissões no cabeçalho administrativo
+- [x] Atualizar testes unitários e build de produção
+
+## Checkout Transparente com Mercado Pago
+- [ ] Adicionar variáveis de ambiente seguras para o Mercado Pago (`MP_ACCESS_TOKEN`, `MP_PUBLIC_KEY`) no backend e frontend
+- [ ] Criar procedures tRPC protegidas para iniciar pagamento transparente (Pix e Cartão de Crédito) via API oficial do Mercado Pago
+- [ ] Implementar endpoint de webhook `/api/mercadopago/webhook` para atualizar o status dos pedidos automaticamente após a confirmação do pagamento
+- [ ] Atualizar a página de Checkout (`Checkout.tsx`) com os métodos de pagamento transparentes (Pix com QR Code / Copia e Cola e Cartão de Crédito direto no site)
+- [ ] Atualizar a página de sucesso para exibir o status confirmado ou pendente do Mercado Pago com resumo detalhado
+- [ ] Escrever testes unitários em Vitest para simular criação de pagamento e webhooks do Mercado Pago
+- [ ] Executar build de produção, validar TypeScript, garantir 95+ testes aprovados e salvar checkpoint final

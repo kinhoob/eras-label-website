@@ -12,4 +12,6 @@ export const ENV = {
   resendAdminEmail: process.env.RESEND_ADMIN_EMAIL ?? "",
   adminLoginEmail: process.env.ADMIN_LOGIN_EMAIL ?? "",
   adminLoginPassword: process.env.ADMIN_LOGIN_PASSWORD ?? "",
+  mpAccessToken: process.env.MP_ACCESS_TOKEN ?? "",
+  mpPublicKey: process.env.MP_PUBLIC_KEY ?? "",
 };
