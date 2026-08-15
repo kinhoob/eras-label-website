@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
+import { playInteractionSound } from "@/lib/interaction-sound";
 import { getCartItemCount } from "@/lib/cart";
 import { updateCartLineQuantity, removeCartLine } from "@/lib/cart-operations";
 import { loadCart, saveCart } from "@/lib/cart-storage";
@@ -239,26 +240,7 @@ function TikTokIcon({ size = 20 }: { size?: number }) {
   );
 }
 
-function playClick(enabled: boolean) {
-  if (!enabled) return;
-  try {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gain = audioContext.createGain();
-    oscillator.type = "sine";
-    oscillator.frequency.setValueAtTime(520, audioContext.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(880, audioContext.currentTime + 0.04);
-    gain.gain.setValueAtTime(0.0001, audioContext.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.04, audioContext.currentTime + 0.012);
-    gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.09);
-    oscillator.connect(gain);
-    gain.connect(audioContext.destination);
-    oscillator.start();
-    oscillator.stop(audioContext.currentTime + 0.1);
-  } catch {
-    // Audio enhancement fallback
-  }
-}
+const playClick = (enabled: boolean) => playInteractionSound(enabled);
 
 export default function Home() {
   const [category, setCategory] = useState<Category>("Todos");

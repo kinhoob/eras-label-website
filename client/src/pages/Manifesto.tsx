@@ -1,28 +1,13 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { PageTransitionHandler } from "@/components/PageTransition";
+import { playInteractionSound } from "@/lib/interaction-sound";
 
 export default function ManifestoPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
 
-  const playClickSound = () => {
-    if (!soundEnabled) return;
-    try {
-      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(440, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.08);
-      gain.gain.setValueAtTime(0.08, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.08);
-    } catch (e) {}
-  };
+  const playClickSound = () => playInteractionSound(soundEnabled);
 
   return (
     <div className="min-h-screen bg-[#f6f3ee] text-[#23221e] flex flex-col font-sans">

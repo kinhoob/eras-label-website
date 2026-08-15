@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useRoute } from "wouter";
 import { PageTransitionHandler } from "@/components/PageTransition";
+import { playInteractionSound } from "@/lib/interaction-sound";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 
@@ -16,23 +17,7 @@ export default function CatalogViewPage() {
 
   const { data: products = [], isLoading } = trpc.catalog.list.useQuery();
 
-  const playClickSound = () => {
-    if (!soundEnabled) return;
-    try {
-      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(440, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.08);
-      gain.gain.setValueAtTime(0.08, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.08);
-    } catch (e) {}
-  };
+  const playClickSound = () => playInteractionSound(soundEnabled);
 
   const collectionAliases: Record<string, string[]> = {
     paradox: ["paradox", "paradox collection"],
