@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "wouter";
+import { trpc } from "@/lib/trpc";
 
 interface SidebarMenuProps {
   isOpen: boolean;
@@ -8,6 +9,8 @@ interface SidebarMenuProps {
 }
 
 export function SidebarMenu({ isOpen, onClose, onPlaySound }: SidebarMenuProps) {
+  const { data: categories = [] } = trpc.catalog.categories.useQuery(undefined, { enabled: isOpen });
+
   if (!isOpen) return null;
 
   return (
@@ -33,8 +36,12 @@ export function SidebarMenu({ isOpen, onClose, onPlaySound }: SidebarMenuProps) 
           <span className="lovable-menu-kicker">CATEGORIAS</span>
           <div className="lovable-menu-sublinks">
             <Link href="/" onClick={() => { onPlaySound(); onClose(); }}>Todos os Produtos</Link>
-            <Link href="/category/camisetas" onClick={() => { onPlaySound(); onClose(); }}>Camisetas</Link>
-            <Link href="/category/bones" onClick={() => { onPlaySound(); onClose(); }}>Bonés</Link>
+                {categories.length > 0 ? categories.map((category) => (
+                  <Link key={category.id} href={`/category/${category.slug}`} onClick={() => { onPlaySound(); onClose(); }}>{category.name}</Link>
+                )) : <>
+                  <Link href="/category/camisetas" onClick={() => { onPlaySound(); onClose(); }}>Camisetas</Link>
+                  <Link href="/category/bones" onClick={() => { onPlaySound(); onClose(); }}>Bonés</Link>
+                </>}
           </div>
         </div>
         <div className="lovable-menu-section">

@@ -82,8 +82,12 @@
 - [x] Mostrar estados de carregamento, sucesso, erro, estoque zerado e responsividade no inventário
 - [x] Adicionar testes Vitest, executar TypeScript, build, verificação visual e guardar checkpoint
 
-## Próxima etapa explicitamente solicitada
-- [ ] Implementar a seção de categorias no painel administrativo após concluir o inventário
+## Seção de Categorias no Painel Administrativo
+- [x] Criar tabela persistida de categorias no schema Drizzle e aplicar migração non-destructive (`drizzle/0005_categories.sql`)
+- [x] Criar rotas tRPC protegidas para listar, salvar, ordenar e remover categorias no admin
+- [x] Criar componente `AdminCategoriesSection` no painel administrativo com suporte a CRUD, ativação e contagem de produtos
+- [x] Integrar as categorias ativas à navegação pública da loja (`SidebarMenu` e `CatalogView`)
+- [x] Adicionar testes unitários (`server/categories.test.ts`), verificar TypeScript, build de produção e guardar checkpoint
 
 ## Ajustes finais do inventário identificados na revisão
 - [x] Adicionar estados explícitos de carregamento, erro e resultado vazio na lista de inventário

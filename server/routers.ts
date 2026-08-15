@@ -28,6 +28,10 @@ import {
   listClients,
   listMarketingCollections,
   listCollectionMarketingRecipients,
+  listAdminCategories,
+  listPublicCategories,
+  saveCategoryData,
+  archiveCategory,
   listOrders,
   updateOrderTracking,
   upsertUser,
@@ -107,6 +111,7 @@ export const appRouter = router({
     getById: publicProcedure.input(z.object({ id: z.number().int().positive() })).query(({ input }) => getProductWithVariations(input.id)),
     getConfig: publicProcedure.query(() => getCommercialConfig()),
     getHomeContent: publicProcedure.query(() => getHomeContent()),
+    categories: publicProcedure.query(() => listPublicCategories()),
     calculateShipping: publicProcedure.input(z.object({
       cep: z.string().min(8),
       subtotal: z.number().nonnegative(),
@@ -284,6 +289,20 @@ export const appRouter = router({
   admin: router({
     summary: adminProcedure.query(() => getAdminSummary()),
     listProducts: adminProcedure.query(() => getAdminProducts()),
+    listCategories: adminProcedure.query(() => listAdminCategories()),
+    saveCategory: adminProcedure.input(z.object({
+      id: z.number().int().positive().optional(),
+      name: z.string().trim().min(2).max(100),
+      description: z.string().max(500).optional(),
+      active: z.number().int().min(0).max(1).default(1),
+      sortOrder: z.number().int().min(0).max(10000).default(0),
+    })).mutation(async ({ input }) => {
+      const category = await saveCategoryData(input);
+      return { success: true, category };
+    }),
+    archiveCategory: adminProcedure.input(z.object({ id: z.number().int().positive() })).mutation(async ({ input }) => {
+      return archiveCategory(input.id);
+    }),
     canAccess: protectedProcedure.query(({ ctx }) => ({ isAdmin: ctx.user.role === "admin" })),
     uploadImage: adminProcedure.input(z.object({
       fileName: z.string(),

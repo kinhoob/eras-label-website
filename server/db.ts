@@ -13,10 +13,12 @@ import {
   notifications,
   InsertNotification,
   resendEmailLogs,
+  categories,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 import { collectCollectionRecipients } from "./marketing-audience";
 import { normalizeInventoryVariations, sumInventoryStock } from "../shared/inventory";
+import { normalizeCategoryName, slugifyCategory } from "../shared/categories";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -72,8 +74,9 @@ export async function getUserByOpenId(openId: string) {
 export async function listProducts(category?: string) {
   const db = await getDb();
   if (!db) return [];
-  const rows = category && category !== "Todos"
-    ? await db.select().from(products).where(and(eq(products.status, "active"), eq(products.category, category)))
+  const resolvedCategory = category && category !== "Todos" ? await resolveCategoryName(category) : undefined;
+  const rows = resolvedCategory
+    ? await db.select().from(products).where(and(eq(products.status, "active"), eq(products.category, resolvedCategory)))
     : await db.select().from(products).where(eq(products.status, "active"));
 
   // The storefront needs available sizes to filter accurately. Keep this enrichment
@@ -215,6 +218,84 @@ export async function getAdminProducts() {
       totalStock: variations.reduce((total, variation) => total + Number(variation.stock ?? 0), 0),
     };
   }));
+}
+
+/** Lista categorias no painel e inclui a quantidade de produtos associados pelo nome atual. */
+export async function listAdminCategories() {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db.select().from(categories).orderBy(asc(categories.sortOrder), asc(categories.name));
+  return Promise.all(rows.map(async (category) => {
+    const [countRow] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(products)
+      .where(eq(products.category, category.name));
+    return { ...category, productCount: Number(countRow?.count ?? 0) };
+  }));
+}
+
+/** Lista apenas categorias ativas para a navegação pública e filtros da loja. */
+export async function listPublicCategories() {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(categories)
+    .where(eq(categories.active, 1))
+    .orderBy(asc(categories.sortOrder), asc(categories.name));
+}
+
+/** Resolve slug ou nome para o nome persistido usado hoje na coluna products.category. */
+export async function resolveCategoryName(value?: string) {
+  const normalized = value?.trim();
+  if (!normalized || normalized === "Todos") return undefined;
+  const db = await getDb();
+  if (!db) return normalized;
+  const rows = await db
+    .select({ name: categories.name })
+    .from(categories)
+    .where(or(eq(categories.slug, normalized), eq(categories.name, normalized)))
+    .limit(1);
+  return rows[0]?.name ?? normalized;
+}
+
+/** Cria ou atualiza uma categoria, mantendo slug estável e validável pela URL pública. */
+export async function saveCategoryData(data: {
+  id?: number;
+  name: string;
+  description?: string;
+  active: number;
+  sortOrder: number;
+}) {
+  const name = normalizeCategoryName(data.name);
+  const slug = slugifyCategory(name);
+  const normalized = { ...data, name, slug, description: data.description?.trim() || null };
+  const db = await getDb();
+  if (!db) return { id: data.id ?? Math.floor(Math.random() * 1000 + 10), ...normalized, productCount: 0 };
+
+  if (data.id) {
+    const previousRows = await db.select({ name: categories.name }).from(categories).where(eq(categories.id, data.id)).limit(1);
+    await db.update(categories).set(normalized).where(eq(categories.id, data.id));
+    const previousName = previousRows[0]?.name;
+    if (previousName && previousName !== name) {
+      await db.update(products).set({ category: name }).where(eq(products.category, previousName));
+    }
+  } else {
+    await db.insert(categories).values(normalized);
+  }
+  const rows = await db.select().from(categories).where(eq(categories.slug, slug)).limit(1);
+  const saved = rows[0];
+  if (!saved) throw new Error("Categoria não encontrada após o salvamento.");
+  const [countRow] = await db.select({ count: sql<number>`count(*)` }).from(products).where(eq(products.category, saved.name));
+  return { ...saved, productCount: Number(countRow?.count ?? 0) };
+}
+
+/** Arquiva uma categoria sem apagar o histórico nem quebrar produtos existentes. */
+export async function archiveCategory(id: number) {
+  const db = await getDb();
+  if (!db) return { success: true };
+  await db.update(categories).set({ active: 0 }).where(eq(categories.id, id));
+  return { success: true };
 }
 
 export async function getCommercialConfig() {

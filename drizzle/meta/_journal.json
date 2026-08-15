@@ -36,6 +36,13 @@
       "when": 1786817000000,
       "tag": "0004_resend_email_logs",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": 5,
+      "when": 1786819300000,
+      "tag": "0005_categories",
+      "breakpoints": true
     }
   ]
 }

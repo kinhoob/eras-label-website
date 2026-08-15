@@ -16,6 +16,7 @@ export default function CatalogViewPage() {
   const [soundEnabled, setSoundEnabled] = useState(true);
 
   const { data: products = [], isLoading } = trpc.catalog.list.useQuery();
+  const { data: categories = [] } = trpc.catalog.categories.useQuery(undefined, { enabled: menuOpen });
 
   const playClickSound = () => playInteractionSound(soundEnabled);
 
@@ -155,8 +156,12 @@ export default function CatalogViewPage() {
               <span className="lovable-menu-kicker">CATEGORIAS</span>
               <div className="lovable-menu-sublinks">
                 <Link href="/" onClick={() => { playClickSound(); setMenuOpen(false); }}>Todos os Produtos</Link>
-                <Link href="/category/camisetas" onClick={() => { playClickSound(); setMenuOpen(false); }}>Camisetas</Link>
-                <Link href="/category/bones" onClick={() => { playClickSound(); setMenuOpen(false); }}>Bonés</Link>
+                {categories.length > 0 ? categories.map((category) => (
+                  <Link key={category.id} href={`/category/${category.slug}`} onClick={() => { playClickSound(); setMenuOpen(false); }}>{category.name}</Link>
+                )) : <>
+                  <Link href="/category/camisetas" onClick={() => { playClickSound(); setMenuOpen(false); }}>Camisetas</Link>
+                  <Link href="/category/bones" onClick={() => { playClickSound(); setMenuOpen(false); }}>Bonés</Link>
+                </>}
               </div>
             </div>
             <div className="lovable-menu-section">

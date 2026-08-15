@@ -32,6 +32,7 @@ import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { getInventorySizeOptions } from "@shared/inventory";
 import { AdminProductThumbnail } from "@/components/AdminProductThumbnail";
+import AdminCategoriesSection from "@/pages/AdminCategoriesSection";
 
 const orders = [
   { id: "#ER-0108", customer: "Marina Oliveira", date: "Hoje, 14:32", total: "R$ 312,80", payment: "Pago", status: "Em preparação" },
@@ -594,6 +595,7 @@ export default function Admin() {
     { label: "Pedidos", icon: ClipboardList },
     { label: "Produtos", icon: Package },
     { label: "Inventário", icon: Package },
+    { label: "Categorias", icon: Tag },
     { label: "Clientes", icon: Users },
     { label: "E-mail Marketing", icon: Mail },
     { label: "Cupons", icon: Tag },
@@ -673,6 +675,8 @@ export default function Admin() {
         }}><Pencil size={16} /></button></td></tr>)}
                   </tbody></table></div>
         </section>}
+
+        {active === "Categorias" && <AdminCategoriesSection />}
 
         {editingProduct && (
           <div className="admin-modal-overlay" style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '1rem' }}>
