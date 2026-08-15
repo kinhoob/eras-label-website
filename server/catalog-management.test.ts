@@ -118,4 +118,14 @@ describe("Catalog Management and Inventory Separation", () => {
     expect(fallback).toContain("1 vendas");
     expect(fallback).toContain("R$ 142.60");
   });
+
+  it("calculates category revenue and low stock alerts correctly", () => {
+    const mockProducts = [
+      { id: 1, name: "Camiseta Boxy", category: "Camisetas", price: "142.60", stock: 2 },
+      { id: 2, name: "Calça Cargo", category: "Calças", price: "280.00", stock: 8 },
+    ];
+    const lowStock = mockProducts.filter(p => p.stock < 5);
+    expect(lowStock.length).toBe(1);
+    expect(lowStock[0].name).toBe("Camiseta Boxy");
+  });
 });

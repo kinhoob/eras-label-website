@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import {
   ArrowLeft,
   BarChart3,
+  BellRing,
   ChevronDown,
   ClipboardList,
   Copy,
@@ -615,6 +616,7 @@ export default function Admin() {
     { label: "Produtos", icon: Package },
     { label: "Inventário", icon: Package },
     { label: "Histórico de Estoque", icon: History },
+    { label: "Alertas de Estoque", icon: BellRing },
     { label: "Categorias", icon: Tag },
     { label: "Clientes", icon: Users },
     { label: "E-mail Marketing", icon: Mail },
@@ -1267,6 +1269,62 @@ function InventoryAuditSection() {
               Próxima
             </Button>
           </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+// Componente de Alertas de Estoque Crítico (Centro Interno de Notificações)
+function LowStockNotificationsSection() {
+  const { data: alerts = [], isLoading, refetch } = trpc.admin.lowStockAlerts.useQuery();
+
+  return (
+    <section className="admin-content">
+      <div className="content-toolbar">
+        <div>
+          <span className="section-kicker">MONITORAMENTO CRÍTICO</span>
+          <h2 className="content-title">Centro de Alertas de Estoque</h2>
+        </div>
+        <Button onClick={() => void refetch()} variant="outline">Atualizar alertas</Button>
+      </div>
+
+      <p style={{ color: "#666", fontSize: "0.9rem", marginBottom: "1.5rem", lineHeight: "1.5" }}>
+        Produtos abaixo de 5 unidades em estoque total requerem atenção imediata para evitar rupturas no storefront da Eras Label.
+      </p>
+
+      {isLoading && (
+        <div className="inventory-state"><LoaderCircle className="spin" size={22} /><strong>Carregando alertas...</strong></div>
+      )}
+
+      {!isLoading && alerts.length === 0 && (
+        <div className="inventory-state">
+          <ShieldCheck size={28} style={{ color: "#2e7d32", marginBottom: "0.5rem" }} />
+          <strong>Nenhum produto em estoque crítico</strong>
+          <span>Todos os itens do catálogo possuem estoque igual ou superior a 5 unidades.</span>
+        </div>
+      )}
+
+      {!isLoading && alerts.length > 0 && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "1rem" }}>
+          {alerts.map((item: any) => (
+            <div key={item.id} className="admin-panel" style={{ background: "#fff1f1", border: "1px solid #e4a6a6", padding: "1.25rem", borderRadius: "8px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.75rem" }}>
+                <div>
+                  <span className="inventory-low-stock-badge danger" style={{ marginBottom: "0.25rem" }}>
+                    {item.stock === 0 ? "Esgotado" : `Estoque crítico: ${item.stock} un.`}
+                  </span>
+                  <h3 style={{ fontSize: "1.05rem", fontWeight: 700, color: "#111", margin: "0.2rem 0" }}>{item.name}</h3>
+                  <small style={{ color: "#666" }}>Categoria: {item.category} {item.sku ? `• SKU: ${item.sku}` : ""}</small>
+                </div>
+              </div>
+              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "1rem" }}>
+                <Button size="sm" onClick={() => { window.location.href = "/admin"; }} style={{ background: "#b22222", color: "#fff", fontSize: "0.8rem" }}>
+                  Repor no Inventário
+                </Button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </section>

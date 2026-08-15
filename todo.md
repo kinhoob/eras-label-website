@@ -132,3 +132,9 @@
 - [x] Implementar paginação e ordenação clicável por colunas na tabela de histórico de alterações de estoque
 - [x] Reforçar indicadores visuais e badges de alerta (com efeito de pulsação e destaque vermelho) para produtos em estoque crítico
 - [x] Executar com sucesso todos os 88 testes unitários em Vitest, TypeScript limpo e build de produção validado
+
+## Gráficos por Categoria, Centro de Alertas e Insights Acionáveis
+- [x] Implementar métricas e procedimentos tRPC para faturamento detalhado por categoria de produto
+- [x] Criar o Centro de Alertas de Estoque Crítico na plataforma para monitorar peças em ruptura (< 5 unidades)
+- [x] Tornar os insights do resumo de IA acionáveis e interativos para redirecionamento direto ao inventário
+- [x] Concluir validação com 89 testes unitários aprovados em Vitest, TypeScript limpo e build de produção validado

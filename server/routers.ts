@@ -17,6 +17,8 @@ import {
   getNewsletterSubscriber,
   listProducts,
   getAdminAnalytics,
+  getCategoryRevenueMetrics,
+  getLowStockAlerts,
   listInventoryAuditLogs,
   logInventoryAudit,
   saveProductData,
@@ -432,6 +434,12 @@ export const appRouter = router({
       periodDays: z.number().int().positive().default(7),
     }).optional()).query(async ({ input }) => {
       return getAdminAnalytics(input?.periodDays ?? 7);
+    }),
+    categoryRevenue: adminProcedure.query(async () => {
+      return getCategoryRevenueMetrics();
+    }),
+    lowStockAlerts: adminProcedure.query(async () => {
+      return getLowStockAlerts();
     }),
     aiSummary: adminProcedure.input(z.object({
       periodDays: z.number().int().positive().default(7),
