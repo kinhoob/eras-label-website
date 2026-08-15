@@ -144,8 +144,24 @@
 - [x] Remover a caixa de subscrição de newsletter do rodapé da Home
 - [x] Substituir os textos de Instagram e TikTok por ícones visuais interativos no rodapé
 - [x] Validar o layout do rodapé em desktop e mobile
-- [ ] Guardar checkpoint e entregar as alterações
+- [x] Guardar checkpoint e entregar as alterações
 
 - [x] Validar visualmente no navegador o rodapé atualizado em desktop, confirmando ausência da newsletter, alinhamento das colunas e ícones sociais clicáveis
 - [x] Validar no navegador em viewport mobile real o rodapé atualizado, confirmando ausência da newsletter, alinhamento/empilhamento das colunas, espaçamento e legibilidade
 - [x] Registrar em qa-home-findings.md as evidências da validação do rodapé após a remoção da newsletter e troca para ícones sociais
+
+- [x] Entregar ao usuário a atualização do rodapé utilizando o checkpoint 4dee36d5
+
+## Correção do Link VIP e Dropdown de Coleções
+- [x] Atualizar o link do Grupo VIP no menu lateral e no banner da Home com `https://chat.whatsapp.com/I9UWZ9A6MmCLVm92mF86MK?mode=gi_t`
+- [x] Corrigir o comportamento e o posicionamento do dropdown de Coleções no desktop e no mobile
+- [x] Validar o funcionamento das coleções e do acesso VIP no navegador
+- [ ] Guardar checkpoint e entregar a correção
+
+- [x] Validar no navegador desktop e mobile o dropdown/menu de Coleções após a correção, cobrindo abertura, posicionamento, links e fechamento
+- [x] Verificar que o problema visual não persiste após ajustar JSX/CSS/handlers do dropdown de Coleções na Home e no menu mobile, com evidências em QA
+
+- [x] Validar no navegador, após a correção final, o clique do link VIP a partir do menu e do banner da Home, registrando a navegação observada
+- [x] Executar validação interativa desktop do dropdown de Coleções após o ajuste final, cobrindo hover/foco/clique, posicionamento e fechamento com evidência em QA
+- [x] Executar validação interativa mobile do menu de Coleções após o ajuste final, cobrindo abertura, clique em pelo menos uma coleção, retorno e fechamento, com evidência em QA
+- [x] Atualizar qa-vip-collections.md com provas explícitas do dropdown/menu aberto e funcionando após o último ajuste visual

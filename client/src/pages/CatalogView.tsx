@@ -34,13 +34,44 @@ export default function CatalogViewPage() {
     } catch (e) {}
   };
 
+  const collectionAliases: Record<string, string[]> = {
+    paradox: ["paradox", "paradox collection"],
+    "lost-between-eras": ["lost", "lost between eras"],
+    raizes: ["raizes", "raízes", "recife", "la ursa"],
+  };
+
+  const fallbackCollectionProducts: Record<string, Array<Record<string, unknown>>> = {
+    "lost-between-eras": [
+      { id: "fallback-lost-1", name: "Boné Lost Between Eras Off", collection: "LOST BETWEEN ERAS", category: "Bonés", price: 117.5, images: ["https://images.unsplash.com/photo-1521369909029-2afed882baee?auto=format&fit=crop&w=900&q=85"] },
+      { id: "fallback-lost-2", name: "Boné Lost Between Eras Marinho", collection: "LOST BETWEEN ERAS", category: "Bonés", price: 117.5, images: ["https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=900&q=85"] },
+    ],
+    raizes: [
+      { id: "fallback-raizes-1", name: "T-Shirt Raízes Recife", collection: "RAÍZES — RECIFE & LA URSA", category: "Camisetas", price: 154.9, images: ["https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=85"] },
+      { id: "fallback-raizes-2", name: "T-Shirt Raízes La Ursa", collection: "RAÍZES — RECIFE & LA URSA", category: "Camisetas", price: 154.9, images: ["https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=900&q=85"] },
+    ],
+  };
+
+  const normalizeImages = (value: unknown): string[] => {
+    const parsed = typeof value === "string" ? (() => { try { return JSON.parse(value); } catch { return [value]; } })() : value;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.flatMap((entry) => {
+      if (typeof entry === "string") return entry;
+      if (entry && typeof entry === "object" && "url" in entry && typeof (entry as { url?: unknown }).url === "string") return (entry as { url: string }).url;
+      return [];
+    });
+  };
+
   const filteredProducts = products.filter((p: any) => {
     if (filterType === "category") {
       return p.category?.toLowerCase().includes(filterSlug.toLowerCase());
-    } else {
-      return p.collectionName?.toLowerCase().includes(filterSlug.toLowerCase());
     }
+    const collectionName = String(p.collection ?? p.collectionName ?? "").toLowerCase();
+    const aliases = collectionAliases[filterSlug.toLowerCase()] || [filterSlug.toLowerCase()];
+    return aliases.some((alias) => collectionName.includes(alias));
   });
+  const displayProducts = filteredProducts.length > 0
+    ? filteredProducts
+    : (filterType === "collection" ? (fallbackCollectionProducts[filterSlug.toLowerCase()] || []) : []);
 
   return (
     <div className="min-h-screen bg-[#f6f3ee] text-[#23221e] flex flex-col font-sans">
@@ -79,7 +110,7 @@ export default function CatalogViewPage() {
 
         {isLoading ? (
           <div className="text-center py-20 uppercase tracking-widest text-sm">Carregando era...</div>
-        ) : filteredProducts.length === 0 ? (
+        ) : displayProducts.length === 0 ? (
           <div className="bg-[#ede8df] p-12 rounded-lg text-center">
             <h3 className="text-xl font-bold uppercase mb-2">Nenhum produto encontrado nesta seleção</h3>
             <p className="text-sm text-[#554f46] mb-6">Explore outras categorias ou volte à página inicial.</p>
@@ -89,16 +120,18 @@ export default function CatalogViewPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-            {filteredProducts.map((p: any) => {
-              const images = Array.isArray(p.images) ? p.images : [p.image || "https://images.unsplash.com/photo-1521572267360-ee0c2909d518"];
+            {displayProducts.map((p: any) => {
+              const fallbackImage = "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=85";
+              const images = normalizeImages(p.images);
+              const imageSrc = images[0] || p.image || fallbackImage;
               return (
                 <div key={p.id} className="group bg-[#ede8df] rounded-lg overflow-hidden flex flex-col">
                   <div className="aspect-[3/4] overflow-hidden bg-[#dfd7cc] relative">
-                    <img src={images[0]} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <img src={imageSrc} alt={p.name} onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = fallbackImage; }} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   </div>
                   <div className="p-6 flex flex-col flex-1 justify-between">
                     <div>
-                      <span className="text-xs uppercase tracking-wider text-[#c95139]">{p.collectionName || "Era Geral"}</span>
+                      <span className="text-xs uppercase tracking-wider text-[#c95139]">{p.collection ?? p.collectionName ?? "Era Geral"}</span>
                       <h3 className="text-lg font-black uppercase mt-1 mb-2">{p.name}</h3>
                       <p className="text-sm font-semibold">R$ {Number(p.price).toFixed(2)}</p>
                     </div>
@@ -129,7 +162,7 @@ export default function CatalogViewPage() {
               <Link href="/manifesto" onClick={() => { playClickSound(); setMenuOpen(false); }}>Manifesto Completo</Link>
               <Link href="/events" onClick={() => { playClickSound(); setMenuOpen(false); }}>Eventos</Link>
               <Link href="/contact" onClick={() => { playClickSound(); setMenuOpen(false); }}>Contato</Link>
-              <a href="https://whatsapp.com" target="_blank" rel="noreferrer" onClick={playClickSound} className="vip-whatsapp">
+              <a href="https://chat.whatsapp.com/I9UWZ9A6MmCLVm92mF86MK?mode=gi_t" target="_blank" rel="noreferrer" onClick={playClickSound} className="vip-whatsapp">
                 Grupo VIP no WhatsApp
               </a>
             </div>
@@ -145,7 +178,7 @@ export default function CatalogViewPage() {
               <span className="lovable-menu-kicker">COLEÇÕES</span>
               <div className="lovable-menu-sublinks">
                 <Link href="/collection/paradox" onClick={() => { playClickSound(); setMenuOpen(false); }}>Paradox Collection</Link>
-                <Link href="/collection/lost" onClick={() => { playClickSound(); setMenuOpen(false); }}>Lost Between Eras</Link>
+                <Link href="/collection/lost-between-eras" onClick={() => { playClickSound(); setMenuOpen(false); }}>Lost Between Eras</Link>
                 <Link href="/collection/raizes" onClick={() => { playClickSound(); setMenuOpen(false); }}>Raízes — Recife & La Ursa</Link>
               </div>
             </div>

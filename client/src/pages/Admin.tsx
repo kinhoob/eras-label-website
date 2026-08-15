@@ -41,7 +41,7 @@ const defaultEditableBanners: EditableBanner[] = [
   { id: "drafts", eyebrow: "NOVA ERA · 2026", title: "DRAFTS JÁ DISPONÍVEL", subtitle: "Uma nova coleção em movimento.", imageUrl: "https://images.unsplash.com/photo-1485230895905-ec40ba36b9bc?auto=format&fit=crop&w=2000&q=90", href: "#shop", cta: "EXPLORAR AGORA" },
   { id: "paradox", eyebrow: "PARADOX COLLECTION", title: "REVIVER. REINVENTAR.", subtitle: "Peças para atravessar o tempo presente.", imageUrl: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=2000&q=90", href: "#shop", cta: "VER COLEÇÃO" },
 ];
-const defaultEditableVipBanner: EditableVipBanner = { eyebrow: "ACESSO ANTECIPADO", title: "ENTRE PARA O GRUPO VIP", subtitle: "Lançamentos, bastidores e as próximas eras primeiro.", imageUrl: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1800&q=90", href: "https://wa.me/5500000000000", cta: "ENTRAR NO WHATSAPP" };
+const defaultEditableVipBanner: EditableVipBanner = { eyebrow: "ACESSO ANTECIPADO", title: "ENTRE PARA O GRUPO VIP", subtitle: "Lançamentos, bastidores e as próximas eras primeiro.", imageUrl: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1800&q=90", href: "https://chat.whatsapp.com/I9UWZ9A6MmCLVm92mF86MK?mode=gi_t", cta: "ENTRAR NO WHATSAPP" };
 const defaultEditableHighlights: EditableHighlight[] = [
   { id: "highlight-1", productId: 1, label: "PEÇA-CHAVE" },
   { id: "highlight-2", productId: 2, label: "MAIS VISTO" },

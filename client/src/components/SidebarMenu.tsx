@@ -25,7 +25,7 @@ export function SidebarMenu({ isOpen, onClose, onPlaySound }: SidebarMenuProps) 
           <Link href="/manifesto" onClick={() => { onPlaySound(); onClose(); }}>Manifesto Completo</Link>
           <Link href="/events" onClick={() => { onPlaySound(); onClose(); }}>Eventos</Link>
           <Link href="/contact" onClick={() => { onPlaySound(); onClose(); }}>Contato</Link>
-          <a href="https://whatsapp.com" target="_blank" rel="noreferrer" onClick={onPlaySound} className="vip-whatsapp">
+          <a href="https://chat.whatsapp.com/I9UWZ9A6MmCLVm92mF86MK?mode=gi_t" target="_blank" rel="noreferrer" onClick={onPlaySound} className="vip-whatsapp">
             Grupo VIP no WhatsApp
           </a>
         </div>
@@ -41,7 +41,7 @@ export function SidebarMenu({ isOpen, onClose, onPlaySound }: SidebarMenuProps) 
           <span className="lovable-menu-kicker">COLEÇÕES</span>
           <div className="lovable-menu-sublinks">
             <Link href="/collection/paradox" onClick={() => { onPlaySound(); onClose(); }}>Paradox Collection</Link>
-            <Link href="/collection/lost" onClick={() => { onPlaySound(); onClose(); }}>Lost Between Eras</Link>
+            <Link href="/collection/lost-between-eras" onClick={() => { onPlaySound(); onClose(); }}>Lost Between Eras</Link>
             <Link href="/collection/raizes" onClick={() => { onPlaySound(); onClose(); }}>Raízes — Recife & La Ursa</Link>
           </div>
         </div>

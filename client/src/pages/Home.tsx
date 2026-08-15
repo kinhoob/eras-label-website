@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { getCheckoutFeedback } from "@/lib/checkout-feedback";
+import { ERAS_COLLECTION_PATHS, ERAS_VIP_WHATSAPP_URL } from "../../../shared/const";
 import { checkoutFlowReducer, initialCheckoutFlowState } from "@/lib/checkout-flow";
 import { createOrderSummary, type OrderSummary } from "@/lib/order-summary";
 
@@ -73,7 +74,7 @@ const fallbackVipBanner: VipBanner = {
   title: "ENTRE PARA O GRUPO VIP",
   subtitle: "Lançamentos, bastidores e as próximas eras primeiro.",
   imageUrl: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1800&q=90",
-  href: "https://wa.me/5500000000000",
+  href: ERAS_VIP_WHATSAPP_URL,
   cta: "ENTRAR NO WHATSAPP",
 };
 const fallbackHighlights: HomeHighlight[] = [
@@ -426,12 +427,32 @@ export default function Home() {
         <Link href="/" className="brand-mark" onClick={() => playClick(soundsOn)}>ERAS<span>.</span></Link>
         <nav className="desktop-nav" aria-label="Navegação principal">
           <a href="#shop" onClick={() => playClick(soundsOn)}>PRODUTOS</a>
-          <div className={`collections-nav ${collectionsOpen ? "open" : ""}`} onMouseEnter={() => setCollectionsOpen(true)} onMouseLeave={() => setCollectionsOpen(false)}>
-            <button className="collections-trigger" aria-expanded={collectionsOpen} onFocus={() => setCollectionsOpen(true)} onClick={() => { playClick(soundsOn); setCollectionsOpen((value) => !value); }}>COLEÇÕES <ArrowDown size={13} /></button>
-            {collectionsOpen && <div className="collections-dropdown" role="menu">
-              <Link href="/collection/paradox" onClick={() => { playClick(soundsOn); setCollectionsOpen(false); }}>PARADOX COLLECTION <span>↗</span></Link>
-              <Link href="/archive" onClick={() => { playClick(soundsOn); setCollectionsOpen(false); }}>LOST BETWEEN ERAS <span>↗</span></Link>
-              <Link href="/archive" onClick={() => { playClick(soundsOn); setCollectionsOpen(false); }}>RAÍZES — RECIFE & LA URSA <span>↗</span></Link>
+          <div
+              className={`collections-nav ${collectionsOpen ? "open" : ""}`}
+              onMouseEnter={() => setCollectionsOpen(true)}
+              onMouseLeave={() => setCollectionsOpen(false)}
+              onBlur={(event) => {
+                if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setCollectionsOpen(false);
+              }}
+            >
+            <button
+              className="collections-trigger"
+              type="button"
+              aria-haspopup="menu"
+              aria-expanded={collectionsOpen}
+              onFocus={() => setCollectionsOpen(true)}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  setCollectionsOpen(false);
+                  event.currentTarget.blur();
+                }
+              }}
+              onClick={() => { playClick(soundsOn); setCollectionsOpen((value) => !value); }}
+            >COLEÇÕES <ArrowDown size={13} /></button>
+            {collectionsOpen && <div className="collections-dropdown" role="menu" aria-label="Coleções disponíveis">
+              <Link role="menuitem" href={ERAS_COLLECTION_PATHS.paradox} onClick={() => { playClick(soundsOn); setCollectionsOpen(false); }}>PARADOX COLLECTION <span>↗</span></Link>
+              <Link role="menuitem" href={ERAS_COLLECTION_PATHS.lostBetweenEras} onClick={() => { playClick(soundsOn); setCollectionsOpen(false); }}>LOST BETWEEN ERAS <span>↗</span></Link>
+              <Link role="menuitem" href={ERAS_COLLECTION_PATHS.raizes} onClick={() => { playClick(soundsOn); setCollectionsOpen(false); }}>RAÍZES — RECIFE & LA URSA <span>↗</span></Link>
             </div>}
           </div>
           <a href="#shop" onClick={() => { playClick(soundsOn); setCategory("Camisetas"); }}>CAMISETAS</a>
@@ -573,7 +594,7 @@ export default function Home() {
               <Link href="/manifesto" onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }}>MANIFESTO COMPLETO</Link>
               <Link href="/events" onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }}>EVENTOS</Link>
               <Link href="/contact" onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }}>CONTATO</Link>
-              <a href="https://whatsapp.com" target="_blank" rel="noreferrer" className="vip-whatsapp" onClick={() => playClick(soundsOn)}>
+              <a href={ERAS_VIP_WHATSAPP_URL} target="_blank" rel="noreferrer" className="vip-whatsapp" onClick={() => playClick(soundsOn)}>
                 GRUPO VIP NO<br />WHATSAPP
               </a>
             </nav>
@@ -590,9 +611,9 @@ export default function Home() {
             <div className="lovable-menu-section">
               <span className="lovable-menu-kicker">COLEÇÕES</span>
               <div className="lovable-menu-sublinks">
-                <Link href="/collection/paradox" onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }}>PARADOX COLLECTION</Link>
-                <Link href="/archive" onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }}>LOST BETWEEN ERAS</Link>
-                <Link href="/archive" onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }}>RAÍZES — RECIFE & LA URSA</Link>
+                <Link href={ERAS_COLLECTION_PATHS.paradox} onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }}>PARADOX COLLECTION</Link>
+                <Link href={ERAS_COLLECTION_PATHS.lostBetweenEras} onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }}>LOST BETWEEN ERAS</Link>
+                <Link href={ERAS_COLLECTION_PATHS.raizes} onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }}>RAÍZES — RECIFE & LA URSA</Link>
               </div>
             </div>
           </aside>

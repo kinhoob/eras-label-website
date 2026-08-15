@@ -35,3 +35,11 @@ export const decodeOAuthState = (state: string): OAuthState => {
   }
   return { redirectUri: decoded };
 };
+
+export const ERAS_VIP_WHATSAPP_URL = "https://chat.whatsapp.com/I9UWZ9A6MmCLVm92mF86MK?mode=gi_t";
+
+export const ERAS_COLLECTION_PATHS = {
+  paradox: "/collection/paradox",
+  lostBetweenEras: "/collection/lost-between-eras",
+  raizes: "/collection/raizes",
+} as const;

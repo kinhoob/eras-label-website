@@ -221,7 +221,7 @@ export const defaultHomeContent: HomeContent = {
     title: "ENTRE PARA O GRUPO VIP",
     subtitle: "Lançamentos, bastidores e as próximas eras primeiro.",
     imageUrl: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1800&q=90",
-    href: "https://wa.me/5500000000000",
+    href: "https://chat.whatsapp.com/I9UWZ9A6MmCLVm92mF86MK?mode=gi_t",
     cta: "ENTRAR NO WHATSAPP",
   },
 };

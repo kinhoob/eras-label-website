@@ -122,7 +122,7 @@ export default function ArchivePage() {
               <Link href="/manifesto" onClick={() => { playClickSound(); setMenuOpen(false); }}>Manifesto Completo</Link>
               <Link href="/events" onClick={() => { playClickSound(); setMenuOpen(false); }}>Eventos</Link>
               <Link href="/contact" onClick={() => { playClickSound(); setMenuOpen(false); }}>Contato</Link>
-              <a href="https://whatsapp.com" target="_blank" rel="noreferrer" onClick={playClickSound} className="vip-whatsapp">
+              <a href="https://chat.whatsapp.com/I9UWZ9A6MmCLVm92mF86MK?mode=gi_t" target="_blank" rel="noreferrer" onClick={playClickSound} className="vip-whatsapp">
                 Grupo VIP no WhatsApp
               </a>
             </div>
@@ -138,7 +138,7 @@ export default function ArchivePage() {
               <span className="lovable-menu-kicker">COLEÇÕES</span>
               <div className="lovable-menu-sublinks">
                 <Link href="/collection/paradox" onClick={() => { playClickSound(); setMenuOpen(false); }}>Paradox Collection</Link>
-                <Link href="/collection/lost" onClick={() => { playClickSound(); setMenuOpen(false); }}>Lost Between Eras</Link>
+                <Link href="/collection/lost-between-eras" onClick={() => { playClickSound(); setMenuOpen(false); }}>Lost Between Eras</Link>
                 <Link href="/collection/raizes" onClick={() => { playClickSound(); setMenuOpen(false); }}>Raízes — Recife & La Ursa</Link>
               </div>
             </div>

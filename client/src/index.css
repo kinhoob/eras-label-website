@@ -1,3 +1,4 @@
+@import "tailwindcss";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
@@ -1325,3 +1326,15 @@ td { border-top: 1px solid #e1dacf; padding: 15px 17px; color: #6f675e; font-siz
 .editor-description { margin: 12px 0 15px; color: #756d63; font-size: 12px; line-height: 1.5; }
 @media (max-width: 720px) { .highlight-editor-row { grid-template-columns: 24px minmax(0, 1fr) 30px; } .highlight-editor-row .input { grid-column: 2 / 4; } }
 @media (max-width: 480px) { .highlight-editor-row { grid-template-columns: 24px minmax(0, 1fr) 30px; gap: 7px; } .highlight-editor-row select { font-size: 10px; } }
+
+/* Dropdown de coleções: área de hover contínua, posicionamento relativo ao trigger e foco acessível */
+.collections-nav { display: inline-flex; align-items: stretch; height: 100%; }
+.collections-trigger { min-height: 68px; white-space: nowrap; }
+.collections-dropdown { top: calc(100% - 1px); min-width: 286px; margin-top: 0; pointer-events: auto; }
+.collections-dropdown a:focus-visible, .collections-trigger:focus-visible { outline: 2px solid #c95139; outline-offset: 4px; }
+.collections-dropdown::before { position: absolute; top: -8px; right: 0; left: 0; height: 8px; content: ""; }
+@media (max-width: 760px) {
+  .collections-nav { height: auto; }
+  .collections-trigger { min-height: 44px; }
+  .collections-dropdown { position: static; min-width: 0; margin-top: 8px; transform: none; box-shadow: none; animation: none; }
+}
