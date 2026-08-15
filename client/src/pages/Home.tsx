@@ -18,6 +18,7 @@ import {
   VolumeX,
   Loader2,
   Instagram,
+  Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +33,7 @@ import { checkoutFlowReducer, initialCheckoutFlowState } from "@/lib/checkout-fl
 import { createOrderSummary, type OrderSummary } from "@/lib/order-summary";
 import { saveCheckoutDraft } from "@/lib/checkout-draft";
 import { filterStorefrontProducts, getStorefrontFilterOptions } from "@/lib/storefront-filters";
+import { getSearchSuggestionText, searchStorefrontProducts } from "@/lib/storefront-search";
 
 type Category = "Todos" | "Camisetas" | "Bonés";
 type PriceRange = "all" | "under150" | "150to200" | "over200";
@@ -266,6 +268,10 @@ export default function Home() {
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeSearchSuggestion, setActiveSearchSuggestion] = useState(-1);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [activeBanner, setActiveBanner] = useState(0);
   const [collectionsOpen, setCollectionsOpen] = useState(false);
@@ -310,12 +316,18 @@ export default function Home() {
   const checkoutMutation = trpc.checkout.create.useMutation();
 
   const { sizes: availableSizes, colors: availableColors } = useMemo(() => getStorefrontFilterOptions(products), [products]);
-  const filteredProducts = useMemo(() => filterStorefrontProducts(products, {
-    category,
-    size: sizeFilter,
-    color: colorFilter,
-    priceRange,
-  }), [category, colorFilter, priceRange, products, sizeFilter]);
+  const filteredProducts = useMemo(() => {
+    const filterResults = filterStorefrontProducts(products, {
+      category,
+      size: sizeFilter,
+      color: colorFilter,
+      priceRange,
+    });
+    return searchStorefrontProducts(filterResults, searchQuery);
+  }, [category, colorFilter, priceRange, products, searchQuery, sizeFilter]);
+  const searchSuggestions = useMemo(() => (
+    searchQuery.trim() ? searchStorefrontProducts(products, searchQuery).slice(0, 6) : []
+  ), [products, searchQuery]);
   const hasAdvancedFilters = sizeFilter !== "Todos" || colorFilter !== "Todas" || priceRange !== "all";
   function clearShopFilters() {
     setCategory("Todos");
@@ -323,6 +335,48 @@ export default function Home() {
     setColorFilter("Todas");
     setPriceRange("all");
   }
+
+  function revealSearch() {
+    playClick(soundsOn);
+    setIsSearchOpen(true);
+    window.setTimeout(() => searchInputRef.current?.focus(), 0);
+  }
+
+  function submitSearch(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const suggestion = searchSuggestions[activeSearchSuggestion];
+    if (suggestion) {
+      openProduct(suggestion);
+      setIsSearchOpen(false);
+      setActiveSearchSuggestion(-1);
+      return;
+    }
+    document.getElementById("shop")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setIsSearchOpen(true);
+  }
+
+  function handleSearchKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setActiveSearchSuggestion((current) => Math.min(current + 1, searchSuggestions.length - 1));
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setActiveSearchSuggestion((current) => Math.max(current - 1, -1));
+    } else if (event.key === "Escape") {
+      setIsSearchOpen(false);
+      setActiveSearchSuggestion(-1);
+      searchInputRef.current?.blur();
+    }
+  }
+
+  function chooseSearchSuggestion(product: Product) {
+    playClick(soundsOn);
+    setSearchQuery(product.name);
+    setActiveSearchSuggestion(-1);
+    setIsSearchOpen(false);
+    openProduct(product);
+  }
+
   const relatedProducts = useMemo(() => {
     if (!selectedProduct) return [];
     const candidates = products
@@ -605,6 +659,53 @@ export default function Home() {
           <a href="#shop" onClick={() => { playClick(soundsOn); setCategory("Camisetas"); }}>CAMISETAS</a>
           <a href="#shop" onClick={() => { playClick(soundsOn); setCategory("Bonés"); }}>BONÉS</a>
         </nav>
+        <div className={`header-search ${isSearchOpen ? "is-open" : ""}`}>
+          <button className="icon-button header-search-trigger" type="button" aria-label={isSearchOpen ? "Fechar pesquisa" : "Pesquisar produtos"} aria-expanded={isSearchOpen} onClick={() => isSearchOpen ? setIsSearchOpen(false) : revealSearch()}>
+            <Search size={17} />
+          </button>
+          {isSearchOpen && (
+            <form className="header-search-form" role="search" onSubmit={submitSearch}>
+              <Search className="header-search-form-icon" size={16} aria-hidden="true" />
+              <input
+                ref={searchInputRef}
+                value={searchQuery}
+                onChange={(event) => {
+                  setSearchQuery(event.target.value);
+                  setActiveSearchSuggestion(-1);
+                }}
+                onFocus={() => setIsSearchOpen(true)}
+                onKeyDown={handleSearchKeyDown}
+                placeholder="Pesquisar peças, coleções ou cores"
+                aria-label="Pesquisar peças, coleções ou cores"
+                aria-autocomplete="list"
+                aria-controls="eras-search-suggestions"
+                aria-activedescendant={activeSearchSuggestion >= 0 ? `eras-search-suggestion-${activeSearchSuggestion}` : undefined}
+                autoComplete="off"
+              />
+              {searchQuery && <button className="header-search-clear" type="button" aria-label="Limpar pesquisa" onClick={() => { setSearchQuery(""); setActiveSearchSuggestion(-1); searchInputRef.current?.focus(); }}>×</button>}
+              {searchQuery.trim() && (
+                <div className="header-search-suggestions" id="eras-search-suggestions" role="listbox" aria-label="Sugestões de produtos">
+                  {searchSuggestions.length > 0 ? searchSuggestions.map((product, index) => (
+                    <button
+                      key={product.id}
+                      id={`eras-search-suggestion-${index}`}
+                      className={activeSearchSuggestion === index ? "active" : ""}
+                      type="button"
+                      role="option"
+                      aria-selected={activeSearchSuggestion === index}
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => chooseSearchSuggestion(product)}
+                    >
+                      <img src={product.image} alt="" aria-hidden="true" />
+                      <span><strong>{product.name}</strong><small>{getSearchSuggestionText(product)}</small></span>
+                      <ArrowRight size={14} aria-hidden="true" />
+                    </button>
+                  )) : <p className="header-search-empty">Nenhuma peça encontrada. Tente nome, coleção, cor ou tamanho.</p>}
+                </div>
+              )}
+            </form>
+          )}
+        </div>
         <div className="header-actions">
           <button className="icon-button" aria-label={soundsOn ? "Desativar sons" : "Ativar sons"} onClick={() => setSoundsOn((value) => !value)}>
             {soundsOn ? <Volume2 size={17} /> : <VolumeX size={17} />}

@@ -258,3 +258,11 @@
 - [x] Cobrir no QA os estados loading e erro do CEP e comprovar edição manual posterior
 - [x] Executar TypeScript, Vitest e build após esta rodada e registar as saídas
 - [x] Guardar um checkpoint novo após resolver todas as lacunas
+
+## Pesquisa inteligente
+- [x] Mapear a navegação atual e o catálogo real para a pesquisa
+- [x] Implementar barra de pesquisa com preenchimento automático e resultados ligados ao catálogo
+- [x] Validar teclado, Escape, clique, mobile e estado sem resultados
+- [x] Executar testes, atualizar documentação e guardar checkpoint da pesquisa
+
+Todos os itens acima devem ser marcados como concluídos após a validação final.
