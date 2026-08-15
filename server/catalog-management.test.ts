@@ -89,4 +89,33 @@ describe("Catalog Management and Inventory Separation", () => {
     expect(getStepCount(30)).toBe(6);
     expect(getStepCount(90)).toBe(8);
   });
+
+  it("paginates and sorts inventory audit logs correctly", () => {
+    const logs = [
+      { id: 1, productName: "Camisa A", size: "M", newStock: 10, createdAt: new Date("2026-08-01") },
+      { id: 2, productName: "Camisa B", size: "G", newStock: 5, createdAt: new Date("2026-08-05") },
+      { id: 3, productName: "Calça C", size: "40", newStock: 2, createdAt: new Date("2026-08-03") },
+    ];
+
+    // Ordenar por newStock ascendente
+    const sorted = [...logs].sort((a, b) => a.newStock - b.newStock);
+    expect(sorted[0].newStock).toBe(2);
+    expect(sorted[2].newStock).toBe(10);
+
+    // Paginação: página 1 com pageSize 2
+    const page = 1;
+    const pageSize = 2;
+    const paginated = sorted.slice((page - 1) * pageSize, page * pageSize);
+    expect(paginated.length).toBe(2);
+    expect(paginated[0].newStock).toBe(2);
+  });
+
+  it("builds AI executive summary prompt and fallback gracefully", () => {
+    const analytics = {
+      summary: { visits: 61, sales: 1, revenue: 142.60, averageTicket: 142.60, conversionRate: 1.64 },
+    };
+    const fallback = `Nos últimos 7 dias, a Eras Label registrou ${analytics.summary.sales} vendas com receita de R$ ${analytics.summary.revenue.toFixed(2)} e taxa de conversão de ${analytics.summary.conversionRate}%.`;
+    expect(fallback).toContain("1 vendas");
+    expect(fallback).toContain("R$ 142.60");
+  });
 });

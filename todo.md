@@ -126,3 +126,9 @@
 - [x] Criar utilitário de exportação segura para formato CSV na interface do painel
 - [x] Adicionar botões de exportar relatório CSV nas abas de Estatísticas e Histórico de Estoque
 - [x] Atualizar testes unitários em Vitest (86 testes aprovados), TypeScript, build e guardar checkpoint final
+
+## Resumo de IA, Paginação e Alertas Críticos de Estoque
+- [x] Integrar resumo executivo gerado por IA com insights analíticos de vendas e tendências da marca (Eras Insights)
+- [x] Implementar paginação e ordenação clicável por colunas na tabela de histórico de alterações de estoque
+- [x] Reforçar indicadores visuais e badges de alerta (com efeito de pulsação e destaque vermelho) para produtos em estoque crítico
+- [x] Executar com sucesso todos os 88 testes unitários em Vitest, TypeScript limpo e build de produção validado

@@ -656,13 +656,21 @@ export async function logInventoryAudit(data: { productId: number; productName: 
   });
 }
 
-export async function listInventoryAuditLogs(filters?: { adminFilter?: string; startDate?: string; endDate?: string }) {
+export async function listInventoryAuditLogs(filters?: {
+  adminFilter?: string;
+  startDate?: string;
+  endDate?: string;
+  sortBy?: "createdAt" | "productName" | "size" | "newStock" | "adminName";
+  sortOrder?: "asc" | "desc";
+  page?: number;
+  pageSize?: number;
+}) {
   const db = await getDb();
-  if (!db) return [];
-  let query = db.select().from(inventoryAuditLogs).orderBy(desc(inventoryAuditLogs.createdAt));
-  const rows = await query.limit(250);
+  if (!db) return { items: [], total: 0 };
+  
+  const rows = await db.select().from(inventoryAuditLogs);
 
-  return rows.filter((log: any) => {
+  const filtered = rows.filter((log: any) => {
     if (filters?.adminFilter && filters.adminFilter !== "all") {
       const matchEmail = log.adminEmail?.toLowerCase().includes(filters.adminFilter.toLowerCase());
       const matchName = log.adminName?.toLowerCase().includes(filters.adminFilter.toLowerCase());
@@ -675,9 +683,30 @@ export async function listInventoryAuditLogs(filters?: { adminFilter?: string; s
     }
     if (filters?.endDate) {
       const logTime = new Date(log.createdAt).getTime();
-      const endTime = new Date(filters.endDate).getTime() + 24 * 60 * 60 * 1000 - 1; // Fim do dia
+      const endTime = new Date(filters.endDate).getTime() + 24 * 60 * 60 * 1000 - 1;
       if (!isNaN(endTime) && logTime > endTime) return false;
     }
     return true;
   });
+
+  const sortBy = filters?.sortBy || "createdAt";
+  const sortOrder = filters?.sortOrder || "desc";
+
+  filtered.sort((a: any, b: any) => {
+    let valA = a[sortBy];
+    let valB = b[sortBy];
+    if (typeof valA === "string") valA = valA.toLowerCase();
+    if (typeof valB === "string") valB = valB.toLowerCase();
+    if (valA < valB) return sortOrder === "asc" ? -1 : 1;
+    if (valA > valB) return sortOrder === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  const page = filters?.page || 1;
+  const pageSize = filters?.pageSize || 10;
+  const total = filtered.length;
+  const start = (page - 1) * pageSize;
+  const items = filtered.slice(start, start + pageSize);
+
+  return { items, total, page, pageSize };
 }

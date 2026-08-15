@@ -966,6 +966,8 @@ function AdminAnalyticsSection() {
   const behavior = analytics?.visitorBehavior || { totalVisits: 61, categoryViews: 15, productViews: 21 };
   const trend = analytics?.salesTrend || [];
 
+  const { data: aiData, isLoading: aiLoading, refetch: refetchAi } = trpc.admin.aiSummary.useQuery({ periodDays });
+
   return (
     <section className="admin-content">
       <div className="content-toolbar">
@@ -1075,6 +1077,30 @@ function AdminAnalyticsSection() {
             <div style={{ width: `${Math.min(100, summary.conversionRate * 20)}%`, height: "100%", background: "#b22222", borderRadius: "99px" }} />
           </div>
         </section>
+
+        <section className="admin-panel" style={{ gridColumn: "span 3", background: "linear-gradient(135deg, #fdfbf7 0%, #f4ede2 100%)", border: "1px solid #e2d7c5" }}>
+          <div className="panel-heading">
+            <div>
+              <span className="section-kicker" style={{ color: "#b22222" }}>INTELIGÊNCIA ARTIFICIAL • ERAS INSIGHTS</span>
+              <h3 style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <span>Resumo Executivo & Tendências da Marca</span>
+              </h3>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => void refetchAi()} disabled={aiLoading} style={{ fontSize: "0.78rem" }}>
+              {aiLoading ? <LoaderCircle className="spin" size={14} /> : "Atualizar Análise"}
+            </Button>
+          </div>
+          {aiLoading ? (
+            <div style={{ padding: "1.5rem", textAlign: "center", color: "#666", fontSize: "0.9rem" }}>
+              <LoaderCircle className="spin" size={20} style={{ margin: "0 auto 0.5rem" }} />
+              Gerando resumo inteligente de desempenho com IA...
+            </div>
+          ) : (
+            <div style={{ fontSize: "0.9rem", color: "#333", lineHeight: "1.6", whiteSpace: "pre-line", background: "#fff", padding: "1.25rem", borderRadius: "8px", border: "1px solid #e8e0d5" }}>
+              {String(aiData?.summary || "Nenhum resumo gerado.")}
+            </div>
+          )}
+        </section>
       </div>
     </section>
   );
@@ -1085,12 +1111,34 @@ function InventoryAuditSection() {
   const [adminFilter, setAdminFilter] = useState<string>("");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
+  const [sortBy, setSortBy] = useState<"createdAt" | "productName" | "size" | "newStock" | "adminName">("createdAt");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [page, setPage] = useState<number>(1);
+  const pageSize = 10;
 
-  const { data: auditLogs = [], isLoading, refetch } = trpc.admin.listInventoryAudit.useQuery({
+  const { data: auditResult, isLoading, refetch } = trpc.admin.listInventoryAudit.useQuery({
     adminFilter: adminFilter || undefined,
     startDate: startDate || undefined,
     endDate: endDate || undefined,
+    sortBy,
+    sortOrder,
+    page,
+    pageSize,
   });
+
+  const auditLogs = auditResult?.items || [];
+  const totalLogs = auditResult?.total || 0;
+  const totalPages = Math.ceil(totalLogs / pageSize) || 1;
+
+  const handleSort = (field: "createdAt" | "productName" | "size" | "newStock" | "adminName") => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(field);
+      setSortOrder("desc");
+    }
+    setPage(1);
+  };
 
   const exportAuditCSV = () => {
     if (!auditLogs.length) {
@@ -1154,12 +1202,22 @@ function InventoryAuditSection() {
         <table>
           <thead>
             <tr>
-              <th>Data e Hora</th>
-              <th>Produto</th>
-              <th>Variação</th>
+              <th onClick={() => handleSort("createdAt")} style={{ cursor: "pointer" }}>
+                Data e Hora {sortBy === "createdAt" && (sortOrder === "asc" ? "▲" : "▼")}
+              </th>
+              <th onClick={() => handleSort("productName")} style={{ cursor: "pointer" }}>
+                Produto {sortBy === "productName" && (sortOrder === "asc" ? "▲" : "▼")}
+              </th>
+              <th onClick={() => handleSort("size")} style={{ cursor: "pointer" }}>
+                Variação {sortBy === "size" && (sortOrder === "asc" ? "▲" : "▼")}
+              </th>
               <th>Estoque Anterior</th>
-              <th>Novo Estoque</th>
-              <th>Administrador</th>
+              <th onClick={() => handleSort("newStock")} style={{ cursor: "pointer" }}>
+                Novo Estoque {sortBy === "newStock" && (sortOrder === "asc" ? "▲" : "▼")}
+              </th>
+              <th onClick={() => handleSort("adminName")} style={{ cursor: "pointer" }}>
+                Administrador {sortBy === "adminName" && (sortOrder === "asc" ? "▲" : "▼")}
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -1195,6 +1253,22 @@ function InventoryAuditSection() {
           </tbody>
         </table>
       </div>
+
+      {totalPages > 1 && (
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "1rem", padding: "0.5rem 1rem", background: "#fff", borderRadius: "8px", border: "1px solid #e8e0d5" }}>
+          <span style={{ fontSize: "0.85rem", color: "#666" }}>
+            Mostrando página <strong>{page}</strong> de <strong>{totalPages}</strong> ({totalLogs} registos no total)
+          </span>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <Button variant="outline" size="sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>
+              Anterior
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>
+              Próxima
+            </Button>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { sdk } from "./_core/sdk";
+import { invokeLLM } from "./_core/llm";
 import { ADMIN_DISPLAY_NAME, getAdminOpenId, validateAdminCredentials } from "./admin-auth";
 import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
@@ -432,10 +433,46 @@ export const appRouter = router({
     }).optional()).query(async ({ input }) => {
       return getAdminAnalytics(input?.periodDays ?? 7);
     }),
+    aiSummary: adminProcedure.input(z.object({
+      periodDays: z.number().int().positive().default(7),
+    }).optional()).query(async ({ input }) => {
+      const days = input?.periodDays ?? 7;
+      const analytics = await getAdminAnalytics(days);
+      try {
+        const prompt = `Analise os seguintes dados de e-commerce da marca de streetwear Eras Label para um período de ${days} dias:
+- Visitas: ${analytics.summary.visits}
+- Vendas: ${analytics.summary.sales}
+- Receita Total: R$ ${analytics.summary.revenue.toFixed(2)}
+- Ticket Médio: R$ ${analytics.summary.averageTicket.toFixed(2)}
+- Taxa de Conversão: ${analytics.summary.conversionRate}%
+- Comportamento: ${analytics.visitorBehavior.categoryViews} visualizações de categoria, ${analytics.visitorBehavior.productViews} visualizações de produto.
+
+Por favor, forneça um resumo executivo inteligente e sofisticado em português (estilo consultoria de moda streetwear), destacando as principais tendências de consumo, o desempenho comercial e 2 recomendações práticas para aumentar as vendas e o engajamento dos clientes. Seja objetivo, elegante e direto ao ponto.`;
+
+        const res = await invokeLLM({
+          messages: [
+            { role: "system", content: "Você é um analista sênior de e-commerce e estratégia de marca para streetwear." },
+            { role: "user", content: prompt },
+          ],
+        });
+        const summaryText = res.choices[0].message.content || "Resumo indisponível no momento.";
+        return { success: true, summary: summaryText };
+      } catch (err) {
+        console.warn("[AI Summary] Failed to generate AI summary:", err);
+        return {
+          success: true,
+          summary: `Nos últimos ${days} dias, a Eras Label registrou ${analytics.summary.sales} vendas com receita de R$ ${analytics.summary.revenue.toFixed(2)} e taxa de conversão de ${analytics.summary.conversionRate}%. O foco principal continua sendo a curadoria de peças em destaque e o engajamento no grupo VIP.`,
+        };
+      }
+    }),
     listInventoryAudit: adminProcedure.input(z.object({
       adminFilter: z.string().optional(),
       startDate: z.string().optional(),
       endDate: z.string().optional(),
+      sortBy: z.enum(["createdAt", "productName", "size", "newStock", "adminName"]).optional(),
+      sortOrder: z.enum(["asc", "desc"]).optional(),
+      page: z.number().int().positive().optional(),
+      pageSize: z.number().int().positive().optional(),
     }).optional()).query(async ({ input }) => {
       return listInventoryAuditLogs(input);
     }),
