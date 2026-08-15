@@ -220,7 +220,10 @@ function ClientsSection() {
 function EmailMarketingSection() {
   const [subject, setSubject] = useState("");
   const [content, setContent] = useState("");
+  const [targetGroup, setTargetGroup] = useState<"all_subscribers" | "all_clients" | "all" | "collection">("all_subscribers");
+  const [collection, setCollection] = useState("");
   const [sending, setSending] = useState(false);
+  const { data: marketingCollections = [] } = trpc.admin.listMarketingCollections.useQuery();
   const marketingMutation = trpc.admin.sendMarketingCampaign.useMutation();
 
   function handleSendCampaign(e: React.FormEvent) {
@@ -229,8 +232,12 @@ function EmailMarketingSection() {
       toast.error("Preencha o assunto e o conteúdo da campanha.");
       return;
     }
+    if (targetGroup === "collection" && !collection) {
+      toast.error("Selecione uma coleção para segmentar a campanha.");
+      return;
+    }
     setSending(true);
-    marketingMutation.mutate({ subject, htmlContent: content, targetGroup: "all_subscribers" }, {
+    marketingMutation.mutate({ subject, htmlContent: content, targetGroup, collection: targetGroup === "collection" ? collection : undefined }, {
       onSuccess: (res) => {
         setSending(false);
         toast.success(`Campanha disparada! ${res.sentCount} e-mails enviados com sucesso (${res.failedCount} falhas).`);
@@ -267,6 +274,40 @@ function EmailMarketingSection() {
               />
             </div>
             <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '0.35rem', color: '#374151' }}>Público da campanha</label>
+              <select
+                value={targetGroup}
+                onChange={(event) => {
+                  const nextTarget = event.target.value as typeof targetGroup;
+                  setTargetGroup(nextTarget);
+                  if (nextTarget !== "collection") setCollection("");
+                }}
+                aria-label="Selecionar público da campanha"
+                style={{ width: '100%', minHeight: '42px', padding: '0 0.75rem', borderRadius: '6px', border: '1px solid #d1d5db', background: '#fff', color: '#111827', fontSize: '0.9rem' }}
+              >
+                <option value="all_subscribers">Todos os inscritos na newsletter</option>
+                <option value="all_clients">Todos os clientes</option>
+                <option value="all">Inscritos e clientes</option>
+                <option value="collection">Clientes que compraram uma coleção</option>
+              </select>
+            </div>
+            {targetGroup === "collection" && (
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '0.35rem', color: '#374151' }}>Coleção</label>
+                <select
+                  value={collection}
+                  onChange={(event) => setCollection(event.target.value)}
+                  aria-label="Selecionar coleção da campanha"
+                  required
+                  style={{ width: '100%', minHeight: '42px', padding: '0 0.75rem', borderRadius: '6px', border: '1px solid #d1d5db', background: '#fff', color: '#111827', fontSize: '0.9rem' }}
+                >
+                  <option value="">Selecione uma coleção</option>
+                  {marketingCollections.map((option) => <option key={option} value={option}>{option}</option>)}
+                </select>
+                <p style={{ margin: '0.4rem 0 0', color: '#6b7280', fontSize: '0.75rem', lineHeight: 1.45 }}>A campanha será enviada apenas para clientes com pedidos que contenham produtos desta coleção.</p>
+              </div>
+            )}
+            <div>
               <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '0.35rem', color: '#374151' }}>Mensagem / Conteúdo (HTML ou Texto)</label>
               <textarea
                 placeholder="Escreva a mensagem personalizada para os subscritores e clientes..."
@@ -276,7 +317,7 @@ function EmailMarketingSection() {
               />
             </div>
             <Button type="submit" disabled={sending} style={{ background: '#b22222', color: '#fff', marginTop: '0.5rem' }}>
-              {sending ? "A disparar e-mails..." : "Disparar para todos os subscritores"}
+              {sending ? "A disparar e-mails..." : targetGroup === "collection" ? "Disparar campanha segmentada" : "Disparar campanha"}
             </Button>
           </form>
         </div>

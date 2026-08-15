@@ -15,6 +15,7 @@ import {
   resendEmailLogs,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
+import { collectCollectionRecipients } from "./marketing-audience";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -363,6 +364,30 @@ export async function listClients() {
   const db = await getDb();
   if (!db) return [];
   return db.select().from(users).orderBy(desc(users.lastSignedIn));
+}
+
+export async function listMarketingCollections() {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db
+    .select({ collection: products.collection })
+    .from(products)
+    .groupBy(products.collection)
+    .orderBy(asc(products.collection));
+  return rows.map((row) => row.collection).filter(Boolean);
+}
+
+export async function listCollectionMarketingRecipients(collection: string) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const collectionProducts = await db
+    .select({ id: products.id, collection: products.collection })
+    .from(products);
+  const orderRows = await db
+    .select({ customerEmail: orders.customerEmail, customerName: orders.customerName, items: orders.items })
+    .from(orders);
+  return collectCollectionRecipients(collection, collectionProducts, orderRows);
 }
 
 export async function listOrders() {

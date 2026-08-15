@@ -27,7 +27,7 @@
 - [x] 13. **Auditoria Técnica, Correções de Áudio e Code-Splitting**
 
 ## Estado atual
-- Plataforma de e-commerce da Eras Label totalmente implementada, auditada, com cobertura de testes (51 testes unitários aprovados), build de produção otimizado e rotas lazy validadas.
+- Plataforma de e-commerce da Eras Label totalmente implementada, auditada, com cobertura robusta de testes (67 testes unitários aprovados), build de produção otimizado e rotas lazy validadas.
 
 ## Integração Resend
 - [x] Mapear os fluxos atuais de e-mail de pedidos, avisos administrativos e newsletter
@@ -68,11 +68,7 @@
 - [x] Adicionar testes Vitest para credenciais válidas, inválidas, sessão e controle de acesso
 - [x] Executar TypeScript, Vitest, build, verificação visual e guardar checkpoint
 
-> Nota: a senha fornecida pelo proprietário deve ser armazenada como segredo de ambiente e nunca como texto literal no frontend ou no repositório.
-
-## Pendências adicionais do painel (a executar depois da segurança)
-- [ ] Implementar histórico de buscas recentes no armazenamento local
-- [ ] Implementar segmentação de campanhas de e-mail por coleção
-- [ ] Preparar mapeamento do domínio próprio eraslabel.com para o lançamento oficial
-
-> As pendências adicionais serão tratadas após a autenticação do painel estar protegida.
+## Pendências adicionais do painel (concluídas)
+- [x] Implementar histórico de buscas recentes no armazenamento local (`client/src/lib/recent-searches.ts` com testes em `server/recent-searches.test.ts`)
+- [x] Implementar segmentação de campanhas de e-mail por coleção (`server/marketing-audience.ts` com testes em `server/marketing-audience.test.ts` e UI integrada na aba E-mail Marketing)
+- [x] Preparar mapeamento do domínio próprio eraslabel.com para o lançamento oficial (`docs/domain-mapping-eraslabel.md`)

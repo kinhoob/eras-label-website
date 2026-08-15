@@ -26,6 +26,8 @@ import {
   markNotificationAsRead,
   listResendEmailLogs,
   listClients,
+  listMarketingCollections,
+  listCollectionMarketingRecipients,
   listOrders,
   updateOrderTracking,
   upsertUser,
@@ -357,6 +359,9 @@ export const appRouter = router({
     listClients: adminProcedure.query(async () => {
       return listClients();
     }),
+    listMarketingCollections: adminProcedure.query(async () => {
+      return listMarketingCollections();
+    }),
     listOrders: adminProcedure.query(async () => {
       return listOrders();
     }),
@@ -385,12 +390,21 @@ export const appRouter = router({
     sendMarketingCampaign: adminProcedure.input(z.object({
       subject: z.string().min(3),
       htmlContent: z.string().min(10),
-      targetGroup: z.enum(["all_subscribers", "all_clients", "all"]).default("all_subscribers"),
+      targetGroup: z.enum(["all_subscribers", "all_clients", "all", "collection"]).default("all_subscribers"),
+      collection: z.string().trim().min(1).max(100).optional(),
     })).mutation(async ({ input }) => {
       const subscribers = await listNewsletterSubscribers();
       const clients = await listClients();
       
       const recipientSet = new Set<string>();
+      if (input.targetGroup === "collection") {
+        if (!input.collection) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Selecione uma coleção para segmentar a campanha." });
+        }
+        for (const recipient of await listCollectionMarketingRecipients(input.collection)) {
+          if (recipient.email) recipientSet.add(recipient.email);
+        }
+      }
       if (input.targetGroup === "all_subscribers" || input.targetGroup === "all") {
         for (const s of subscribers) if (s.email) recipientSet.add(s.email);
       }

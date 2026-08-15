@@ -35,6 +35,7 @@ import { createOrderSummary, type OrderSummary } from "@/lib/order-summary";
 import { saveCheckoutDraft } from "@/lib/checkout-draft";
 import { filterStorefrontProducts, getStorefrontFilterOptions } from "@/lib/storefront-filters";
 import { getSearchSuggestionText, searchStorefrontProducts, sortStorefrontProducts, type StorefrontSearchSort } from "@/lib/storefront-search";
+import { clearRecentSearches, loadRecentSearches, removeRecentSearch, saveRecentSearch } from "@/lib/recent-searches";
 
 type Category = "Todos" | "Camisetas" | "Bonés";
 type PriceRange = "all" | "under150" | "150to200" | "over200";
@@ -256,6 +257,7 @@ export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [recentSearches, setRecentSearches] = useState<string[]>(() => loadRecentSearches());
   const [activeSearchSuggestion, setActiveSearchSuggestion] = useState(-1);
   const [isSearchLoading, setIsSearchLoading] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -387,15 +389,22 @@ export default function Home() {
     window.setTimeout(() => searchInputRef.current?.focus(), 0);
   }
 
+  function recordRecentSearch(query: string) {
+    const next = saveRecentSearch(query);
+    setRecentSearches(next);
+  }
+
   function submitSearch(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const suggestion = searchSuggestions[activeSearchSuggestion];
     if (suggestion) {
+      recordRecentSearch(suggestion.name);
       openProduct(suggestion);
       setIsSearchOpen(false);
       setActiveSearchSuggestion(-1);
       return;
     }
+    if (searchQuery.trim()) recordRecentSearch(searchQuery);
     document.getElementById("shop")?.scrollIntoView({ behavior: "smooth", block: "start" });
     setIsSearchOpen(true);
   }
@@ -416,10 +425,29 @@ export default function Home() {
 
   function chooseSearchSuggestion(product: Product) {
     playClick(soundsOn);
+    recordRecentSearch(product.name);
     setSearchQuery(product.name);
     setActiveSearchSuggestion(-1);
     setIsSearchOpen(false);
     openProduct(product);
+  }
+
+  function chooseRecentSearch(query: string) {
+    playClick(soundsOn);
+    setSearchQuery(query);
+    setActiveSearchSuggestion(-1);
+    window.setTimeout(() => searchInputRef.current?.focus(), 0);
+  }
+
+  function deleteRecentSearch(query: string) {
+    playClick(soundsOn);
+    setRecentSearches(removeRecentSearch(query));
+  }
+
+  function clearSearchHistory() {
+    playClick(soundsOn);
+    clearRecentSearches();
+    setRecentSearches([]);
   }
 
   const relatedProducts = useMemo(() => {
@@ -747,8 +775,9 @@ export default function Home() {
                 autoComplete="off"
               />
               {searchQuery && <button className="header-search-clear" type="button" aria-label="Limpar pesquisa" onClick={() => { setSearchQuery(""); setActiveSearchSuggestion(-1); searchInputRef.current?.focus(); }}>×</button>}
-              {searchQuery.trim() && (
-                <div className="header-search-results" id="eras-search-suggestions" aria-label="Resultados da pesquisa">
+              {(searchQuery.trim() || recentSearches.length > 0) && (
+                <div className="header-search-results" id="eras-search-suggestions" aria-label={searchQuery.trim() ? "Resultados da pesquisa" : "Pesquisas recentes"}>
+                  {searchQuery.trim() ? <>
                   <div className="header-search-results-heading">
                     <span>RESULTADOS DA PESQUISA</span>
                     <span aria-live="polite">{isSearchLoading ? "A procurar…" : `${filteredProducts.length} ${filteredProducts.length === 1 ? "peça" : "peças"}`}</span>
@@ -829,6 +858,26 @@ export default function Home() {
                       <strong>Não encontrámos essa era.</strong>
                       <span>Tente outro nome, coleção, cor ou tamanho.</span>
                       {activeSearchFilters.length > 0 && <button type="button" onClick={() => { playClick(soundsOn); clearAllSearchCriteria(); }}>Limpar filtros da pesquisa</button>}
+                    </div>
+                  )}
+                  </> : (
+                    <div className="header-search-recent" aria-label="Pesquisas recentes">
+                      <div className="header-search-results-heading">
+                        <span>PESQUISAS RECENTES</span>
+                        <button type="button" onClick={clearSearchHistory}>Limpar histórico</button>
+                      </div>
+                      <div className="header-search-recent-list" role="listbox" aria-label="Pesquisas recentes">
+                        {recentSearches.map((recentSearch) => (
+                          <div className="header-search-recent-item" key={recentSearch} role="option">
+                            <button type="button" onClick={() => chooseRecentSearch(recentSearch)}>
+                              <Clock3 size={14} aria-hidden="true" />
+                              <span>{recentSearch}</span>
+                              <ArrowRight size={14} aria-hidden="true" />
+                            </button>
+                            <button type="button" className="header-search-recent-remove" aria-label={`Remover pesquisa ${recentSearch}`} onClick={() => deleteRecentSearch(recentSearch)}><X size={13} aria-hidden="true" /></button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
