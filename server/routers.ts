@@ -300,8 +300,13 @@ export const appRouter = router({
       const saved = await saveHomeContent(input);
       return { success: true, content: saved };
     }),
-    listEmailLogs: adminProcedure.query(async () => {
-      return listResendEmailLogs();
+    listEmailLogs: adminProcedure.input(z.object({
+      search: z.string().optional(),
+      status: z.string().optional(),
+      templateType: z.string().optional(),
+      sort: z.enum(["newest", "oldest"]).optional(),
+    }).optional()).query(async ({ input }) => {
+      return listResendEmailLogs(input);
     }),
   }),
 });

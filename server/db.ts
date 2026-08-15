@@ -1,4 +1,4 @@
-import { and, desc, eq, or, sql } from "drizzle-orm";
+import { eq, desc, asc, like, or, and, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { nanoid } from "nanoid";
 import {
@@ -137,10 +137,35 @@ export async function logResendEmail(data: { recipient: string; subject: string;
   }
 }
 
-export async function listResendEmailLogs() {
+export async function listResendEmailLogs(options?: { search?: string; status?: string; templateType?: string; sort?: "newest" | "oldest" }) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(resendEmailLogs).orderBy(desc(resendEmailLogs.createdAt)).limit(100);
+  
+  const conditions = [];
+  if (options?.status && options.status !== "all") {
+    conditions.push(eq(resendEmailLogs.status, options.status));
+  }
+  if (options?.templateType && options.templateType !== "all") {
+    conditions.push(eq(resendEmailLogs.templateType, options.templateType));
+  }
+  if (options?.search && options.search.trim() !== "") {
+    const term = `%${options.search.trim().toLowerCase()}%`;
+    conditions.push(or(
+      like(resendEmailLogs.recipient, term),
+      like(resendEmailLogs.subject, term),
+      like(resendEmailLogs.providerResponse, term)
+    ));
+  }
+
+  const query = db.select().from(resendEmailLogs);
+  if (conditions.length > 0) {
+    // @ts-ignore
+    query.where(and(...conditions));
+  }
+
+  const sortOrder = options?.sort === "oldest" ? asc(resendEmailLogs.createdAt) : desc(resendEmailLogs.createdAt);
+  // @ts-ignore
+  return query.orderBy(sortOrder).limit(100);
 }
 
 export async function validateCoupon(code: string, subtotal: number) {

@@ -46,3 +46,9 @@
 - [ ] Construir a aba "E-mails (Resend)" no painel administrativo com status, destinatário, assunto e data
 - [ ] Aprimorar o formulário de newsletter na Home com estado de carregamento, sucesso claro e exibição do cupom gerado
 - [ ] Executar migração SQL, testes unitários, build de produção e guardar checkpoint final
+
+## Filtros e Ordenação Histórico Resend
+- [x] Atualizar procedimento backend para aceitar filtros de busca, template e ordenação
+- [x] Implementar controlos visuais de busca por texto, filtro de status/tipo e ordenação na aba admin
+- [x] Validar estados vazios, teclado e responsividade
+- [x] Executar TypeScript, Vitest, build e guardar checkpoint

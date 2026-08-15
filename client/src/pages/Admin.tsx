@@ -34,7 +34,17 @@ const orders = [
 ];
 
 function EmailLogsSection() {
-  const { data: logs = [], isLoading, refetch } = trpc.admin.listEmailLogs.useQuery();
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("all");
+  const [templateType, setTemplateType] = useState("all");
+  const [sort, setSort] = useState<"newest" | "oldest">("newest");
+
+  const { data: logs = [], isLoading, refetch } = trpc.admin.listEmailLogs.useQuery({
+    search: search.trim() !== "" ? search : undefined,
+    status,
+    templateType,
+    sort,
+  });
 
   return (
     <section className="admin-content">
@@ -46,14 +56,70 @@ function EmailLogsSection() {
         <Button onClick={() => void refetch()} variant="outline">Atualizar lista</Button>
       </div>
 
+      <div className="admin-filter-bar" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1.5rem', background: '#fff', padding: '1.25rem', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+        <div>
+          <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '0.35rem', color: '#374151' }}>Pesquisar</label>
+          <input
+            type="text"
+            placeholder="Destinatário, assunto..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ width: '100%', padding: '0.5rem 0.75rem', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.875rem' }}
+          />
+        </div>
+        <div>
+          <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '0.35rem', color: '#374151' }}>Status</label>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            style={{ width: '100%', padding: '0.5rem 0.75rem', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.875rem', background: '#fff' }}
+          >
+            <option value="all">Todos os status</option>
+            <option value="sent">Enviado (sent)</option>
+            <option value="failed">Falha (failed)</option>
+            <option value="skipped_not_configured">Não configurado (skipped)</option>
+          </select>
+        </div>
+        <div>
+          <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '0.35rem', color: '#374151' }}>Tipo de Template</label>
+          <select
+            value={templateType}
+            onChange={(e) => setTemplateType(e.target.value)}
+            style={{ width: '100%', padding: '0.5rem 0.75rem', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.875rem', background: '#fff' }}
+          >
+            <option value="all">Todos os tipos</option>
+            <option value="order_confirmation">Confirmação de Pedido</option>
+            <option value="payment_confirmation">Confirmação de Pagamento</option>
+            <option value="admin_order">Aviso ao Administrador</option>
+            <option value="newsletter_welcome">Newsletter de Boas-vindas</option>
+          </select>
+        </div>
+        <div>
+          <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '0.35rem', color: '#374151' }}>Ordenar por</label>
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value as "newest" | "oldest")}
+            style={{ width: '100%', padding: '0.5rem 0.75rem', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.875rem', background: '#fff' }}
+          >
+            <option value="newest">Mais recentes primeiro</option>
+            <option value="oldest">Mais antigos primeiro</option>
+          </select>
+        </div>
+      </div>
+
       <div className="admin-panel table-panel">
         {isLoading ? (
           <div style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>A carregar histórico de e-mails...</div>
         ) : logs.length === 0 ? (
           <div style={{ padding: '2.5rem', textAlign: 'center', color: '#666' }}>
             <Mail size={32} style={{ margin: '0 auto 0.5rem', opacity: 0.5 }} />
-            <p>Nenhum e-mail registado pelo Resend ainda.</p>
-            <small style={{ color: '#888' }}>Os envios de pedidos, pagamentos e newsletters aparecerão aqui automaticamente.</small>
+            <p>Nenhum e-mail corresponde aos filtros selecionados.</p>
+            <button
+              onClick={() => { setSearch(""); setStatus("all"); setTemplateType("all"); setSort("newest"); }}
+              style={{ marginTop: '0.75rem', padding: '0.35rem 0.75rem', fontSize: '0.8rem', background: '#111', color: '#fff', borderRadius: '4px', border: 'none', cursor: 'pointer' }}
+            >
+              Limpar filtros
+            </button>
           </div>
         ) : (
           <table>
