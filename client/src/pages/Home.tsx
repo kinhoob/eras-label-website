@@ -225,16 +225,6 @@ function playClick(enabled: boolean) {
 }
 
 export default function Home() {
-  useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setSelectedProduct(null);
-      }
-    }
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
-
   const [category, setCategory] = useState<Category>("Todos");
   const [cart, setCart] = useState<CartLine[]>(() => loadCart<CartLine>());
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -289,6 +279,17 @@ export default function Home() {
     () => (category === "Todos" ? products : products.filter((product) => product.category === category)),
     [category, products],
   );
+  const relatedProducts = useMemo(() => {
+    if (!selectedProduct) return [];
+    const candidates = products
+      .filter((product) => product.id !== selectedProduct.id)
+      .sort((left, right) => {
+        const leftScore = left.collection === selectedProduct.collection ? 2 : left.category === selectedProduct.category ? 1 : 0;
+        const rightScore = right.collection === selectedProduct.collection ? 2 : right.category === selectedProduct.category ? 1 : 0;
+        return rightScore - leftScore;
+      });
+    return candidates.slice(0, 3);
+  }, [products, selectedProduct]);
   const cartCount = getCartItemCount(cart);
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const discount = couponApplied ? subtotal * 0.1 : 0;
@@ -1028,6 +1029,31 @@ export default function Home() {
                 {selectedProduct.stock === 0 ? "ESGOTADO" : addedProductId === selectedProduct.id ? <><CheckCircle2 size={16} /> ADICIONADO À SACOLA</> : <>ADICIONAR À SACOLA <ArrowRight size={16} /></>}
               </button>
               <p className="stock-note"><Sparkles size={13} /> Estoque gerido no painel administrativo.</p>
+              {relatedProducts.length > 0 && (
+                <section className="quick-view-related" aria-label="Produtos relacionados">
+                  <div className="quick-view-related-heading">
+                    <span className="eyebrow">COMPLETE A ERA</span>
+                    <span>Peças relacionadas</span>
+                  </div>
+                  <div className="quick-view-related-grid">
+                    {relatedProducts.map((product) => (
+                      <button
+                        type="button"
+                        className="quick-view-related-card"
+                        key={product.id}
+                        onClick={() => {
+                          setSelectedProduct(product);
+                          setSelectedSize(product.sizes[0] ?? "");
+                        }}
+                        aria-label={`Ver ${product.name}`}
+                      >
+                        <span className="quick-view-related-image"><img src={product.image} alt="" /></span>
+                        <span className="quick-view-related-copy"><strong>{product.name}</strong><span>{formatPrice(product.price)}</span></span>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              )}
             </div>
           </div>
         </div>

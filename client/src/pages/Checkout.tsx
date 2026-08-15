@@ -6,6 +6,7 @@ import { trpc } from "@/lib/trpc";
 import { loadCart, saveCart } from "@/lib/cart-storage";
 import { clearCheckoutDraft, loadCheckoutDraft, saveCheckoutDraft, type CheckoutPaymentMethod } from "@/lib/checkout-draft";
 import { updateCartLineQuantity, removeCartLine } from "@/lib/cart-operations";
+import { hasCheckoutFieldErrors, validateCheckoutFields, type CheckoutFieldErrors, type CheckoutFields } from "@/lib/checkout-validation";
 
  type CheckoutLine = {
   id: number;
@@ -19,6 +20,12 @@ import { updateCartLineQuantity, removeCartLine } from "@/lib/cart-operations";
 
 type CheckoutSuccess = {
   orderNumber: string;
+  items: CheckoutLine[];
+  subtotal: number;
+  discount: number;
+  shippingCost: number;
+  paymentMethod: CheckoutPaymentMethod;
+  estimatedDelivery: string;
   total: number;
 };
 
@@ -40,6 +47,7 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<CheckoutFieldErrors>({});
   const [success, setSuccess] = useState<CheckoutSuccess | null>(null);
   const commercialConfigQuery = trpc.catalog.getConfig.useQuery();
   const shippingQuery = trpc.catalog.calculateShipping.useQuery(
@@ -100,28 +108,45 @@ export default function CheckoutPage() {
   function submitCheckout(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (isSubmitting || cart.length === 0) return;
-    if (cep.replace(/\D/g, "").length !== 8) {
-      toast.error("Informe um CEP válido para calcular o frete.");
+
+    const form = new FormData(event.currentTarget);
+    const fields: CheckoutFields = {
+      customerName: String(form.get("customerName") ?? ""),
+      customerEmail: String(form.get("customerEmail") ?? ""),
+      cpf: String(form.get("cpf") ?? ""),
+      phone: String(form.get("phone") ?? ""),
+      cep: String(form.get("cep") ?? ""),
+      number: String(form.get("number") ?? ""),
+      street: String(form.get("street") ?? ""),
+      neighborhood: String(form.get("neighborhood") ?? ""),
+      city: String(form.get("city") ?? ""),
+      state: String(form.get("state") ?? ""),
+    };
+    const validationErrors = validateCheckoutFields(fields);
+    setFieldErrors(validationErrors);
+    if (hasCheckoutFieldErrors(validationErrors)) {
+      toast.error("Revise os campos destacados antes de finalizar a compra.");
+      const firstInvalidField = Object.keys(validationErrors)[0];
+      window.setTimeout(() => document.querySelector<HTMLInputElement>(`[name="${firstInvalidField}"]`)?.focus(), 0);
       return;
     }
 
-    const form = new FormData(event.currentTarget);
     setIsSubmitting(true);
     setStatus("idle");
     setErrorMessage("");
     checkoutMutation.mutate({
-      customerName: String(form.get("customerName") ?? ""),
-      customerEmail: String(form.get("customerEmail") ?? ""),
-      customerCpf: String(form.get("cpf") ?? ""),
-      phone: String(form.get("phone") ?? ""),
+      customerName: fields.customerName.trim(),
+      customerEmail: fields.customerEmail.trim(),
+      customerCpf: fields.cpf.trim(),
+      phone: fields.phone.trim(),
       address: {
-        cep: String(form.get("cep") ?? ""),
-        street: String(form.get("street") ?? ""),
-        number: String(form.get("number") ?? ""),
-        complement: String(form.get("complement") ?? ""),
-        neighborhood: String(form.get("neighborhood") ?? ""),
-        city: String(form.get("city") ?? ""),
-        state: String(form.get("state") ?? ""),
+        cep: fields.cep,
+        street: fields.street.trim(),
+        number: fields.number.trim(),
+        complement: String(form.get("complement") ?? "").trim(),
+        neighborhood: fields.neighborhood.trim(),
+        city: fields.city.trim(),
+        state: fields.state.trim().toUpperCase(),
       },
       items: cart.map((item) => ({ productId: item.id, size: item.size, quantity: item.quantity, price: item.price })),
       subtotal,
@@ -133,7 +158,17 @@ export default function CheckoutPage() {
       onSuccess: (result) => {
         setIsSubmitting(false);
         setStatus("success");
-        setSuccess({ orderNumber: result.orderNumber, total });
+        setFieldErrors({});
+        setSuccess({
+          orderNumber: result.orderNumber,
+          items: cart,
+          subtotal,
+          discount: discount + pixSavings,
+          shippingCost,
+          paymentMethod: selectedPaymentMethod,
+          estimatedDelivery: shippingQuery.data?.deadline ?? "5 a 7 dias úteis",
+          total,
+        });
         setCart([]);
         saveCart([]);
         clearCheckoutDraft();
@@ -151,15 +186,35 @@ export default function CheckoutPage() {
   if (status === "success" && success) {
     return (
       <main className="checkout-page">
-        <section className="checkout-success-page" aria-live="polite">
+        <section className="checkout-success-page" aria-live="polite" aria-labelledby="checkout-success-title">
           <span className="checkout-success-icon"><Check size={30} /></span>
           <span className="section-kicker">UMA NOVA ERA COMEÇA AQUI</span>
-          <h1>Pagamento confirmado.</h1>
+          <h1 id="checkout-success-title">Pagamento confirmado.</h1>
           <p>O pedido <strong>{success.orderNumber}</strong> foi recebido pela Eras Label. Você poderá acompanhar cada etapa na sua conta.</p>
           <div className="checkout-success-total"><span>Total pago</span><strong>{formatPrice(success.total)}</strong></div>
+          <section className="checkout-success-order" aria-label="Resumo do pedido confirmado">
+            <div className="checkout-success-order-heading"><span>RESUMO DO PEDIDO</span><strong>{success.items.reduce((sum, item) => sum + item.quantity, 0)} itens</strong></div>
+            <div className="checkout-success-order-items">
+              {success.items.map((item) => (
+                <div className="checkout-success-order-item" key={`${item.id}-${item.size}`}>
+                  <img src={item.image} alt={item.alt || item.name} />
+                  <div><strong>{item.name}</strong><span>Tamanho {item.size} · {item.quantity}x</span></div>
+                  <b>{formatPrice(item.price * item.quantity)}</b>
+                </div>
+              ))}
+            </div>
+            <div className="checkout-success-order-totals">
+              <div><span>Subtotal</span><strong>{formatPrice(success.subtotal)}</strong></div>
+              {success.discount > 0 && <div><span>Descontos</span><strong>- {formatPrice(success.discount)}</strong></div>}
+              <div><span>Frete</span><strong>{success.shippingCost === 0 ? "Grátis" : formatPrice(success.shippingCost)}</strong></div>
+              <div><span>Pagamento</span><strong>{success.paymentMethod === "pix" ? "Pix" : "Cartão"}</strong></div>
+              <div className="final"><span>Total</span><strong>{formatPrice(success.total)}</strong></div>
+            </div>
+            <p className="checkout-success-delivery"><Clock3 size={15} /> Entrega estimada: {success.estimatedDelivery}</p>
+          </section>
           <div className="checkout-success-actions">
             <Link href="/account" className="primary-button">ACOMPANHAR PEDIDO <ArrowRight size={16} /></Link>
-            <Link href="/" className="checkout-secondary-link">CONTINUAR COMPRANDO</Link>
+            <Link href="/" className="primary-button checkout-continue-button">CONTINUAR COMPRANDO <ArrowRight size={16} /></Link>
           </div>
         </section>
       </main>
@@ -198,27 +253,27 @@ export default function CheckoutPage() {
 
           {status === "error" && <div className="checkout-error-banner" role="alert">{errorMessage}</div>}
 
-          <form className="checkout-page-form" onSubmit={submitCheckout}>
+          <form className="checkout-page-form" onSubmit={submitCheckout} noValidate>
             <div className="checkout-page-form-section">
               <span className="checkout-form-step">01 / IDENTIFICAÇÃO</span>
               <div className="checkout-page-fields">
-                <label>Nome completo<input name="customerName" required placeholder="Seu nome" /></label>
-                <label>E-mail<input name="customerEmail" required type="email" placeholder="voce@email.com" /></label>
-                <label>CPF<input name="cpf" required placeholder="000.000.000-00" /></label>
-                <label>Telefone<input name="phone" required placeholder="(00) 00000-0000" /></label>
+                <label className={fieldErrors.customerName ? "has-error" : undefined}>Nome completo<input name="customerName" required placeholder="Seu nome" aria-invalid={Boolean(fieldErrors.customerName)} aria-describedby={fieldErrors.customerName ? "customerName-error" : undefined} />{fieldErrors.customerName && <span id="customerName-error" className="field-error" role="alert">{fieldErrors.customerName}</span>}</label>
+                <label className={fieldErrors.customerEmail ? "has-error" : undefined}>E-mail<input name="customerEmail" required type="email" placeholder="voce@email.com" aria-invalid={Boolean(fieldErrors.customerEmail)} aria-describedby={fieldErrors.customerEmail ? "customerEmail-error" : undefined} />{fieldErrors.customerEmail && <span id="customerEmail-error" className="field-error" role="alert">{fieldErrors.customerEmail}</span>}</label>
+                <label className={fieldErrors.cpf ? "has-error" : undefined}>CPF<input name="cpf" required placeholder="000.000.000-00" aria-invalid={Boolean(fieldErrors.cpf)} aria-describedby={fieldErrors.cpf ? "cpf-error" : undefined} />{fieldErrors.cpf && <span id="cpf-error" className="field-error" role="alert">{fieldErrors.cpf}</span>}</label>
+                <label className={fieldErrors.phone ? "has-error" : undefined}>Telefone<input name="phone" required placeholder="(00) 00000-0000" aria-invalid={Boolean(fieldErrors.phone)} aria-describedby={fieldErrors.phone ? "phone-error" : undefined} />{fieldErrors.phone && <span id="phone-error" className="field-error" role="alert">{fieldErrors.phone}</span>}</label>
               </div>
             </div>
 
             <div className="checkout-page-form-section">
               <span className="checkout-form-step">02 / ENTREGA</span>
               <div className="checkout-page-fields">
-                <label>CEP<input name="cep" required value={cep} onChange={(event) => setCep(event.target.value.replace(/\D/g, "").slice(0, 8))} placeholder="00000-000" /></label>
-                <label>Número<input name="number" required placeholder="123" /></label>
-                <label className="wide">Endereço completo<input name="street" required placeholder="Rua, avenida ou travessa" /></label>
+                <label className={fieldErrors.cep ? "has-error" : undefined}>CEP<input name="cep" required value={cep} onChange={(event) => setCep(event.target.value.replace(/\D/g, "").slice(0, 8))} placeholder="00000-000" aria-invalid={Boolean(fieldErrors.cep)} aria-describedby={fieldErrors.cep ? "cep-error" : undefined} />{fieldErrors.cep && <span id="cep-error" className="field-error" role="alert">{fieldErrors.cep}</span>}</label>
+                <label className={fieldErrors.number ? "has-error" : undefined}>Número<input name="number" required placeholder="123" aria-invalid={Boolean(fieldErrors.number)} aria-describedby={fieldErrors.number ? "number-error" : undefined} />{fieldErrors.number && <span id="number-error" className="field-error" role="alert">{fieldErrors.number}</span>}</label>
+                <label className={`wide ${fieldErrors.street ? "has-error" : ""}`}>Endereço completo<input name="street" required placeholder="Rua, avenida ou travessa" aria-invalid={Boolean(fieldErrors.street)} aria-describedby={fieldErrors.street ? "street-error" : undefined} />{fieldErrors.street && <span id="street-error" className="field-error" role="alert">{fieldErrors.street}</span>}</label>
                 <label>Complemento<input name="complement" placeholder="Apartamento, bloco" /></label>
-                <label>Bairro<input name="neighborhood" required placeholder="Seu bairro" /></label>
-                <label>Cidade<input name="city" required placeholder="Sua cidade" /></label>
-                <label>Estado<input name="state" required placeholder="UF" /></label>
+                <label className={fieldErrors.neighborhood ? "has-error" : undefined}>Bairro<input name="neighborhood" required placeholder="Seu bairro" aria-invalid={Boolean(fieldErrors.neighborhood)} aria-describedby={fieldErrors.neighborhood ? "neighborhood-error" : undefined} />{fieldErrors.neighborhood && <span id="neighborhood-error" className="field-error" role="alert">{fieldErrors.neighborhood}</span>}</label>
+                <label className={fieldErrors.city ? "has-error" : undefined}>Cidade<input name="city" required placeholder="Sua cidade" aria-invalid={Boolean(fieldErrors.city)} aria-describedby={fieldErrors.city ? "city-error" : undefined} />{fieldErrors.city && <span id="city-error" className="field-error" role="alert">{fieldErrors.city}</span>}</label>
+                <label className={fieldErrors.state ? "has-error" : undefined}>Estado<input name="state" required placeholder="UF" aria-invalid={Boolean(fieldErrors.state)} aria-describedby={fieldErrors.state ? "state-error" : undefined} />{fieldErrors.state && <span id="state-error" className="field-error" role="alert">{fieldErrors.state}</span>}</label>
               </div>
               <p className="checkout-page-helper"><Clock3 size={15} /> {shippingQuery.isLoading ? "Calculando frete..." : shippingQuery.data?.deadline ? `Entrega estimada: ${shippingQuery.data.deadline}` : "O valor do frete será calculado após o CEP."}</p>
             </div>

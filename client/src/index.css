@@ -1445,3 +1445,227 @@ td { border-top: 1px solid #e1dacf; padding: 15px 17px; color: #6f675e; font-siz
 @media (prefers-reduced-motion: reduce) {
   .quick-view-label, .checkout-payment-options button { transition: none; }
 }
+
+
+/* Checkout validation and confirmation details */
+.checkout-page-fields label.has-error input {
+  border-color: rgba(177, 54, 54, 0.78);
+  box-shadow: 0 0 0 3px rgba(177, 54, 54, 0.08);
+}
+
+.checkout-page-fields label.has-error {
+  color: #9b3434;
+}
+
+.field-error {
+  display: block;
+  margin-top: 0.35rem;
+  color: #9b3434;
+  font-size: 0.68rem;
+  line-height: 1.35;
+  letter-spacing: 0.04em;
+}
+
+.checkout-success-order {
+  width: min(100%, 34rem);
+  margin: 1.5rem auto 0;
+  padding: 1.1rem;
+  border: 1px solid rgba(22, 22, 22, 0.12);
+  background: rgba(255, 255, 255, 0.72);
+  text-align: left;
+}
+
+.checkout-success-order-heading,
+.checkout-success-order-item,
+.checkout-success-order-totals > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.checkout-success-order-heading {
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid rgba(22, 22, 22, 0.1);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+}
+
+.checkout-success-order-items {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.9rem 0;
+  border-bottom: 1px solid rgba(22, 22, 22, 0.1);
+}
+
+.checkout-success-order-item {
+  font-size: 0.78rem;
+}
+
+.checkout-success-order-item img {
+  width: 2.8rem;
+  height: 3.4rem;
+  flex: 0 0 auto;
+  object-fit: cover;
+  background: #ece9e4;
+}
+
+.checkout-success-order-item > div {
+  display: grid;
+  flex: 1;
+  gap: 0.18rem;
+}
+
+.checkout-success-order-item span,
+.checkout-success-order-totals span {
+  color: rgba(22, 22, 22, 0.58);
+  font-size: 0.68rem;
+}
+
+.checkout-success-order-totals {
+  display: grid;
+  gap: 0.55rem;
+  padding-top: 0.9rem;
+  font-size: 0.78rem;
+}
+
+.checkout-success-order-totals .final {
+  margin-top: 0.2rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid rgba(22, 22, 22, 0.14);
+  font-size: 0.92rem;
+}
+
+.checkout-success-delivery {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.9rem 0 0;
+  color: rgba(22, 22, 22, 0.62);
+  font-size: 0.72rem;
+}
+
+.checkout-continue-button {
+  background: transparent;
+  color: #171717;
+  border: 1px solid rgba(22, 22, 22, 0.22);
+}
+
+/* Related products inside quick view */
+.quick-view-related {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(22, 22, 22, 0.12);
+}
+
+.quick-view-related-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.7rem;
+}
+
+.quick-view-related-heading > span:last-child {
+  color: rgba(22, 22, 22, 0.58);
+  font-size: 0.7rem;
+}
+
+.quick-view-related-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.quick-view-related-card {
+  display: grid;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 180ms ease, opacity 180ms ease;
+}
+
+.quick-view-related-card:hover {
+  transform: translateY(-2px);
+}
+
+.quick-view-related-image {
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 4 / 5;
+  background: #ece9e4;
+}
+
+.quick-view-related-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 320ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.quick-view-related-card:hover .quick-view-related-image img {
+  transform: scale(1.04);
+}
+
+.quick-view-related-copy {
+  display: grid;
+  gap: 0.2rem;
+  padding-top: 0.45rem;
+}
+
+.quick-view-related-copy strong,
+.quick-view-related-copy span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.quick-view-related-copy strong {
+  font-size: 0.67rem;
+}
+
+.quick-view-related-copy span {
+  color: rgba(22, 22, 22, 0.58);
+  font-size: 0.66rem;
+}
+
+@media (max-width: 640px) {
+  .checkout-success-order {
+    padding: 0.85rem;
+  }
+
+  .checkout-success-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .checkout-success-actions .primary-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .quick-view-related-grid {
+    gap: 0.4rem;
+  }
+
+  .quick-view-related-heading {
+    display: grid;
+    gap: 0.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quick-view-related-card,
+  .quick-view-related-image img {
+    transition: none;
+  }
+
+  .quick-view-related-card:hover,
+  .quick-view-related-card:hover .quick-view-related-image img {
+    transform: none;
+  }
+}
