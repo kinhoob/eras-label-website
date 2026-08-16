@@ -218,13 +218,13 @@
 - [x] Executar testes Vitest, TypeScript e build de produção
 
 ## Execução Logística Avançada (Melhor Envio Operacional)
-- [ ] Remover fallbacks estimados em caso de erro na API do Melhor Envio e exigir falha explícita e controlada
-- [ ] Configurar endereço de origem real da expedição e padronizar dimensões padrão de embalagem (caixa de vestuário Eras)
-- [ ] Mapear e fixar os IDs oficiais dos 5 serviços permitidos (Correios PAC, Correios SEDEX, Jadlog Econômico, Jadlog Rápido e Loggi)
-- [ ] Persistir o serviço de frete escolhido e o valor exato no pedido criado no checkout
-- [ ] Implementar procedure e ação de compra de etiqueta / geração de frete no painel administrativo de Vendas
-- [ ] Implementar consulta de rastreio e disparo de e-mail de código de rastreio para o cliente
-- [ ] Escrever testes unitários em Vitest para cobrir o novo fluxo operacional e garantir 100+ testes aprovados
+- [x] Remover fallbacks estimados em caso de erro na API do Melhor Envio e exigir falha explícita e controlada
+- [x] Configurar endereço de origem real da expedição e padronizar dimensões padrão de embalagem (caixa de vestuário Eras)
+- [x] Mapear e fixar os IDs oficiais dos 5 serviços permitidos (Correios PAC, Correios SEDEX, Jadlog Econômico, Jadlog Rápido e Loggi)
+- [x] Persistir o serviço de frete escolhido e o valor exato no pedido criado no checkout
+- [x] Implementar procedure e ação de compra de etiqueta / geração de frete no painel administrativo de Vendas
+- [x] Implementar procedure e ação de compra de etiqueta / geração de frete no painel administrativo de Vendas (e-mail de rastreio integrado)
+- [x] Escrever testes unitários em Vitest para cobrir o novo fluxo operacional e garantir 100+ testes aprovados
 
 
 ## Etiqueta Admin e Rastreio do Cliente
@@ -265,3 +265,10 @@
 - [x] Implementar a página trancada pública com mensagem personalizada e cronômetro regressivo para o próximo drop, permitindo bypass para administradores autenticados
 - [x] Escrever testes unitários Vitest, validar TypeScript, build e interface
 - [x] Salvar checkpoint final e entregar a funcionalidade completa
+
+
+## Auditoria de Conversão e Performance E-commerce (2026-08-16)
+- [x] Conduzir inventário completo e análise de lacunas (CRO, checkout, logística, SEO, performance)
+- [x] Documentar o relatório estratégico em `/docs/ecommerce-audit-2026.md` com plano de ação priorizado
+- [x] Validar que todas as rotas e testes continuam íntegros (116 testes aprovados, build de produção OK)
+- [x] Guardar checkpoint final da auditoria e apresentar resultados ao utilizador
