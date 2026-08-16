@@ -358,6 +358,16 @@ export const appRouter = router({
   }),
   orders: router({
     myOrders: protectedProcedure.query(async ({ ctx }) => listOrdersByUser(ctx.user.id)),
+    trackOrderShipping: publicProcedure.input(z.object({
+      trackingCode: z.string().trim().min(3),
+    })).query(async ({ input }) => {
+      try {
+        const tracking = await getMelhorEnvioTracking(input.trackingCode);
+        return { success: true, tracking };
+      } catch (err: any) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: err.message || "Erro ao consultar rastreio." });
+      }
+    }),
   }),
   admin: router({
     summary: adminProcedure.query(() => getAdminSummary()),
@@ -708,16 +718,7 @@ Seja objetivo, elegante e direto ao ponto.`;
       }
     }),
 
-    trackOrderShipping: publicProcedure.input(z.object({
-      trackingCode: z.string().trim().min(3),
-    })).query(async ({ input }) => {
-      try {
-        const tracking = await getMelhorEnvioTracking(input.trackingCode);
-        return { success: true, tracking };
-      } catch (err: any) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: err.message || "Erro ao consultar rastreio." });
-      }
-    }),
+
 
     sendMarketingCampaign: adminProcedure.input(z.object({
       subject: z.string().min(3),
