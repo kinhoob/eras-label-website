@@ -41,6 +41,7 @@ import AdminCategoriesSection from "@/pages/AdminCategoriesSection";
 import AdminSalesSection from "@/pages/AdminSalesSection";
 import { exportToCSV } from "@/lib/csv-export";
 import type { StorefrontConfig } from "../../../shared/storefront";
+import { optimizeProductImage } from "@/lib/image-optimizer";
 
 const orders = [
   { id: "#ER-0108", customer: "Marina Oliveira", date: "Hoje, 14:32", total: "R$ 312,80", payment: "Pago", status: "Em preparação" },
@@ -556,6 +557,7 @@ export default function Admin() {
   const [editorMode, setEditorMode] = useState<"product" | "inventory">("product");
   const [productImages, setProductImages] = useState<string[]>([]);
   const [productUploading, setProductUploading] = useState(false);
+  const [productUploadProgress, setProductUploadProgress] = useState({ completed: 0, total: 0 });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const productFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -621,43 +623,50 @@ export default function Admin() {
     reader.readAsDataURL(file);
   }
 
-  function handleMultipleProductUpload(event: React.ChangeEvent<HTMLInputElement>) {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
+  async function handleMultipleProductUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? []);
+    event.target.value = "";
+    if (files.length === 0) return;
 
     setProductUploading(true);
-    let uploadedCount = 0;
-    const newImages = [...productImages];
+    setProductUploadProgress({ completed: 0, total: files.length });
+    const uploadedUrls: string[] = [];
+    let failedCount = 0;
+    let originalBytes = 0;
+    let optimizedBytes = 0;
 
-    Array.from(files).forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const base64 = reader.result as string;
-        uploadMutation.mutate({
-          fileName: file.name,
-          fileBase64: base64,
-          contentType: file.type || "image/png",
-        }, {
-          onSuccess: (res) => {
-            newImages.push(res.url);
-            uploadedCount++;
-            if (uploadedCount === files.length) {
-              setProductImages(newImages);
-              setProductUploading(false);
-              toast.success(`${files.length} imagem(ns) carregada(s) com sucesso para o produto!`);
-            }
-          },
-          onError: () => {
-            uploadedCount++;
-            if (uploadedCount === files.length) {
-              setProductUploading(false);
-              toast.error("Algumas imagens não puderam ser carregadas.");
-            }
-          }
+    // O processamento é sequencial para não bloquear o navegador com várias
+    // operações Canvas simultâneas nem aumentar a memória usada no painel.
+    for (const file of files) {
+      try {
+        const optimized = await optimizeProductImage(file);
+        const response = await uploadMutation.mutateAsync({
+          fileName: optimized.fileName,
+          fileBase64: optimized.dataUrl,
+          contentType: optimized.contentType,
         });
-      };
-      reader.readAsDataURL(file);
-    });
+        uploadedUrls.push(response.url);
+        originalBytes += optimized.originalBytes;
+        optimizedBytes += optimized.optimizedBytes;
+      } catch (error) {
+        failedCount += 1;
+        console.error("Falha ao otimizar ou carregar imagem do produto", error);
+      } finally {
+        setProductUploadProgress((current) => ({ ...current, completed: current.completed + 1 }));
+      }
+    }
+
+    setProductImages((current) => [...current, ...uploadedUrls]);
+    setProductUploading(false);
+
+    if (uploadedUrls.length > 0) {
+      const savedPercent = originalBytes > 0 ? Math.max(0, Math.round((1 - optimizedBytes / originalBytes) * 100)) : 0;
+      const summary = `${uploadedUrls.length} imagem(ns) otimizada(s) e carregada(s)${savedPercent > 0 ? ` — ${savedPercent}% menos peso` : ""}.`;
+      if (failedCount > 0) toast.warning(`${summary} ${failedCount} ficheiro(s) não puderam ser processados.`);
+      else toast.success(summary);
+    } else {
+      toast.error("Não foi possível processar nenhuma imagem. Use JPG, PNG ou WebP válidos.");
+    }
   }
 
   const adminProducts = useMemo<AdminProductOption[]>(() => (catalogProducts ?? []).map((product) => {
@@ -899,7 +908,7 @@ export default function Admin() {
                   <label>Galeria de Fotos do Produto ({productImages.length})</label>
                   <input type="file" ref={productFileInputRef} style={{ display: 'none' }} accept="image/*" multiple onChange={handleMultipleProductUpload} />
                   <Button type="button" onClick={() => productFileInputRef.current?.click()} disabled={productUploading}>
-                    <Upload size={14} /> {productUploading ? "A carregar fotos..." : "Adicionar fotos"}
+                    <Upload size={14} /> {productUploading ? `A otimizar ${productUploadProgress.completed}/${productUploadProgress.total}...` : "Adicionar fotos"}
                   </Button>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '0.75rem', marginTop: '0.5rem' }}>

@@ -280,3 +280,12 @@
 - [x] Garantir acessibilidade total de todas as opções do menu em ecrãs de menor altura e dispositivos móveis
 - [x] Executar testes Vitest (116 aprovados) e build de produção sem erros
 - [x] Guardar checkpoint e entregar a correção
+
+
+## Otimização automática de imagens no upload de produtos (2026-08-16)
+- [x] Criar utilitário de compressão e redimensionamento automático no cliente
+- [x] Converter imagens para WebP com fallback seguro e remover metadados desnecessários
+- [x] Integrar o processamento no upload múltiplo de produtos sem quebrar os URLs existentes
+- [x] Validar tamanho, dimensões, formato e qualidade com testes unitários
+- [x] Executar TypeScript, Vitest, build e verificação visual do painel
+- [x] Guardar checkpoint da otimização de imagens
