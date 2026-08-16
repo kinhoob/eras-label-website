@@ -211,3 +211,8 @@
 - [x] Configurar Client ID e Client Secret seguros nas Secrets
 - [x] Criar endpoint de redirecionamento e troca de código por Access Token (`/api/melhor-envio/auth` e `/api/melhor-envio/callback`)
 - [x] Validar a troca e o armazenamento seguro do token para cotação de frete real
+
+## Restrição Logística Exclusiva (Correios e Jadlog)
+- [ ] Filtrar opções de frete na API de cotação e no carrinho/checkout para exibir apenas Correios PAC, Correios SEDEX, Jadlog .Com e Jadlog .Package
+- [ ] Atualizar o painel administrativo de Vendas para restringir ou destacar apenas as mesmas opções permitidas
+- [ ] Executar testes Vitest, TypeScript e build de produção

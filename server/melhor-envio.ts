@@ -28,89 +28,118 @@ export async function calculateMelhorEnvioShipping(payload: MelhorEnvioQuotePayl
     ? "https://sandbox.melhorenvio.com.br/api/v2" 
     : "https://www.melhorenvio.com.br/api/v2";
 
-  // Se o token não estiver configurado, retorna estimativas calculadas de fallback realistas
-  if (!token) {
-    const cepNum = parseInt(payload.to.postal_code.replace(/\D/g, ""), 10) || 50000000;
-    const isSudesteOrNordeste = cepNum >= 20000000 && cepNum <= 69999999;
-    const baseValue = isSudesteOrNordeste ? 24.90 : 38.50;
+    // Helper para verificar se a opção de frete é permitida (Correios PAC/SEDEX, Jadlog Econômico/Rápido, Loggi)
+    const isAllowedShippingOption = (name: string, companyName?: string) => {
+      const text = `${name} ${companyName || ""}`.toLowerCase();
+      const isCorreios = text.includes("correios") || text.includes("pac") || text.includes("sedex");
+      const isJadlog = text.includes("jadlog");
+      const isLoggi = text.includes("loggi");
 
-    return [
-      {
-        id: 1,
-        name: "SEDEX (Melhor Envio)",
-        company: { name: "Correios" },
-        price: Number((baseValue * 1.45).toFixed(2)),
-        custom_price: Number((baseValue * 1.45).toFixed(2)),
-        discount: 0,
-        delivery_time: 3,
-        error: null,
-      },
-      {
-        id: 2,
-        name: "PAC (Melhor Envio)",
-        company: { name: "Correios" },
-        price: Number(baseValue.toFixed(2)),
-        custom_price: Number(baseValue.toFixed(2)),
-        discount: 0,
-        delivery_time: 7,
-        error: null,
-      },
-      {
-        id: 3,
-        name: "Jadlog Package",
-        company: { name: "Jadlog" },
-        price: Number((baseValue * 0.95).toFixed(2)),
-        custom_price: Number((baseValue * 0.95).toFixed(2)),
-        discount: 0,
-        delivery_time: 5,
-        error: null,
-      },
-    ];
-  }
+      if (isCorreios) {
+        return text.includes("pac") || text.includes("sedex");
+      }
+      if (isJadlog) {
+        // Aceita Jadlog .Com / Econômico e .Package / Rápido
+        return true;
+      }
+      if (isLoggi) {
+        return true;
+      }
+      return false;
+    };
 
-  try {
-    const response = await fetch(`${baseUrl}/me/shipment/calculate`, {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-        "User-Agent": "ErasLabelE-commerce (contato@eraslabel.com)",
-      },
-      body: JSON.stringify(payload),
-    });
+    // Fallback com as 5 opções permitidas
+    const getAllowedFallbacks = () => {
+      const cepNum = parseInt(payload.to.postal_code.replace(/\D/g, ""), 10) || 50000000;
+      const isSudesteOrNordeste = cepNum >= 20000000 && cepNum <= 69999999;
+      const baseValue = isSudesteOrNordeste ? 24.90 : 38.50;
 
-    if (!response.ok) {
-      const errText = await response.text();
-      console.warn("[Melhor Envio] Erro na cotação:", errText);
-      throw new Error(`Melhor Envio API error: ${response.status}`);
+      return [
+        {
+          id: 1,
+          name: "Correios SEDEX",
+          company: { name: "Correios" },
+          price: Number((baseValue * 1.45).toFixed(2)),
+          custom_price: Number((baseValue * 1.45).toFixed(2)),
+          discount: 0,
+          delivery_time: 3,
+          error: null,
+        },
+        {
+          id: 2,
+          name: "Correios PAC",
+          company: { name: "Correios" },
+          price: Number(baseValue.toFixed(2)),
+          custom_price: Number(baseValue.toFixed(2)),
+          discount: 0,
+          delivery_time: 7,
+          error: null,
+        },
+        {
+          id: 3,
+          name: "Jadlog .Com (Econômico)",
+          company: { name: "Jadlog" },
+          price: Number((baseValue * 0.92).toFixed(2)),
+          custom_price: Number((baseValue * 0.92).toFixed(2)),
+          discount: 0,
+          delivery_time: 6,
+          error: null,
+        },
+        {
+          id: 4,
+          name: "Jadlog .Package (Rápido)",
+          company: { name: "Jadlog" },
+          price: Number((baseValue * 1.15).toFixed(2)),
+          custom_price: Number((baseValue * 1.15).toFixed(2)),
+          discount: 0,
+          delivery_time: 4,
+          error: null,
+        },
+        {
+          id: 5,
+          name: "Loggi Expresso",
+          company: { name: "Loggi" },
+          price: Number((baseValue * 1.25).toFixed(2)),
+          custom_price: Number((baseValue * 1.25).toFixed(2)),
+          discount: 0,
+          delivery_time: 4,
+          error: null,
+        },
+      ];
+    };
+
+    if (!token) {
+      return getAllowedFallbacks();
     }
 
-    const data = await response.json();
-    return Array.isArray(data) ? data.filter((item: any) => !item.error) : [];
-  } catch (err) {
-    console.warn("[Melhor Envio] Falha na requisição, usando fallback:", err);
-    return [
-      {
-        id: 1,
-        name: "SEDEX (Melhor Envio)",
-        company: { name: "Correios" },
-        price: 35.00,
-        custom_price: 35.00,
-        discount: 0,
-        delivery_time: 3,
-        error: null,
-      },
-      {
-        id: 2,
-        name: "PAC (Melhor Envio)",
-        company: { name: "Correios" },
-        price: 22.00,
-        custom_price: 22.00,
-        discount: 0,
-        delivery_time: 7,
-        error: null,
-      },
-    ];
-  }
+    try {
+      const response = await fetch(`${baseUrl}/me/shipment/calculate`, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          "User-Agent": "ErasLabelE-commerce (contato@eraslabel.com)",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        console.warn("[Melhor Envio] Erro na cotação:", errText);
+        throw new Error(`Melhor Envio API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (!Array.isArray(data)) return [];
+
+      // Filtra estritamente para manter apenas Correios, Jadlog e Loggi autorizados
+      return data.filter((item: any) => {
+        if (item.error) return false;
+        return isAllowedShippingOption(item.name || "", item.company?.name);
+      });
+    } catch (err) {
+      console.warn("[Melhor Envio] Falha na requisição, usando fallback permitido:", err);
+      return getAllowedFallbacks();
+    }
 }
