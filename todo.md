@@ -200,3 +200,14 @@
 - [ ] Criar rotas tRPC e helpers para integração com a API do Melhor Envio (cálculo de frete, geração de etiqueta e consulta de rastreio)
 - [ ] Adicionar suporte a configuração de token do Melhor Envio via painel/secrets
 - [ ] Cobrir com testes unitários em Vitest a gestão de vendas e as chamadas do Melhor Envio
+
+## Melhor Envio Real (Integração e Origem)
+- [ ] Configurar token e ambiente (Sandbox/Produção) do Melhor Envio via Secrets
+- [ ] Cadastrar endereço de origem da expedição (CEP, logradouro, número, bairro, cidade, UF)
+- [ ] Ligar cotação e geração de etiquetas com token real da API do Melhor Envio
+- [ ] Testar cotações e simular emissão de etiqueta com dados reais
+
+## Melhor Envio OAuth2 (Client ID & Secret)
+- [ ] Configurar Client ID e Client Secret seguros nas Secrets
+- [ ] Criar endpoint de redirecionamento e troca de código por Access Token (`/api/melhor-envio/auth` e `/api/melhor-envio/callback`)
+- [ ] Validar a troca e o armazenamento seguro do token para cotação de frete real

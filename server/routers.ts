@@ -567,7 +567,7 @@ Seja objetivo, elegante e direto ao ponto.`;
       const { calculateMelhorEnvioShipping } = await import("./melhor-envio");
       const subtotal = input.items.reduce((acc, it) => acc + it.price * it.quantity, 0);
       const quotes = await calculateMelhorEnvioShipping({
-        from: { postal_code: "50000000" }, // Origem padrão Eras Label (Recife/PE)
+        from: { postal_code: ENV.melhorEnvioCep || "50000000" }, // Origem configurada Eras Label
         to: { postal_code: input.cepDestination },
         products: input.items.map((it, idx) => ({
           id: String(idx + 1),

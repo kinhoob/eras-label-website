@@ -21,8 +21,9 @@ export type MelhorEnvioQuotePayload = {
  * Permite calcular fretes, cotar serviços (PAC, SEDEX, Jadlog) e consultar rastreio.
  */
 export async function calculateMelhorEnvioShipping(payload: MelhorEnvioQuotePayload) {
-  const token = process.env.MELHOR_ENVIO_TOKEN || "";
-  const isSandbox = process.env.MELHOR_ENVIO_SANDBOX !== "false";
+  const token = ENV.melhorEnvioToken || process.env.MELHOR_ENVIO_TOKEN || "";
+  // Tokens criados na Área Dev usam a API principal; Sandbox só é ativado explicitamente.
+  const isSandbox = process.env.MELHOR_ENVIO_SANDBOX === "true";
   const baseUrl = isSandbox 
     ? "https://sandbox.melhorenvio.com.br/api/v2" 
     : "https://www.melhorenvio.com.br/api/v2";

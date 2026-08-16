@@ -14,4 +14,8 @@ export const ENV = {
   adminLoginPassword: process.env.ADMIN_LOGIN_PASSWORD ?? "",
   mpAccessToken: process.env.MP_ACCESS_TOKEN ?? "",
   mpPublicKey: process.env.MP_PUBLIC_KEY ?? "",
+  melhorEnvioToken: process.env.MELHOR_ENVIO_TOKEN ?? "",
+  melhorEnvioCep: process.env.MELHOR_ENVIO_CEP ?? "50000000",
+  melhorEnvioClientId: process.env.MELHOR_ENVIO_CLIENT_ID ?? "",
+  melhorEnvioClientSecret: process.env.MELHOR_ENVIO_CLIENT_SECRET ?? "",
 };
