@@ -7,6 +7,7 @@ export type CheckoutDraft = {
   couponApplied: boolean;
   selectedPaymentMethod: CheckoutPaymentMethod;
   shippingCep: string;
+  orderNumber?: string;
 };
 
 type StorageLike = Pick<Storage, "getItem" | "setItem" | "removeItem">;
@@ -36,6 +37,7 @@ export function loadCheckoutDraft(storage?: StorageLike): Partial<CheckoutDraft>
       couponApplied: draft.couponApplied === true,
       selectedPaymentMethod: draft.selectedPaymentMethod === "credit_card" ? "credit_card" : "pix",
       shippingCep: typeof draft.shippingCep === "string" ? draft.shippingCep.replace(/\D/g, "").slice(0, 8) : "",
+      orderNumber: typeof draft.orderNumber === "string" && /^ER-\d{4}-\d{4,12}$/.test(draft.orderNumber) ? draft.orderNumber : "",
     };
   } catch {
     return {};

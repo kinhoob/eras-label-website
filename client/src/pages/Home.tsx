@@ -19,6 +19,9 @@ import {
   Loader2,
   Instagram,
   Search,
+  Ruler,
+  ShieldCheck,
+  Truck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -270,6 +273,8 @@ export default function Home() {
   const [searchSort, setSearchSort] = useState<StorefrontSearchSort>("newest");
   const [cart, setCart] = useState<CartLine[]>(() => loadCart<CartLine>());
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  // Controla a abertura do guia de tamanhos sem retirar o cliente do contexto da peça.
+  const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const [addedProductId, setAddedProductId] = useState<number | null>(null);
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -584,6 +589,19 @@ export default function Home() {
     playClick(soundsOn);
     setSelectedProduct(product);
     setSelectedSize(product.sizes[0] ?? "");
+    setSizeGuideOpen(false);
+  }
+
+  // Exibe uma referência de modelagem apenas como orientação; a disponibilidade vem sempre do inventário real.
+  function getSizeGuideRows(product: Product) {
+    if (product.category === "Bonés") return [{ size: "Único", width: "Ajustável", length: "Circunferência regulável" }];
+    return [
+      { size: "PP", width: "50–52 cm", length: "66–68 cm" },
+      { size: "P", width: "52–54 cm", length: "68–70 cm" },
+      { size: "M", width: "54–56 cm", length: "70–72 cm" },
+      { size: "G", width: "56–58 cm", length: "72–74 cm" },
+      { size: "GG", width: "58–60 cm", length: "74–76 cm" },
+    ].filter((row) => product.sizes.includes(row.size));
   }
 
   function addToCart(product: Product, size: string) {
@@ -1043,6 +1061,21 @@ export default function Home() {
           )}
         </section>
 
+        {/* Prova social ética: encaminha para publicações reais da conta oficial, sem inventar avaliações ou testemunhos. */}
+        <section className="community-proof-section" aria-labelledby="community-proof-title">
+          <div className="community-proof-copy">
+            <span className="section-kicker">03 / ERAS NA RUA</span>
+            <h2 id="community-proof-title">VISTO FORA DO ESTÚDIO.</h2>
+            <p>Descubra como a comunidade está a usar as peças Eras Label. As publicações e marcações são sempre reais e podem ser vistas no perfil oficial.</p>
+            <a className="text-link" href="https://www.instagram.com/eraslabel/" target="_blank" rel="noreferrer" onClick={() => playClick(soundsOn)}>VER NO INSTAGRAM <ArrowRight size={14} /></a>
+          </div>
+          <div className="community-proof-grid" aria-label="Compromissos da experiência Eras Label">
+            <article><ShieldCheck size={20} strokeWidth={1.5} /><strong>COMPRA PROTEGIDA</strong><span>Pix e cartão processados com segurança pelo Mercado Pago.</span></article>
+            <article><Truck size={20} strokeWidth={1.5} /><strong>ENVIO ACOMPANHADO</strong><span>Receba o código de rastreio assim que o pedido for despachado.</span></article>
+            <article><Instagram size={20} strokeWidth={1.5} /><strong>CONTEÚDO REAL</strong><span>Marque @eraslabel para aparecer nas próximas eras.</span></article>
+          </div>
+        </section>
+
         <section className="vip-home-banner" aria-label="Grupo VIP">
           <a href={vipBanner.href} target={vipBanner.href.startsWith("http") ? "_blank" : undefined} rel={vipBanner.href.startsWith("http") ? "noreferrer" : undefined} onClick={() => playClick(soundsOn)}>
             <div className="vip-home-media" style={{ backgroundImage: `url(${vipBanner.imageUrl})` }} />
@@ -1443,15 +1476,26 @@ export default function Home() {
                 <span className={`availability-badge ${selectedProduct.stock > 0 ? "in-stock" : "out-of-stock"}`}>
                   {selectedProduct.stock > 0 ? `Disponível em estoque (${selectedProduct.stock} unidades)` : "Esgotado no momento"}
                 </span>
+                {selectedProduct.stock > 0 && selectedProduct.stock <= 5 && <span className="scarcity-note">Restam apenas {selectedProduct.stock} unidades</span>}
               </div>
               <div className="size-picker">
-                <span>TAMANHO</span>
+                <div className="size-picker-heading"><span>TAMANHO</span><button type="button" className="size-guide-trigger" onClick={() => { playClick(soundsOn); setSizeGuideOpen((current) => !current); }} aria-expanded={sizeGuideOpen}><Ruler size={13} /> GUIA DE TAMANHOS</button></div>
                 <div>
                   {selectedProduct.sizes.map((size) => (
                     <button key={size} className={selectedSize === size ? "selected" : ""} onClick={() => setSelectedSize(size)} disabled={selectedProduct.stock === 0}>{size}</button>
                   ))}
                 </div>
               </div>
+              {sizeGuideOpen && (
+                <section className="size-guide-panel" aria-label={`Guia de tamanhos para ${selectedProduct.name}`}>
+                  <div className="size-guide-heading"><strong>REFERÊNCIA DE MODELAGEM</strong><button type="button" onClick={() => setSizeGuideOpen(false)} aria-label="Fechar guia de tamanhos"><X size={14} /></button></div>
+                  <div className="size-guide-table" role="table">
+                    <div role="row" className="size-guide-row size-guide-header"><span>TAM.</span><span>LARGURA</span><span>COMPRIMENTO</span></div>
+                    {getSizeGuideRows(selectedProduct).map((row) => <div role="row" className="size-guide-row" key={row.size}><span>{row.size}</span><span>{row.width}</span><span>{row.length}</span></div>)}
+                  </div>
+                  <p>Meça uma peça semelhante sobre uma superfície plana. As medidas são uma referência de modelagem e podem variar ligeiramente entre coleções.</p>
+                </section>
+              )}
               <button
                 className={`primary-button add-to-cart-button ${addedProductId === selectedProduct.id ? "is-added" : ""}`}
                 onClick={() => addToCart(selectedProduct, selectedSize)}

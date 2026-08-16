@@ -129,6 +129,12 @@ function readInitialCart() {
   return loadCart<CheckoutLine[] extends never[] ? never : CheckoutLine>();
 }
 
+function createOrderReference() {
+  const year = new Date().getFullYear();
+  const random = Math.floor(Math.random() * 9000 + 1000);
+  return `ER-${year}-${random}`;
+}
+
 export default function CheckoutPage() {
   const [cart, setCart] = useState<CheckoutLine[]>(() => readInitialCart());
   const [coupon, setCoupon] = useState(() => loadCheckoutDraft().coupon ?? "");
@@ -137,6 +143,7 @@ export default function CheckoutPage() {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<CheckoutPaymentMethod>(() => loadCheckoutDraft().selectedPaymentMethod ?? "pix");
   const [selectedInstallments, setSelectedInstallments] = useState(1);
   const [cep, setCep] = useState(() => loadCheckoutDraft().shippingCep ?? "");
+  const [orderNumber] = useState(() => loadCheckoutDraft().orderNumber || createOrderReference());
   const [addressFields, setAddressFields] = useState({ street: "", neighborhood: "", city: "", state: "" });
   const [cepLookupStatus, setCepLookupStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [couponLoading, setCouponLoading] = useState(false);
@@ -182,6 +189,7 @@ export default function CheckoutPage() {
       couponApplied,
       selectedPaymentMethod,
       shippingCep: cep,
+      orderNumber,
     });
   }, [cep, coupon, couponApplied, selectedPaymentMethod]);
 
@@ -307,6 +315,7 @@ export default function CheckoutPage() {
     }
 
     checkoutMutation.mutate({
+      orderNumber,
       customerName: fields.customerName.trim(),
       customerEmail: fields.customerEmail.trim(),
       customerCpf: fields.cpf.trim(),

@@ -11,17 +11,17 @@ function createStorage() {
 }
 
 describe("checkout draft", () => {
-  it("persiste e recupera cupão, método de pagamento e CEP", () => {
+  it("persiste e recupera cupão, método de pagamento, CEP e referência válida", () => {
     const storage = createStorage();
-    saveCheckoutDraft({ coupon: "ERAS10", couponApplied: true, selectedPaymentMethod: "credit_card", shippingCep: "50.010-000" }, storage);
+    saveCheckoutDraft({ coupon: "ERAS10", couponApplied: true, selectedPaymentMethod: "credit_card", shippingCep: "50.010-000", orderNumber: "ER-2026-1234" }, storage);
     expect(storage.getItem(CHECKOUT_DRAFT_STORAGE_KEY)).toContain("ERAS10");
-    expect(loadCheckoutDraft(storage)).toEqual({ coupon: "ERAS10", couponApplied: true, selectedPaymentMethod: "credit_card", shippingCep: "50010000" });
+    expect(loadCheckoutDraft(storage)).toEqual({ coupon: "ERAS10", couponApplied: true, selectedPaymentMethod: "credit_card", shippingCep: "50010000", orderNumber: "ER-2026-1234" });
   });
 
   it("normaliza dados inválidos sem quebrar a navegação", () => {
     const storage = createStorage();
-    storage.setItem(CHECKOUT_DRAFT_STORAGE_KEY, JSON.stringify({ coupon: 42, couponApplied: "yes", selectedPaymentMethod: "unknown", shippingCep: { value: 1 } }));
-    expect(loadCheckoutDraft(storage)).toEqual({ coupon: "", couponApplied: false, selectedPaymentMethod: "pix", shippingCep: "" });
+    storage.setItem(CHECKOUT_DRAFT_STORAGE_KEY, JSON.stringify({ coupon: 42, couponApplied: "yes", selectedPaymentMethod: "unknown", shippingCep: { value: 1 }, orderNumber: "PAYMENT-123" }));
+    expect(loadCheckoutDraft(storage)).toEqual({ coupon: "", couponApplied: false, selectedPaymentMethod: "pix", shippingCep: "", orderNumber: "" });
   });
 
   it("limpa o rascunho após uma compra concluída", () => {

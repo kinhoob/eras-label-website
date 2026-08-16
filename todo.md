@@ -297,3 +297,12 @@
 - [x] Elevar a aparência do painel administrativo (hierarquia, superfícies de vidro/sombra suave, transições e feedback visual)
 - [x] Executar testes Vitest (121+ aprovados), verificação TypeScript e build de produção
 - [ ] Salvar checkpoint e entregar o novo visual elegante
+
+
+## Continuação pós-auditoria e preparação de produção
+- [x] Corrigir o fluxo de cartão sandbox com referência de pedido estável, timeout explícito, normalização da validade e envio seguro da mutation de checkout.
+- [x] Reexecutar os testes determinísticos do contrato de checkout para Pix e cartão e validar que retries reutilizam a mesma referência.
+- [x] Implementar melhorias de conversão de alta prioridade sem fabricar avaliações: guia de tamanhos, prova social baseada apenas em dados reais e CTAs/contexto de compra.
+- [x] Validar visualmente a barra de anúncio, modo loja bloqueada e contador regressivo em desktop e mobile.
+- [x] Rever variáveis de ambiente e documentar checklist de migração sandbox/produção para Mercado Pago, Melhor Envio e Resend.
+- [x] Executar TypeScript, suíte Vitest completa, build de produção e guardar checkpoint final.
