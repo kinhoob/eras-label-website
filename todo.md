@@ -196,18 +196,18 @@
 
 
 ## Gestão de Vendas & Integração Melhor Envio
-- [ ] Criar aba e secção de Vendas no Painel Administrativo (listagem de pedidos, pagamento, itens, morada e método de entrega)
-- [ ] Criar rotas tRPC e helpers para integração com a API do Melhor Envio (cálculo de frete, geração de etiqueta e consulta de rastreio)
-- [ ] Adicionar suporte a configuração de token do Melhor Envio via painel/secrets
-- [ ] Cobrir com testes unitários em Vitest a gestão de vendas e as chamadas do Melhor Envio
+- [x] Criar aba e secção de Vendas no Painel Administrativo (listagem de pedidos, pagamento, itens, morada e método de entrega)
+- [x] Criar rotas tRPC e helpers para integração com a API do Melhor Envio (cálculo de frete, geração de etiqueta e consulta de rastreio)
+- [x] Adicionar suporte a configuração de token do Melhor Envio via painel/secrets
+- [x] Cobrir com testes unitários em Vitest a gestão de vendas e as chamadas do Melhor Envio
 
 ## Melhor Envio Real (Integração e Origem)
-- [ ] Configurar token e ambiente (Sandbox/Produção) do Melhor Envio via Secrets
-- [ ] Cadastrar endereço de origem da expedição (CEP, logradouro, número, bairro, cidade, UF)
-- [ ] Ligar cotação e geração de etiquetas com token real da API do Melhor Envio
-- [ ] Testar cotações e simular emissão de etiqueta com dados reais
+- [x] Configurar token e ambiente (Sandbox/Produção) do Melhor Envio via Secrets
+- [x] Cadastrar endereço de origem da expedição (CEP, logradouro, número, bairro, cidade, UF)
+- [x] Ligar cotação e geração de etiquetas com token real da API do Melhor Envio
+- [x] Testar cotações e simular emissão de etiqueta com dados reais
 
 ## Melhor Envio OAuth2 (Client ID & Secret)
-- [ ] Configurar Client ID e Client Secret seguros nas Secrets
-- [ ] Criar endpoint de redirecionamento e troca de código por Access Token (`/api/melhor-envio/auth` e `/api/melhor-envio/callback`)
-- [ ] Validar a troca e o armazenamento seguro do token para cotação de frete real
+- [x] Configurar Client ID e Client Secret seguros nas Secrets
+- [x] Criar endpoint de redirecionamento e troca de código por Access Token (`/api/melhor-envio/auth` e `/api/melhor-envio/callback`)
+- [x] Validar a troca e o armazenamento seguro do token para cotação de frete real
