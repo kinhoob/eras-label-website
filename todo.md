@@ -313,3 +313,10 @@
 - [x] Aprimorar o checkout com animações de carregamento fluidas, etapas visuais e mensagens de sucesso claras.
 - [x] Criar nova página/secção de Perguntas Frequentes (FAQ) cobrindo envios, prazos, devoluções e compromissos éticos da Eras Label.
 - [x] Validar testes unitários Vitest, TypeScript e build de produção para as novas adições.
+
+
+## Limpeza de Dados Fictícios (2026-08-16)
+- [x] Mapear tabelas de produtos, estoque, categorias, pedidos, itens, histórico, logs e subscritores para remoção limpa.
+- [x] Executar script SQL transacional para truncar ou limpar tabelas de demonstração sem apagar utilizadores administradores.
+- [x] Validar contagens zeradas e testar o funcionamento do painel administrativo com catálogo e vendas vazios.
+- [x] Executar suíte de testes Vitest, TypeScript e guardar checkpoint da base limpa.
