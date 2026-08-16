@@ -8,6 +8,7 @@ import { clearCheckoutDraft, loadCheckoutDraft, saveCheckoutDraft, type Checkout
 import { updateCartLineQuantity, removeCartLine } from "@/lib/cart-operations";
 import { formatCardExpiry, formatCardNumber, formatCpf, hasCheckoutFieldErrors, onlyDigits, validateCheckoutFields, type CheckoutFieldErrors, type CheckoutFields } from "@/lib/checkout-validation";
 import { lookupCep, normalizeCep } from "@/lib/cep";
+import { calculateInstallmentAmount, calculateInstallmentTotal } from "@/lib/installment-calculator";
 
  type CheckoutLine = {
   id: number;
@@ -29,6 +30,8 @@ type CheckoutSuccess = {
   estimatedDelivery: string;
   total: number;
   paymentStatus: string;
+  installments?: number;
+  installmentInterest?: number;
   pixData?: {
     qr_code?: string;
     qr_code_base64?: string;
@@ -39,6 +42,7 @@ type CheckoutSuccess = {
 function formatPrice(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
+
 
 function readCheckoutFieldsFromForm(form: HTMLFormElement): CheckoutFields {
   const get = (name: string) => String(new FormData(form).get(name) ?? "");
@@ -110,7 +114,9 @@ export default function CheckoutPage() {
   const [cart, setCart] = useState<CheckoutLine[]>(() => readInitialCart());
   const [coupon, setCoupon] = useState(() => loadCheckoutDraft().coupon ?? "");
   const [couponApplied, setCouponApplied] = useState(() => loadCheckoutDraft().couponApplied === true);
+  const [couponDiscountRate, setCouponDiscountRate] = useState(10);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<CheckoutPaymentMethod>(() => loadCheckoutDraft().selectedPaymentMethod ?? "pix");
+  const [selectedInstallments, setSelectedInstallments] = useState(1);
   const [cep, setCep] = useState(() => loadCheckoutDraft().shippingCep ?? "");
   const [addressFields, setAddressFields] = useState({ street: "", neighborhood: "", city: "", state: "" });
   const [cepLookupStatus, setCepLookupStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -128,14 +134,24 @@ export default function CheckoutPage() {
   const checkoutConfigQuery = trpc.checkout.publicConfig.useQuery();
   const checkoutMutation = trpc.checkout.create.useMutation();
 
-  const pixDiscountPercent = commercialConfigQuery.data?.pixDiscountPercent ?? 5;
-  const freeShippingThreshold = commercialConfigQuery.data?.freeShippingThreshold ?? 350;
+  const commercialConfig = checkoutConfigQuery.data?.commercial ?? commercialConfigQuery.data;
+  const pixDiscountPercent = commercialConfig?.pixDiscountPercent ?? 5;
+  const freeShippingThreshold = commercialConfig?.freeShippingThreshold ?? 350;
+  const maxInstallments = Math.max(1, commercialConfig?.maxInstallments ?? 12);
+  const installmentInterestRate = Math.max(0, commercialConfig?.installmentInterestRate ?? 0);
   const subtotal = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.quantity, 0), [cart]);
-  const discount = couponApplied ? subtotal * 0.1 : 0;
+  const couponValidationQuery = trpc.coupons.validate.useQuery({ code: coupon.trim() || "ERAS10", subtotal }, { enabled: false });
+  const discount = couponApplied ? subtotal * (couponDiscountRate / 100) : 0;
   const shippingCost = shippingQuery.data?.free ? 0 : (shippingQuery.data?.cost ?? 0);
-  const totalBeforePayment = subtotal - discount + shippingCost;
+  const totalBeforePayment = Math.max(0, subtotal - discount + shippingCost);
   const pixSavings = selectedPaymentMethod === "pix" ? subtotal * (pixDiscountPercent / 100) : 0;
-  const total = Math.max(0, totalBeforePayment - pixSavings);
+  const cardTotal = selectedPaymentMethod === "credit_card" ? calculateInstallmentTotal(totalBeforePayment, selectedInstallments, installmentInterestRate) : totalBeforePayment;
+  const installmentInterest = Math.max(0, cardTotal - totalBeforePayment);
+  const total = Math.max(0, selectedPaymentMethod === "credit_card" ? cardTotal : totalBeforePayment - pixSavings);
+
+  useEffect(() => {
+    setSelectedInstallments((current) => Math.min(Math.max(1, current), maxInstallments));
+  }, [maxInstallments]);
 
   useEffect(() => {
     saveCart(cart);
@@ -189,6 +205,10 @@ export default function CheckoutPage() {
     if (target.name === "cpf") target.value = formatCpf(target.value);
     if (target.name === "cardNumber") target.value = formatCardNumber(target.value);
     if (target.name === "cardExpiry") target.value = formatCardExpiry(target.value);
+    if (target.name === "coupon") {
+      setCouponApplied(false);
+      setCouponDiscountRate(0);
+    }
 
     const fields = readCheckoutFieldsFromForm(event.currentTarget);
     const errors = validateCheckoutFields(fields, selectedPaymentMethod);
@@ -203,22 +223,31 @@ export default function CheckoutPage() {
     }
   }
 
-  function applyCoupon() {
+  async function applyCoupon() {
     if (!coupon.trim()) {
       toast.error("Digite o código do cupom.");
       return;
     }
     setCouponLoading(true);
-    window.setTimeout(() => {
-      setCouponLoading(false);
-      if (coupon.trim().toUpperCase() === "ERAS10") {
+    try {
+      const result = await couponValidationQuery.refetch();
+      const validation = result.data;
+      if (validation?.valid) {
+        const rate = subtotal > 0 ? (Number(validation.discount) / subtotal) * 100 : 0;
+        setCouponDiscountRate(rate);
         setCouponApplied(true);
-        toast.success("Cupom ERAS10 aplicado: 10% de desconto.");
+        toast.success(`Cupom ${validation.code} aplicado: ${rate.toFixed(0)}% de desconto.`);
       } else {
+        setCouponDiscountRate(0);
         setCouponApplied(false);
-        toast.error("Cupom não encontrado ou expirado.");
+        toast.error("Cupom não encontrado, expirado ou incompatível com o subtotal.");
       }
-    }, 500);
+    } catch {
+      setCouponApplied(false);
+      toast.error("Não foi possível validar o cupom agora.");
+    } finally {
+      setCouponLoading(false);
+    }
   }
 
   async function submitCheckout(event: React.FormEvent<HTMLFormElement>) {
@@ -279,7 +308,7 @@ export default function CheckoutPage() {
       paymentMethod: selectedPaymentMethod,
       cardToken,
       paymentMethodId,
-      installments: selectedPaymentMethod === "credit_card" ? 1 : undefined,
+      installments: selectedPaymentMethod === "credit_card" ? selectedInstallments : undefined,
     }, {
       onSuccess: (result) => {
         setIsSubmitting(false);
@@ -295,6 +324,8 @@ export default function CheckoutPage() {
           estimatedDelivery: shippingQuery.data?.deadline ?? "5 a 7 dias úteis",
           total,
           paymentStatus: result.paymentStatus || "pending",
+          installments: selectedPaymentMethod === "credit_card" ? selectedInstallments : undefined,
+          installmentInterest: selectedPaymentMethod === "credit_card" ? installmentInterest : 0,
           pixData: (result as any).pixData || null,
         });
         setCart([]);
@@ -466,6 +497,15 @@ export default function CheckoutPage() {
                     <input name="cardCvv" inputMode="numeric" autoComplete="cc-csc" maxLength={4} placeholder="123" aria-invalid={Boolean(fieldErrors.cardCvv)} aria-describedby={fieldErrors.cardCvv ? "cardCvv-error" : undefined} />
                     {fieldErrors.cardCvv && <span id="cardCvv-error" className="field-error" role="alert">{fieldErrors.cardCvv}</span>}
                   </label>
+                  <label className="wide checkout-installments-field">Parcelamento
+                    <select value={selectedInstallments} onChange={(event) => setSelectedInstallments(Number(event.target.value))} aria-label="Número de parcelas">
+                      {Array.from({ length: maxInstallments }, (_, index) => index + 1).map((count) => {
+                        const installmentTotal = calculateInstallmentTotal(totalBeforePayment, count, installmentInterestRate);
+                        return <option key={count} value={count}>{count}x de {formatPrice(calculateInstallmentAmount(installmentTotal, count))}{count > 1 && installmentInterestRate > 0 ? ` · total ${formatPrice(installmentTotal)}` : " sem juros"}</option>;
+                      })}
+                    </select>
+                    <span className="checkout-installments-note">{installmentInterestRate > 0 ? `Taxa configurada: ${installmentInterestRate.toFixed(2)}% ao mês.` : "Parcelamento sem juros configurado pela loja."}</span>
+                  </label>
                   <p className="checkout-page-helper wide"><ShieldCheck size={15} /> Os dados do cartão são tokenizados pelo Mercado Pago e nunca ficam armazenados na Eras Label.</p>
                 </div>
               )}
@@ -491,7 +531,7 @@ export default function CheckoutPage() {
           </div>
           <div className="checkout-coupon-row"><input value={coupon} onChange={(event) => setCoupon(event.target.value)} placeholder="Cupom de desconto" /><button type="button" onClick={applyCoupon} disabled={couponLoading}>{couponLoading ? <Loader2 size={14} className="spinner-icon" /> : "APLICAR"}</button></div>
           {couponApplied && <p className="checkout-coupon-applied"><Check size={14} /> ERAS10 aplicado</p>}
-          <div className="checkout-page-totals"><div><span>Subtotal</span><strong>{formatPrice(subtotal)}</strong></div>{discount > 0 && <div><span>Desconto</span><strong>- {formatPrice(discount)}</strong></div>}<div><span>Frete</span><strong>{shippingQuery.data?.free ? "Grátis" : shippingQuery.data ? formatPrice(shippingCost) : "A calcular"}</strong></div>{pixSavings > 0 && <div><span>Economia no Pix</span><strong>- {formatPrice(pixSavings)}</strong></div>}<div className="final"><span>Total</span><strong>{formatPrice(total)}</strong></div></div>
+          <div className="checkout-page-totals"><div><span>Subtotal</span><strong>{formatPrice(subtotal)}</strong></div>{discount > 0 && <div><span>Desconto</span><strong>- {formatPrice(discount)}</strong></div>}<div><span>Frete</span><strong>{shippingQuery.data?.free ? "Grátis" : shippingQuery.data ? formatPrice(shippingCost) : "A calcular"}</strong></div>{pixSavings > 0 && <div><span>Economia no Pix</span><strong>- {formatPrice(pixSavings)}</strong></div>}{selectedPaymentMethod === "credit_card" && selectedInstallments > 1 && <div><span>Juros ({selectedInstallments}x)</span><strong>+ {formatPrice(installmentInterest)}</strong></div>}<div className="final"><span>{selectedPaymentMethod === "credit_card" ? `${selectedInstallments}x no cartão` : "Total"}</span><strong>{formatPrice(total)}</strong></div></div>
           <p className="checkout-free-shipping-note">{subtotal >= freeShippingThreshold ? "Você conquistou frete grátis." : `Frete grátis a partir de ${formatPrice(freeShippingThreshold)}.`}</p>
         </aside>
       </div>

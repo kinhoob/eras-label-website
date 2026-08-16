@@ -196,7 +196,7 @@ export const appRouter = router({
     validate: publicProcedure.input(z.object({ code: z.string().min(2), subtotal: z.number().nonnegative() })).query(({ input }) => validateCoupon(input.code, input.subtotal)),
   }),
   checkout: router({
-    publicConfig: publicProcedure.query(() => ({ publicKey: ENV.mpPublicKey || null })),
+    publicConfig: publicProcedure.query(async () => ({ publicKey: ENV.mpPublicKey || null, commercial: await getCommercialConfig() })),
     create: publicProcedure.input(z.object({
       customerName: z.string().min(2),
       customerEmail: z.string().email(),
@@ -214,6 +214,14 @@ export const appRouter = router({
       installments: z.number().int().positive().optional(),
     })).mutation(async ({ input, ctx }) => {
       const orderNumber = `ER-${new Date().getFullYear()}-${Math.floor(Math.random() * 9000 + 1000)}`;
+      const commercialConfig = await getCommercialConfig();
+      const actualInstallments = input.paymentMethod === "credit_card"
+        ? Math.min(Math.max(1, input.installments ?? 1), commercialConfig.maxInstallments)
+        : 1;
+      const baseTotal = Math.max(0, input.subtotal - input.discount + input.shippingCost);
+      const serverTotal = input.paymentMethod === "credit_card"
+        ? baseTotal * Math.pow(1 + commercialConfig.installmentInterestRate / 100, actualInstallments)
+        : baseTotal;
 
       // Chamar a API oficial do Mercado Pago para gerar a cobrança Pix ou Cartão Transparente
       let mpResult: any = null;
@@ -224,11 +232,11 @@ export const appRouter = router({
 
       try {
         mpResult = await createMercadoPagoPayment({
-          transaction_amount: Number(input.total.toFixed(2)),
+          transaction_amount: Number(serverTotal.toFixed(2)),
           description: `Pedido ${orderNumber} - Eras Label`,
           payment_method_id: input.paymentMethod === "pix" ? "pix" : input.paymentMethodId || "credit_card",
           token: input.cardToken,
-          installments: input.installments || 1,
+          installments: actualInstallments,
           payer: {
             email: input.customerEmail,
             first_name: firstName,
@@ -263,7 +271,7 @@ export const appRouter = router({
         subtotal: input.subtotal.toFixed(2),
         shippingCost: input.shippingCost.toFixed(2),
         discount: input.discount.toFixed(2),
-        total: input.total.toFixed(2),
+        total: serverTotal.toFixed(2),
         paymentStatus: initialPaymentStatus,
         status: initialPaymentStatus === "approved" ? "Processando" : "Aguardando pagamento",
       });
@@ -432,6 +440,8 @@ export const appRouter = router({
     saveConfig: adminProcedure.input(z.object({
       pixDiscountPercent: z.number().min(0).max(100),
       freeShippingThreshold: z.number().nonnegative(),
+      maxInstallments: z.number().int().min(1).max(24),
+      installmentInterestRate: z.number().min(0).max(20),
     })).mutation(async ({ input }) => {
       const saved = await saveCommercialConfig(input);
       return { success: true, config: saved };

@@ -175,3 +175,9 @@
 - [x] Persistência de pedidos reais na base de dados (tabela orders e order_items)
 - [x] Página de Histórico de Pedidos (/account/orders ou /orders) para acompanhamento do status e pagamentos
 - [x] Testes Vitest cobrindo validação e histórico de pedidos
+
+## Novas Solicitações de Ajuste (Parcelamento, Cupons e Histórico Detalhado)
+- [ ] Adicionar opção de parcelamento com cálculo de juros configurável no formulário de cartão de crédito no checkout
+- [ ] Implementar campo de cupom de desconto diretamente no checkout principal, recalculando o total em tempo real
+- [ ] Aprimorar a página de histórico de pedidos (`/orders` e `Account.tsx`) com modal/visualização detalhada dos itens adquiridos e rastreamento da entrega
+- [ ] Executar testes Vitest, TypeScript e build de produção para validar as novas funcionalidades

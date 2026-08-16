@@ -340,12 +340,26 @@ export async function archiveCategory(id: number) {
   return { success: true };
 }
 
-export async function getCommercialConfig() {
+export const DEFAULT_COMMERCIAL_CONFIG = {
+  pixDiscountPercent: 5,
+  freeShippingThreshold: 350,
+  maxInstallments: 12,
+  installmentInterestRate: 0,
+};
+
+export type CommercialConfig = typeof DEFAULT_COMMERCIAL_CONFIG;
+
+export async function getCommercialConfig(): Promise<CommercialConfig> {
   const db = await getDb();
-  if (!db) return { pixDiscountPercent: 5, freeShippingThreshold: 350 };
+  if (!db) return DEFAULT_COMMERCIAL_CONFIG;
   const rows = await db.select().from(siteAppearance).where(eq(siteAppearance.sectionKey, "commercial_config")).limit(1);
-  if (!rows[0]) return { pixDiscountPercent: 5, freeShippingThreshold: 350 };
-  return (rows[0].content as any) || { pixDiscountPercent: 5, freeShippingThreshold: 350 };
+  const saved = (rows[0]?.content as Partial<CommercialConfig> | undefined) ?? {};
+  return {
+    pixDiscountPercent: Number(saved.pixDiscountPercent ?? DEFAULT_COMMERCIAL_CONFIG.pixDiscountPercent),
+    freeShippingThreshold: Number(saved.freeShippingThreshold ?? DEFAULT_COMMERCIAL_CONFIG.freeShippingThreshold),
+    maxInstallments: Math.min(24, Math.max(1, Number(saved.maxInstallments ?? DEFAULT_COMMERCIAL_CONFIG.maxInstallments))),
+    installmentInterestRate: Math.min(20, Math.max(0, Number(saved.installmentInterestRate ?? DEFAULT_COMMERCIAL_CONFIG.installmentInterestRate))),
+  };
 }
 
 // Funções de Gerenciamento de Notificações (Estilo Nuvemshop)
@@ -374,16 +388,22 @@ export async function markNotificationAsRead(id: number) {
   await db.update(notifications).set({ isRead: 1 }).where(eq(notifications.id, id));
 }
 
-export async function saveCommercialConfig(config: { pixDiscountPercent: number; freeShippingThreshold: number }) {
+export async function saveCommercialConfig(config: CommercialConfig) {
+  const normalized: CommercialConfig = {
+    pixDiscountPercent: Math.min(100, Math.max(0, Number(config.pixDiscountPercent))),
+    freeShippingThreshold: Math.max(0, Number(config.freeShippingThreshold)),
+    maxInstallments: Math.min(24, Math.max(1, Math.round(Number(config.maxInstallments)))),
+    installmentInterestRate: Math.min(20, Math.max(0, Number(config.installmentInterestRate))),
+  };
   const db = await getDb();
-  if (!db) return config;
+  if (!db) return normalized;
   const existing = await db.select().from(siteAppearance).where(eq(siteAppearance.sectionKey, "commercial_config")).limit(1);
   if (existing[0]) {
-    await db.update(siteAppearance).set({ content: config as any }).where(eq(siteAppearance.sectionKey, "commercial_config"));
+    await db.update(siteAppearance).set({ content: normalized as any }).where(eq(siteAppearance.sectionKey, "commercial_config"));
   } else {
-    await db.insert(siteAppearance).values({ sectionKey: "commercial_config", content: config as any });
+    await db.insert(siteAppearance).values({ sectionKey: "commercial_config", content: normalized as any });
   }
-  return config;
+  return normalized;
 }
 
 export type HomeContent = {
@@ -622,10 +642,10 @@ export async function updateOrderPaymentStatus(orderNumber: string, paymentStatu
   return updated[0];
 }
 
-export async function updateOrderTracking(orderId: number, trackingCode: string, _carrier?: string) {
+export async function updateOrderTracking(orderId: number, trackingCode: string, carrier?: string) {
   const db = await getDb();
   if (!db) return;
-  await db.update(orders).set({ trackingCode }).where(eq(orders.id, orderId));
+  await db.update(orders).set({ trackingCode, carrier: carrier?.trim() || "Correios / Logística" }).where(eq(orders.id, orderId));
 }
 
 export async function getAdminAnalytics(periodDays: number = 7) {
