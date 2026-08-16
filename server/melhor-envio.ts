@@ -78,3 +78,111 @@ export async function calculateMelhorEnvioShipping(payload: MelhorEnvioQuotePayl
       return isAllowedShippingOption(item.name || "", item.company?.name);
     });
 }
+
+/**
+ * Cria um pedido/etiqueta no carrinho do Melhor Envio (protegido por ação explícita do admin).
+ */
+export async function createMelhorEnvioCartItem(orderData: {
+  serviceId: number;
+  from: {
+    name: string;
+    phone: string;
+    email: string;
+    document: string;
+    company_document?: string;
+    address: string;
+    number: string;
+    complement?: string;
+    district: string;
+    city: string;
+    state_abbr: string;
+    postal_code: string;
+  };
+  to: {
+    name: string;
+    phone: string;
+    email: string;
+    document: string;
+    address: string;
+    number: string;
+    complement?: string;
+    district: string;
+    city: string;
+    state_abbr: string;
+    postal_code: string;
+  };
+  products: Array<{
+    name: string;
+    quantity: number;
+    unitary_value: number;
+    weight: number;
+    width: number;
+    height: number;
+    length: number;
+  }>;
+  volumes: Array<{
+    height: number;
+    width: number;
+    length: number;
+    weight: number;
+  }>;
+}) {
+  const token = ENV.melhorEnvioToken || process.env.MELHOR_ENVIO_TOKEN || "";
+  const isSandbox = process.env.MELHOR_ENVIO_SANDBOX === "true";
+  const baseUrl = isSandbox 
+    ? "https://sandbox.melhorenvio.com.br/api/v2" 
+    : "https://www.melhorenvio.com.br/api/v2";
+
+  if (!token) {
+    throw new Error("Token do Melhor Envio não configurado.");
+  }
+
+  const response = await fetch(`${baseUrl}/me/cart`, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      "User-Agent": "ErasLabelE-commerce (contato@eraslabel.com)",
+    },
+    body: JSON.stringify(orderData),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(`Erro ao adicionar item ao carrinho do Melhor Envio: ${JSON.stringify(data)}`);
+  }
+  return data;
+}
+
+/**
+ * Consulta o status de rastreio de um envio no Melhor Envio.
+ */
+export async function getMelhorEnvioTracking(shippingCodeOrId: string) {
+  const token = ENV.melhorEnvioToken || process.env.MELHOR_ENVIO_TOKEN || "";
+  const isSandbox = process.env.MELHOR_ENVIO_SANDBOX === "true";
+  const baseUrl = isSandbox 
+    ? "https://sandbox.melhorenvio.com.br/api/v2" 
+    : "https://www.melhorenvio.com.br/api/v2";
+
+  if (!token) {
+    throw new Error("Token do Melhor Envio não configurado.");
+  }
+
+  const response = await fetch(`${baseUrl}/me/shipment/tracking`, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      "User-Agent": "ErasLabelE-commerce (contato@eraslabel.com)",
+    },
+    body: JSON.stringify({ orders: [shippingCodeOrId] }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(`Erro ao consultar rastreio no Melhor Envio: ${JSON.stringify(data)}`);
+  }
+  return data;
+}
