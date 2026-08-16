@@ -306,3 +306,10 @@
 - [x] Validar visualmente a barra de anúncio, modo loja bloqueada e contador regressivo em desktop e mobile.
 - [x] Rever variáveis de ambiente e documentar checklist de migração sandbox/produção para Mercado Pago, Melhor Envio e Resend.
 - [x] Executar TypeScript, suíte Vitest completa, build de produção e guardar checkpoint final.
+
+
+## Novas Solicitações (2026-08-16)
+- [x] Implementar rastreio público direto de encomendas via código do Melhor Envio com timeline detalhada na página `/tracking`.
+- [x] Aprimorar o checkout com animações de carregamento fluidas, etapas visuais e mensagens de sucesso claras.
+- [x] Criar nova página/secção de Perguntas Frequentes (FAQ) cobrindo envios, prazos, devoluções e compromissos éticos da Eras Label.
+- [x] Validar testes unitários Vitest, TypeScript e build de produção para as novas adições.

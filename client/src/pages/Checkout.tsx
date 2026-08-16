@@ -470,12 +470,20 @@ export default function CheckoutPage() {
           </div>
 
           {status === "processing" && (
-            <div className="checkout-processing-banner" role="status" aria-live="polite">
-              <span className="checkout-processing-spinner"><Loader2 size={18} className="spinner-icon" /></span>
-              <div><strong>A confirmar o seu pagamento...</strong><span>Estamos a comunicar com o Mercado Pago. Não feche esta janela.</span></div>
+            <div className="checkout-processing-banner animate-pulse" role="status" aria-live="polite">
+              <span className="checkout-processing-spinner"><Loader2 size={20} className="spinner-icon text-[#b22222]" /></span>
+              <div>
+                <strong>A processar o seu pagamento de forma segura...</strong>
+                <span>Estamos a validar a transação com o Mercado Pago e a preparar a sua encomenda na Eras Label. Não feche esta janela.</span>
+              </div>
             </div>
           )}
-          {status === "error" && <div className="checkout-error-banner" role="alert">{errorMessage}</div>}
+          {status === "error" && (
+            <div className="checkout-error-banner" role="alert">
+              <strong>Não foi possível concluir o pagamento</strong>
+              <span>{errorMessage || "Verifique os dados informados ou tente novamente com outro meio de pagamento."}</span>
+            </div>
+          )}
 
           <form className="checkout-page-form" onSubmit={submitCheckout} onChange={handleFormChange} noValidate>
             <div className="checkout-page-form-section">
