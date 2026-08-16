@@ -35,6 +35,8 @@ import {
   saveCommercialConfig,
   getHomeContent,
   saveHomeContent,
+  getStorefrontConfig,
+  saveStorefrontConfig,
   listNotifications,
   createNotification,
   markNotificationAsRead,
@@ -150,6 +152,7 @@ export const appRouter = router({
     getById: publicProcedure.input(z.object({ id: z.number().int().positive() })).query(({ input }) => getProductWithVariations(input.id)),
     getConfig: publicProcedure.query(() => getCommercialConfig()),
     getHomeContent: publicProcedure.query(() => getHomeContent()),
+    getStorefrontConfig: publicProcedure.query(() => getStorefrontConfig()),
     categories: publicProcedure.query(() => listPublicCategories()),
     calculateShipping: publicProcedure.input(z.object({
       cep: z.string().min(8),
@@ -496,6 +499,29 @@ export const appRouter = router({
     })).mutation(async ({ input }) => {
       const saved = await saveHomeContent(input);
       return { success: true, content: saved };
+    }),
+    saveStorefrontConfig: adminProcedure.input(z.object({
+      announcement: z.object({
+        enabled: z.boolean(),
+        text: z.string().trim().min(1).max(180),
+        href: z.string().max(500),
+        backgroundColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+        textColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+      }),
+      maintenance: z.object({
+        enabled: z.boolean(),
+        title: z.string().trim().min(1).max(100),
+        message: z.string().trim().min(1).max(500),
+        accessLabel: z.string().trim().min(1).max(100),
+      }),
+      drop: z.object({
+        enabled: z.boolean(),
+        title: z.string().trim().min(1).max(100),
+        targetAt: z.string().max(40).nullable(),
+      }),
+    })).mutation(async ({ input }) => {
+      const saved = await saveStorefrontConfig(input);
+      return { success: true, config: saved };
     }),
     listEmailLogs: adminProcedure.input(z.object({
       search: z.string().optional(),

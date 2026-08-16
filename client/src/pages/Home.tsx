@@ -30,6 +30,8 @@ import { updateCartLineQuantity, removeCartLine } from "@/lib/cart-operations";
 import { loadCart, saveCart } from "@/lib/cart-storage";
 import { getCheckoutFeedback } from "@/lib/checkout-feedback";
 import { ERAS_COLLECTION_PATHS, ERAS_VIP_WHATSAPP_URL } from "../../../shared/const";
+import type { StorefrontConfig } from "../../../shared/storefront";
+import { hasStorefrontAnnouncement } from "../../../shared/storefront-logic";
 import { checkoutFlowReducer, initialCheckoutFlowState } from "@/lib/checkout-flow";
 import { createOrderSummary, type OrderSummary } from "@/lib/order-summary";
 import { saveCheckoutDraft } from "@/lib/checkout-draft";
@@ -243,6 +245,23 @@ function TikTokIcon({ size = 20 }: { size?: number }) {
 
 const playClick = (enabled: boolean) => playInteractionSound(enabled);
 
+function AnnouncementBar({ config }: { config?: StorefrontConfig }) {
+  if (!config || !hasStorefrontAnnouncement(config)) return null;
+
+  const style = { backgroundColor: config.announcement.backgroundColor, color: config.announcement.textColor };
+  const content = <span className="pix-strip-content">{config.announcement.text}</span>;
+
+  if (!config.announcement.href.trim()) {
+    return <div className="pix-strip" style={style}>{content}</div>;
+  }
+
+  return config.announcement.href.startsWith("/") ? (
+    <Link href={config.announcement.href} className="pix-strip" style={style} aria-label={config.announcement.text}>{content}</Link>
+  ) : (
+    <a href={config.announcement.href} className="pix-strip" style={style} target="_blank" rel="noreferrer" aria-label={config.announcement.text}>{content}</a>
+  );
+}
+
 export default function Home() {
   const [category, setCategory] = useState<Category>("Todos");
   const [sizeFilter, setSizeFilter] = useState("Todos");
@@ -310,6 +329,7 @@ export default function Home() {
   const [cepInput, setCepInput] = useState("");
   const [shippingCep, setShippingCep] = useState("");
   const { data: commercialConfig } = trpc.catalog.getConfig.useQuery();
+  const { data: storefrontConfig } = trpc.catalog.getStorefrontConfig.useQuery();
   const { data: homeContent } = trpc.catalog.getHomeContent.useQuery();
   const { data: catalogRows = [] } = trpc.catalog.list.useQuery();
   const products = useMemo<Product[]>(() => catalogRows.length ? catalogRows.map(mapCatalogProduct) : fallbackProducts, [catalogRows]);
@@ -722,7 +742,7 @@ export default function Home() {
 
   return (
     <div className="eras-site">
-      <div className="pix-strip">5% OFF PARA PAGAMENTOS NO PIX · UMA NOVA ERA COMEÇA AQUI</div>
+      <AnnouncementBar config={storefrontConfig} />
       <header className={`site-header ${isHeaderVisible ? "is-visible" : "is-hidden"}`}>
         <button className="icon-button" aria-label="Abrir menu lateral" onClick={() => { playClick(soundsOn); setIsMenuOpen(true); }}>
           <Menu size={20} />

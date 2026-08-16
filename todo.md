@@ -255,3 +255,13 @@
 - [x] Filtrar dinamicamente os pedidos com base na presença de `labelPdfUrl` ou `shippingOrderId`
 - [x] Ajustar a seleção em massa para considerar apenas os pedidos visíveis no filtro atual
 - [x] Executar testes Vitest, TypeScript, build e guardar checkpoint
+
+
+## Página em construção, banner de anúncio e contador de drop (solicitação de 2026-08-16)
+- [x] Adicionar campos de configuração de anúncio, bloqueio da loja e contador de drop no esquema e banco de dados
+- [x] Criar procedures tRPC para ler e atualizar as configurações no painel administrativo
+- [x] Construir a aba de configuração de "Página em construção / Loja fechada" no painel administrativo (inspirada no Nuvemshop)
+- [x] Atualizar o banner de anúncio topo para ser totalmente editável no painel
+- [x] Implementar a página trancada pública com mensagem personalizada e cronômetro regressivo para o próximo drop, permitindo bypass para administradores autenticados
+- [x] Escrever testes unitários Vitest, validar TypeScript, build e interface
+- [x] Salvar checkpoint final e entregar a funcionalidade completa

@@ -918,3 +918,105 @@ export async function getOrderItems(orderId: number) {
     size: String(item.size ?? "Único"),
   }));
 }
+
+
+export type StorefrontConfig = {
+  announcement: {
+    enabled: boolean;
+    text: string;
+    href: string;
+    backgroundColor: string;
+    textColor: string;
+  };
+  maintenance: {
+    enabled: boolean;
+    title: string;
+    message: string;
+    accessLabel: string;
+  };
+  drop: {
+    enabled: boolean;
+    title: string;
+    targetAt: string | null;
+  };
+};
+
+export const DEFAULT_STOREFRONT_CONFIG: StorefrontConfig = {
+  announcement: {
+    enabled: true,
+    text: "5% OFF PARA PAGAMENTOS NO PIX · UMA NOVA ERA COMEÇA AQUI",
+    href: "",
+    backgroundColor: "#b22222",
+    textColor: "#ffffff",
+  },
+  maintenance: {
+    enabled: false,
+    title: "Página em construção",
+    message: "Estamos a preparar a próxima era. Volte em breve para descobrir o novo drop.",
+    accessLabel: "Entrar na área administrativa",
+  },
+  drop: {
+    enabled: false,
+    title: "PRÓXIMO DROP",
+    targetAt: null,
+  },
+};
+
+function safeStorefrontString(value: unknown, fallback: string, maxLength: number) {
+  if (typeof value !== "string") return fallback;
+  const normalized = value.trim();
+  return normalized ? normalized.slice(0, maxLength) : fallback;
+}
+
+function safeHexColor(value: unknown, fallback: string) {
+  return typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value) ? value : fallback;
+}
+
+function normalizeStorefrontConfig(value: unknown): StorefrontConfig {
+  const saved = (value && typeof value === "object" ? value : {}) as Partial<StorefrontConfig>;
+  const announcement = (saved.announcement ?? {}) as Partial<StorefrontConfig["announcement"]>;
+  const maintenance = (saved.maintenance ?? {}) as Partial<StorefrontConfig["maintenance"]>;
+  const drop = (saved.drop ?? {}) as Partial<StorefrontConfig["drop"]>;
+  const targetAt = typeof drop.targetAt === "string" && !Number.isNaN(Date.parse(drop.targetAt)) ? drop.targetAt : null;
+
+  return {
+    announcement: {
+      enabled: announcement.enabled !== false,
+      text: safeStorefrontString(announcement.text, DEFAULT_STOREFRONT_CONFIG.announcement.text, 180),
+      href: typeof announcement.href === "string" ? announcement.href.trim().slice(0, 500) : "",
+      backgroundColor: safeHexColor(announcement.backgroundColor, DEFAULT_STOREFRONT_CONFIG.announcement.backgroundColor),
+      textColor: safeHexColor(announcement.textColor, DEFAULT_STOREFRONT_CONFIG.announcement.textColor),
+    },
+    maintenance: {
+      enabled: maintenance.enabled === true,
+      title: safeStorefrontString(maintenance.title, DEFAULT_STOREFRONT_CONFIG.maintenance.title, 100),
+      message: safeStorefrontString(maintenance.message, DEFAULT_STOREFRONT_CONFIG.maintenance.message, 500),
+      accessLabel: safeStorefrontString(maintenance.accessLabel, DEFAULT_STOREFRONT_CONFIG.maintenance.accessLabel, 100),
+    },
+    drop: {
+      enabled: drop.enabled === true && Boolean(targetAt),
+      title: safeStorefrontString(drop.title, DEFAULT_STOREFRONT_CONFIG.drop.title, 100),
+      targetAt,
+    },
+  };
+}
+
+export async function getStorefrontConfig(): Promise<StorefrontConfig> {
+  const db = await getDb();
+  if (!db) return DEFAULT_STOREFRONT_CONFIG;
+  const rows = await db.select().from(siteAppearance).where(eq(siteAppearance.sectionKey, "storefront_config")).limit(1);
+  return normalizeStorefrontConfig(rows[0]?.content);
+}
+
+export async function saveStorefrontConfig(config: StorefrontConfig): Promise<StorefrontConfig> {
+  const normalized = normalizeStorefrontConfig(config);
+  const db = await getDb();
+  if (!db) return normalized;
+  const existing = await db.select().from(siteAppearance).where(eq(siteAppearance.sectionKey, "storefront_config")).limit(1);
+  if (existing[0]) {
+    await db.update(siteAppearance).set({ content: normalized as any }).where(eq(siteAppearance.sectionKey, "storefront_config"));
+  } else {
+    await db.insert(siteAppearance).values({ sectionKey: "storefront_config", content: normalized as any });
+  }
+  return normalized;
+}

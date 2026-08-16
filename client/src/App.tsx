@@ -2,9 +2,12 @@ import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch } from "wouter";
+import { Route, Switch, useLocation } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import StorefrontLockedPage from "./components/StorefrontLockedPage";
+import { trpc } from "@/lib/trpc";
+import { isStorefrontLocked } from "../../shared/storefront-logic";
 import Home from "./pages/Home";
 const Auth = lazy(() => import("./pages/Auth"));
 const Admin = lazy(() => import("./pages/Admin"));
@@ -29,6 +32,15 @@ function RouteLoading() {
 }
 
 function Router() {
+  const [location] = useLocation();
+  const isAdminOrAuthRoute = location.startsWith("/admin") || location.startsWith("/auth");
+  const { data: storefrontConfig, isLoading: storefrontConfigLoading } = trpc.catalog.getStorefrontConfig.useQuery();
+
+  if (!isAdminOrAuthRoute && storefrontConfigLoading) return <RouteLoading />;
+  if (!isAdminOrAuthRoute && storefrontConfig && isStorefrontLocked(storefrontConfig)) {
+    return <StorefrontLockedPage config={storefrontConfig} />;
+  }
+
   return (
     <Suspense fallback={<RouteLoading />}>
       <Switch>
