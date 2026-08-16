@@ -10,6 +10,8 @@ export type StorefrontConfig = {
     messages: StorefrontAnnouncementMessage[];
     backgroundColor: string;
     textColor: string;
+    rotationSpeedSeconds: number;
+    showArrows: boolean;
   };
   maintenance: {
     enabled: boolean;
@@ -33,6 +35,8 @@ export const DEFAULT_STOREFRONT_CONFIG: StorefrontConfig = {
     ],
     backgroundColor: "#b22222",
     textColor: "#ffffff",
+    rotationSpeedSeconds: 4,
+    showArrows: true,
   },
   maintenance: {
     enabled: false,

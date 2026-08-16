@@ -428,6 +428,31 @@ function StorefrontSettingsPanel({
             <label className="editor-field"><span>Fundo</span><Input type="color" value={config.announcement.backgroundColor} onChange={(event) => onChange({ ...config, announcement: { ...config.announcement, backgroundColor: event.target.value } })} /></label>
             <label className="editor-field"><span>Texto</span><Input type="color" value={config.announcement.textColor} onChange={(event) => onChange({ ...config, announcement: { ...config.announcement, textColor: event.target.value } })} /></label>
           </div>
+          <div className="home-editor-inline" style={{ marginTop: "1rem" }}>
+            <label className="editor-field">
+              <span>Velocidade de rotação (seg)</span>
+              <select
+                className="admin-filter-select"
+                value={config.announcement.rotationSpeedSeconds ?? 4}
+                onChange={(event) => onChange({ ...config, announcement: { ...config.announcement, rotationSpeedSeconds: Number(event.target.value) } })}
+              >
+                {[2, 3, 4, 5, 6, 8, 10, 15].map((sec) => (
+                  <option key={sec} value={sec}>{sec} segundos</option>
+                ))}
+              </select>
+            </label>
+            <div className="editor-field" style={{ justifyContent: "center" }}>
+              <span>Setas de navegação</span>
+              <label className="admin-category-check" style={{ marginTop: "0.25rem" }}>
+                <input
+                  type="checkbox"
+                  checked={config.announcement.showArrows !== false}
+                  onChange={(event) => onChange({ ...config, announcement: { ...config.announcement, showArrows: event.target.checked } })}
+                />
+                <span>Exibir setas &lt; &gt; na barra</span>
+              </label>
+            </div>
+          </div>
         </div>
         <div className="admin-panel appearance-panel" style={{ background: "#faf8f5" }}>
           <div className="panel-heading"><div><span className="section-kicker">PÁGINA TRANCADA</span><h3>Modo em construção</h3></div></div>
@@ -731,7 +756,8 @@ export default function Admin() {
     setMenuOpen(false);
   }
 
-  const adminName = authUser?.name?.trim() || "Eras Label Admin";
+  const { data: myAdminDetails } = trpc.admin.myAdminDetails.useQuery();
+  const adminName = myAdminDetails?.name?.trim() || authUser?.name?.trim() || "Eras Label Admin";
   const adminInitial = adminName.charAt(0).toUpperCase();
 
   function toggleEditingSize(size: string, checked: boolean) {
@@ -767,7 +793,20 @@ export default function Admin() {
       <aside className={`admin-sidebar ${menuOpen ? "open" : ""}`}>
         <div className="admin-brand"><Link href="/">ERAS<span>.</span></Link><small>ADMIN</small></div>
         <nav>{navItems.map(({ label, icon: Icon }) => <button key={label} className={active === label ? "active" : ""} onClick={() => selectNav(label)}><Icon size={17} />{label}</button>)}</nav>
-        <div className="admin-sidebar-bottom"><button className={active === "Configurações" ? "active" : ""} onClick={() => selectNav("Configurações")}><Settings2 size={17} />Configurações</button><Link href="/" className="back-store"><ArrowLeft size={17} />Voltar à loja</Link></div>
+        <div className="admin-sidebar-bottom">
+          <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", padding: "0.5rem 0.75rem", marginBottom: "0.5rem", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+            {myAdminDetails?.avatarUrl ? (
+              <div style={{ width: "28px", height: "28px", borderRadius: "50%", overflow: "hidden", flexShrink: 0, border: "1px solid rgba(255,255,255,0.2)" }}>
+                <img src={myAdminDetails.avatarUrl} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              </div>
+            ) : (
+              <span style={{ width: "28px", height: "28px", borderRadius: "50%", background: "#b22222", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.75rem", fontWeight: 700, flexShrink: 0 }}>{adminInitial}</span>
+            )}
+            <span style={{ fontSize: "0.85rem", color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: 500 }}>{myAdminDetails?.name || adminName}</span>
+          </div>
+          <button className={active === "Configurações" ? "active" : ""} onClick={() => selectNav("Configurações")}><Settings2 size={17} />Configurações</button>
+          <Link href="/" className="back-store"><ArrowLeft size={17} />Voltar à loja</Link>
+        </div>
       </aside>
       <button type="button" className="admin-sidebar-scrim" aria-label="Fechar menu administrativo" onClick={() => setMenuOpen(false)} />
       <main className="admin-main">
@@ -1089,8 +1128,74 @@ function AdminDashboardHome({ adminName, adminOrders, adminOrdersLoading, catalo
       </div>
       <div className="admin-dashboard-grid">
         <section className="admin-panel chart-panel dashboard-chart-panel">
-          <div className="panel-heading"><div><span className="section-kicker">VENDAS</span><h3>Faturamento no período</h3></div><span className="editor-help">Ticket médio: R$ {Number(summary.averageTicket).toFixed(2)}</span></div>
-          {isLoading ? <div className="dashboard-empty-state"><LoaderCircle className="spin" size={18} /> A carregar métricas reais...</div> : trend.length === 0 ? <div className="dashboard-empty-state"><BarChart3 size={22} /><strong>Ainda não existem vendas para analisar.</strong><span>Assim que houver pedidos, o gráfico será preenchido automaticamente.</span></div> : <div className="fake-chart"><div className="chart-axis"><span>R$ {maxRevenue.toFixed(0)}</span><span>R$ {(maxRevenue * 0.66).toFixed(0)}</span><span>R$ {(maxRevenue * 0.33).toFixed(0)}</span><span>R$ 0</span></div><div className="chart-bars">{trend.map((item: any, index: number) => <div className="chart-bar-wrap" key={index}><div className="chart-bar" style={{ height: `${Math.max(6, ((Number(item.revenue) || 0) / maxRevenue) * 100)}%` }} title={`R$ ${Number(item.revenue || 0).toFixed(2)}`} /><span>{item.label}</span></div>)}</div></div>}
+          <div className="panel-heading">
+            <div>
+              <span className="section-kicker">EVOLUÇÃO DA LOJA</span>
+              <h3>Vendas e Visitas no Período</h3>
+            </div>
+            <div className="chart-legend-badge">
+              <span className="legend-dot revenue-dot" /> Faturamento (R$) &nbsp;
+              <span className="legend-dot visits-dot" /> Visitas
+            </div>
+          </div>
+          {isLoading ? (
+            <div className="dashboard-empty-state"><LoaderCircle className="spin" size={18} /> A carregar gráfico de linhas...</div>
+          ) : trend.length === 0 ? (
+            <div className="dashboard-empty-state"><BarChart3 size={22} /><strong>Ainda não existem dados para exibir.</strong><span>O gráfico de linhas será gerado assim que houver atividade na loja.</span></div>
+          ) : (
+            <div className="interactive-line-chart-container">
+              <div className="chart-axis-labels">
+                <span>R$ {maxRevenue.toFixed(0)}</span>
+                <span>R$ {(maxRevenue * 0.5).toFixed(0)}</span>
+                <span>R$ 0</span>
+              </div>
+              <div className="svg-line-chart-wrap">
+                <svg className="analytics-line-svg" viewBox="0 0 600 200" preserveAspectRatio="none">
+                  {/* Linha de Faturamento */}
+                  <path
+                    d={trend.reduce((acc: string, item: any, i: number) => {
+                      const x = (i / (Math.max(1, trend.length - 1))) * 560 + 20;
+                      const y = 180 - Math.max(10, ((Number(item.revenue) || 0) / (maxRevenue || 1)) * 160);
+                      return i === 0 ? `M ${x} ${y}` : `${acc} L ${x} ${y}`;
+                    }, "")}
+                    fill="none"
+                    stroke="#b22222"
+                    strokeWidth="3.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  {/* Linha de Visitas (escala proporcional menor) */}
+                  <path
+                    d={trend.reduce((acc: string, item: any, i: number) => {
+                      const maxVisits = Math.max(...trend.map((t: any) => t.visits || 1), 10);
+                      const x = (i / (Math.max(1, trend.length - 1))) * 560 + 20;
+                      const y = 180 - Math.max(10, ((Number(item.visits) || 0) / maxVisits) * 160);
+                      return i === 0 ? `M ${x} ${y}` : `${acc} L ${x} ${y}`;
+                    }, "")}
+                    fill="none"
+                    stroke="#333333"
+                    strokeWidth="2"
+                    strokeDasharray="4 4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  {/* Pontos de Faturamento */}
+                  {trend.map((item: any, i: number) => {
+                    const x = (i / (Math.max(1, trend.length - 1))) * 560 + 20;
+                    const y = 180 - Math.max(10, ((Number(item.revenue) || 0) / (maxRevenue || 1)) * 160);
+                    return (
+                      <circle key={`rev-${i}`} cx={x} cy={y} r="5" fill="#ffffff" stroke="#b22222" strokeWidth="3" />
+                    );
+                  })}
+                </svg>
+                <div className="chart-x-labels">
+                  {trend.map((item: any, i: number) => (
+                    <span key={i} title={`R$ ${item.revenue} · ${item.visits} visitas`}>{item.label}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </section>
         <section className="admin-panel"><div className="panel-heading"><div><span className="section-kicker">OPERAÇÃO</span><h3>Pedidos recentes</h3></div><button className="inline-link" type="button" onClick={() => onNavigate("Pedidos")}>Ver todos <ArrowLeft size={13} className="rotate-180" /></button></div><div className="mini-orders">{adminOrdersLoading ? <div className="dashboard-empty-state"><LoaderCircle className="spin" size={18} /> A carregar...</div> : adminOrders.length === 0 ? <div className="dashboard-empty-state"><ShoppingCart size={18} /><span>Nenhum pedido registado.</span></div> : adminOrders.slice(0, 3).map((order) => <div className="mini-order" key={order.id}><div className="order-icon"><ShoppingCart size={15} /></div><div><strong>{order.orderNumber} · {order.customerName}</strong><span>{new Date(order.createdAt).toLocaleString("pt-BR")}</span></div><b>R$ {Number(order.total).toFixed(2)}</b></div>)}</div></section>
       </div>
@@ -1794,20 +1899,58 @@ function AdminSettingsSection({ onNavigate }: { onNavigate: (label: string) => v
   const { data: details, isLoading } = trpc.admin.myAdminDetails.useQuery();
   const utils = trpc.useUtils();
   const [name, setName] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const uploadMutation = trpc.admin.uploadImage.useMutation();
   const [compactMode, setCompactMode] = useState(() => readAdminPreference("compact", false));
   const [reducedMotion, setReducedMotion] = useState(() => readAdminPreference("reducedMotion", false));
   const [autoRefresh, setAutoRefresh] = useState(() => readAdminPreference("autoRefresh", true));
   const updateProfile = trpc.admin.updateMyAdminProfile.useMutation({
     onSuccess: async () => {
       await Promise.all([utils.auth.me.invalidate(), utils.admin.myAdminDetails.invalidate()]);
-      toast.success("O seu nome foi atualizado no painel.");
+      toast.success("O seu perfil foi atualizado no painel.");
     },
-    onError: (error) => toast.error(error.message || "Não foi possível atualizar o nome."),
+    onError: (error) => toast.error(error.message || "Não foi possível atualizar o perfil."),
   });
 
   useEffect(() => {
     if (details?.name) setName(details.name);
-  }, [details?.name]);
+    if (details?.avatarUrl !== undefined) setAvatarUrl(details.avatarUrl ?? null);
+  }, [details?.name, details?.avatarUrl]);
+
+  function handleAvatarUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("O ficheiro é muito grande. Escolha uma imagem de até 5MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    setUploadingAvatar(true);
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      uploadMutation.mutate({
+        fileName: file.name,
+        fileBase64: base64,
+        contentType: file.type || "image/png",
+      }, {
+        onSuccess: (res) => {
+          setUploadingAvatar(false);
+          setAvatarUrl(res.url);
+          updateProfile.mutate({ name, avatarUrl: res.url });
+          toast.success("Fotografia de perfil carregada com sucesso!");
+        },
+        onError: () => {
+          setUploadingAvatar(false);
+          toast.error("Não foi possível carregar a fotografia. Tente novamente.");
+        }
+      });
+    };
+    reader.readAsDataURL(file);
+  }
 
   function savePreference(key: "compact" | "reducedMotion" | "autoRefresh", value: boolean) {
     writeAdminPreference(key, value);
@@ -1823,7 +1966,34 @@ function AdminSettingsSection({ onNavigate }: { onNavigate: (label: string) => v
     <section className="admin-content settings-page">
       <div className="content-toolbar settings-page-heading"><div><span className="section-kicker">CENTRO DE CONTROLO</span><h2 className="content-title">Configurações</h2><p>Personalize o seu acesso e o comportamento do painel administrativo.</p></div><span className="settings-role-badge">{details?.roleTitle || "Administrador"}</span></div>
       <div className="settings-grid">
-        <section className="admin-panel settings-card"><div className="settings-card-heading"><span className="settings-icon"><UserRound size={18} /></span><div><h3>O seu perfil</h3><p>O nome pode ser alterado por qualquer função administrativa.</p></div></div><div className="settings-form"><label>Nome de apresentação<Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Como quer ser chamado no painel?" /></label><label>E-mail de acesso<Input value={details?.email || ""} readOnly /></label><label>Cargo<Input value={details?.roleTitle || "Administrador"} readOnly /></label><div className="settings-actions"><Button onClick={() => updateProfile.mutate({ name })} disabled={updateProfile.isPending || name.trim().length < 2}>{updateProfile.isPending ? <><LoaderCircle className="spin" size={15} /> A guardar...</> : <><Check size={15} /> Guardar nome</>}</Button></div></div></section>
+        <section className="admin-panel settings-card"><div className="settings-card-heading"><span className="settings-icon"><UserRound size={18} /></span><div><h3>O seu perfil</h3><p>O nome e a fotografia podem ser alterados por qualquer função administrativa.</p></div></div>
+          <div className="settings-form">
+            <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1rem" }}>
+              <div style={{ width: "64px", height: "64px", borderRadius: "50%", background: "#f3f0ea", border: "2px solid #ddd", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                ) : (
+                  <span style={{ fontSize: "1.25rem", fontWeight: 700, color: "#333" }}>{name.charAt(0).toUpperCase() || "A"}</span>
+                )}
+              </div>
+              <div>
+                <label style={{ display: "inline-block", background: "#111", color: "#fff", padding: "0.4rem 0.8rem", borderRadius: "6px", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer" }}>
+                  <input type="file" accept="image/*" onChange={handleAvatarUpload} style={{ display: "none" }} />
+                  {uploadingAvatar ? "A carregar..." : "Alterar fotografia"}
+                </label>
+                <p style={{ fontSize: "0.75rem", color: "#666", marginTop: "0.3rem" }}>JPG, PNG ou WebP de até 5MB.</p>
+              </div>
+            </div>
+            <label>Nome de apresentação<Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Como quer ser chamado no painel?" /></label>
+            <label>E-mail de acesso<Input value={details?.email || ""} readOnly /></label>
+            <label>Cargo<Input value={details?.roleTitle || "Administrador"} readOnly /></label>
+            <div className="settings-actions">
+              <Button onClick={() => updateProfile.mutate({ name, avatarUrl })} disabled={updateProfile.isPending || name.trim().length < 2}>
+                {updateProfile.isPending ? <><LoaderCircle className="spin" size={15} /> A guardar...</> : <><Check size={15} /> Guardar perfil</>}
+              </Button>
+            </div>
+          </div>
+        </section>
         <section className="admin-panel settings-card"><div className="settings-card-heading"><span className="settings-icon"><SlidersHorizontal size={18} /></span><div><h3>Preferências do painel</h3><p>Estas opções ficam guardadas neste navegador.</p></div></div><div className="settings-options"><label className="settings-toggle"><span><strong>Modo compacto</strong><small>Reduz espaçamentos para mostrar mais informação.</small></span><input type="checkbox" checked={compactMode} onChange={(event) => savePreference("compact", event.target.checked)} /></label><label className="settings-toggle"><span><strong>Movimento reduzido</strong><small>Desativa transições não essenciais para uma navegação mais discreta.</small></span><input type="checkbox" checked={reducedMotion} onChange={(event) => savePreference("reducedMotion", event.target.checked)} /></label><label className="settings-toggle"><span><strong>Atualização automática</strong><small>Permite atualizar indicadores quando novos dados forem registados.</small></span><input type="checkbox" checked={autoRefresh} onChange={(event) => savePreference("autoRefresh", event.target.checked)} /></label></div></section>
         <section className="admin-panel settings-card"><div className="settings-card-heading"><span className="settings-icon"><Palette size={18} /></span><div><h3>Aparência da loja</h3><p>Os conteúdos públicos continuam editáveis na secção dedicada.</p></div></div><div className="settings-link-list"><button type="button" onClick={() => onNavigate("Aparência")}><ImagePlus size={17} /><span><strong>Editar banners e destaques</strong><small>Atualize imagens, textos e links da Home.</small></span><ArrowLeft className="rotate-180" size={15} /></button><button type="button" onClick={() => onNavigate("Aparência")}><Megaphone size={17} /><span><strong>Gerir barra de anúncio</strong><small>Crie mensagens rotativas e defina links.</small></span><ArrowLeft className="rotate-180" size={15} /></button></div></section>
         <section className="admin-panel settings-card"><div className="settings-card-heading"><span className="settings-icon"><ShieldCheck size={18} /></span><div><h3>Segurança e permissões</h3><p>O cabeçalho mostra o cargo e os módulos permitidos para o utilizador.</p></div></div><div className="permission-summary"><span>Perfil atual</span><strong>{details?.isSuperAdmin ? "Acesso total" : details?.roleTitle || "Administrador"}</strong><small>{details?.isSuperAdmin ? "Pode gerir todas as áreas e a equipa." : "As permissões foram definidas pelo administrador principal."}</small></div></section>
@@ -1870,7 +2040,13 @@ function AdminHeaderBar({ authUser, active, setMenuOpen, adminInitial, adminName
           </span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", borderLeft: "1px solid #ddd", paddingLeft: "0.75rem" }}>
-          <span className="admin-avatar">{adminInitial}</span>
+          {myDetails?.avatarUrl ? (
+            <div style={{ width: "32px", height: "32px", borderRadius: "50%", overflow: "hidden", border: "1px solid #ccc", flexShrink: 0 }}>
+              <img src={myDetails.avatarUrl} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            </div>
+          ) : (
+            <span className="admin-avatar">{adminInitial}</span>
+          )}
           <span style={{ fontWeight: 600, fontSize: "0.9rem" }}>{adminName}</span>
         </div>
       </div>

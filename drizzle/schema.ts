@@ -204,6 +204,7 @@ export const adminUsers = mysqlTable("admin_users", {
   passwordHash: varchar("passwordHash", { length: 255 }).notNull(),
   roleTitle: varchar("roleTitle", { length: 100 }).notNull().default("Assistente"),
   permissions: text("permissions").notNull().default("products,inventory,categories,stats,emails,settings"),
+  avatarUrl: text("avatarUrl"),
   isActive: int("isActive").notNull().default(1),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),

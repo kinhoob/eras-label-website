@@ -1,8 +1,8 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "cc4fd286-c3e9-4497-84d9-d564ea326ead",
-  "prevId": "8c3de138-1415-4cf4-a6ae-b010d7ec4a57",
+  "id": "e83d940b-aa7a-4afc-9857-7b5943699e98",
+  "prevId": "cc4fd286-c3e9-4497-84d9-d564ea326ead",
   "tables": {
     "abandoned_carts": {
       "name": "abandoned_carts",
@@ -118,6 +118,13 @@
           "notNull": true,
           "autoincrement": false,
           "default": "('products,inventory,categories,stats,emails,settings')"
+        },
+        "avatarUrl": {
+          "name": "avatarUrl",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
         },
         "isActive": {
           "name": "isActive",
@@ -799,6 +806,20 @@
         "carrier": {
           "name": "carrier",
           "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "shippingOrderId": {
+          "name": "shippingOrderId",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "labelPdfUrl": {
+          "name": "labelPdfUrl",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false

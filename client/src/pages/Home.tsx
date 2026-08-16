@@ -251,12 +251,15 @@ const playClick = (enabled: boolean) => playInteractionSound(enabled);
 function AnnouncementBar({ config }: { config?: StorefrontConfig }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const messages = config?.announcement.messages ?? [];
+  const rotationSeconds = config?.announcement.rotationSpeedSeconds ?? 5;
+  const showArrows = config?.announcement.showArrows ?? true;
 
   useEffect(() => {
     if (messages.length <= 1) return;
-    const timer = window.setInterval(() => setActiveIndex((current) => (current + 1) % messages.length), 5000);
+    const intervalMs = Math.max(2000, rotationSeconds * 1000);
+    const timer = window.setInterval(() => setActiveIndex((current) => (current + 1) % messages.length), intervalMs);
     return () => window.clearInterval(timer);
-  }, [messages.length]);
+  }, [messages.length, rotationSeconds]);
 
   useEffect(() => {
     if (activeIndex >= messages.length) setActiveIndex(0);
@@ -266,16 +269,42 @@ function AnnouncementBar({ config }: { config?: StorefrontConfig }) {
 
   const message = messages[activeIndex % messages.length];
   const style = { backgroundColor: config.announcement.backgroundColor, color: config.announcement.textColor };
-  const content = <span className="pix-strip-content" key={message.id}>{message.text}</span>;
+  const content = <span className="pix-strip-content" key={`${activeIndex}-${message.id || message.text}`}>{message.text}</span>;
 
-  if (!message.href.trim()) {
-    return <div className="pix-strip" style={style} aria-live="polite">{content}</div>;
-  }
+  return (
+    <div className="pix-strip-wrapper" style={{ ...style, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      {showArrows && messages.length > 1 && (
+        <button 
+          type="button" 
+          onClick={(e) => { e.stopPropagation(); setActiveIndex((current) => (current - 1 + messages.length) % messages.length); }} 
+          style={{ background: 'transparent', border: 'none', color: config.announcement.textColor, cursor: 'pointer', padding: '0 1rem', fontSize: '1rem', opacity: 0.8, zIndex: 2 }}
+          aria-label="Anúncio anterior"
+        >
+          ‹
+        </button>
+      )}
 
-  return message.href.startsWith("/") ? (
-    <Link href={message.href} className="pix-strip" style={style} aria-label={message.text}>{content}</Link>
-  ) : (
-    <a href={message.href} className="pix-strip" style={style} target="_blank" rel="noreferrer" aria-label={message.text}>{content}</a>
+      {message.href.trim() ? (
+        message.href.startsWith("/") ? (
+          <Link href={message.href} className="pix-strip" style={{ ...style, flex: 1, textAlign: 'center' }} aria-label={message.text}>{content}</Link>
+        ) : (
+          <a href={message.href} className="pix-strip" style={{ ...style, flex: 1, textAlign: 'center' }} target="_blank" rel="noreferrer" aria-label={message.text}>{content}</a>
+        )
+      ) : (
+        <div className="pix-strip" style={{ ...style, flex: 1, textAlign: 'center' }} aria-live="polite">{content}</div>
+      )}
+
+      {showArrows && messages.length > 1 && (
+        <button 
+          type="button" 
+          onClick={(e) => { e.stopPropagation(); setActiveIndex((current) => (current + 1) % messages.length); }} 
+          style={{ background: 'transparent', border: 'none', color: config.announcement.textColor, cursor: 'pointer', padding: '0 1rem', fontSize: '1rem', opacity: 0.8, zIndex: 2 }}
+          aria-label="Próximo anúncio"
+        >
+          ›
+        </button>
+      )}
+    </div>
   );
 }
 

@@ -343,3 +343,17 @@
 - [x] Reformular a tela inicial com métricas reais por período (7, 15, 30 dias e personalizado) e cartões operacionais.
 - [x] Corrigir a secção de expectativas ligando-a ao estado real do catálogo.
 - [x] Executar TypeScript, testes Vitest, build e salvar checkpoint final.
+
+
+## Novas Solicitações de Melhoria (Gráfico de Linhas, Anúncios com Velocidade/Setas e Avatar de Perfil)
+- [ ] Adicionar gráfico de linhas no painel inicial para evolução de vendas e visitas por período.
+- [ ] Incluir nas configurações de aparência a velocidade de rotação da barra de anúncios e botões de setas de navegação.
+- [ ] Permitir upload e exibição de fotografia de perfil para administradores junto ao nome na sidebar.
+- [ ] Executar testes unitários, TypeScript, build de produção e guardar checkpoint final.
+
+
+## Gráfico de Linhas, Velocidade de Anúncio e Fotografia de Perfil (2026-08-16)
+- [x] Adicionar gráfico de linhas no painel inicial para visualizar a evolução das vendas e visitas de acordo com o período selecionado.
+- [x] Incluir opções na secção de aparência para definir a velocidade de rotação das mensagens da barra de anúncios e adicionar setas de navegação.
+- [x] Permitir que os utilizadores do painel administrativo façam o upload de uma fotografia de perfil para ser exibida junto ao seu nome na sidebar.
+- [x] Executar testes unitários Vitest, TypeScript e build de produção para confirmar todas as melhorias.

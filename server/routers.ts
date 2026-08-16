@@ -512,6 +512,8 @@ export const appRouter = router({
         })).min(1).max(8),
         backgroundColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
         textColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+        rotationSpeedSeconds: z.number().int().min(2).max(15),
+        showArrows: z.boolean(),
       }),
       maintenance: z.object({
         enabled: z.boolean(),
@@ -957,32 +959,38 @@ Seja objetivo, elegante e direto ao ponto.`;
     }),
     updateMyAdminProfile: adminProcedure.input(z.object({
       name: z.string().trim().min(2, "Informe pelo menos 2 caracteres.").max(100),
+      avatarUrl: z.string().max(1000).nullable().optional(),
     })).mutation(async ({ ctx, input }) => {
       const email = (ctx.user?.email || "").toLowerCase().trim();
       const name = input.name.trim();
+      const avatarUrl = input.avatarUrl !== undefined ? input.avatarUrl : null;
       await updateUserName(ctx.user.openId, name);
       const subAdmin = await getAdminUserByEmail(email);
-      if (subAdmin) await updateAdminUser(subAdmin.id, { name });
-      return { success: true, name };
+      if (subAdmin) {
+        await updateAdminUser(subAdmin.id, { name, avatarUrl });
+      }
+      return { success: true, name, avatarUrl };
     }),
     myAdminDetails: adminProcedure.query(async ({ ctx }) => {
       const email = (ctx.user?.email || "").toLowerCase().trim();
       const isSuperAdmin = email === (process.env.ADMIN_LOGIN_EMAIL || "theeraslabel@gmail.com").toLowerCase().trim();
+      const subAdmin = await getAdminUserByEmail(email);
       if (isSuperAdmin) {
         return {
           email,
-          name: ctx.user?.name || ADMIN_DISPLAY_NAME,
-          roleTitle: "Superadministrador",
+          name: ctx.user?.name || subAdmin?.name || ADMIN_DISPLAY_NAME,
+          roleTitle: subAdmin?.roleTitle || "Superadministrador",
           permissions: "products,inventory,categories,stats,emails,settings",
+          avatarUrl: subAdmin?.avatarUrl || null,
           isSuperAdmin: true,
         };
       }
-      const subAdmin = await getAdminUserByEmail(email);
       return {
         email,
         name: ctx.user?.name || subAdmin?.name || "Administrador",
         roleTitle: subAdmin?.roleTitle || "Assistente",
         permissions: subAdmin?.permissions || "",
+        avatarUrl: subAdmin?.avatarUrl || null,
         isSuperAdmin: false,
       };
     }),
