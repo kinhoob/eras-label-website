@@ -3,6 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { filterOrdersWithReadyLabels } from "@/lib/order-label-filter";
 import { Download, Eye, FileText, ExternalLink, Truck, Package, LoaderCircle, CreditCard, Users, Check, Minus, Files } from "lucide-react";
 
 export default function AdminSalesSection() {
@@ -13,6 +14,13 @@ export default function AdminSalesSection() {
   const [labelPdfUrl, setLabelPdfUrl] = useState<string | null>(null);
   const [selectedOrderIds, setSelectedOrderIds] = useState<number[]>([]);
   const [bulkLabelPdfUrl, setBulkLabelPdfUrl] = useState<string | null>(null);
+  const [labelFilter, setLabelFilter] = useState<"all" | "ready">("all");
+
+  // Um pedido está pronto para download quando já tem um PDF persistido ou
+  // um ID de envio que permite obtê-lo no Melhor Envio sob demanda.
+  const visibleOrders = labelFilter === "ready" ? filterOrdersWithReadyLabels(orders) : orders;
+  const visibleOrderIds = visibleOrders.map((order: any) => order.id);
+  const visibleSelectedOrderIds = selectedOrderIds.filter((orderId) => visibleOrderIds.includes(orderId));
 
   const calculateShippingMutation = trpc.admin.calculateShippingQuote.useMutation({
     onSuccess: (data) => {
@@ -75,7 +83,7 @@ export default function AdminSalesSection() {
   };
 
   const activeLabelPdfUrl = labelPdfUrl || selectedOrder?.labelPdfUrl || null;
-  const allOrdersSelected = orders.length > 0 && orders.every((order: any) => selectedOrderIds.includes(order.id));
+  const allOrdersSelected = visibleOrders.length > 0 && visibleOrders.every((order: any) => visibleSelectedOrderIds.includes(order.id));
 
   const bulkDownloadLabelsMutation = trpc.admin.downloadBulkShippingLabels.useMutation({
     onSuccess: (data) => {
@@ -99,16 +107,18 @@ export default function AdminSalesSection() {
   };
 
   const toggleAllOrders = () => {
-    setSelectedOrderIds(allOrdersSelected ? [] : orders.map((order: any) => order.id));
+    setSelectedOrderIds((current) => allOrdersSelected
+      ? current.filter((orderId) => !visibleOrderIds.includes(orderId))
+      : Array.from(new Set([...current, ...visibleOrderIds])));
   };
 
   const handleBulkDownload = () => {
-    if (selectedOrderIds.length === 0) {
+    if (visibleSelectedOrderIds.length === 0) {
       toast.error("Selecione pelo menos um pedido para baixar as etiquetas.");
       return;
     }
     setBulkLabelPdfUrl(null);
-    bulkDownloadLabelsMutation.mutate({ orderIds: selectedOrderIds });
+    bulkDownloadLabelsMutation.mutate({ orderIds: visibleSelectedOrderIds });
   };
 
   return (
@@ -117,16 +127,32 @@ export default function AdminSalesSection() {
         <div>
           <span className="section-kicker">GESTÃO COMERCIAL</span>
           <h2 className="content-title">Vendas & Entregas (Melhor Envio)</h2>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "10px", flexWrap: "wrap" }} role="group" aria-label="Filtro de etiquetas">
+            <Button
+              size="sm"
+              variant={labelFilter === "all" ? "default" : "outline"}
+              onClick={() => setLabelFilter("all")}
+            >
+              Todas ({orders.length})
+            </Button>
+            <Button
+              size="sm"
+              variant={labelFilter === "ready" ? "default" : "outline"}
+              onClick={() => setLabelFilter("ready")}
+            >
+              Etiquetas prontas ({filterOrdersWithReadyLabels(orders).length})
+            </Button>
+          </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", justifyContent: "flex-end" }}>
-          {selectedOrderIds.length > 0 && (
+          {visibleSelectedOrderIds.length > 0 && (
             <Button
               onClick={handleBulkDownload}
               disabled={bulkDownloadLabelsMutation.isPending}
               style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
             >
               {bulkDownloadLabelsMutation.isPending ? <LoaderCircle className="spin" size={14} /> : <Files size={14} />}
-              {bulkDownloadLabelsMutation.isPending ? "A consolidar..." : `Baixar ${selectedOrderIds.length} etiqueta(s)`}
+              {bulkDownloadLabelsMutation.isPending ? "A consolidar..." : `Baixar ${visibleSelectedOrderIds.length} etiqueta(s)`}
             </Button>
           )}
           <Button variant="outline" onClick={() => refetch()}>Atualizar lista</Button>
@@ -170,8 +196,12 @@ export default function AdminSalesSection() {
       <div className="admin-panel table-panel">
         {isLoading ? (
           <p className="editor-description" style={{ padding: "2rem", textAlign: "center" }}>A carregar vendas e dados de entrega...</p>
-        ) : orders.length === 0 ? (
-          <p className="editor-description" style={{ padding: "2rem", textAlign: "center" }}>Ainda não existem vendas registadas no sistema.</p>
+        ) : visibleOrders.length === 0 ? (
+          <p className="editor-description" style={{ padding: "2rem", textAlign: "center" }}>
+            {labelFilter === "ready"
+              ? "Ainda não existem pedidos com etiquetas prontas para download."
+              : "Ainda não existem vendas registadas no sistema."}
+          </p>
         ) : (
           <table>
             <thead>
@@ -197,7 +227,7 @@ export default function AdminSalesSection() {
               </tr>
             </thead>
             <tbody>
-              {orders.map((order: any) => {
+              {visibleOrders.map((order: any) => {
                 const address = order.address || order.shippingAddress || {};
                 const shippingLabel = order.shippingService || order.shippingMethod || "Correios / Logística";
                 const isPaid = order.paymentStatus === "approved" || order.payment === "Pago";

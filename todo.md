@@ -246,5 +246,12 @@
 - [x] Consolidar as etiquetas selecionadas em um único PDF no backend
 - [x] Disponibilizar o download do PDF consolidado com tratamento de etiquetas ausentes
 - [x] Criar testes unitários e validar TypeScript, Vitest, build e interface
-- [ ] Salvar checkpoint da funcionalidade de PDF consolidado
+- [x] Salvar checkpoint da funcionalidade de PDF consolidado
 
+
+
+## Filtro rápido de etiquetas prontas (solicitação de 2026-08-16)
+- [x] Adicionar estado de filtro rápido ("Todos" vs "Etiquetas Prontas") na aba de Vendas
+- [x] Filtrar dinamicamente os pedidos com base na presença de `labelPdfUrl` ou `shippingOrderId`
+- [x] Ajustar a seleção em massa para considerar apenas os pedidos visíveis no filtro atual
+- [x] Executar testes Vitest, TypeScript, build e guardar checkpoint
