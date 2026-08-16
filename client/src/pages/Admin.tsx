@@ -759,6 +759,7 @@ export default function Admin() {
         <nav>{navItems.map(({ label, icon: Icon }) => <button key={label} className={active === label ? "active" : ""} onClick={() => selectNav(label)}><Icon size={17} />{label}</button>)}</nav>
         <div className="admin-sidebar-bottom"><button onClick={() => toast.info("Configurações do painel em breve.")}><Settings2 size={17} />Configurações</button><Link href="/" className="back-store"><ArrowLeft size={17} />Voltar à loja</Link></div>
       </aside>
+      <button type="button" className="admin-sidebar-scrim" aria-label="Fechar menu administrativo" onClick={() => setMenuOpen(false)} />
       <main className="admin-main">
         <AdminHeaderBar authUser={authUser} active={active} setMenuOpen={setMenuOpen} adminInitial={adminInitial} adminName={adminName} />
         {active === "Estatísticas" && <AdminAnalyticsSection />}

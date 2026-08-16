@@ -2543,3 +2543,701 @@ td { border-top: 1px solid #e1dacf; padding: 15px 17px; color: #6f675e; font-siz
   .orders-refresh-button { padding: 8px 9px; font-size: 8px; }
   .order-status-stack { justify-items: start; margin-top: 10px; }
 }
+
+
+/* ============================================================================
+   ERAS LABEL — REFINAMENTO VISUAL ELEGANTE
+   Esta camada final concentra os tokens e microinterações do novo sistema visual.
+   Ela sobrescreve apenas aparência, sem alterar a lógica dos componentes.
+   ============================================================================ */
+
+/* Tokens de marca: o vermelho oficial fica reservado para ações, estados ativos
+   e detalhes de navegação, evitando saturar a experiência editorial. */
+:root {
+  --eras-red: #b22222;
+  --eras-red-dark: #861c1c;
+  --eras-red-soft: #f4dfdc;
+  --eras-ink: #211f1c;
+  --eras-ink-soft: #5f584f;
+  --eras-paper: #fbf9f5;
+  --eras-paper-warm: #f3eee7;
+  --eras-line: rgba(80, 66, 54, .16);
+  --eras-shadow-soft: 0 18px 55px rgba(48, 36, 27, .10);
+  --eras-shadow-float: 0 22px 65px rgba(48, 36, 27, .18);
+  --eras-ease: cubic-bezier(.23, 1, .32, 1);
+}
+
+/* Scrollbar fina e discreta: o thumb vermelho mantém a identidade mesmo durante
+   listas internas longas, sem ocupar a área útil do conteúdo. */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--eras-red) #ece6df;
+  scroll-behavior: smooth;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--eras-red) #ece6df;
+}
+
+*::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #ece6df;
+}
+
+*::-webkit-scrollbar-thumb {
+  border: 2px solid #ece6df;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #c53a3a 0%, var(--eras-red-dark) 100%);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--eras-red);
+}
+
+/* Base tipográfica e seleção: melhora a leitura sem introduzir uma fonte externa
+   que aumentaria o custo de carregamento da primeira visita. */
+body {
+  background: var(--eras-paper-warm);
+  color: var(--eras-ink);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--eras-red);
+  color: #fffaf5;
+}
+
+/* Foco consistente: teclado e leitores de ecrã recebem uma indicação de foco
+   visível, elegante e alinhada com a cor principal da marca. */
+:where(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--eras-red);
+  outline-offset: 3px;
+}
+
+/* Ligações e botões recebem transições curtas e físicas; a regra evita animações
+   agressivas em elementos que não são interativos. */
+:where(a, button, input, select, textarea) {
+  transition-timing-function: var(--eras-ease);
+}
+
+/* Barra de anúncio: mais presença editorial, mantendo a altura compacta para não
+   empurrar o hero nem reduzir a conversão no mobile. */
+.pix-strip {
+  position: relative;
+  z-index: 25;
+  overflow: hidden;
+  background: var(--eras-red);
+  color: #fffaf5;
+  box-shadow: 0 4px 16px rgba(178, 34, 34, .16);
+  letter-spacing: .22em;
+}
+
+.pix-strip::after {
+  position: absolute;
+  inset: 0 auto 0 -35%;
+  width: 28%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.22), transparent);
+  content: "";
+  transform: skewX(-20deg);
+  animation: eras-announcement-sheen 5.5s var(--eras-ease) infinite;
+  pointer-events: none;
+}
+
+@keyframes eras-announcement-sheen {
+  0%, 65% { transform: translateX(0) skewX(-20deg); opacity: 0; }
+  75% { opacity: 1; }
+  100% { transform: translateX(520%) skewX(-20deg); opacity: 0; }
+}
+
+/* Cabeçalho público: a superfície translúcida fica mais refinada ao rolar e o
+   sublinhado da navegação usa uma entrada curta em vez de um salto brusco. */
+.site-header {
+  border-bottom-color: rgba(80, 66, 54, .13);
+  background: rgba(251, 249, 245, .86);
+  box-shadow: 0 12px 36px rgba(48, 36, 27, .07);
+  backdrop-filter: blur(18px) saturate(1.05);
+}
+
+.brand-mark, .footer-brand, .menu-brand {
+  color: var(--eras-ink);
+  letter-spacing: .3em;
+}
+
+.brand-mark span, .footer-brand span, .menu-brand span,
+.section-kicker, .product-price span, .event-date {
+  color: var(--eras-red);
+}
+
+.desktop-nav a::after {
+  bottom: 16px;
+  height: 2px;
+  background: var(--eras-red);
+  transition: width .28s var(--eras-ease);
+}
+
+.desktop-nav a:hover,
+.desktop-nav a:focus-visible,
+.icon-button:hover,
+.bag-button:hover {
+  color: var(--eras-red);
+}
+
+.icon-button,
+.bag-button,
+.close-button {
+  transition: color .2s ease, background-color .2s ease, border-color .2s ease, transform .2s var(--eras-ease);
+}
+
+.icon-button:hover,
+.bag-button:hover {
+  transform: translateY(-1px);
+}
+
+/* Conteúdo editorial: cartões, imagens e links têm uma profundidade subtil para
+   criar uma sensação premium sem abandonar o minimalismo da marca. */
+.hero-section {
+  position: relative;
+  isolation: isolate;
+}
+
+.hero-section::after {
+  position: absolute;
+  inset: auto 7vw 6vh auto;
+  width: 70px;
+  height: 1px;
+  background: rgba(255, 250, 245, .65);
+  content: "";
+  opacity: .8;
+}
+
+.text-link {
+  transition: gap .28s var(--eras-ease), color .2s ease, border-color .2s ease;
+}
+
+.text-link:hover,
+.text-link:focus-visible {
+  color: var(--eras-red);
+  gap: 17px;
+}
+
+.product-grid {
+  gap: clamp(22px, 2.7vw, 40px) clamp(12px, 1.65vw, 24px);
+}
+
+.product-image-button {
+  border: 1px solid rgba(80, 66, 54, .08);
+  box-shadow: 0 9px 24px rgba(48, 36, 27, .05);
+  transition: box-shadow .36s var(--eras-ease), transform .36s var(--eras-ease);
+}
+
+.product-image-button img {
+  filter: saturate(.82) contrast(1.01);
+  transition: transform .75s var(--eras-ease), filter .45s ease;
+}
+
+.product-image-button:hover,
+.product-image-button:focus-visible {
+  box-shadow: var(--eras-shadow-soft);
+  transform: translateY(-4px);
+}
+
+.product-image-button:hover img,
+.product-image-button:focus-visible img {
+  filter: saturate(.98) contrast(1.03);
+  transform: scale(1.065);
+}
+
+.product-arrow {
+  background: rgba(251, 249, 245, .92);
+  color: var(--eras-red);
+  box-shadow: 0 7px 19px rgba(48, 36, 27, .15);
+  transition: opacity .22s ease, transform .28s var(--eras-ease), background-color .2s ease;
+}
+
+.product-arrow:hover {
+  background: var(--eras-red);
+  color: #fffaf5;
+  transform: translateY(0) scale(1.06);
+}
+
+.soldout-tag {
+  background: var(--eras-red);
+  box-shadow: 0 7px 16px rgba(178, 34, 34, .22);
+}
+
+.product-meta {
+  padding-top: 17px;
+}
+
+.product-name {
+  transition: color .2s ease;
+}
+
+.product-image-button:hover + .product-meta .product-name {
+  color: var(--eras-red);
+}
+
+.archive-row,
+.event-card,
+.quick-actions button,
+.editorial-item {
+  transition: background-color .25s ease, color .25s ease, padding .35s var(--eras-ease), transform .35s var(--eras-ease), border-color .25s ease;
+}
+
+.archive-row:hover {
+  color: var(--eras-red);
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.event-card:hover {
+  background: #e9dfd4;
+  transform: translateY(-3px);
+}
+
+/* Sacola, modal e checkout: superfícies com raio moderado, sombra controlada e
+   entradas que respeitam a hierarquia da tarefa principal. */
+.overlay {
+  background: rgba(25, 19, 16, .66);
+  backdrop-filter: blur(9px) saturate(.9);
+}
+
+.product-modal,
+.cart-drawer,
+.checkout-modal {
+  border: 1px solid rgba(255, 255, 255, .68);
+  box-shadow: var(--eras-shadow-float);
+}
+
+.product-modal,
+.cart-drawer {
+  border-radius: 18px 0 0 18px;
+}
+
+.product-modal {
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.close-button:hover {
+  color: var(--eras-red);
+  transform: rotate(5deg) scale(1.04);
+}
+
+.primary-button,
+.admin-welcome button,
+.content-toolbar button,
+.empty-admin button,
+.newsletter-form button {
+  border-radius: 999px;
+  background: var(--eras-red);
+  box-shadow: 0 10px 22px rgba(178, 34, 34, .17);
+  transition: background-color .22s ease, box-shadow .28s var(--eras-ease), transform .28s var(--eras-ease), color .22s ease;
+}
+
+.primary-button:hover:not(:disabled),
+.admin-welcome button:hover,
+.content-toolbar button:hover,
+.empty-admin button:hover,
+.newsletter-form button:hover {
+  background: var(--eras-red-dark);
+  box-shadow: 0 15px 30px rgba(178, 34, 34, .25);
+  transform: translateY(-3px);
+}
+
+.primary-button:active:not(:disabled),
+.admin-welcome button:active,
+.content-toolbar button:active,
+.empty-admin button:active,
+.newsletter-form button:active {
+  transform: translateY(0) scale(.985);
+}
+
+.size-picker button,
+.quantity button,
+.coupon-row button {
+  border-color: rgba(80, 66, 54, .22);
+  transition: border-color .2s ease, background-color .2s ease, color .2s ease, transform .2s var(--eras-ease);
+}
+
+.size-picker button.selected,
+.size-picker button:hover,
+.quantity button:hover,
+.coupon-row button:hover {
+  border-color: var(--eras-red);
+  background: var(--eras-red);
+  color: #fffaf5;
+  transform: translateY(-1px);
+}
+
+/* Painel admin: fundo mais sóbrio, sidebar com contraste editorial e cards com
+   bordas leves. A largura e a rolagem continuam independentes em ecrãs baixos. */
+.admin-shell {
+  background: linear-gradient(135deg, #f4f0ea 0%, #eee8df 100%);
+}
+
+.admin-sidebar {
+  width: 232px;
+  border-right: 1px solid rgba(255, 255, 255, .08);
+  background: linear-gradient(180deg, #24211f 0%, #191817 100%);
+  box-shadow: 10px 0 35px rgba(32, 24, 19, .10);
+  scrollbar-color: #8f2525 #24211f;
+}
+
+.admin-sidebar::-webkit-scrollbar-track {
+  background: #24211f;
+}
+
+.admin-sidebar::-webkit-scrollbar-thumb {
+  border-color: #24211f;
+  background: #8f2525;
+}
+
+.admin-brand {
+  padding-bottom: 30px;
+}
+
+.admin-brand a span,
+.admin-brand small,
+.admin-sidebar nav button.active {
+  color: var(--eras-red);
+}
+
+.admin-sidebar nav button,
+.admin-sidebar-bottom button,
+.back-store {
+  border: 1px solid transparent;
+  border-radius: 8px;
+  transition: background-color .22s ease, border-color .22s ease, color .22s ease, transform .28s var(--eras-ease), box-shadow .22s ease;
+}
+
+.admin-sidebar nav button:hover,
+.admin-sidebar nav button.active {
+  border-color: rgba(255,255,255,.08);
+  background: rgba(178, 34, 34, .16);
+  color: #fffaf5;
+  transform: translateX(3px);
+}
+
+.admin-sidebar nav button.active {
+  box-shadow: inset 3px 0 0 var(--eras-red), 0 7px 20px rgba(0,0,0,.12);
+}
+
+.admin-main {
+  padding-left: clamp(24px, 4vw, 64px);
+  padding-right: clamp(24px, 4vw, 64px);
+}
+
+.admin-header {
+  min-height: 92px;
+  border-bottom-color: rgba(80, 66, 54, .13);
+}
+
+.admin-header h1,
+.admin-welcome h2,
+.content-title {
+  color: var(--eras-ink);
+  letter-spacing: -.055em;
+}
+
+.admin-avatar {
+  background: var(--eras-red);
+  box-shadow: 0 7px 18px rgba(178, 34, 34, .22);
+}
+
+.admin-welcome {
+  padding-top: 40px;
+}
+
+.metric-card,
+.admin-panel,
+.table-panel,
+.appearance-panel,
+.coupon-admin-card {
+  border: 1px solid rgba(80, 66, 54, .13);
+  border-radius: 14px;
+  background: rgba(255, 253, 250, .72);
+  box-shadow: 0 10px 30px rgba(48, 36, 27, .045);
+  transition: border-color .25s ease, box-shadow .35s var(--eras-ease), transform .35s var(--eras-ease);
+}
+
+.metric-card:hover,
+.admin-panel:hover,
+.coupon-admin-card:hover {
+  border-color: rgba(178, 34, 34, .25);
+  box-shadow: var(--eras-shadow-soft);
+  transform: translateY(-3px);
+}
+
+.metric-card {
+  padding: 18px;
+}
+
+.metric-card strong,
+.metric-card .positive,
+.inline-link {
+  color: var(--eras-red);
+}
+
+.panel-heading,
+.content-toolbar {
+  position: relative;
+}
+
+.panel-heading::after,
+.content-toolbar::after {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 42px;
+  height: 2px;
+  background: var(--eras-red);
+  content: "";
+}
+
+.chart-bar {
+  background: linear-gradient(180deg, #cf4646 0%, var(--eras-red-dark) 100%);
+  border-radius: 5px 5px 0 0;
+  box-shadow: 0 6px 13px rgba(178, 34, 34, .16);
+  transition: height .5s var(--eras-ease), filter .2s ease;
+}
+
+.chart-bar:hover {
+  filter: brightness(1.12);
+}
+
+.order-icon {
+  background: var(--eras-red-soft);
+  color: var(--eras-red);
+}
+
+.quick-actions button:hover {
+  background: rgba(178, 34, 34, .06);
+  color: var(--eras-red);
+  transform: translateY(-2px);
+}
+
+.quick-actions strong {
+  transition: color .2s ease;
+}
+
+.quick-actions button:hover strong {
+  color: var(--eras-red);
+}
+
+.table-panel {
+  overflow: auto;
+}
+
+.table-panel table tr {
+  transition: background-color .18s ease;
+}
+
+.table-panel tbody tr:hover {
+  background: rgba(178, 34, 34, .035);
+}
+
+.table-panel th {
+  background: rgba(245, 239, 232, .72);
+  color: #7a6b60;
+}
+
+.table-panel td {
+  border-top-color: rgba(80, 66, 54, .12);
+}
+
+.status-pill.danger,
+.stock-danger {
+  background: var(--eras-red-soft);
+  color: var(--eras-red-dark);
+}
+
+.status-pill.success {
+  background: #e6eee6;
+}
+
+/* Campos administrativos: o foco deve ser percebido imediatamente sem criar
+   contornos pesados ou inconsistentes entre seções. */
+.admin-main input,
+.admin-main select,
+.admin-main textarea,
+.search-box {
+  transition: border-color .2s ease, box-shadow .25s var(--eras-ease), background-color .2s ease;
+}
+
+.admin-main input:focus,
+.admin-main select:focus,
+.admin-main textarea:focus,
+.search-box:focus-within {
+  border-color: var(--eras-red);
+  box-shadow: 0 0 0 4px rgba(178, 34, 34, .10);
+  outline: none;
+}
+
+/* Animações de entrada: só afetam conteúdo que aparece uma vez; a preferência
+   reduced-motion abaixo desativa-as para pessoas sensíveis a movimento. */
+.admin-content,
+.admin-welcome,
+.hero-copy,
+.shop-section .section-heading {
+  animation: eras-content-rise .55s var(--eras-ease) both;
+}
+
+.metric-card,
+.product-grid > *,
+.quick-actions button {
+  animation: eras-card-rise .55s var(--eras-ease) both;
+}
+
+.metric-card:nth-child(2), .product-grid > :nth-child(2), .quick-actions button:nth-child(2) { animation-delay: 45ms; }
+.metric-card:nth-child(3), .product-grid > :nth-child(3), .quick-actions button:nth-child(3) { animation-delay: 90ms; }
+.metric-card:nth-child(4), .product-grid > :nth-child(4) { animation-delay: 135ms; }
+
+@keyframes eras-content-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes eras-card-rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Mobile: mantém o desenho compacto, mas preserva alvos de toque confortáveis e
+   faz o menu lateral aparecer como uma superfície com profundidade. */
+@media (max-width: 720px) {
+  .site-header {
+    min-height: 60px;
+    padding-inline: 5vw;
+  }
+
+  .brand-mark, .footer-brand, .menu-brand {
+    font-size: 17px;
+  }
+
+  .pix-strip {
+    padding-block: 6px;
+    font-size: 8px;
+    letter-spacing: .16em;
+  }
+
+  .product-grid {
+    gap: 28px 10px;
+  }
+
+  .product-meta {
+    gap: 8px;
+    padding-top: 12px;
+  }
+
+  .product-name {
+    font-size: 11px;
+  }
+
+  .product-price strong {
+    font-size: 11px;
+  }
+
+  .admin-sidebar {
+    width: min(278px, 84vw);
+    box-shadow: 16px 0 48px rgba(28, 20, 15, .24);
+  }
+
+  .admin-main {
+    padding-inline: 16px;
+  }
+
+  .admin-header {
+    min-height: 74px;
+  }
+
+  .admin-welcome {
+    padding-block: 28px 24px;
+  }
+
+  .admin-welcome h2 {
+    font-size: 28px;
+  }
+
+  .metric-card,
+  .admin-panel,
+  .coupon-admin-card {
+    border-radius: 12px;
+  }
+
+  .table-panel {
+    border-radius: 10px;
+  }
+}
+
+/* Acessibilidade de movimento: toda a experiência continua funcional sem
+   animações para quem ativou prefers-reduced-motion no sistema operativo. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+
+/* Refinamento final do painel em dispositivos móveis: a sidebar sai totalmente
+   do viewport quando fechada e o conteúdo permanece com uma única rolagem. */
+.admin-sidebar-scrim {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .admin-shell {
+    position: relative;
+    min-height: 100dvh;
+    overflow-x: clip;
+  }
+
+  .admin-sidebar {
+    left: calc(-1 * min(278px, 84vw));
+    width: min(278px, 84vw);
+    height: 100dvh;
+    max-height: 100dvh;
+    overscroll-behavior: contain;
+    transition: left .32s var(--eras-ease), box-shadow .32s var(--eras-ease);
+  }
+
+  .admin-sidebar.open {
+    left: 0;
+    box-shadow: 18px 0 52px rgba(28, 20, 15, .32);
+  }
+
+  .admin-sidebar-scrim {
+    position: fixed;
+    z-index: 70;
+    inset: 0;
+    display: block;
+    border: 0;
+    background: rgba(21, 17, 14, .38);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity .28s ease, visibility .28s ease;
+  }
+
+  .admin-sidebar.open + .admin-sidebar-scrim {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  .admin-main {
+    width: 100%;
+    min-width: 0;
+    overflow-x: clip;
+  }
+}

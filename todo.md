@@ -289,3 +289,11 @@
 - [x] Validar tamanho, dimensões, formato e qualidade com testes unitários
 - [x] Executar TypeScript, Vitest, build e verificação visual do painel
 - [x] Guardar checkpoint da otimização de imagens
+
+
+## Refinamento Visual e Elegante (#b22222) - 2026-08-16
+- [x] Atualizar o sistema global de design em `index.css` com a paleta refinada em `#b22222`, scrollbar personalizada elegante e microinterações suaves
+- [x] Refinar a experiência da loja pública (animações de entrada, botões, modais, sacola e cartões de produtos)
+- [x] Elevar a aparência do painel administrativo (hierarquia, superfícies de vidro/sombra suave, transições e feedback visual)
+- [x] Executar testes Vitest (121+ aprovados), verificação TypeScript e build de produção
+- [ ] Salvar checkpoint e entregar o novo visual elegante
