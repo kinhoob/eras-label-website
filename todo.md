@@ -160,13 +160,13 @@
 - [x] Atualizar testes unitários e build de produção
 
 ## Checkout Transparente com Mercado Pago
-- [ ] Adicionar variáveis de ambiente seguras para o Mercado Pago (`MP_ACCESS_TOKEN`, `MP_PUBLIC_KEY`) no backend e frontend
-- [ ] Criar procedures tRPC protegidas para iniciar pagamento transparente (Pix e Cartão de Crédito) via API oficial do Mercado Pago
-- [ ] Implementar endpoint de webhook `/api/mercadopago/webhook` para atualizar o status dos pedidos automaticamente após a confirmação do pagamento
-- [ ] Atualizar a página de Checkout (`Checkout.tsx`) com os métodos de pagamento transparentes (Pix com QR Code / Copia e Cola e Cartão de Crédito direto no site)
-- [ ] Atualizar a página de sucesso para exibir o status confirmado ou pendente do Mercado Pago com resumo detalhado
-- [ ] Escrever testes unitários em Vitest para simular criação de pagamento e webhooks do Mercado Pago
-- [ ] Executar build de produção, validar TypeScript, garantir 95+ testes aprovados e salvar checkpoint final
+- [x] Adicionar variáveis de ambiente seguras para o Mercado Pago (`MP_ACCESS_TOKEN`, `MP_PUBLIC_KEY`) no backend e frontend
+- [x] Criar procedures tRPC protegidas para iniciar pagamento transparente (Pix e Cartão de Crédito) via API oficial do Mercado Pago
+- [x] Implementar endpoint de webhook `/api/mercadopago/webhook` para atualizar o status dos pedidos automaticamente após a confirmação do pagamento
+- [x] Atualizar a página de Checkout (`Checkout.tsx`) com os métodos de pagamento transparentes (Pix com QR Code / Copia e Cola e Cartão de Crédito direto no site)
+- [x] Atualizar a página de sucesso para exibir o status confirmado ou pendente do Mercado Pago com resumo detalhado
+- [x] Escrever testes unitários em Vitest para simular criação de pagamento e webhooks do Mercado Pago
+- [x] Executar build de produção, validar TypeScript, garantir 95+ testes aprovados e salvar checkpoint final
 
 ## Melhorias Solicitadas (Checkout, Validação e Histórico)
 - [x] Validação em tempo real do CPF no formulário de checkout
