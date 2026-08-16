@@ -213,6 +213,15 @@
 - [x] Validar a troca e o armazenamento seguro do token para cotação de frete real
 
 ## Restrição Logística Exclusiva (Correios e Jadlog)
-- [ ] Filtrar opções de frete na API de cotação e no carrinho/checkout para exibir apenas Correios PAC, Correios SEDEX, Jadlog .Com e Jadlog .Package
-- [ ] Atualizar o painel administrativo de Vendas para restringir ou destacar apenas as mesmas opções permitidas
-- [ ] Executar testes Vitest, TypeScript e build de produção
+- [x] Filtrar opções de frete na API de cotação e no carrinho/checkout para exibir apenas Correios PAC, Correios SEDEX, Jadlog .Com e Jadlog .Package
+- [x] Atualizar o painel administrativo de Vendas para restringir ou destacar apenas as mesmas opções permitidas
+- [x] Executar testes Vitest, TypeScript e build de produção
+
+## Execução Logística Avançada (Melhor Envio Operacional)
+- [ ] Remover fallbacks estimados em caso de erro na API do Melhor Envio e exigir falha explícita e controlada
+- [ ] Configurar endereço de origem real da expedição e padronizar dimensões padrão de embalagem (caixa de vestuário Eras)
+- [ ] Mapear e fixar os IDs oficiais dos 5 serviços permitidos (Correios PAC, Correios SEDEX, Jadlog Econômico, Jadlog Rápido e Loggi)
+- [ ] Persistir o serviço de frete escolhido e o valor exato no pedido criado no checkout
+- [ ] Implementar procedure e ação de compra de etiqueta / geração de frete no painel administrativo de Vendas
+- [ ] Implementar consulta de rastreio e disparo de e-mail de código de rastreio para o cliente
+- [ ] Escrever testes unitários em Vitest para cobrir o novo fluxo operacional e garantir 100+ testes aprovados

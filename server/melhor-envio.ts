@@ -48,98 +48,33 @@ export async function calculateMelhorEnvioShipping(payload: MelhorEnvioQuotePayl
       return false;
     };
 
-    // Fallback com as 5 opções permitidas
-    const getAllowedFallbacks = () => {
-      const cepNum = parseInt(payload.to.postal_code.replace(/\D/g, ""), 10) || 50000000;
-      const isSudesteOrNordeste = cepNum >= 20000000 && cepNum <= 69999999;
-      const baseValue = isSudesteOrNordeste ? 24.90 : 38.50;
-
-      return [
-        {
-          id: 1,
-          name: "Correios SEDEX",
-          company: { name: "Correios" },
-          price: Number((baseValue * 1.45).toFixed(2)),
-          custom_price: Number((baseValue * 1.45).toFixed(2)),
-          discount: 0,
-          delivery_time: 3,
-          error: null,
-        },
-        {
-          id: 2,
-          name: "Correios PAC",
-          company: { name: "Correios" },
-          price: Number(baseValue.toFixed(2)),
-          custom_price: Number(baseValue.toFixed(2)),
-          discount: 0,
-          delivery_time: 7,
-          error: null,
-        },
-        {
-          id: 3,
-          name: "Jadlog .Com (Econômico)",
-          company: { name: "Jadlog" },
-          price: Number((baseValue * 0.92).toFixed(2)),
-          custom_price: Number((baseValue * 0.92).toFixed(2)),
-          discount: 0,
-          delivery_time: 6,
-          error: null,
-        },
-        {
-          id: 4,
-          name: "Jadlog .Package (Rápido)",
-          company: { name: "Jadlog" },
-          price: Number((baseValue * 1.15).toFixed(2)),
-          custom_price: Number((baseValue * 1.15).toFixed(2)),
-          discount: 0,
-          delivery_time: 4,
-          error: null,
-        },
-        {
-          id: 5,
-          name: "Loggi Expresso",
-          company: { name: "Loggi" },
-          price: Number((baseValue * 1.25).toFixed(2)),
-          custom_price: Number((baseValue * 1.25).toFixed(2)),
-          discount: 0,
-          delivery_time: 4,
-          error: null,
-        },
-      ];
-    };
-
     if (!token) {
-      return getAllowedFallbacks();
+      throw new Error("Token do Melhor Envio não configurado. Configure MELHOR_ENVIO_TOKEN para calcular o frete real.");
     }
 
-    try {
-      const response = await fetch(`${baseUrl}/me/shipment/calculate`, {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-          "User-Agent": "ErasLabelE-commerce (contato@eraslabel.com)",
-        },
-        body: JSON.stringify(payload),
-      });
+    const response = await fetch(`${baseUrl}/me/shipment/calculate`, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        "User-Agent": "ErasLabelE-commerce (contato@eraslabel.com)",
+      },
+      body: JSON.stringify(payload),
+    });
 
-      if (!response.ok) {
-        const errText = await response.text();
-        console.warn("[Melhor Envio] Erro na cotação:", errText);
-        throw new Error(`Melhor Envio API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      if (!Array.isArray(data)) return [];
-
-      // Filtra estritamente para manter apenas Correios, Jadlog e Loggi autorizados
-      return data.filter((item: any) => {
-        if (item.error) return false;
-        return isAllowedShippingOption(item.name || "", item.company?.name);
-      });
-    } catch (err) {
-      console.warn("[Melhor Envio] Falha na requisição, usando fallback permitido:", err);
-      return getAllowedFallbacks();
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error("[Melhor Envio] Erro na cotação real:", errText);
+      throw new Error(`Melhor Envio API error: ${response.status} - ${errText}`);
     }
+
+    const data = await response.json();
+    if (!Array.isArray(data)) return [];
+
+    // Filtra estritamente para manter apenas Correios, Jadlog e Loggi autorizados
+    return data.filter((item: any) => {
+      if (item.error) return false;
+      return isAllowedShippingOption(item.name || "", item.company?.name);
+    });
 }
