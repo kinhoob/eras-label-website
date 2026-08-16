@@ -35,6 +35,20 @@ export default function AdminSalesSection() {
     });
   };
 
+  const generateLabelMutation = trpc.admin.generateShippingLabel.useMutation({
+    onSuccess: () => {
+      toast.success("Etiqueta gerada com sucesso e adicionada ao carrinho do Melhor Envio!");
+    },
+    onError: (err) => {
+      toast.error("Erro ao gerar etiqueta: " + err.message);
+    },
+  });
+
+  const handleEmitirEtiqueta = (orderId: number, serviceId: number) => {
+    if (!confirm("Deseja enviar este pedido para o carrinho do Melhor Envio e gerar a etiqueta de postagem?")) return;
+    generateLabelMutation.mutate({ orderId, serviceId });
+  };
+
   return (
     <section className="admin-content">
       <div className="content-toolbar">
@@ -205,8 +219,8 @@ export default function AdminSalesSection() {
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                         <strong>R$ {Number(q.custom_price || q.price).toFixed(2)}</strong>
-                        <Button size="sm" onClick={() => toast.success(`Serviço ${q.name} selecionado para emissão de etiqueta.`)}>
-                          Emitir Etiqueta
+                        <Button size="sm" onClick={() => handleEmitirEtiqueta(selectedOrder.id, q.id)} disabled={generateLabelMutation.isPending}>
+                          {generateLabelMutation.isPending ? "A gerar..." : "Gerar Etiqueta"}
                         </Button>
                       </div>
                     </div>

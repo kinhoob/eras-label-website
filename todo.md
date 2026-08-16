@@ -225,3 +225,10 @@
 - [ ] Implementar procedure e ação de compra de etiqueta / geração de frete no painel administrativo de Vendas
 - [ ] Implementar consulta de rastreio e disparo de e-mail de código de rastreio para o cliente
 - [ ] Escrever testes unitários em Vitest para cobrir o novo fluxo operacional e garantir 100+ testes aprovados
+
+
+## Etiqueta Admin e Rastreio do Cliente
+- [ ] Implementar procedure tRPC para gerar/comprar etiqueta no carrinho do Melhor Envio e obter PDF de impressão a partir de detalhes do pedido
+- [ ] Adicionar botão de "Gerar Etiqueta de Envio" e visualizador/impressão de etiqueta na seção de Vendas do painel admin
+- [ ] Criar página/seção dedicada de rastreio de entrega para o cliente (com input de código de rastreio e timeline de status)
+- [ ] Cobrir com testes unitários em Vitest e build de produção validado

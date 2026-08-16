@@ -9,6 +9,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { storagePut } from "./storage";
 import { createMercadoPagoPayment } from "./mercadopago";
+import { createMelhorEnvioCartItem, getMelhorEnvioTracking } from "./melhor-envio";
 import {
   getAdminSummary,
   getAdminProducts,
@@ -604,6 +605,77 @@ Seja objetivo, elegante e direto ao ponto.`;
       }
       return { success: true };
     }),
+    generateShippingLabel: adminProcedure.input(z.object({
+      orderId: z.number(),
+      serviceId: z.number(),
+    })).mutation(async ({ input }) => {
+      const order = await getOrderById(input.orderId);
+      if (!order) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Pedido não encontrado." });
+      }
+      const items = await getOrderItems(input.orderId);
+      const totalWeight = items.reduce((sum: number, item: any) => sum + (item.quantity * 0.3), 0.3); // estimativa 300g por peça
+      
+      const cartResult = await createMelhorEnvioCartItem({
+        serviceId: input.serviceId,
+        from: {
+          name: "Eras Label Oficial",
+          phone: "11999999999",
+          email: "contato@eraslabel.com",
+          document: "00000000000",
+          address: "Rua Eras",
+          number: "100",
+          district: "Centro",
+          city: "São Paulo",
+          state_abbr: "SP",
+          postal_code: "01001000",
+        },
+        to: {
+          name: order.customerName,
+          phone: order.customerPhone || "11999999999",
+          email: order.customerEmail,
+          document: order.customerDocument || "00000000000",
+          address: order.shippingAddress,
+          number: order.shippingNumber || "1",
+          complement: order.shippingComplement || undefined,
+          district: order.shippingDistrict || "Centro",
+          city: order.shippingCity || "São Paulo",
+          state_abbr: order.shippingState || "SP",
+          postal_code: order.shippingCep,
+        },
+        products: items.map((item: any) => ({
+          name: item.productName || "Peça Eras Label",
+          quantity: item.quantity,
+          unitary_value: Number(item.unitPrice),
+          weight: 0.3,
+          width: 15,
+          height: 5,
+          length: 20,
+        })),
+        volumes: [
+          {
+            height: 10,
+            width: 20,
+            length: 25,
+            weight: Math.max(totalWeight, 0.3),
+          },
+        ],
+      });
+
+      return { success: true, cartResult };
+    }),
+
+    trackOrderShipping: publicProcedure.input(z.object({
+      trackingCode: z.string().trim().min(3),
+    })).query(async ({ input }) => {
+      try {
+        const tracking = await getMelhorEnvioTracking(input.trackingCode);
+        return { success: true, tracking };
+      } catch (err: any) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: err.message || "Erro ao consultar rastreio." });
+      }
+    }),
+
     sendMarketingCampaign: adminProcedure.input(z.object({
       subject: z.string().min(3),
       htmlContent: z.string().min(10),

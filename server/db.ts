@@ -894,3 +894,9 @@ export async function deleteAdminUser(id: number) {
   if (!db) throw new Error("Database not available");
   await db.delete(adminUsers).where(eq(adminUsers.id, id));
 }
+
+export async function getOrderItems(orderId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(orderItems).where(eq(orderItems.orderId, orderId));
+}
