@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
-import { Package, Truck, CheckCircle2, Clock, ArrowLeft, ExternalLink, ShieldCheck, User as UserIcon, LogOut, Check, X, Box, Copy } from "lucide-react";
-import { Link } from "wouter";
+import { Package, Truck, CheckCircle2, Clock, ArrowLeft, ExternalLink, ShieldCheck, User as UserIcon, LogOut, Check, X, Box, Copy, RefreshCw } from "lucide-react";
+import { Link, useLocation } from "wouter";
 
 /* Função utilitária para formatar valores monetários em Reais (BRL) */
 function formatPrice(value: number) {
@@ -11,8 +11,10 @@ function formatPrice(value: number) {
 
 export default function Account() {
   const { user, logout } = useAuth();
-  // Busca os pedidos do usuário autenticado no backend tRPC
-  const { data: orders, isLoading } = trpc.orders.myOrders.useQuery(undefined, {
+  const [location] = useLocation();
+  const isOrdersPage = location === "/orders";
+  // Busca os pedidos do utilizador autenticado no backend tRPC.
+  const { data: orders, isLoading, isFetching, refetch } = trpc.orders.myOrders.useQuery(undefined, {
     enabled: !!user,
   });
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
@@ -51,8 +53,9 @@ export default function Account() {
       <header className="site-header">
         <Link href="/" className="brand-logo">ERAS.</Link>
         <div className="header-actions">
-          <Link href="/" className="header-link">LOJA</Link>
-          <button className="icon-button" onClick={() => logout()} title="Terminar sessão">
+              <Link href="/" className="header-link">LOJA</Link>
+              {!isOrdersPage && <Link href="/orders" className="header-link">PEDIDOS</Link>}
+              <button className="icon-button" onClick={() => logout()} title="Terminar sessão">
             <LogOut size={18} />
           </button>
         </div>
@@ -66,15 +69,20 @@ export default function Account() {
               <UserIcon size={24} />
             </div>
             <div>
-              <h1>Olá, {user.name || "Colecionador"}</h1>
-              <p>{user.email}</p>
+              <h1>{isOrdersPage ? "O seu histórico." : `Olá, ${user.name || "Colecionador"}`}</h1>
+              <p>{isOrdersPage ? "Acompanhe pagamentos, preparação e entrega das suas compras." : user.email}</p>
             </div>
           </div>
 
           <section className="orders-section">
             <div className="section-title-row">
-              <h2>MEUS PEDIDOS</h2>
-              <span className="orders-count">{orders?.length ?? 0} pedidos realizados</span>
+              <div>
+                <h2>{isOrdersPage ? "HISTÓRICO DE PEDIDOS" : "MEUS PEDIDOS"}</h2>
+                <span className="orders-count">{orders?.length ?? 0} pedidos realizados</span>
+              </div>
+              <button className="orders-refresh-button" type="button" onClick={() => refetch()} disabled={isFetching}>
+                <RefreshCw size={14} className={isFetching ? "spinner-icon" : ""} /> ATUALIZAR
+              </button>
             </div>
 
             {isLoading ? (
@@ -94,12 +102,17 @@ export default function Account() {
                         <span className="order-num">{order.orderNumber}</span>
                         <span className="order-date">{new Date(order.createdAt).toLocaleDateString("pt-BR")}</span>
                       </div>
-                      <span className={`order-status-badge ${order.status.toLowerCase()}`}>
-                        {order.status === "Enviado" && <Truck size={14} />}
-                        {order.status === "Entregue" && <CheckCircle2 size={14} />}
-                        {order.status === "Processando" && <Clock size={14} />}
-                        {order.status}
-                      </span>
+                      <div className="order-status-stack">
+                        <span className={`order-status-badge ${String(order.status).toLowerCase()}`}>
+                          {order.status === "Enviado" && <Truck size={14} />}
+                          {order.status === "Entregue" && <CheckCircle2 size={14} />}
+                          {order.status === "Processando" && <Clock size={14} />}
+                          {order.status}
+                        </span>
+                        <span className={`order-payment-badge ${order.paymentStatus === "approved" ? "approved" : order.paymentStatus === "failed" || order.paymentStatus === "rejected" ? "failed" : "pending"}`}>
+                          <ShieldCheck size={12} /> {order.paymentStatus === "approved" ? "Pagamento confirmado" : order.paymentStatus === "failed" || order.paymentStatus === "rejected" ? "Pagamento recusado" : "Pagamento pendente"}
+                        </span>
+                      </div>
                     </div>
 
                     <div className="order-preview-items">
@@ -188,6 +201,11 @@ export default function Account() {
                     </div>
                   );
                 })()}
+              </div>
+
+              <div className={`order-payment-detail ${selectedOrder.paymentStatus === "approved" ? "approved" : selectedOrder.paymentStatus === "failed" || selectedOrder.paymentStatus === "rejected" ? "failed" : "pending"}`}>
+                <ShieldCheck size={17} />
+                <div><strong>{selectedOrder.paymentStatus === "approved" ? "Pagamento confirmado" : selectedOrder.paymentStatus === "failed" || selectedOrder.paymentStatus === "rejected" ? "Pagamento recusado" : "Pagamento pendente"}</strong><span>Via {selectedOrder.paymentMethod === "credit_card" ? "cartão de crédito" : "Pix"}</span></div>
               </div>
 
               {/* Informações de Rastreio */}

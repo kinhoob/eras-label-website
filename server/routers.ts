@@ -47,6 +47,9 @@ import {
   archiveCategory,
   updateInventoryStock,
   listOrders,
+  listOrdersByUser,
+  createOrder,
+  updateOrderPaymentStatus,
   updateOrderTracking,
   upsertUser,
 } from "./db";
@@ -193,6 +196,7 @@ export const appRouter = router({
     validate: publicProcedure.input(z.object({ code: z.string().min(2), subtotal: z.number().nonnegative() })).query(({ input }) => validateCoupon(input.code, input.subtotal)),
   }),
   checkout: router({
+    publicConfig: publicProcedure.query(() => ({ publicKey: ENV.mpPublicKey || null })),
     create: publicProcedure.input(z.object({
       customerName: z.string().min(2),
       customerEmail: z.string().email(),
@@ -206,6 +210,7 @@ export const appRouter = router({
       total: z.number().nonnegative(),
       paymentMethod: z.enum(["pix", "credit_card"]).default("pix"),
       cardToken: z.string().optional(),
+      paymentMethodId: z.string().min(2).optional(),
       installments: z.number().int().positive().optional(),
     })).mutation(async ({ input, ctx }) => {
       const orderNumber = `ER-${new Date().getFullYear()}-${Math.floor(Math.random() * 9000 + 1000)}`;
@@ -221,7 +226,7 @@ export const appRouter = router({
         mpResult = await createMercadoPagoPayment({
           transaction_amount: Number(input.total.toFixed(2)),
           description: `Pedido ${orderNumber} - Eras Label`,
-          payment_method_id: input.paymentMethod === "pix" ? "pix" : "credit_card",
+          payment_method_id: input.paymentMethod === "pix" ? "pix" : input.paymentMethodId || "credit_card",
           token: input.cardToken,
           installments: input.installments || 1,
           payer: {
@@ -243,6 +248,25 @@ export const appRouter = router({
         console.error("[MercadoPago] Erro ao criar pagamento transparente:", mpError);
         throw new TRPCError({ code: "BAD_REQUEST", message: mpError.message || "Erro ao processar pagamento com o Mercado Pago." });
       }
+
+      const persistedOrder = await createOrder({
+        orderNumber,
+        userId: ctx.user?.id ?? null,
+        customerName: input.customerName.trim(),
+        customerEmail: input.customerEmail.trim(),
+        customerCpf: input.customerCpf.replace(/\D/g, ""),
+        phone: input.phone.trim(),
+        shippingAddress: input.address,
+        items: input.items.map((item) => ({ ...item, name: item.name ?? `Produto #${item.productId}` })),
+        shippingMethod: "standard",
+        paymentMethod: input.paymentMethod,
+        subtotal: input.subtotal.toFixed(2),
+        shippingCost: input.shippingCost.toFixed(2),
+        discount: input.discount.toFixed(2),
+        total: input.total.toFixed(2),
+        paymentStatus: initialPaymentStatus,
+        status: initialPaymentStatus === "approved" ? "Processando" : "Aguardando pagamento",
+      });
 
       // Disparar notificação estilo Nuvemshop para o Administrador
       try {
@@ -294,6 +318,7 @@ export const appRouter = router({
       return {
         success: true,
         orderNumber,
+        orderId: persistedOrder?.id ?? null,
         paymentStatus: initialPaymentStatus,
         pixData: mpResult?.point_of_interaction?.transaction_data || null,
         message: initialPaymentStatus === "approved" ? "Pedido aprovado com sucesso!" : "Pedido gerado! Conclua o pagamento via Pix ou Cartão.",
@@ -311,46 +336,7 @@ export const appRouter = router({
     }),
   }),
   orders: router({
-    myOrders: protectedProcedure.query(async ({ ctx }) => {
-      // Retorna histórico de pedidos do usuário autenticado ou mock estendido para demonstração
-      return [
-        {
-          id: 1,
-          orderNumber: "ER-2026-8419",
-          createdAt: Date.now() - 1000 * 60 * 60 * 24 * 2, // 2 dias atrás
-          status: "Enviado",
-          trackingCode: "BR982734120BR",
-          shippingService: "SEDEX",
-          paymentMethod: "pix",
-          subtotal: 390.0,
-          discount: 39.0,
-          shippingCost: 0.0,
-          total: 351.0,
-          items: [
-            { id: 1, name: "Camiseta Oversized Lost Between Eras", size: "G", quantity: 1, price: 195.0, image: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=1200&q=85" },
-            { id: 2, name: "Moletom Heavyweight Vintage Wash", size: "G", quantity: 1, price: 195.0, image: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=1200&q=85" }
-          ],
-          address: { street: "Av. Paulista, 1000", number: "Apto 42", neighborhood: "Bela Vista", city: "São Paulo", state: "SP", cep: "01310100" }
-        },
-        {
-          id: 2,
-          orderNumber: "ER-2026-9102",
-          createdAt: Date.now() - 1000 * 60 * 60 * 24 * 7, // 7 dias atrás
-          status: "Entregue",
-          trackingCode: "BR129384756BR",
-          shippingService: "PAC",
-          paymentMethod: "credit_card",
-          subtotal: 185.0,
-          discount: 0.0,
-          shippingCost: 25.0,
-          total: 210.0,
-          items: [
-            { id: 4, name: "Boné Classic Eras Dad Hat", size: "Único", quantity: 1, price: 185.0, image: "https://images.unsplash.com/photo-1521369909029-2afed882baee?auto=format&fit=crop&w=1200&q=85" }
-          ],
-          address: { street: "Rua do Imperador, 200", number: "Casa", neighborhood: "Recife Antigo", city: "Recife", state: "PE", cep: "50030230" }
-        }
-      ];
-    }),
+    myOrders: protectedProcedure.query(async ({ ctx }) => listOrdersByUser(ctx.user.id)),
   }),
   admin: router({
     summary: adminProcedure.query(() => getAdminSummary()),

@@ -2397,3 +2397,146 @@ td { border-top: 1px solid #e1dacf; padding: 15px 17px; color: #6f675e; font-siz
     width: 100%;
   }
 }
+
+
+/* Checkout transparente: feedback em tempo real e cartão tokenizado */
+.checkout-page-fields input:focus-visible {
+  outline: 2px solid rgba(201, 81, 57, .28);
+  outline-offset: 2px;
+  border-color: #c95139;
+}
+.checkout-card-fields {
+  margin-top: 16px;
+  padding: 18px;
+  border: 1px solid #d8d0c5;
+  background: rgba(255, 255, 255, .24);
+}
+.checkout-processing-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 18px 0 4px;
+  padding: 15px 16px;
+  border: 1px solid #d8c4b8;
+  background: #fff7f1;
+  color: #625b52;
+  animation: checkout-feedback-in .24s cubic-bezier(.23,1,.32,1);
+}
+.checkout-processing-banner strong,
+.checkout-processing-banner span {
+  display: block;
+}
+.checkout-processing-banner strong {
+  margin-bottom: 4px;
+  color: #25241f;
+  font-size: 11px;
+  letter-spacing: .04em;
+}
+.checkout-processing-banner span {
+  color: #81786e;
+  font-size: 11px;
+  line-height: 1.45;
+}
+.checkout-processing-spinner {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #f4ddd4;
+  color: #b22222;
+  flex: 0 0 auto;
+}
+.checkout-page-submit:disabled {
+  cursor: wait;
+  opacity: .72;
+}
+.checkout-page-submit .spinner-icon,
+.checkout-processing-spinner .spinner-icon {
+  animation: spin-slow .8s linear infinite;
+}
+.checkout-payment-status {
+  display: inline-flex;
+  margin-top: 18px;
+  padding: 8px 11px;
+  border: 1px solid #d4cbc0;
+  color: #766e64;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .13em;
+}
+.checkout-payment-status-approved {
+  border-color: #8eaf93;
+  background: #edf5ed;
+  color: #4f7657;
+}
+.checkout-payment-status-pending {
+  border-color: #d8b989;
+  background: #fff7e8;
+  color: #916522;
+}
+.checkout-payment-status-rejected {
+  border-color: #d79a8a;
+  background: #fff0eb;
+  color: #9b3434;
+}
+@media (max-width: 760px) {
+  .checkout-card-fields { padding: 14px; }
+  .checkout-payment-status { justify-self: center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .checkout-processing-banner,
+  .checkout-page-submit .spinner-icon,
+  .checkout-processing-spinner .spinner-icon { animation: none; }
+}
+
+
+/* Histórico dedicado de pedidos e pagamentos */
+.section-title-row { align-items: center; }
+.section-title-row > div { display: grid; gap: 5px; }
+.orders-refresh-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid rgba(37, 36, 31, .16);
+  background: transparent;
+  color: #766e64;
+  padding: 9px 11px;
+  font-size: 9px;
+  letter-spacing: .12em;
+  cursor: pointer;
+  transition: border-color .18s ease, color .18s ease, transform .18s ease;
+}
+.orders-refresh-button:hover:not(:disabled) { border-color: #c95139; color: #c95139; transform: translateY(-1px); }
+.orders-refresh-button:disabled { cursor: wait; opacity: .6; }
+.order-status-stack { display: grid; justify-items: end; gap: 7px; }
+.order-payment-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 9px;
+  letter-spacing: .04em;
+}
+.order-payment-badge.approved { color: #4f7657; }
+.order-payment-badge.pending { color: #916522; }
+.order-payment-badge.failed { color: #9b3434; }
+.order-payment-detail {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin: 22px 0;
+  padding: 14px 15px;
+  border: 1px solid #d8d0c5;
+  background: #f6f1e9;
+}
+.order-payment-detail > div { display: grid; gap: 3px; }
+.order-payment-detail strong { color: #25241f; font-size: 11px; }
+.order-payment-detail span { color: #81786e; font-size: 10px; }
+.order-payment-detail.approved { border-color: #a9c2ab; color: #4f7657; background: #edf5ed; }
+.order-payment-detail.pending { border-color: #d9bf95; color: #916522; background: #fff7e8; }
+.order-payment-detail.failed { border-color: #d9a397; color: #9b3434; background: #fff0eb; }
+@media (max-width: 620px) {
+  .section-title-row { align-items: flex-start; gap: 12px; }
+  .orders-refresh-button { padding: 8px 9px; font-size: 8px; }
+  .order-status-stack { justify-items: start; margin-top: 10px; }
+}

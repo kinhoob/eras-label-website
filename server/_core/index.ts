@@ -8,6 +8,8 @@ import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { getMercadoPagoPayment } from "../mercadopago";
+import { updateOrderPaymentStatus } from "../db";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -45,21 +47,32 @@ async function startServer() {
     })
   );
 
-  // Webhook endpoint para notificações de pagamento do Mercado Pago
+  // Webhook endpoint para notificações de pagamento do Mercado Pago.
   app.post("/api/mercadopago/webhook", async (req, res) => {
     try {
-      const event = req.body;
-      console.log("[MercadoPago Webhook] Evento recebido:", JSON.stringify(event));
-      
-      if (event?.type === "payment" || event?.action === "payment.created" || event?.data?.id) {
-        const paymentId = event.data?.id || event.id;
-        console.log(`[MercadoPago Webhook] Notificação processada para o pagamento ID: ${paymentId}`);
+      const event = req.body as Record<string, any>;
+      const paymentId = event?.data?.id ?? event?.id;
+      if (!paymentId) {
+        res.status(200).json({ received: true, ignored: true });
+        return;
+      }
+
+      const payment = await getMercadoPagoPayment(paymentId);
+      const paymentStatus = String(payment?.status ?? event?.status ?? "pending");
+      const orderNumber = payment?.external_reference ?? event?.external_reference;
+      if (orderNumber) {
+        const updated = await updateOrderPaymentStatus(String(orderNumber), paymentStatus);
+        console.log(`[MercadoPago Webhook] Pedido ${orderNumber} sincronizado: ${paymentStatus}${updated ? "" : " (sem registo local)"}`);
+      } else {
+        console.warn(`[MercadoPago Webhook] Pagamento ${paymentId} sem external_reference.`);
       }
 
       res.status(200).json({ received: true });
     } catch (err: any) {
       console.error("[MercadoPago Webhook] Erro ao processar webhook:", err);
-      res.status(500).json({ error: err.message });
+      // O Mercado Pago pode reenviar eventos; 200 evita uma tempestade de retries
+      // quando a consulta externa estiver temporariamente indisponível.
+      res.status(200).json({ received: true, processed: false });
     }
   });
   // development mode uses Vite, production mode uses static files

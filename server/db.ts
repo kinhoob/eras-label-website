@@ -575,6 +575,53 @@ export async function listOrders() {
   return db.select().from(orders).orderBy(desc(orders.id));
 }
 
+export async function createOrder(data: typeof orders.$inferInsert) {
+  const db = await getDb();
+  if (!db) return undefined;
+  await db.insert(orders).values(data);
+  const created = await db.select().from(orders).where(eq(orders.orderNumber, data.orderNumber)).limit(1);
+  return created[0];
+}
+
+function normalizeOrderForClient(order: typeof orders.$inferSelect) {
+  const rawItems = Array.isArray(order.items) ? order.items as Array<Record<string, unknown>> : [];
+  return {
+    ...order,
+    address: order.shippingAddress,
+    paymentMethod: order.paymentMethod,
+    subtotal: Number(order.subtotal),
+    shippingCost: Number(order.shippingCost),
+    discount: Number(order.discount),
+    total: Number(order.total),
+    paymentStatus: order.paymentStatus,
+    shippingService: order.shippingMethod || "Correios / Logística",
+    items: rawItems.map((item) => ({
+      id: Number(item.id ?? item.productId ?? 0),
+      name: String(item.name ?? "Produto Eras Label"),
+      size: String(item.size ?? "Único"),
+      quantity: Number(item.quantity ?? 1),
+      price: Number(item.price ?? 0),
+      image: String(item.image ?? ""),
+    })),
+  };
+}
+
+export async function listOrdersByUser(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db.select().from(orders).where(eq(orders.userId, userId)).orderBy(desc(orders.createdAt));
+  return rows.map(normalizeOrderForClient);
+}
+
+export async function updateOrderPaymentStatus(orderNumber: string, paymentStatus: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const nextStatus = paymentStatus === "approved" ? "Processando" : paymentStatus === "cancelled" || paymentStatus === "rejected" ? "Pagamento recusado" : "Aguardando pagamento";
+  await db.update(orders).set({ paymentStatus, status: nextStatus }).where(eq(orders.orderNumber, orderNumber));
+  const updated = await db.select().from(orders).where(eq(orders.orderNumber, orderNumber)).limit(1);
+  return updated[0];
+}
+
 export async function updateOrderTracking(orderId: number, trackingCode: string, _carrier?: string) {
   const db = await getDb();
   if (!db) return;

@@ -84,3 +84,18 @@ export async function createMercadoPagoPayment(params: CreatePaymentParams) {
 
   return data;
 }
+
+export async function getMercadoPagoPayment(paymentId: string | number) {
+  const accessToken = ENV.mpAccessToken;
+  if (!accessToken || accessToken.trim() === "") return null;
+
+  const response = await fetch(`${MP_API_BASE}/v1/payments/${encodeURIComponent(String(paymentId))}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  const data = (await response.json()) as any;
+  if (!response.ok) {
+    console.error("[MercadoPago] Erro ao consultar pagamento:", data);
+    throw new Error(data.message || data.error || "Não foi possível consultar o pagamento no Mercado Pago.");
+  }
+  return data;
+}

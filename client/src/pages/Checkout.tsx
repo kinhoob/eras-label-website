@@ -6,7 +6,7 @@ import { trpc } from "@/lib/trpc";
 import { loadCart, saveCart } from "@/lib/cart-storage";
 import { clearCheckoutDraft, loadCheckoutDraft, saveCheckoutDraft, type CheckoutPaymentMethod } from "@/lib/checkout-draft";
 import { updateCartLineQuantity, removeCartLine } from "@/lib/cart-operations";
-import { hasCheckoutFieldErrors, validateCheckoutFields, type CheckoutFieldErrors, type CheckoutFields } from "@/lib/checkout-validation";
+import { formatCardExpiry, formatCardNumber, formatCpf, hasCheckoutFieldErrors, onlyDigits, validateCheckoutFields, type CheckoutFieldErrors, type CheckoutFields } from "@/lib/checkout-validation";
 import { lookupCep, normalizeCep } from "@/lib/cep";
 
  type CheckoutLine = {
@@ -40,6 +40,68 @@ function formatPrice(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+function readCheckoutFieldsFromForm(form: HTMLFormElement): CheckoutFields {
+  const get = (name: string) => String(new FormData(form).get(name) ?? "");
+  return {
+    customerName: get("customerName"),
+    customerEmail: get("customerEmail"),
+    cpf: get("cpf"),
+    phone: get("phone"),
+    cep: get("cep"),
+    number: get("number"),
+    street: get("street"),
+    neighborhood: get("neighborhood"),
+    city: get("city"),
+    state: get("state"),
+    cardNumber: get("cardNumber"),
+    cardName: get("cardName"),
+    cardExpiry: get("cardExpiry"),
+    cardCvv: get("cardCvv"),
+  };
+}
+
+type MercadoPagoClient = {
+  createCardToken: (params: {
+    cardNumber: string;
+    cardholderName: string;
+    cardExpirationMonth: string;
+    cardExpirationYear: string;
+    securityCode: string;
+    identificationType: "CPF";
+    identificationNumber: string;
+  }) => Promise<{ id?: string }>;
+  getPaymentMethods?: (params: { bin: string }) => Promise<Array<{ id?: string; payment_method_id?: string }> | { results?: Array<{ id?: string; payment_method_id?: string }> }>;
+};
+
+declare global {
+  interface Window {
+    MercadoPago?: new (publicKey: string, options?: { locale?: string }) => MercadoPagoClient;
+  }
+}
+
+async function tokenizeCard(fields: CheckoutFields, publicKey?: string): Promise<{ cardToken: string; paymentMethodId: string }> {
+  if (!publicKey) throw new Error("A chave pública do Mercado Pago ainda não está configurada para pagamentos com cartão.");
+  if (!window.MercadoPago) throw new Error("O SDK seguro do cartão ainda está a carregar. Tente novamente em alguns segundos.");
+  const [month, year] = String(fields.cardExpiry ?? "").split("/");
+  const client = new window.MercadoPago(publicKey, { locale: "pt-BR" });
+  const cardNumber = onlyDigits(fields.cardNumber ?? "");
+  const token = await client.createCardToken({
+    cardNumber,
+    cardholderName: String(fields.cardName ?? "").trim(),
+    cardExpirationMonth: month,
+    cardExpirationYear: `20${year}`,
+    securityCode: onlyDigits(fields.cardCvv ?? ""),
+    identificationType: "CPF",
+    identificationNumber: onlyDigits(fields.cpf),
+  });
+  if (!token?.id) throw new Error("Não foi possível validar o cartão. Confirme os dados e tente novamente.");
+  const methods = await client.getPaymentMethods?.({ bin: cardNumber.slice(0, 6) });
+  const firstMethod = Array.isArray(methods) ? methods[0] : methods?.results?.[0];
+  const paymentMethodId = firstMethod?.id ?? firstMethod?.payment_method_id;
+  if (!paymentMethodId) throw new Error("Não foi possível identificar a bandeira do cartão.");
+  return { cardToken: token.id, paymentMethodId };
+}
+
 function readInitialCart() {
   return loadCart<CheckoutLine[] extends never[] ? never : CheckoutLine>();
 }
@@ -54,7 +116,7 @@ export default function CheckoutPage() {
   const [cepLookupStatus, setCepLookupStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [couponLoading, setCouponLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "processing" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [fieldErrors, setFieldErrors] = useState<CheckoutFieldErrors>({});
   const [success, setSuccess] = useState<CheckoutSuccess | null>(null);
@@ -63,6 +125,7 @@ export default function CheckoutPage() {
     { cep, subtotal: cart.reduce((sum, item) => sum + item.price * item.quantity, 0) },
     { enabled: cep.length === 8 },
   );
+  const checkoutConfigQuery = trpc.checkout.publicConfig.useQuery();
   const checkoutMutation = trpc.checkout.create.useMutation();
 
   const pixDiscountPercent = commercialConfigQuery.data?.pixDiscountPercent ?? 5;
@@ -120,6 +183,26 @@ export default function CheckoutPage() {
     toast.success("Item removido da sacola", { description: `${line.name} · tamanho ${line.size}` });
   }
 
+  function handleFormChange(event: React.FormEvent<HTMLFormElement>) {
+    const target = event.target as HTMLInputElement;
+    if (!target.name) return;
+    if (target.name === "cpf") target.value = formatCpf(target.value);
+    if (target.name === "cardNumber") target.value = formatCardNumber(target.value);
+    if (target.name === "cardExpiry") target.value = formatCardExpiry(target.value);
+
+    const fields = readCheckoutFieldsFromForm(event.currentTarget);
+    const errors = validateCheckoutFields(fields, selectedPaymentMethod);
+    const fieldName = target.name as keyof CheckoutFieldErrors;
+    if (target.value.trim() || fieldErrors[fieldName]) {
+      setFieldErrors((current) => {
+        const next = { ...current };
+        if (errors[fieldName]) next[fieldName] = errors[fieldName];
+        else delete next[fieldName];
+        return next;
+      });
+    }
+  }
+
   function applyCoupon() {
     if (!coupon.trim()) {
       toast.error("Digite o código do cupom.");
@@ -138,24 +221,13 @@ export default function CheckoutPage() {
     }, 500);
   }
 
-  function submitCheckout(event: React.FormEvent<HTMLFormElement>) {
+  async function submitCheckout(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (isSubmitting || cart.length === 0) return;
 
-    const form = new FormData(event.currentTarget);
-    const fields: CheckoutFields = {
-      customerName: String(form.get("customerName") ?? ""),
-      customerEmail: String(form.get("customerEmail") ?? ""),
-      cpf: String(form.get("cpf") ?? ""),
-      phone: String(form.get("phone") ?? ""),
-      cep: String(form.get("cep") ?? ""),
-      number: String(form.get("number") ?? ""),
-      street: String(form.get("street") ?? ""),
-      neighborhood: String(form.get("neighborhood") ?? ""),
-      city: String(form.get("city") ?? ""),
-      state: String(form.get("state") ?? ""),
-    };
-    const validationErrors = validateCheckoutFields(fields);
+    const form = event.currentTarget;
+    const fields = readCheckoutFieldsFromForm(form);
+    const validationErrors = validateCheckoutFields(fields, selectedPaymentMethod);
     setFieldErrors(validationErrors);
     if (hasCheckoutFieldErrors(validationErrors)) {
       toast.error("Revise os campos destacados antes de finalizar a compra.");
@@ -165,8 +237,26 @@ export default function CheckoutPage() {
     }
 
     setIsSubmitting(true);
-    setStatus("idle");
+    setStatus("processing");
     setErrorMessage("");
+
+    let cardToken: string | undefined;
+    let paymentMethodId: string | undefined;
+    try {
+      const tokenizedCard = selectedPaymentMethod === "credit_card"
+        ? await tokenizeCard(fields, checkoutConfigQuery.data?.publicKey ?? undefined)
+        : undefined;
+      cardToken = tokenizedCard?.cardToken;
+      paymentMethodId = tokenizedCard?.paymentMethodId;
+    } catch (tokenError) {
+      const message = tokenError instanceof Error ? tokenError.message : "Não foi possível validar o cartão.";
+      setIsSubmitting(false);
+      setStatus("error");
+      setErrorMessage(message);
+      toast.error(message);
+      return;
+    }
+
     checkoutMutation.mutate({
       customerName: fields.customerName.trim(),
       customerEmail: fields.customerEmail.trim(),
@@ -187,6 +277,9 @@ export default function CheckoutPage() {
       discount: discount + pixSavings,
       total,
       paymentMethod: selectedPaymentMethod,
+      cardToken,
+      paymentMethodId,
+      installments: selectedPaymentMethod === "credit_card" ? 1 : undefined,
     }, {
       onSuccess: (result) => {
         setIsSubmitting(false);
@@ -224,15 +317,18 @@ export default function CheckoutPage() {
 
   if (status === "success" && success) {
     const isApproved = success.paymentStatus === "approved";
+    const isPix = success.paymentMethod === "pix";
+    const isRejected = ["rejected", "cancelled", "refunded"].includes(success.paymentStatus);
     return (
       <main className="checkout-page">
         <section className="checkout-success-page" aria-live="polite" aria-labelledby="checkout-success-title">
           <span className="checkout-success-icon"><Check size={30} /></span>
           <span className="section-kicker">UMA NOVA ERA COMEÇA AQUI</span>
-          <h1 id="checkout-success-title">{isApproved ? "Pagamento confirmado." : "Pedido gerado com sucesso."}</h1>
-          <p>O pedido <strong>{success.orderNumber}</strong> foi registrado na Eras Label. {isApproved ? "O pagamento foi aprovado." : "Escaneie o QR Code Pix ou copie o código para concluir."}</p>
+          <h1 id="checkout-success-title">{isApproved ? "Pagamento confirmado." : isRejected ? "Pagamento não aprovado." : "Pedido gerado com sucesso."}</h1>
+          <p>O pedido <strong>{success.orderNumber}</strong> foi registrado na Eras Label. {isApproved ? "O pagamento foi aprovado." : isRejected ? "O pagamento foi recusado pelo Mercado Pago. Pode tentar novamente." : isPix ? "Escaneie o QR Code Pix ou copie o código para concluir." : "O pagamento está a ser analisado pelo Mercado Pago. Atualizaremos o seu histórico assim que houver confirmação."}</p>
+          <span className={`checkout-payment-status checkout-payment-status-${isApproved ? "approved" : isRejected ? "rejected" : "pending"}`}>{isApproved ? "PAGAMENTO APROVADO" : isRejected ? "PAGAMENTO RECUSADO" : "PAGAMENTO PENDENTE"}</span>
           
-          {!isApproved && success.pixData?.qr_code && (
+          {!isApproved && isPix && success.pixData?.qr_code && (
             <div className="checkout-pix-box" style={{ background: "#f8f9fa", border: "1px solid #e5e7eb", borderRadius: "8px", padding: "20px", margin: "20px 0", textAlign: "center" }}>
               <h3>Pagamento via Pix (Mercado Pago)</h3>
               <p style={{ fontSize: "13px", color: "#6b7280", marginBottom: "12px" }}>Utilize o aplicativo do seu banco para ler o código abaixo:</p>
@@ -253,7 +349,7 @@ export default function CheckoutPage() {
             </div>
           )}
 
-          <div className="checkout-success-total"><span>{isApproved ? "Total pago" : "Total a pagar"}</span><strong>{formatPrice(success.total)}</strong></div>
+          <div className="checkout-success-total"><span>{isApproved ? "Total pago" : isRejected ? "Total do pedido" : "Total a pagar"}</span><strong>{formatPrice(success.total)}</strong></div>
           <section className="checkout-success-order" aria-label="Resumo do pedido confirmado">
             <div className="checkout-success-order-heading"><span>RESUMO DO PEDIDO</span><strong>{success.items.reduce((sum, item) => sum + item.quantity, 0)} itens</strong></div>
             <div className="checkout-success-order-items">
@@ -275,7 +371,7 @@ export default function CheckoutPage() {
             <p className="checkout-success-delivery"><Clock3 size={15} /> Entrega estimada: {success.estimatedDelivery}</p>
           </section>
           <div className="checkout-success-actions">
-            <Link href="/account" className="primary-button">ACOMPANHAR PEDIDO <ArrowRight size={16} /></Link>
+            <Link href="/orders" className="primary-button">ACOMPANHAR PEDIDO <ArrowRight size={16} /></Link>
             <Link href="/" className="primary-button checkout-continue-button">CONTINUAR COMPRANDO <ArrowRight size={16} /></Link>
           </div>
         </section>
@@ -313,9 +409,15 @@ export default function CheckoutPage() {
             <p>Preencha as informações para receber as peças da sua próxima era.</p>
           </div>
 
+          {status === "processing" && (
+            <div className="checkout-processing-banner" role="status" aria-live="polite">
+              <span className="checkout-processing-spinner"><Loader2 size={18} className="spinner-icon" /></span>
+              <div><strong>A confirmar o seu pagamento...</strong><span>Estamos a comunicar com o Mercado Pago. Não feche esta janela.</span></div>
+            </div>
+          )}
           {status === "error" && <div className="checkout-error-banner" role="alert">{errorMessage}</div>}
 
-          <form className="checkout-page-form" onSubmit={submitCheckout} noValidate>
+          <form className="checkout-page-form" onSubmit={submitCheckout} onChange={handleFormChange} noValidate>
             <div className="checkout-page-form-section">
               <span className="checkout-form-step">01 / IDENTIFICAÇÃO</span>
               <div className="checkout-page-fields">
@@ -343,13 +445,34 @@ export default function CheckoutPage() {
             <div className="checkout-page-form-section">
               <span className="checkout-form-step">03 / PAGAMENTO</span>
               <div className="checkout-payment-options">
-                <button type="button" className={selectedPaymentMethod === "pix" ? "active" : ""} onClick={() => setSelectedPaymentMethod("pix")}><strong>Pix</strong><span>{pixDiscountPercent}% de desconto</span></button>
+                <button type="button" className={selectedPaymentMethod === "pix" ? "active" : ""} onClick={() => { setSelectedPaymentMethod("pix"); setFieldErrors((current) => { const next = { ...current }; delete next.cardNumber; delete next.cardName; delete next.cardExpiry; delete next.cardCvv; return next; }); }}><strong>Pix</strong><span>{pixDiscountPercent}% de desconto</span></button>
                 <button type="button" className={selectedPaymentMethod === "credit_card" ? "active" : ""} onClick={() => setSelectedPaymentMethod("credit_card")}><strong>Cartão</strong><span>Pagamento seguro</span></button>
               </div>
+              {selectedPaymentMethod === "credit_card" && (
+                <div className="checkout-page-fields checkout-card-fields">
+                  <label className={`wide ${fieldErrors.cardNumber ? "has-error" : ""}`}>Número do cartão
+                    <input name="cardNumber" inputMode="numeric" autoComplete="cc-number" maxLength={23} placeholder="0000 0000 0000 0000" aria-invalid={Boolean(fieldErrors.cardNumber)} aria-describedby={fieldErrors.cardNumber ? "cardNumber-error" : undefined} />
+                    {fieldErrors.cardNumber && <span id="cardNumber-error" className="field-error" role="alert">{fieldErrors.cardNumber}</span>}
+                  </label>
+                  <label className={fieldErrors.cardName ? "has-error" : undefined}>Nome no cartão
+                    <input name="cardName" autoComplete="cc-name" placeholder="Nome e sobrenome" aria-invalid={Boolean(fieldErrors.cardName)} aria-describedby={fieldErrors.cardName ? "cardName-error" : undefined} />
+                    {fieldErrors.cardName && <span id="cardName-error" className="field-error" role="alert">{fieldErrors.cardName}</span>}
+                  </label>
+                  <label className={fieldErrors.cardExpiry ? "has-error" : undefined}>Validade
+                    <input name="cardExpiry" inputMode="numeric" autoComplete="cc-exp" maxLength={5} placeholder="MM/AA" aria-invalid={Boolean(fieldErrors.cardExpiry)} aria-describedby={fieldErrors.cardExpiry ? "cardExpiry-error" : undefined} />
+                    {fieldErrors.cardExpiry && <span id="cardExpiry-error" className="field-error" role="alert">{fieldErrors.cardExpiry}</span>}
+                  </label>
+                  <label className={fieldErrors.cardCvv ? "has-error" : undefined}>CVV
+                    <input name="cardCvv" inputMode="numeric" autoComplete="cc-csc" maxLength={4} placeholder="123" aria-invalid={Boolean(fieldErrors.cardCvv)} aria-describedby={fieldErrors.cardCvv ? "cardCvv-error" : undefined} />
+                    {fieldErrors.cardCvv && <span id="cardCvv-error" className="field-error" role="alert">{fieldErrors.cardCvv}</span>}
+                  </label>
+                  <p className="checkout-page-helper wide"><ShieldCheck size={15} /> Os dados do cartão são tokenizados pelo Mercado Pago e nunca ficam armazenados na Eras Label.</p>
+                </div>
+              )}
             </div>
 
             <button type="submit" className="primary-button checkout-page-submit" disabled={isSubmitting}>
-              {isSubmitting ? <><Loader2 size={16} className="spinner-icon" /> CONFIRMANDO PAGAMENTO...</> : <>CONFIRMAR PAGAMENTO · {formatPrice(total)} <ArrowRight size={16} /></>}
+              {isSubmitting ? <><Loader2 size={16} className="spinner-icon" /> A CONFIRMAR PAGAMENTO...</> : <>CONFIRMAR PAGAMENTO · {formatPrice(total)} <ArrowRight size={16} /></>}
             </button>
           </form>
         </section>

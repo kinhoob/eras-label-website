@@ -167,3 +167,11 @@
 - [ ] Atualizar a página de sucesso para exibir o status confirmado ou pendente do Mercado Pago com resumo detalhado
 - [ ] Escrever testes unitários em Vitest para simular criação de pagamento e webhooks do Mercado Pago
 - [ ] Executar build de produção, validar TypeScript, garantir 95+ testes aprovados e salvar checkpoint final
+
+## Melhorias Solicitadas (Checkout, Validação e Histórico)
+- [ ] Validação em tempo real do CPF no formulário de checkout
+- [ ] Validação em tempo real do número do cartão de crédito no checkout transparente
+- [ ] Indicador visual e mensagens de status durante o processamento do pagamento no checkout
+- [ ] Persistência de pedidos reais na base de dados (tabela orders e order_items)
+- [ ] Página de Histórico de Pedidos (/account/orders ou /orders) para acompanhamento do status e pagamentos
+- [ ] Testes Vitest cobrindo validação e histórico de pedidos
