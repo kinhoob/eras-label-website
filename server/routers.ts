@@ -7,7 +7,7 @@ import { invokeLLM } from "./_core/llm";
 import { ADMIN_DISPLAY_NAME, getAdminOpenId, validateAdminCredentials } from "./admin-auth";
 import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
-import { storagePut } from "./storage";
+import { storageGetSignedUrl, storagePut } from "./storage";
 import { createMercadoPagoPayment } from "./mercadopago";
 import { createMelhorEnvioCartItem, downloadMelhorEnvioLabelFile, getMelhorEnvioTracking } from "./melhor-envio";
 import {
@@ -60,6 +60,7 @@ import {
 import { adminOrderEmail, newsletterWelcomeEmail, orderConfirmationEmail, paymentConfirmationEmail } from "./email-templates";
 import { ENV } from "./_core/env";
 import { sendResendEmail } from "./resend";
+import { mergeLabelPdfs } from "./label-pdf";
 
 const newsletterInput = z.object({
   name: z.string().min(2).max(255),
@@ -718,6 +719,92 @@ Seja objetivo, elegante e direto ao ponto.`;
       }
     }),
 
+    downloadBulkShippingLabels: adminProcedure.input(z.object({
+      orderIds: z.array(z.number().int().positive()).min(1).max(50),
+    })).mutation(async ({ input }) => {
+      const uniqueOrderIds = Array.from(new Set(input.orderIds));
+      const pdfBuffers: Uint8Array[] = [];
+      const includedOrderIds: number[] = [];
+      const skippedOrders: Array<{ orderId: number; orderNumber?: string; reason: string }> = [];
+
+      /**
+       * Baixa uma etiqueta que já foi persistida no storage interno ou num
+       * URL externo. A validação do content-type e da assinatura PDF impede
+       * que um arquivo arbitrário seja publicado como etiqueta consolidada.
+       */
+      const downloadStoredLabel = async (labelUrl: string) => {
+        let resolvedUrl = labelUrl;
+        if (labelUrl.startsWith("/manus-storage/")) {
+          const storageKey = decodeURIComponent(labelUrl.slice("/manus-storage/".length));
+          resolvedUrl = await storageGetSignedUrl(storageKey);
+        }
+
+        const response = await fetch(resolvedUrl, { headers: { Accept: "application/pdf, application/octet-stream" } });
+        if (!response.ok) throw new Error(`Falha ao baixar a etiqueta persistida (${response.status}).`);
+        const bytes = new Uint8Array(await response.arrayBuffer());
+        if (bytes.length < 4 || new TextDecoder().decode(bytes.slice(0, 4)) !== "%PDF") {
+          throw new Error("O arquivo persistido não é um PDF válido.");
+        }
+        return bytes;
+      };
+
+      for (const orderId of uniqueOrderIds) {
+        const order = await getOrderById(orderId);
+        if (!order) {
+          skippedOrders.push({ orderId, reason: "Pedido não encontrado." });
+          continue;
+        }
+
+        try {
+          let pdfBytes: Uint8Array | null = null;
+          if (order.labelPdfUrl) {
+            // Reutiliza a etiqueta já armazenada para reduzir chamadas ao
+            // provedor e manter o mesmo arquivo usado no fluxo individual.
+            pdfBytes = await downloadStoredLabel(order.labelPdfUrl);
+          } else if (order.shippingOrderId) {
+            const file = await downloadMelhorEnvioLabelFile(order.shippingOrderId);
+            pdfBytes = file.kind === "binary" ? file.bytes : await downloadStoredLabel(file.url);
+          }
+
+          if (!pdfBytes) {
+            skippedOrders.push({ orderId, orderNumber: order.orderNumber, reason: "Etiqueta ainda não disponível." });
+            continue;
+          }
+
+          pdfBuffers.push(pdfBytes);
+          includedOrderIds.push(orderId);
+        } catch (error) {
+          skippedOrders.push({
+            orderId,
+            orderNumber: order.orderNumber,
+            reason: error instanceof Error ? error.message : "Não foi possível obter a etiqueta.",
+          });
+        }
+      }
+
+      if (pdfBuffers.length === 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Nenhuma das vendas selecionadas possui uma etiqueta PDF disponível.",
+        });
+      }
+
+      try {
+        const mergedPdf = await mergeLabelPdfs(pdfBuffers);
+        const filename = `etiquetas-${new Date().toISOString().replace(/[:.]/g, "-")}.pdf`;
+        const uploaded = await storagePut(`bulk-labels/${filename}`, mergedPdf, "application/pdf");
+        return {
+          success: true,
+          labelPdfUrl: uploaded.url,
+          includedOrderIds,
+          skippedOrders,
+          pageCount: pdfBuffers.length,
+        };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Não foi possível consolidar as etiquetas em PDF.";
+        throw new TRPCError({ code: "BAD_REQUEST", message });
+      }
+    }),
 
 
     sendMarketingCampaign: adminProcedure.input(z.object({

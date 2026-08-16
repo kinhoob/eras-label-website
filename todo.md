@@ -240,3 +240,11 @@
 - [x] Validar a interface do painel, a suíte Vitest e o build de produção
 - [x] Salvar checkpoint da funcionalidade de PDF da etiqueta
 
+
+## PDF consolidado de múltiplas etiquetas (solicitação de 2026-08-16)
+- [x] Adicionar seleção de múltiplos pedidos na aba de Vendas
+- [x] Consolidar as etiquetas selecionadas em um único PDF no backend
+- [x] Disponibilizar o download do PDF consolidado com tratamento de etiquetas ausentes
+- [x] Criar testes unitários e validar TypeScript, Vitest, build e interface
+- [ ] Salvar checkpoint da funcionalidade de PDF consolidado
+

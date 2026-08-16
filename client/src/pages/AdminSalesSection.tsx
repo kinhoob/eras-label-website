@@ -3,7 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Download, Eye, FileText, ExternalLink, Truck, Package, LoaderCircle, CreditCard, Users } from "lucide-react";
+import { Download, Eye, FileText, ExternalLink, Truck, Package, LoaderCircle, CreditCard, Users, Check, Minus, Files } from "lucide-react";
 
 export default function AdminSalesSection() {
   const { data: orders = [], isLoading, refetch } = trpc.admin.listOrders.useQuery();
@@ -11,6 +11,8 @@ export default function AdminSalesSection() {
   const [shippingQuotes, setShippingQuotes] = useState<any[]>([]);
   const [calculatingShipping, setCalculatingShipping] = useState(false);
   const [labelPdfUrl, setLabelPdfUrl] = useState<string | null>(null);
+  const [selectedOrderIds, setSelectedOrderIds] = useState<number[]>([]);
+  const [bulkLabelPdfUrl, setBulkLabelPdfUrl] = useState<string | null>(null);
 
   const calculateShippingMutation = trpc.admin.calculateShippingQuote.useMutation({
     onSuccess: (data) => {
@@ -73,6 +75,41 @@ export default function AdminSalesSection() {
   };
 
   const activeLabelPdfUrl = labelPdfUrl || selectedOrder?.labelPdfUrl || null;
+  const allOrdersSelected = orders.length > 0 && orders.every((order: any) => selectedOrderIds.includes(order.id));
+
+  const bulkDownloadLabelsMutation = trpc.admin.downloadBulkShippingLabels.useMutation({
+    onSuccess: (data) => {
+      setBulkLabelPdfUrl(data.labelPdfUrl);
+      const skippedCount = data.skippedOrders?.length ?? 0;
+      toast.success(
+        skippedCount > 0
+          ? `${data.pageCount} etiqueta(s) consolidada(s); ${skippedCount} pedido(s) ignorado(s) por falta de PDF.`
+          : `${data.pageCount} etiqueta(s) consolidada(s) num único PDF.`,
+      );
+    },
+    onError: (err) => {
+      toast.error("Não foi possível consolidar as etiquetas: " + err.message);
+    },
+  });
+
+  const toggleOrderSelection = (orderId: number) => {
+    setSelectedOrderIds((current) => current.includes(orderId)
+      ? current.filter((id) => id !== orderId)
+      : [...current, orderId]);
+  };
+
+  const toggleAllOrders = () => {
+    setSelectedOrderIds(allOrdersSelected ? [] : orders.map((order: any) => order.id));
+  };
+
+  const handleBulkDownload = () => {
+    if (selectedOrderIds.length === 0) {
+      toast.error("Selecione pelo menos um pedido para baixar as etiquetas.");
+      return;
+    }
+    setBulkLabelPdfUrl(null);
+    bulkDownloadLabelsMutation.mutate({ orderIds: selectedOrderIds });
+  };
 
   return (
     <section className="admin-content">
@@ -81,8 +118,39 @@ export default function AdminSalesSection() {
           <span className="section-kicker">GESTÃO COMERCIAL</span>
           <h2 className="content-title">Vendas & Entregas (Melhor Envio)</h2>
         </div>
-        <Button variant="outline" onClick={() => refetch()}>Atualizar lista</Button>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", justifyContent: "flex-end" }}>
+          {selectedOrderIds.length > 0 && (
+            <Button
+              onClick={handleBulkDownload}
+              disabled={bulkDownloadLabelsMutation.isPending}
+              style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+            >
+              {bulkDownloadLabelsMutation.isPending ? <LoaderCircle className="spin" size={14} /> : <Files size={14} />}
+              {bulkDownloadLabelsMutation.isPending ? "A consolidar..." : `Baixar ${selectedOrderIds.length} etiqueta(s)`}
+            </Button>
+          )}
+          <Button variant="outline" onClick={() => refetch()}>Atualizar lista</Button>
+        </div>
       </div>
+
+      {bulkLabelPdfUrl && (
+        <div className="admin-panel" style={{ marginBottom: "1rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
+          <div>
+            <strong style={{ display: "flex", alignItems: "center", gap: "6px" }}><FileText size={16} /> PDF consolidado pronto</strong>
+            <p className="editor-description" style={{ margin: "4px 0 0" }}>As etiquetas disponíveis da seleção foram reunidas num único arquivo PDF.</p>
+          </div>
+          <a
+            href={bulkLabelPdfUrl}
+            download="etiquetas-eras-label.pdf"
+            target="_blank"
+            rel="noreferrer"
+            className="button"
+            style={{ display: "inline-flex", alignItems: "center", gap: "6px", textDecoration: "none" }}
+          >
+            <Download size={14} /> Descarregar PDF consolidado
+          </a>
+        </div>
+      )}
 
       <div className="order-cards">
         <div className="metric-card">
@@ -108,6 +176,17 @@ export default function AdminSalesSection() {
           <table>
             <thead>
               <tr>
+                <th style={{ width: "42px", textAlign: "center" }}>
+                  <input
+                    type="checkbox"
+                    checked={allOrdersSelected}
+                    ref={(element) => {
+                      if (element) element.indeterminate = selectedOrderIds.length > 0 && !allOrdersSelected;
+                    }}
+                    onChange={toggleAllOrders}
+                    aria-label="Selecionar todos os pedidos"
+                  />
+                </th>
                 <th>Pedido</th>
                 <th>Cliente</th>
                 <th>Método de Entrega</th>
@@ -125,6 +204,14 @@ export default function AdminSalesSection() {
 
                 return (
                   <tr key={order.id}>
+                    <td style={{ textAlign: "center" }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedOrderIds.includes(order.id)}
+                        onChange={() => toggleOrderSelection(order.id)}
+                        aria-label={`Selecionar pedido ${order.orderNumber}`}
+                      />
+                    </td>
                     <td><strong>{order.orderNumber}</strong></td>
                     <td>
                       <div>{order.customerName}</div>
