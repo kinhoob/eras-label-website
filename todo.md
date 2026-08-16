@@ -272,3 +272,11 @@
 - [x] Documentar o relatório estratégico em `/docs/ecommerce-audit-2026.md` com plano de ação priorizado
 - [x] Validar que todas as rotas e testes continuam íntegros (116 testes aprovados, build de produção OK)
 - [x] Guardar checkpoint final da auditoria e apresentar resultados ao utilizador
+
+
+## Correção do Scroll e Densidade do Painel Admin (2026-08-16)
+- [x] Aplicar rolagem vertical independente na barra lateral administrativa (`.admin-sidebar` e `nav`)
+- [x] Reduzir dimensões de thumbnails (`32x32px`), ícones e paddings para otimizar o espaço vertical
+- [x] Garantir acessibilidade total de todas as opções do menu em ecrãs de menor altura e dispositivos móveis
+- [x] Executar testes Vitest (116 aprovados) e build de produção sem erros
+- [x] Guardar checkpoint e entregar a correção
