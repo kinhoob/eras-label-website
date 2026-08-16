@@ -181,3 +181,15 @@
 - [x] Implementar campo de cupom de desconto diretamente no checkout principal, recalculando o total em tempo real
 - [x] Aprimorar a página de histórico de pedidos (`/orders` e `Account.tsx`) com modal/visualização detalhada dos itens adquiridos e rastreamento da entrega
 - [x] Executar testes Vitest, TypeScript e build de produção para validar as novas funcionalidades
+
+## Teste Sandbox Mercado Pago
+- [ ] Corrigir o fluxo de cartão sandbox que permanece em processamento após tokenização, adicionando timeout explícito, normalização da validade e envio seguro da mutation checkout.create
+- [ ] Reexecutar o teste de cartão e iniciar o teste Pix sandbox
+
+
+## Diagnóstico final do checkout sandbox Mercado Pago
+- [ ] Corrigir e documentar o tratamento de `communication_error` do Pix, incluindo payload de endereço e orientação para chave Pix do vendedor sandbox
+- [ ] Tornar a chave de idempotência do pagamento estável por pedido e melhorar o diagnóstico de respostas não-2xx do Mercado Pago
+- [ ] Revalidar criação de token e mutation `checkout.create` com cartão no navegador, sem deixar o fluxo preso em processamento
+- [ ] Confirmar o webhook `/api/mercadopago/webhook` e a renderização completa do histórico de pedidos após uma mudança de status
+- [ ] Executar TypeScript, suíte Vitest completa e build de produção; guardar checkpoint final

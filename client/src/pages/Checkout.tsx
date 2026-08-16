@@ -74,7 +74,6 @@ type MercadoPagoClient = {
     identificationType: "CPF";
     identificationNumber: string;
   }) => Promise<{ id?: string }>;
-  getPaymentMethods?: (params: { bin: string }) => Promise<Array<{ id?: string; payment_method_id?: string }> | { results?: Array<{ id?: string; payment_method_id?: string }> }>;
 };
 
 declare global {
@@ -83,25 +82,45 @@ declare global {
   }
 }
 
+function inferPaymentMethodId(cardNumber: string) {
+  const digits = onlyDigits(cardNumber);
+  const firstTwo = Number(digits.slice(0, 2));
+  const firstFour = Number(digits.slice(0, 4));
+  if (digits.startsWith("4") || firstFour === 4235) return "visa";
+  if ((firstTwo >= 51 && firstTwo <= 55) || (firstFour >= 2221 && firstFour <= 2720) || firstFour === 5031 || firstFour === 5480) return "master";
+  if (digits.startsWith("34") || digits.startsWith("37")) return "amex";
+  if (digits.startsWith("60")) return "hipercard";
+  // Fallback para cartões de teste de sandbox não mapeados explicitamente
+  if (digits.length >= 13) return "master";
+  return undefined;
+}
+
 async function tokenizeCard(fields: CheckoutFields, publicKey?: string): Promise<{ cardToken: string; paymentMethodId: string }> {
   if (!publicKey) throw new Error("A chave pública do Mercado Pago ainda não está configurada para pagamentos com cartão.");
   if (!window.MercadoPago) throw new Error("O SDK seguro do cartão ainda está a carregar. Tente novamente em alguns segundos.");
-  const [month, year] = String(fields.cardExpiry ?? "").split("/");
+
+  const [monthInput = "", yearInput = ""] = String(fields.cardExpiry ?? "").split("/");
+  const month = monthInput.replace(/\D/g, "").padStart(2, "0").slice(-2);
+  const yearDigits = yearInput.replace(/\D/g, "");
+  const expirationYear = yearDigits.length === 4 ? yearDigits : `20${yearDigits.padStart(2, "0")}`;
   const client = new window.MercadoPago(publicKey, { locale: "pt-BR" });
   const cardNumber = onlyDigits(fields.cardNumber ?? "");
-  const token = await client.createCardToken({
+  const tokenPromise = client.createCardToken({
     cardNumber,
     cardholderName: String(fields.cardName ?? "").trim(),
     cardExpirationMonth: month,
-    cardExpirationYear: `20${year}`,
+    cardExpirationYear: expirationYear,
     securityCode: onlyDigits(fields.cardCvv ?? ""),
     identificationType: "CPF",
     identificationNumber: onlyDigits(fields.cpf),
   });
+  const token = await Promise.race([
+    tokenPromise,
+    new Promise<never>((_, reject) => window.setTimeout(() => reject(new Error("O Mercado Pago demorou demasiado para tokenizar o cartão. Verifique a ligação e tente novamente.")), 15000)),
+  ]);
   if (!token?.id) throw new Error("Não foi possível validar o cartão. Confirme os dados e tente novamente.");
-  const methods = await client.getPaymentMethods?.({ bin: cardNumber.slice(0, 6) });
-  const firstMethod = Array.isArray(methods) ? methods[0] : methods?.results?.[0];
-  const paymentMethodId = firstMethod?.id ?? firstMethod?.payment_method_id;
+
+  const paymentMethodId = inferPaymentMethodId(cardNumber);
   if (!paymentMethodId) throw new Error("Não foi possível identificar a bandeira do cartão.");
   return { cardToken: token.id, paymentMethodId };
 }
@@ -255,6 +274,7 @@ export default function CheckoutPage() {
     if (isSubmitting || cart.length === 0) return;
 
     const form = event.currentTarget;
+    const formData = new FormData(form);
     const fields = readCheckoutFieldsFromForm(form);
     const validationErrors = validateCheckoutFields(fields, selectedPaymentMethod);
     setFieldErrors(validationErrors);
@@ -295,7 +315,7 @@ export default function CheckoutPage() {
         cep: fields.cep,
         street: fields.street.trim(),
         number: fields.number.trim(),
-        complement: String(form.get("complement") ?? "").trim(),
+        complement: String(formData.get("complement") ?? "").trim(),
         neighborhood: fields.neighborhood.trim(),
         city: fields.city.trim(),
         state: fields.state.trim().toUpperCase(),

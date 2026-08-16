@@ -9,7 +9,7 @@ import { ENV } from "./_core/env";
 // URL base da API do Mercado Pago
 const MP_API_BASE = "https://api.mercadopago.com";
 
-interface CreatePaymentParams {
+export interface CreatePaymentParams {
   transaction_amount: number;
   description: string;
   payment_method_id: string; // 'pix', 'visa', 'master', etc.
@@ -23,8 +23,60 @@ interface CreatePaymentParams {
       type: string; // 'CPF' ou 'CNPJ'
       number: string;
     };
+    address?: {
+      zip_code?: string;
+      street_name?: string;
+      street_number?: string;
+      neighborhood?: string;
+      city?: string;
+      federal_unit?: string;
+    };
   };
   external_reference?: string; // ID do pedido na Eras Label
+}
+
+/**
+ * Converte o endereço interno do checkout para os nomes esperados pela API do Mercado Pago.
+ * Os campos são enviados quando disponíveis para manter compatibilidade com validações
+ * regionais do Pix e de outros meios de pagamento.
+ */
+export function buildMercadoPagoPaymentPayload(params: CreatePaymentParams) {
+  const address = params.payer.address;
+  return {
+    ...params,
+    payer: {
+      ...params.payer,
+      ...(address ? {
+        address: {
+          ...address,
+          zip_code: address.zip_code?.replace(/\D/g, ""),
+          street_name: address.street_name?.trim(),
+          street_number: address.street_number?.trim(),
+          neighborhood: address.neighborhood?.trim(),
+          city: address.city?.trim(),
+          federal_unit: address.federal_unit?.trim().toUpperCase(),
+        },
+      } : {}),
+    },
+  };
+}
+
+export function getMercadoPagoErrorMessage(data: any, status: number) {
+  const rawMessage = String(data?.message || data?.error || "").trim();
+  const causes = Array.isArray(data?.cause) ? data.cause : [];
+  const hasCauseCode = (code: number) => causes.some((cause: any) => Number(cause?.code) === code);
+
+  // Código 2034 indica que o token do cartão e o Access Token não pertencem
+  // ao mesmo utilizador vendedor. Isso costuma acontecer quando MP_PUBLIC_KEY
+  // e MP_ACCESS_TOKEN foram copiados de contas sandbox diferentes.
+  if (hasCauseCode(2034) || rawMessage.toLowerCase().includes("invalid users involved")) {
+    return "As credenciais sandbox do Mercado Pago não pertencem à mesma conta vendedora. Gere MP_PUBLIC_KEY e MP_ACCESS_TOKEN no mesmo utilizador de teste e atualize ambos nas Secrets do projeto.";
+  }
+
+  if (rawMessage.includes("communication_error")) {
+    return "O Mercado Pago não conseguiu comunicar com o meio de pagamento. No sandbox, confirme que a conta vendedora tem uma chave Pix registada e que o MP_ACCESS_TOKEN é a credencial APP_USR dessa mesma conta.";
+  }
+  return rawMessage || `Erro ao processar pagamento no Mercado Pago (HTTP ${status}).`;
 }
 
 /**
@@ -65,21 +117,32 @@ export async function createMercadoPagoPayment(params: CreatePaymentParams) {
   }
 
   // Requisição real à API do Mercado Pago
+  const payload = buildMercadoPagoPaymentPayload(params);
+  const idempotencyKey = `${params.external_reference || "eras-payment"}-v1`;
   const response = await fetch(`${MP_API_BASE}/v1/payments`, {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${accessToken}`,
       "Content-Type": "application/json",
-      "X-Idempotency-Key": `${params.external_reference}-${Date.now()}`
+      // A chave precisa ser estável para que um retry do mesmo pedido não crie uma cobrança duplicada.
+      "X-Idempotency-Key": idempotencyKey,
     },
-    body: JSON.stringify(params)
+    body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(20_000),
   });
 
   const data = (await response.json()) as any;
 
   if (!response.ok) {
-    console.error("[MercadoPago] Erro na API do Mercado Pago:", data);
-    throw new Error(data.message || data.error || "Erro ao processar pagamento no Mercado Pago");
+    console.error("[MercadoPago] Erro na API do Mercado Pago:", {
+      status: response.status,
+      error: data?.error,
+      message: data?.message,
+      cause: data?.cause,
+      externalReference: params.external_reference,
+      paymentMethodId: params.payment_method_id,
+    });
+    throw new Error(getMercadoPagoErrorMessage(data, response.status));
   }
 
   return data;

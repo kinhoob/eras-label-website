@@ -245,6 +245,14 @@ export const appRouter = router({
               type: "CPF",
               number: input.customerCpf.replace(/\D/g, ""),
             },
+            address: {
+              zip_code: input.address.cep,
+              street_name: input.address.street,
+              street_number: input.address.number,
+              neighborhood: input.address.neighborhood,
+              city: input.address.city,
+              federal_unit: input.address.state,
+            },
           },
           external_reference: orderNumber,
         });
