@@ -320,3 +320,26 @@
 - [x] Executar script SQL transacional para truncar ou limpar tabelas de demonstração sem apagar utilizadores administradores.
 - [x] Validar contagens zeradas e testar o funcionamento do painel administrativo com catálogo e vendas vazios.
 - [x] Executar suíte de testes Vitest, TypeScript e guardar checkpoint da base limpa.
+
+
+## Refinamentos do Painel Administrativo (2026-08-16)
+- [ ] Eliminar o scroll lateral na sidebar do painel administrativo (`.admin-sidebar`).
+- [ ] Implementar opções completas de definições e perfil editável (permitindo ao utilizador definir o próprio nome independentemente da permissão).
+- [ ] Reorganizar a secção de Aparência com blocos limpos, evitando elementos sobrepostos ou amontoados.
+- [ ] Permitir múltiplos anúncios rotativos ou em lista na barra de anúncio editável.
+- [ ] Refinar a experiência visual dos dropdowns do painel.
+- [ ] Reformular a tela inicial (Início) do painel com cartões de status operacionais (Por cobrar, Por embalar, Por enviar, Por retirar) e filtros de estatísticas por 7, 15, 30 dias e personalizado.
+- [ ] Corrigir o erro/quebra na secção de expectativas/estatísticas.
+- [ ] Executar testes Vitest, TypeScript e guardar checkpoint.
+
+
+## Refinamentos do Painel Administrativo (Concluídos)
+- [x] Corrigir a sidebar do admin para eliminar o scroll lateral indesejado e fixar a navegação.
+- [x] Adicionar opções completas na área de configurações do painel.
+- [x] Permitir que qualquer administrador edite o próprio nome de apresentação.
+- [x] Reestruturar a aba de aparência em cartões e blocos limpos, sem aglomeração.
+- [x] Atualizar a barra de anúncio para suportar múltiplas mensagens rotativas.
+- [x] Melhorar visualmente os dropdowns e seletas do painel.
+- [x] Reformular a tela inicial com métricas reais por período (7, 15, 30 dias e personalizado) e cartões operacionais.
+- [x] Corrigir a secção de expectativas ligando-a ao estado real do catálogo.
+- [x] Executar TypeScript, testes Vitest, build e salvar checkpoint final.

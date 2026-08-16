@@ -13,7 +13,7 @@ export function isStorefrontLocked(config?: Pick<StorefrontConfig, "maintenance"
 }
 
 export function hasStorefrontAnnouncement(config?: Pick<StorefrontConfig, "announcement"> | null) {
-  return Boolean(config?.announcement.enabled && config.announcement.text.trim());
+  return Boolean(config?.announcement.enabled && config.announcement.messages.some((message) => message.text.trim()));
 }
 
 export function getDropRemainingTime(targetAt: string | null, now = Date.now()): DropRemainingTime {

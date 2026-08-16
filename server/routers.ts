@@ -58,6 +58,7 @@ import {
   updateOrderTracking,
   updateOrderLabelData,
   upsertUser,
+  updateUserName,
 } from "./db";
 import { adminOrderEmail, newsletterWelcomeEmail, orderConfirmationEmail, paymentConfirmationEmail } from "./email-templates";
 import { ENV } from "./_core/env";
@@ -504,8 +505,11 @@ export const appRouter = router({
     saveStorefrontConfig: adminProcedure.input(z.object({
       announcement: z.object({
         enabled: z.boolean(),
-        text: z.string().trim().min(1).max(180),
-        href: z.string().max(500),
+        messages: z.array(z.object({
+          id: z.string().trim().min(1).max(80),
+          text: z.string().trim().min(1).max(180),
+          href: z.string().max(500),
+        })).min(1).max(8),
         backgroundColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
         textColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
       }),
@@ -537,8 +541,12 @@ export const appRouter = router({
     }),
     getAnalytics: adminProcedure.input(z.object({
       periodDays: z.number().int().positive().default(7),
+      startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+      endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
     }).optional()).query(async ({ input }) => {
-      return getAdminAnalytics(input?.periodDays ?? 7);
+      const startAt = input?.startDate ? Date.parse(`${input.startDate}T00:00:00.000Z`) : undefined;
+      const endAt = input?.endDate ? Date.parse(`${input.endDate}T23:59:59.999Z`) : undefined;
+      return getAdminAnalytics(input?.periodDays ?? 7, { startAt, endAt });
     }),
     categoryRevenue: adminProcedure.query(async () => {
       return getCategoryRevenueMetrics();
@@ -548,9 +556,13 @@ export const appRouter = router({
     }),
     aiSummary: adminProcedure.input(z.object({
       periodDays: z.number().int().positive().default(7),
+      startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+      endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
     }).optional()).query(async ({ input }) => {
       const days = input?.periodDays ?? 7;
-      const analytics = await getAdminAnalytics(days);
+      const startAt = input?.startDate ? Date.parse(`${input.startDate}T00:00:00.000Z`) : undefined;
+      const endAt = input?.endDate ? Date.parse(`${input.endDate}T23:59:59.999Z`) : undefined;
+      const analytics = await getAdminAnalytics(days, { startAt, endAt });
       const lowStockList = await getLowStockAlerts();
       try {
         const prompt = `Analise os seguintes dados operacionais e de e-commerce da marca de streetwear Eras Label para um período de ${days} dias:
@@ -942,6 +954,16 @@ Seja objetivo, elegante e direto ao ponto.`;
     })).mutation(async ({ input }) => {
       await deleteAdminUser(input.id);
       return { success: true };
+    }),
+    updateMyAdminProfile: adminProcedure.input(z.object({
+      name: z.string().trim().min(2, "Informe pelo menos 2 caracteres.").max(100),
+    })).mutation(async ({ ctx, input }) => {
+      const email = (ctx.user?.email || "").toLowerCase().trim();
+      const name = input.name.trim();
+      await updateUserName(ctx.user.openId, name);
+      const subAdmin = await getAdminUserByEmail(email);
+      if (subAdmin) await updateAdminUser(subAdmin.id, { name });
+      return { success: true, name };
     }),
     myAdminDetails: adminProcedure.query(async ({ ctx }) => {
       const email = (ctx.user?.email || "").toLowerCase().trim();

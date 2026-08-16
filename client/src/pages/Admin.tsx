@@ -30,11 +30,15 @@ import {
   LockKeyhole,
   LoaderCircle,
   ShieldCheck,
+  UserRound,
+  SlidersHorizontal,
+  Megaphone,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
+import { readAdminPreference, writeAdminPreference } from "@/lib/admin-preferences";
 import { getInventorySizeOptions } from "@shared/inventory";
 import { AdminProductThumbnail } from "@/components/AdminProductThumbnail";
 import AdminCategoriesSection from "@/pages/AdminCategoriesSection";
@@ -42,13 +46,6 @@ import AdminSalesSection from "@/pages/AdminSalesSection";
 import { exportToCSV } from "@/lib/csv-export";
 import type { StorefrontConfig } from "../../../shared/storefront";
 import { optimizeProductImage } from "@/lib/image-optimizer";
-
-const orders = [
-  { id: "#ER-0108", customer: "Marina Oliveira", date: "Hoje, 14:32", total: "R$ 312,80", payment: "Pago", status: "Em preparação" },
-  { id: "#ER-0107", customer: "Caio Nascimento", date: "Hoje, 11:08", total: "R$ 117,50", payment: "Pago", status: "Enviado" },
-  { id: "#ER-0106", customer: "Lara Martins", date: "Ontem, 18:45", total: "R$ 154,90", payment: "Pendente", status: "Aguardando pagamento" },
-  { id: "#ER-0105", customer: "João Pedro", date: "12 Ago, 09:17", total: "R$ 470,20", payment: "Pago", status: "Entregue" },
-];
 
 function EmailLogsSection() {
   const [search, setSearch] = useState("");
@@ -413,8 +410,20 @@ function StorefrontSettingsPanel({
         <div className="admin-panel appearance-panel" style={{ background: "#faf8f5" }}>
           <div className="panel-heading"><div><span className="section-kicker">BARRA SUPERIOR</span><h3>Anúncio editável</h3></div></div>
           <label className="admin-category-check"><input type="checkbox" checked={config.announcement.enabled} onChange={(event) => onChange({ ...config, announcement: { ...config.announcement, enabled: event.target.checked } })} /><span>Exibir barra de anúncio na loja</span></label>
-          <div className="editor-field"><label htmlFor="announcement-text">Mensagem</label><Input id="announcement-text" maxLength={180} value={config.announcement.text} onChange={(event) => onChange({ ...config, announcement: { ...config.announcement, text: event.target.value } })} placeholder="Ex.: Frete grátis acima de R$ 350" /></div>
-          <div className="editor-field"><label htmlFor="announcement-link">Link opcional</label><Input id="announcement-link" maxLength={500} value={config.announcement.href} onChange={(event) => onChange({ ...config, announcement: { ...config.announcement, href: event.target.value } })} placeholder="/collection/drafts ou https://..." /></div>
+          <div className="announcement-message-list">
+            <div className="announcement-list-heading"><span>Mensagens rotativas</span><small>{config.announcement.messages.length}/8</small></div>
+            {config.announcement.messages.map((message, index) => (
+              <div className="announcement-message-row" key={message.id}>
+                <span className="announcement-message-index">{String(index + 1).padStart(2, "0")}</span>
+                <div className="announcement-message-fields">
+                  <Input maxLength={180} value={message.text} onChange={(event) => onChange({ ...config, announcement: { ...config.announcement, messages: config.announcement.messages.map((item) => item.id === message.id ? { ...item, text: event.target.value } : item) } })} placeholder="Ex.: Frete grátis acima de R$ 350" aria-label={`Mensagem ${index + 1}`} />
+                  <Input maxLength={500} value={message.href} onChange={(event) => onChange({ ...config, announcement: { ...config.announcement, messages: config.announcement.messages.map((item) => item.id === message.id ? { ...item, href: event.target.value } : item) } })} placeholder="Link opcional: /faq ou https://..." aria-label={`Link da mensagem ${index + 1}`} />
+                </div>
+                <button type="button" className="announcement-remove-button" disabled={config.announcement.messages.length <= 1} onClick={() => onChange({ ...config, announcement: { ...config.announcement, messages: config.announcement.messages.filter((item) => item.id !== message.id) } })} aria-label={`Remover mensagem ${index + 1}`}>×</button>
+              </div>
+            ))}
+            <button type="button" className="announcement-add-button" disabled={config.announcement.messages.length >= 8} onClick={() => onChange({ ...config, announcement: { ...config.announcement, messages: [...config.announcement.messages, { id: `announcement-${Date.now()}`, text: "NOVA MENSAGEM", href: "" }] } })}><Plus size={14} /> Adicionar mensagem</button>
+          </div>
           <div className="home-editor-inline">
             <label className="editor-field"><span>Fundo</span><Input type="color" value={config.announcement.backgroundColor} onChange={(event) => onChange({ ...config, announcement: { ...config.announcement, backgroundColor: event.target.value } })} /></label>
             <label className="editor-field"><span>Texto</span><Input type="color" value={config.announcement.textColor} onChange={(event) => onChange({ ...config, announcement: { ...config.announcement, textColor: event.target.value } })} /></label>
@@ -507,7 +516,7 @@ function AdminLoginScreen() {
 export default function Admin() {
   const { data: authUser, isLoading: authLoading } = trpc.auth.me.useQuery();
 
-  const [active, setActive] = useState("Produtos");
+  const [active, setActive] = useState("Visão geral");
   const [query, setQuery] = useState("");
   const [appearanceSaved, setAppearanceSaved] = useState(false);
   const [couponActive, setCouponActive] = useState(true);
@@ -522,6 +531,7 @@ export default function Admin() {
   const { data: storefrontConfig } = trpc.catalog.getStorefrontConfig.useQuery();
   const { data: homeContent } = trpc.catalog.getHomeContent.useQuery();
   const { data: catalogProducts, isLoading: catalogProductsLoading, isError: catalogProductsError, refetch: refetchCatalogProducts } = trpc.admin.listProducts.useQuery(undefined, { enabled: authUser?.role === "admin" });
+  const { data: adminOrders = [], isLoading: adminOrdersLoading } = trpc.admin.listOrders.useQuery(undefined, { enabled: authUser?.role === "admin" });
   const { data: adminCategories = [] } = trpc.admin.listCategories.useQuery(undefined, { enabled: authUser?.role === "admin" });
   const utils = trpc.useUtils();
   const [pixDiscountPercent, setPixDiscountPercent] = useState<number>(5);
@@ -757,19 +767,14 @@ export default function Admin() {
       <aside className={`admin-sidebar ${menuOpen ? "open" : ""}`}>
         <div className="admin-brand"><Link href="/">ERAS<span>.</span></Link><small>ADMIN</small></div>
         <nav>{navItems.map(({ label, icon: Icon }) => <button key={label} className={active === label ? "active" : ""} onClick={() => selectNav(label)}><Icon size={17} />{label}</button>)}</nav>
-        <div className="admin-sidebar-bottom"><button onClick={() => toast.info("Configurações do painel em breve.")}><Settings2 size={17} />Configurações</button><Link href="/" className="back-store"><ArrowLeft size={17} />Voltar à loja</Link></div>
+        <div className="admin-sidebar-bottom"><button className={active === "Configurações" ? "active" : ""} onClick={() => selectNav("Configurações")}><Settings2 size={17} />Configurações</button><Link href="/" className="back-store"><ArrowLeft size={17} />Voltar à loja</Link></div>
       </aside>
       <button type="button" className="admin-sidebar-scrim" aria-label="Fechar menu administrativo" onClick={() => setMenuOpen(false)} />
       <main className="admin-main">
         <AdminHeaderBar authUser={authUser} active={active} setMenuOpen={setMenuOpen} adminInitial={adminInitial} adminName={adminName} />
         {active === "Estatísticas" && <AdminAnalyticsSection />}
         {active === "Histórico de Estoque" && <InventoryAuditSection />}
-        {active === "Visão geral" && <>
-          <div className="admin-welcome"><div><p className="section-kicker">PAINEL SEGURO</p><h2>Bom dia, {adminName.split(" ")[0]}.</h2><p>A sua loja está em movimento. Aqui está o resumo da operação.</p></div><Button onClick={() => selectNav("Produtos")}><Plus size={16} /> Novo produto</Button></div>
-          <div className="metric-grid"><div className="metric-card"><span>Faturamento (30 dias)</span><strong>R$ 8.492,40</strong><small className="positive">+18,4% comparado ao período anterior</small></div><div className="metric-card"><span>Pedidos</span><strong>48</strong><small className="positive">+12,1% comparado ao período anterior</small></div><div className="metric-card"><span>Ticket médio</span><strong>R$ 176,92</strong><small>estável nas últimas 4 semanas</small></div><div className="metric-card"><span>Clientes ativos</span><strong>274</strong><small className="positive">+32 novos este mês</small></div></div>
-          <div className="admin-dashboard-grid"><section className="admin-panel chart-panel"><div className="panel-heading"><div><span className="section-kicker">VENDAS</span><h3>Faturamento por período</h3></div><button className="period-button">Últimos 30 dias <ChevronDown size={14} /></button></div><div className="fake-chart"><div className="chart-axis"><span>10k</span><span>7,5k</span><span>5k</span><span>2,5k</span><span>0</span></div><div className="chart-bars">{[32, 45, 39, 62, 48, 76, 55, 68, 53, 82, 63, 91].map((height, index) => <div className="chart-bar-wrap" key={index}><div className="chart-bar" style={{ height: `${height}%` }} /><span>{index + 1}–{index + 3}</span></div>)}</div></div></section><section className="admin-panel"><div className="panel-heading"><div><span className="section-kicker">ATENÇÃO</span><h3>Pedidos recentes</h3></div><button className="inline-link" onClick={() => selectNav("Pedidos")}>Ver todos <ArrowLeft size={13} className="rotate-180" /></button></div><div className="mini-orders">{orders.slice(0, 3).map((order) => <div className="mini-order" key={order.id}><div className="order-icon"><ShoppingCart size={15} /></div><div><strong>{order.id} · {order.customer}</strong><span>{order.date}</span></div><b>{order.total}</b></div>)}</div></section></div>
-          <section className="admin-panel quick-panel"><div className="panel-heading"><div><span className="section-kicker">ATALHOS</span><h3>Próximos passos</h3></div></div><div className="quick-actions"><button onClick={() => selectNav("Produtos")}><Package size={19} /><span><strong>Adicionar produto</strong><small>Cadastre uma nova peça no catálogo</small></span><ArrowLeft className="rotate-180" size={16} /></button><button onClick={() => selectNav("Aparência")}><ImagePlus size={19} /><span><strong>Atualizar home</strong><small>Troque o editorial ou reorganize a galeria</small></span><ArrowLeft className="rotate-180" size={16} /></button><button onClick={() => selectNav("Newsletter")}><Mail size={19} /><span><strong>Ver inscritos</strong><small>Acompanhe a lista e os cupons enviados</small></span><ArrowLeft className="rotate-180" size={16} /></button></div></section>
-        </>}
+        {active === "Visão geral" && <AdminDashboardHome adminName={adminName} adminOrders={adminOrders} adminOrdersLoading={adminOrdersLoading} catalogCount={adminProducts.length} onNavigate={selectNav} />}
         {active === "Produtos" && <section className="admin-content">
           <div className="inventory-heading">
             <div><span className="section-kicker">CATÁLOGO</span><h2 className="content-title">Produtos</h2><p>Cadastre e edite os dados completos das peças, incluindo SKU, categoria, imagens e preços.</p></div>
@@ -1008,7 +1013,7 @@ export default function Admin() {
           </div>
         )}
         {active === "Vendas" && <AdminSalesSection />}
-        {active === "Pedidos" && <section className="admin-content"><div className="order-cards"><div className="metric-card"><span>Todos os pedidos</span><strong>108</strong></div><div className="metric-card"><span>Aguardando pagamento</span><strong>6</strong></div><div className="metric-card"><span>Em preparação</span><strong>11</strong></div><div className="metric-card"><span>Enviados</span><strong>21</strong></div></div><div className="admin-panel table-panel"><table><thead><tr><th>Pedido</th><th>Cliente</th><th>Data</th><th>Total</th><th>Pagamento</th><th>Status</th><th /></tr></thead><tbody>{orders.map((order) => <tr key={order.id}><td><strong>{order.id}</strong></td><td>{order.customer}</td><td>{order.date}</td><td>{order.total}</td><td><span className={order.payment === "Pago" ? "stock-ok" : "stock-warning"}>{order.payment}</span></td><td><span className="status-pill success">{order.status}</span></td><td><button className="table-more" onClick={() => toast.info(`Detalhes do pedido ${order.id}`)}><Eye size={17} /></button></td></tr>)}</tbody></table></div></section>}
+        {active === "Pedidos" && <section className="admin-content"><div className="order-cards"><div className="metric-card"><span>Todos os pedidos</span><strong>{adminOrders.length}</strong></div><div className="metric-card"><span>Aguardando pagamento</span><strong>{adminOrders.filter((order) => order.paymentStatus !== "approved").length}</strong></div><div className="metric-card"><span>Em preparação</span><strong>{adminOrders.filter((order) => ["Processando", "Em preparação"].includes(order.status)).length}</strong></div><div className="metric-card"><span>Enviados</span><strong>{adminOrders.filter((order) => ["Enviado", "Entregue"].includes(order.status)).length}</strong></div></div><div className="admin-panel table-panel">{adminOrdersLoading ? <div className="dashboard-empty-state"><LoaderCircle className="spin" size={18} /> A carregar pedidos...</div> : adminOrders.length === 0 ? <div className="empty-admin" style={{ padding: "3rem", textAlign: "center" }}><ShoppingCart size={30} style={{ color: "#b22222", marginBottom: "0.75rem" }} /><h3>Nenhuma venda registada</h3><p>Quando o primeiro pagamento for confirmado, o pedido aparecerá aqui.</p></div> : <table><thead><tr><th>Pedido</th><th>Cliente</th><th>Data</th><th>Total</th><th>Pagamento</th><th>Status</th><th /></tr></thead><tbody>{adminOrders.map((order) => <tr key={order.id}><td><strong>{order.orderNumber}</strong></td><td>{order.customerName}</td><td>{new Date(order.createdAt).toLocaleString("pt-BR")}</td><td>R$ {Number(order.total).toFixed(2)}</td><td><span className={order.paymentStatus === "approved" ? "stock-ok" : "stock-warning"}>{order.paymentStatus === "approved" ? "Pago" : order.paymentStatus}</span></td><td><span className={`status-pill ${order.status === "Entregue" ? "success" : "warning"}`}>{order.status}</span></td><td><button className="table-more" onClick={() => toast.info(`Detalhes do pedido ${order.orderNumber}`)}><Eye size={17} /></button></td></tr>)}</tbody></table>}</div></section>}
         {active === "Cupons" && <section className="admin-content"><div className="content-toolbar"><div><span className="section-kicker">DESCONTOS</span><h2 className="content-title">Cupons de desconto</h2></div><Button onClick={() => toast.success("Novo cupom criado.")}><Plus size={16} /> Criar cupom</Button></div><div className="coupon-admin-grid"><div className="admin-panel coupon-admin-card"><div className="coupon-code">ERAS10 <span className="status-pill success">Ativo</span></div><p>10% de desconto para novos inscritos da newsletter.</p><div className="coupon-info"><span>Usos <strong>34 / ilimitado</strong></span><span>Válido até <strong>31 Dez 2026</strong></span></div><button className="coupon-toggle" onClick={() => setCouponActive((value) => !value)}>{couponActive ? "Desativar cupom" : "Ativar cupom"}</button></div><div className="admin-panel coupon-admin-card"><div className="coupon-code">PARADOX20 <span className="status-pill warning">Rascunho</span></div><p>20% no lançamento da coleção Paradox.</p><div className="coupon-info"><span>Usos <strong>0 / 100</strong></span><span>Válido até <strong>14 Ago 2026</strong></span></div><button className="coupon-toggle" onClick={() => toast.success("Cupom publicado.")}>Publicar cupom</button></div></div></section>}
         {active === "Aparência" && <section className="admin-content"><div className="content-toolbar"><div><span className="section-kicker">EDITOR DA LOJA</span><h2 className="content-title">Home oficial e banners</h2></div><Button onClick={() => {
           saveConfigMutation.mutate({ pixDiscountPercent: Number(pixDiscountPercent), freeShippingThreshold: Number(freeShippingThreshold), maxInstallments: Number(maxInstallments), installmentInterestRate: Number(installmentInterestRate) }, { onSuccess: () => setAppearanceSaved(true), onError: () => toast.error("Erro ao guardar configurações comerciais.") });
@@ -1021,16 +1026,93 @@ export default function Admin() {
         {active === "Clientes" && <ClientsSection />}
         {active === "E-mail Marketing" && <EmailMarketingSection />}
         {active === "E-mails (Resend)" && <EmailLogsSection />}
+        {active === "Configurações" && <AdminSettingsSection onNavigate={selectNav} />}
         {active === "Gestão de Equipe" && <SubAdminsManagementSection />}
       </main>
     </div>
   );
 }
 
+type AdminDashboardOrder = {
+  id: number;
+  orderNumber: string;
+  customerName: string;
+  total: number | string;
+  createdAt: Date | string | number;
+  status: string;
+  paymentStatus: string;
+};
+
+function AdminDashboardHome({ adminName, adminOrders, adminOrdersLoading, catalogCount, onNavigate }: { adminName: string; adminOrders: AdminDashboardOrder[]; adminOrdersLoading: boolean; catalogCount: number; onNavigate: (label: string) => void }) {
+  const [periodDays, setPeriodDays] = useState(7);
+  const [rangeMode, setRangeMode] = useState<"preset" | "custom">("preset");
+  const [customStartDate, setCustomStartDate] = useState("");
+  const [customEndDate, setCustomEndDate] = useState("");
+  const analyticsInput = useMemo(() => rangeMode === "custom" && customStartDate && customEndDate
+    ? { periodDays: 1, startDate: customStartDate, endDate: customEndDate }
+    : { periodDays }, [rangeMode, customStartDate, customEndDate, periodDays]);
+  const { data: analytics, isLoading } = trpc.admin.getAnalytics.useQuery(analyticsInput);
+  const summary = analytics?.summary ?? { visits: 0, sales: 0, revenue: 0, averageTicket: 0, conversionRate: 0 };
+  const trend = analytics?.salesTrend ?? [];
+  const rangeLabel = rangeMode === "custom" && customStartDate && customEndDate ? `${customStartDate} a ${customEndDate}` : `últimos ${periodDays} dias`;
+  const orderCounts = {
+    awaiting: adminOrders.filter((order) => order.paymentStatus !== "approved").length,
+    packing: adminOrders.filter((order) => ["Processando", "Em preparação"].includes(order.status)).length,
+    shipping: adminOrders.filter((order) => ["Enviado", "Em trânsito"].includes(order.status)).length,
+    pickup: adminOrders.filter((order) => order.status === "Disponível para retirada").length,
+  };
+  const maxRevenue = Math.max(1, ...trend.map((item: any) => Number(item.revenue) || 0));
+  const firstName = adminName.split(" ")[0];
+
+  return (
+    <section className="admin-content admin-dashboard-home">
+      <div className="admin-welcome">
+        <div><p className="section-kicker">PAINEL SEGURO</p><h2>Bom dia, {firstName}.</h2><p>Uma visão limpa da operação, sem dados de demonstração.</p></div>
+        <Button onClick={() => onNavigate("Produtos")}><Plus size={16} /> Novo produto</Button>
+      </div>
+      <div className="dashboard-period-toolbar">
+        <div><span className="section-kicker">PERÍODO DE ANÁLISE</span><strong>{rangeLabel}</strong></div>
+        <div className="analytics-period-picker">
+          {[7, 15, 30].map((days) => <button key={days} className={`period-btn ${rangeMode === "preset" && periodDays === days ? "active" : ""}`} type="button" onClick={() => { setRangeMode("preset"); setPeriodDays(days); }}>{days} dias</button>)}
+          <button className={`period-btn ${rangeMode === "custom" ? "active" : ""}`} type="button" onClick={() => setRangeMode("custom")}>Personalizado</button>
+        </div>
+        {rangeMode === "custom" && <div className="analytics-custom-range"><label>De <input type="date" value={customStartDate} onChange={(event) => setCustomStartDate(event.target.value)} /></label><label>Até <input type="date" value={customEndDate} onChange={(event) => setCustomEndDate(event.target.value)} /></label></div>}
+      </div>
+      <div className="order-status-strip">
+        {[{ label: "Por cobrar", value: orderCounts.awaiting, icon: ShoppingCart }, { label: "Por embalar", value: orderCounts.packing, icon: Package }, { label: "Por enviar", value: orderCounts.shipping, icon: ClipboardList }, { label: "Por retirar", value: orderCounts.pickup, icon: Check }].map(({ label, value, icon: Icon }) => <div className="order-status-card" key={label}><span className="order-status-icon"><Icon size={16} /></span><div><strong>{value === 0 ? "Sem pedidos" : value}</strong><span>{label}</span></div></div>)}
+      </div>
+      <div className="metric-grid">
+        <div className="metric-card"><span>Visitas</span><strong>{isLoading ? "—" : summary.visits}</strong><small>Dados registados no período</small></div>
+        <div className="metric-card"><span>Vendas</span><strong>{isLoading ? "—" : summary.sales}</strong><small>Pedidos no período</small></div>
+        <div className="metric-card"><span>Faturamento</span><strong>{isLoading ? "—" : `R$ ${Number(summary.revenue).toFixed(2)}`}</strong><small>Receita bruta registada</small></div>
+        <div className="metric-card"><span>Produtos no catálogo</span><strong>{catalogCount}</strong><small>{catalogCount === 0 ? "Pronto para o primeiro cadastro" : "Itens publicados ou em rascunho"}</small></div>
+      </div>
+      <div className="admin-dashboard-grid">
+        <section className="admin-panel chart-panel dashboard-chart-panel">
+          <div className="panel-heading"><div><span className="section-kicker">VENDAS</span><h3>Faturamento no período</h3></div><span className="editor-help">Ticket médio: R$ {Number(summary.averageTicket).toFixed(2)}</span></div>
+          {isLoading ? <div className="dashboard-empty-state"><LoaderCircle className="spin" size={18} /> A carregar métricas reais...</div> : trend.length === 0 ? <div className="dashboard-empty-state"><BarChart3 size={22} /><strong>Ainda não existem vendas para analisar.</strong><span>Assim que houver pedidos, o gráfico será preenchido automaticamente.</span></div> : <div className="fake-chart"><div className="chart-axis"><span>R$ {maxRevenue.toFixed(0)}</span><span>R$ {(maxRevenue * 0.66).toFixed(0)}</span><span>R$ {(maxRevenue * 0.33).toFixed(0)}</span><span>R$ 0</span></div><div className="chart-bars">{trend.map((item: any, index: number) => <div className="chart-bar-wrap" key={index}><div className="chart-bar" style={{ height: `${Math.max(6, ((Number(item.revenue) || 0) / maxRevenue) * 100)}%` }} title={`R$ ${Number(item.revenue || 0).toFixed(2)}`} /><span>{item.label}</span></div>)}</div></div>}
+        </section>
+        <section className="admin-panel"><div className="panel-heading"><div><span className="section-kicker">OPERAÇÃO</span><h3>Pedidos recentes</h3></div><button className="inline-link" type="button" onClick={() => onNavigate("Pedidos")}>Ver todos <ArrowLeft size={13} className="rotate-180" /></button></div><div className="mini-orders">{adminOrdersLoading ? <div className="dashboard-empty-state"><LoaderCircle className="spin" size={18} /> A carregar...</div> : adminOrders.length === 0 ? <div className="dashboard-empty-state"><ShoppingCart size={18} /><span>Nenhum pedido registado.</span></div> : adminOrders.slice(0, 3).map((order) => <div className="mini-order" key={order.id}><div className="order-icon"><ShoppingCart size={15} /></div><div><strong>{order.orderNumber} · {order.customerName}</strong><span>{new Date(order.createdAt).toLocaleString("pt-BR")}</span></div><b>R$ {Number(order.total).toFixed(2)}</b></div>)}</div></section>
+      </div>
+      <section className="admin-panel expectations-panel"><div className="panel-heading"><div><span className="section-kicker">ORIENTAÇÃO</span><h3>Próximas etapas</h3></div><span className="editor-help">Atualizado com o estado atual da loja</span></div><div className="expectations-grid">
+        <button type="button" onClick={() => onNavigate("Produtos")}><Package size={19} /><span><strong>{catalogCount === 0 ? "Cadastre o primeiro produto" : "Gerir catálogo"}</strong><small>{catalogCount === 0 ? "Adicione nome, preço, SKU, imagens e variações." : `${catalogCount} item(ns) no catálogo.`}</small></span><ArrowLeft className="rotate-180" size={16} /></button>
+        <button type="button" onClick={() => onNavigate("Aparência")}><ImagePlus size={19} /><span><strong>Personalizar a home</strong><small>Atualize banners, destaques e a barra de anúncio.</small></span><ArrowLeft className="rotate-180" size={16} /></button>
+        <button type="button" onClick={() => onNavigate("Configurações")}><Settings2 size={19} /><span><strong>Rever configurações</strong><small>Defina o seu nome, permissões e parâmetros comerciais.</small></span><ArrowLeft className="rotate-180" size={16} /></button>
+      </div></section>
+    </section>
+  );
+}
+
 // Componente de Estatísticas Avançadas com Filtros de Período e Exportação CSV
 function AdminAnalyticsSection() {
   const [periodDays, setPeriodDays] = useState<number>(7);
-  const { data: analytics, isLoading, refetch } = trpc.admin.getAnalytics.useQuery({ periodDays });
+  const [rangeMode, setRangeMode] = useState<"preset" | "custom">("preset");
+  const [customStartDate, setCustomStartDate] = useState("");
+  const [customEndDate, setCustomEndDate] = useState("");
+  const analyticsInput = useMemo(() => rangeMode === "custom" && customStartDate && customEndDate
+    ? { periodDays: 1, startDate: customStartDate, endDate: customEndDate }
+    : { periodDays }, [rangeMode, customStartDate, customEndDate, periodDays]);
+  const { data: analytics, isLoading, refetch } = trpc.admin.getAnalytics.useQuery(analyticsInput);
 
   const exportAnalyticsCSV = () => {
     if (!analytics) return;
@@ -1044,7 +1126,8 @@ function AdminAnalyticsSection() {
       ["Ticket Médio (R$)", summary.averageTicket.toFixed(2)],
       ["Taxa de Conversão (%)", summary.conversionRate],
     ];
-    const success = exportToCSV(`estatisticas_eras_label_${periodDays}dias.csv`, headers, rows);
+    const rangeLabel = rangeMode === "custom" && customStartDate && customEndDate ? `${customStartDate}_${customEndDate}` : `${periodDays}dias`;
+    const success = exportToCSV(`estatisticas_eras_label_${rangeLabel}.csv`, headers, rows);
     if (success) {
       toast.success("Relatório de estatísticas exportado em CSV com sucesso!");
     } else {
@@ -1060,11 +1143,11 @@ function AdminAnalyticsSection() {
     );
   }
 
-  const summary = analytics?.summary || { visits: 61, sales: 1, revenue: 142.60, averageTicket: 142.60, conversionRate: 1.64 };
-  const behavior = analytics?.visitorBehavior || { totalVisits: 61, categoryViews: 15, productViews: 21 };
+  const summary = analytics?.summary || { visits: 0, sales: 0, revenue: 0, averageTicket: 0, conversionRate: 0 };
+  const behavior = analytics?.visitorBehavior || { totalVisits: 0, categoryViews: 0, productViews: 0 };
   const trend = analytics?.salesTrend || [];
 
-  const { data: aiData, isLoading: aiLoading, refetch: refetchAi } = trpc.admin.aiSummary.useQuery({ periodDays });
+  const { data: aiData, isLoading: aiLoading, refetch: refetchAi } = trpc.admin.aiSummary.useQuery(analyticsInput);
 
   return (
     <section className="admin-content">
@@ -1075,12 +1158,18 @@ function AdminAnalyticsSection() {
           <p>Acompanhe o comportamento dos visitantes, faturamento e conversões da Eras Label.</p>
         </div>
         <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
-          <div style={{ display: "flex", background: "#f0ece6", padding: "0.2rem", borderRadius: "8px", gap: "0.2rem" }}>
-            <button className={`period-btn ${periodDays === 7 ? "active" : ""}`} onClick={() => setPeriodDays(7)} style={{ padding: "0.35rem 0.7rem", fontSize: "0.8rem", borderRadius: "6px", border: "none", background: periodDays === 7 ? "#b22222" : "transparent", color: periodDays === 7 ? "#fff" : "#444", cursor: "pointer", fontWeight: 600 }}>7 dias</button>
-            <button className={`period-btn ${periodDays === 30 ? "active" : ""}`} onClick={() => setPeriodDays(30)} style={{ padding: "0.35rem 0.7rem", fontSize: "0.8rem", borderRadius: "6px", border: "none", background: periodDays === 30 ? "#b22222" : "transparent", color: periodDays === 30 ? "#fff" : "#444", cursor: "pointer", fontWeight: 600 }}>30 dias</button>
-            <button className={`period-btn ${periodDays === 90 ? "active" : ""}`} onClick={() => setPeriodDays(90)} style={{ padding: "0.35rem 0.7rem", fontSize: "0.8rem", borderRadius: "6px", border: "none", background: periodDays === 90 ? "#b22222" : "transparent", color: periodDays === 90 ? "#fff" : "#444", cursor: "pointer", fontWeight: 600 }}>90 dias</button>
-            <button className={`period-btn ${periodDays === 180 ? "active" : ""}`} onClick={() => setPeriodDays(180)} style={{ padding: "0.35rem 0.7rem", fontSize: "0.8rem", borderRadius: "6px", border: "none", background: periodDays === 180 ? "#b22222" : "transparent", color: periodDays === 180 ? "#fff" : "#444", cursor: "pointer", fontWeight: 600 }}>180 dias</button>
+          <div className="analytics-period-picker">
+            {[7, 15, 30].map((days) => (
+              <button key={days} className={`period-btn ${rangeMode === "preset" && periodDays === days ? "active" : ""}`} onClick={() => { setRangeMode("preset"); setPeriodDays(days); }} type="button">{days} dias</button>
+            ))}
+            <button className={`period-btn ${rangeMode === "custom" ? "active" : ""}`} onClick={() => setRangeMode("custom")} type="button">Personalizado</button>
           </div>
+          {rangeMode === "custom" && (
+            <div className="analytics-custom-range">
+              <label>De <input type="date" value={customStartDate} onChange={(event) => setCustomStartDate(event.target.value)} /></label>
+              <label>Até <input type="date" value={customEndDate} onChange={(event) => setCustomEndDate(event.target.value)} /></label>
+            </div>
+          )}
           <Button variant="outline" onClick={exportAnalyticsCSV}><Download size={15} /> Exportar CSV</Button>
           <Button variant="outline" onClick={() => void refetch()}>Atualizar</Button>
         </div>
@@ -1697,6 +1786,48 @@ function SubAdminsManagementSection() {
           </div>
         </div>
       )}
+    </section>
+  );
+}
+
+function AdminSettingsSection({ onNavigate }: { onNavigate: (label: string) => void }) {
+  const { data: details, isLoading } = trpc.admin.myAdminDetails.useQuery();
+  const utils = trpc.useUtils();
+  const [name, setName] = useState("");
+  const [compactMode, setCompactMode] = useState(() => readAdminPreference("compact", false));
+  const [reducedMotion, setReducedMotion] = useState(() => readAdminPreference("reducedMotion", false));
+  const [autoRefresh, setAutoRefresh] = useState(() => readAdminPreference("autoRefresh", true));
+  const updateProfile = trpc.admin.updateMyAdminProfile.useMutation({
+    onSuccess: async () => {
+      await Promise.all([utils.auth.me.invalidate(), utils.admin.myAdminDetails.invalidate()]);
+      toast.success("O seu nome foi atualizado no painel.");
+    },
+    onError: (error) => toast.error(error.message || "Não foi possível atualizar o nome."),
+  });
+
+  useEffect(() => {
+    if (details?.name) setName(details.name);
+  }, [details?.name]);
+
+  function savePreference(key: "compact" | "reducedMotion" | "autoRefresh", value: boolean) {
+    writeAdminPreference(key, value);
+    if (key === "compact") setCompactMode(value);
+    if (key === "reducedMotion") setReducedMotion(value);
+    if (key === "autoRefresh") setAutoRefresh(value);
+    toast.success("Preferência do painel guardada.");
+  }
+
+  if (isLoading) return <section className="admin-content"><div className="inventory-state"><LoaderCircle className="spin" size={22} /> A carregar configurações...</div></section>;
+
+  return (
+    <section className="admin-content settings-page">
+      <div className="content-toolbar settings-page-heading"><div><span className="section-kicker">CENTRO DE CONTROLO</span><h2 className="content-title">Configurações</h2><p>Personalize o seu acesso e o comportamento do painel administrativo.</p></div><span className="settings-role-badge">{details?.roleTitle || "Administrador"}</span></div>
+      <div className="settings-grid">
+        <section className="admin-panel settings-card"><div className="settings-card-heading"><span className="settings-icon"><UserRound size={18} /></span><div><h3>O seu perfil</h3><p>O nome pode ser alterado por qualquer função administrativa.</p></div></div><div className="settings-form"><label>Nome de apresentação<Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Como quer ser chamado no painel?" /></label><label>E-mail de acesso<Input value={details?.email || ""} readOnly /></label><label>Cargo<Input value={details?.roleTitle || "Administrador"} readOnly /></label><div className="settings-actions"><Button onClick={() => updateProfile.mutate({ name })} disabled={updateProfile.isPending || name.trim().length < 2}>{updateProfile.isPending ? <><LoaderCircle className="spin" size={15} /> A guardar...</> : <><Check size={15} /> Guardar nome</>}</Button></div></div></section>
+        <section className="admin-panel settings-card"><div className="settings-card-heading"><span className="settings-icon"><SlidersHorizontal size={18} /></span><div><h3>Preferências do painel</h3><p>Estas opções ficam guardadas neste navegador.</p></div></div><div className="settings-options"><label className="settings-toggle"><span><strong>Modo compacto</strong><small>Reduz espaçamentos para mostrar mais informação.</small></span><input type="checkbox" checked={compactMode} onChange={(event) => savePreference("compact", event.target.checked)} /></label><label className="settings-toggle"><span><strong>Movimento reduzido</strong><small>Desativa transições não essenciais para uma navegação mais discreta.</small></span><input type="checkbox" checked={reducedMotion} onChange={(event) => savePreference("reducedMotion", event.target.checked)} /></label><label className="settings-toggle"><span><strong>Atualização automática</strong><small>Permite atualizar indicadores quando novos dados forem registados.</small></span><input type="checkbox" checked={autoRefresh} onChange={(event) => savePreference("autoRefresh", event.target.checked)} /></label></div></section>
+        <section className="admin-panel settings-card"><div className="settings-card-heading"><span className="settings-icon"><Palette size={18} /></span><div><h3>Aparência da loja</h3><p>Os conteúdos públicos continuam editáveis na secção dedicada.</p></div></div><div className="settings-link-list"><button type="button" onClick={() => onNavigate("Aparência")}><ImagePlus size={17} /><span><strong>Editar banners e destaques</strong><small>Atualize imagens, textos e links da Home.</small></span><ArrowLeft className="rotate-180" size={15} /></button><button type="button" onClick={() => onNavigate("Aparência")}><Megaphone size={17} /><span><strong>Gerir barra de anúncio</strong><small>Crie mensagens rotativas e defina links.</small></span><ArrowLeft className="rotate-180" size={15} /></button></div></section>
+        <section className="admin-panel settings-card"><div className="settings-card-heading"><span className="settings-icon"><ShieldCheck size={18} /></span><div><h3>Segurança e permissões</h3><p>O cabeçalho mostra o cargo e os módulos permitidos para o utilizador.</p></div></div><div className="permission-summary"><span>Perfil atual</span><strong>{details?.isSuperAdmin ? "Acesso total" : details?.roleTitle || "Administrador"}</strong><small>{details?.isSuperAdmin ? "Pode gerir todas as áreas e a equipa." : "As permissões foram definidas pelo administrador principal."}</small></div></section>
+      </div>
     </section>
   );
 }

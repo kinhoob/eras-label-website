@@ -1,8 +1,13 @@
+export type StorefrontAnnouncementMessage = {
+  id: string;
+  text: string;
+  href: string;
+};
+
 export type StorefrontConfig = {
   announcement: {
     enabled: boolean;
-    text: string;
-    href: string;
+    messages: StorefrontAnnouncementMessage[];
     backgroundColor: string;
     textColor: string;
   };
@@ -22,8 +27,10 @@ export type StorefrontConfig = {
 export const DEFAULT_STOREFRONT_CONFIG: StorefrontConfig = {
   announcement: {
     enabled: true,
-    text: "5% OFF PARA PAGAMENTOS NO PIX · UMA NOVA ERA COMEÇA AQUI",
-    href: "",
+    messages: [
+      { id: "pix", text: "5% OFF PARA PAGAMENTOS NO PIX · UMA NOVA ERA COMEÇA AQUI", href: "" },
+      { id: "shipping", text: "FRETE GRÁTIS ACIMA DE R$ 350 · ENVIO PARA TODO O BRASIL", href: "/faq" },
+    ],
     backgroundColor: "#b22222",
     textColor: "#ffffff",
   },

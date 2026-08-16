@@ -21,6 +21,7 @@ import { ENV } from "./_core/env";
 import { collectCollectionRecipients } from "./marketing-audience";
 import { normalizeInventoryVariations, sumInventoryStock } from "../shared/inventory";
 import { normalizeCategoryName, slugifyCategory } from "../shared/categories";
+import { DEFAULT_STOREFRONT_CONFIG, type StorefrontConfig, type StorefrontAnnouncementMessage } from "../shared/storefront";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -34,6 +35,12 @@ export async function getDb() {
     }
   }
   return _db;
+}
+
+export async function updateUserName(openId: string, name: string): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(users).set({ name: name.trim() }).where(eq(users.openId, openId));
 }
 
 export async function upsertUser(user: InsertUser): Promise<void> {
@@ -662,20 +669,19 @@ export async function updateOrderLabelData(orderId: number, data: { shippingOrde
   await db.update(orders).set(data).where(eq(orders.id, orderId));
 }
 
-export async function getAdminAnalytics(periodDays: number = 7) {
+export async function getAdminAnalytics(periodDays: number = 7, range?: { startAt?: number; endAt?: number }) {
   const db = await getDb();
   const now = Date.now();
-  const cutoff = now - periodDays * 24 * 60 * 60 * 1000;
+  const hasCustomRange = typeof range?.startAt === "number" && typeof range?.endAt === "number" && range.endAt > range.startAt;
+  const rangeEnd = hasCustomRange ? Math.min(range.endAt as number, now) : now;
+  const effectivePeriodDays = hasCustomRange ? Math.max(1, Math.ceil((rangeEnd - (range.startAt as number)) / (24 * 60 * 60 * 1000))) : periodDays;
+  const cutoff = hasCustomRange ? (range.startAt as number) : now - effectivePeriodDays * 24 * 60 * 60 * 1000;
 
   if (!db) {
     return {
-      summary: { visits: periodDays * 8, sales: Math.max(1, Math.round(periodDays / 3)), revenue: periodDays * 45.20, averageTicket: 142.60, conversionRate: 1.64 },
-      visitorBehavior: { totalVisits: periodDays * 8, categoryViews: periodDays * 2, productViews: periodDays * 3 },
-      salesTrend: Array.from({ length: Math.min(periodDays, 10) }).map((_, i) => ({
-        label: `Período ${i + 1}`,
-        orders: i % 2 === 0 ? 1 : 0,
-        revenue: i % 2 === 0 ? 142.60 : 0,
-      })),
+      summary: { visits: 0, sales: 0, revenue: 0, averageTicket: 0, conversionRate: 0 },
+      visitorBehavior: { totalVisits: 0, categoryViews: 0, productViews: 0 },
+      salesTrend: [],
       topProducts: [],
     };
   }
@@ -684,25 +690,25 @@ export async function getAdminAnalytics(periodDays: number = 7) {
   // Filtrar por período se houver timestamp nos pedidos
   const filteredOrders = allOrders.filter((o: any) => {
     const oTime = o.createdAt ? new Date(o.createdAt).getTime() : now;
-    return oTime >= cutoff;
+    return oTime >= cutoff && oTime <= rangeEnd;
   });
 
   const totalRevenue = filteredOrders.reduce((acc, o) => acc + Number(o.total || 0), 0);
   const totalSales = filteredOrders.length;
   const averageTicket = totalSales > 0 ? totalRevenue / totalSales : 0;
-  const visits = Math.max(periodDays * 8, totalSales * 45 + 18);
+  const visits = 0;
   const conversionRate = visits > 0 ? Number(((totalSales / visits) * 100).toFixed(2)) : 0;
 
-  const prevCutoff = cutoff - periodDays * 24 * 60 * 60 * 1000;
+  const prevCutoff = cutoff - effectivePeriodDays * 24 * 60 * 60 * 1000;
   const prevFilteredOrders = allOrders.filter((o: any) => {
     const oTime = o.createdAt ? new Date(o.createdAt).getTime() : now;
     return oTime >= prevCutoff && oTime < cutoff;
   });
 
   // Gerar tendência baseada no período escolhido com comparação do período anterior
-  const stepCount = periodDays <= 7 ? 7 : periodDays <= 30 ? 6 : 8;
+  const stepCount = effectivePeriodDays <= 7 ? 7 : effectivePeriodDays <= 30 ? 6 : 8;
   const salesTrend = Array.from({ length: stepCount }).map((_, index) => {
-    const stepLabel = periodDays <= 7 ? `Há ${6 - index} dias` : periodDays <= 30 ? `Semana ${index + 1}` : `Mês ${index + 1}`;
+    const stepLabel = effectivePeriodDays <= 7 ? `Há ${6 - index} dias` : effectivePeriodDays <= 30 ? `Semana ${index + 1}` : `Mês ${index + 1}`;
     const chunkOrders = filteredOrders.filter((_, idx) => idx % stepCount === index);
     const chunkRev = chunkOrders.reduce((acc, o) => acc + Number(o.total || 0), 0);
 
@@ -724,7 +730,7 @@ export async function getAdminAnalytics(periodDays: number = 7) {
     category: p.category || "Geral",
     price: Number(p.price || 0),
     stock: p.stock ?? 10,
-    velocity: Math.floor(Math.random() * 5) + 1, // velocidade estimada de saída por período
+    velocity: 0,
   })).sort((a, b) => b.velocity - a.velocity).slice(0, 5);
 
   return {
@@ -920,47 +926,6 @@ export async function getOrderItems(orderId: number) {
 }
 
 
-export type StorefrontConfig = {
-  announcement: {
-    enabled: boolean;
-    text: string;
-    href: string;
-    backgroundColor: string;
-    textColor: string;
-  };
-  maintenance: {
-    enabled: boolean;
-    title: string;
-    message: string;
-    accessLabel: string;
-  };
-  drop: {
-    enabled: boolean;
-    title: string;
-    targetAt: string | null;
-  };
-};
-
-export const DEFAULT_STOREFRONT_CONFIG: StorefrontConfig = {
-  announcement: {
-    enabled: true,
-    text: "5% OFF PARA PAGAMENTOS NO PIX · UMA NOVA ERA COMEÇA AQUI",
-    href: "",
-    backgroundColor: "#b22222",
-    textColor: "#ffffff",
-  },
-  maintenance: {
-    enabled: false,
-    title: "Página em construção",
-    message: "Estamos a preparar a próxima era. Volte em breve para descobrir o novo drop.",
-    accessLabel: "Entrar na área administrativa",
-  },
-  drop: {
-    enabled: false,
-    title: "PRÓXIMO DROP",
-    targetAt: null,
-  },
-};
 
 function safeStorefrontString(value: unknown, fallback: string, maxLength: number) {
   if (typeof value !== "string") return fallback;
@@ -972,9 +937,24 @@ function safeHexColor(value: unknown, fallback: string) {
   return typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value) ? value : fallback;
 }
 
+function normalizeAnnouncementMessages(value: { messages?: unknown; text?: unknown; href?: unknown }): StorefrontAnnouncementMessage[] {
+  const rawMessages = Array.isArray(value.messages) ? value.messages : [{ text: value.text, href: value.href }];
+  const messages = rawMessages.map((item, index) => {
+    const candidate = (item && typeof item === "object" ? item : {}) as { id?: unknown; text?: unknown; href?: unknown };
+    const text = typeof candidate.text === "string" ? candidate.text.trim().slice(0, 180) : "";
+    if (!text) return null;
+    return {
+      id: safeStorefrontString(candidate.id, `announcement-${index + 1}`, 80),
+      text,
+      href: typeof candidate.href === "string" ? candidate.href.trim().slice(0, 500) : "",
+    };
+  }).filter((message): message is StorefrontAnnouncementMessage => Boolean(message));
+  return messages.length > 0 ? messages : DEFAULT_STOREFRONT_CONFIG.announcement.messages;
+}
+
 function normalizeStorefrontConfig(value: unknown): StorefrontConfig {
   const saved = (value && typeof value === "object" ? value : {}) as Partial<StorefrontConfig>;
-  const announcement = (saved.announcement ?? {}) as Partial<StorefrontConfig["announcement"]>;
+  const announcement = (saved.announcement ?? {}) as Partial<StorefrontConfig["announcement"]> & { text?: unknown; href?: unknown };
   const maintenance = (saved.maintenance ?? {}) as Partial<StorefrontConfig["maintenance"]>;
   const drop = (saved.drop ?? {}) as Partial<StorefrontConfig["drop"]>;
   const targetAt = typeof drop.targetAt === "string" && !Number.isNaN(Date.parse(drop.targetAt)) ? drop.targetAt : null;
@@ -982,8 +962,7 @@ function normalizeStorefrontConfig(value: unknown): StorefrontConfig {
   return {
     announcement: {
       enabled: announcement.enabled !== false,
-      text: safeStorefrontString(announcement.text, DEFAULT_STOREFRONT_CONFIG.announcement.text, 180),
-      href: typeof announcement.href === "string" ? announcement.href.trim().slice(0, 500) : "",
+      messages: normalizeAnnouncementMessages(announcement),
       backgroundColor: safeHexColor(announcement.backgroundColor, DEFAULT_STOREFRONT_CONFIG.announcement.backgroundColor),
       textColor: safeHexColor(announcement.textColor, DEFAULT_STOREFRONT_CONFIG.announcement.textColor),
     },

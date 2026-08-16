@@ -249,19 +249,33 @@ function TikTokIcon({ size = 20 }: { size?: number }) {
 const playClick = (enabled: boolean) => playInteractionSound(enabled);
 
 function AnnouncementBar({ config }: { config?: StorefrontConfig }) {
-  if (!config || !hasStorefrontAnnouncement(config)) return null;
+  const [activeIndex, setActiveIndex] = useState(0);
+  const messages = config?.announcement.messages ?? [];
 
+  useEffect(() => {
+    if (messages.length <= 1) return;
+    const timer = window.setInterval(() => setActiveIndex((current) => (current + 1) % messages.length), 5000);
+    return () => window.clearInterval(timer);
+  }, [messages.length]);
+
+  useEffect(() => {
+    if (activeIndex >= messages.length) setActiveIndex(0);
+  }, [activeIndex, messages.length]);
+
+  if (!config || !hasStorefrontAnnouncement(config) || messages.length === 0) return null;
+
+  const message = messages[activeIndex % messages.length];
   const style = { backgroundColor: config.announcement.backgroundColor, color: config.announcement.textColor };
-  const content = <span className="pix-strip-content">{config.announcement.text}</span>;
+  const content = <span className="pix-strip-content" key={message.id}>{message.text}</span>;
 
-  if (!config.announcement.href.trim()) {
-    return <div className="pix-strip" style={style}>{content}</div>;
+  if (!message.href.trim()) {
+    return <div className="pix-strip" style={style} aria-live="polite">{content}</div>;
   }
 
-  return config.announcement.href.startsWith("/") ? (
-    <Link href={config.announcement.href} className="pix-strip" style={style} aria-label={config.announcement.text}>{content}</Link>
+  return message.href.startsWith("/") ? (
+    <Link href={message.href} className="pix-strip" style={style} aria-label={message.text}>{content}</Link>
   ) : (
-    <a href={config.announcement.href} className="pix-strip" style={style} target="_blank" rel="noreferrer" aria-label={config.announcement.text}>{content}</a>
+    <a href={message.href} className="pix-strip" style={style} target="_blank" rel="noreferrer" aria-label={message.text}>{content}</a>
   );
 }
 
