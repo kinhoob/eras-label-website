@@ -14,15 +14,18 @@ function createContext(): TrpcContext {
 describe("store procedures", () => {
   const originalResendApiKey = ENV.resendApiKey;
   const originalResendFromEmail = ENV.resendFromEmail;
+  const originalMpAccessToken = ENV.mpAccessToken;
 
   beforeEach(() => {
     ENV.resendApiKey = "";
     ENV.resendFromEmail = "";
+    ENV.mpAccessToken = "";
   });
 
   afterEach(() => {
     ENV.resendApiKey = originalResendApiKey;
     ENV.resendFromEmail = originalResendFromEmail;
+    ENV.mpAccessToken = originalMpAccessToken;
   });
 
   it("generates a unique subscriber coupon", async () => {

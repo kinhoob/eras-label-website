@@ -177,7 +177,7 @@
 - [x] Testes Vitest cobrindo validação e histórico de pedidos
 
 ## Novas Solicitações de Ajuste (Parcelamento, Cupons e Histórico Detalhado)
-- [ ] Adicionar opção de parcelamento com cálculo de juros configurável no formulário de cartão de crédito no checkout
-- [ ] Implementar campo de cupom de desconto diretamente no checkout principal, recalculando o total em tempo real
-- [ ] Aprimorar a página de histórico de pedidos (`/orders` e `Account.tsx`) com modal/visualização detalhada dos itens adquiridos e rastreamento da entrega
-- [ ] Executar testes Vitest, TypeScript e build de produção para validar as novas funcionalidades
+- [x] Adicionar opção de parcelamento com cálculo de juros configurável no formulário de cartão de crédito no checkout
+- [x] Implementar campo de cupom de desconto diretamente no checkout principal, recalculando o total em tempo real
+- [x] Aprimorar a página de histórico de pedidos (`/orders` e `Account.tsx`) com modal/visualização detalhada dos itens adquiridos e rastreamento da entrega
+- [x] Executar testes Vitest, TypeScript e build de produção para validar as novas funcionalidades
