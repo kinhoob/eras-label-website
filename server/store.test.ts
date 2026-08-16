@@ -58,4 +58,24 @@ describe("store procedures", () => {
     expect(["approved", "pending"]).toContain(result.paymentStatus);
     expect(result.orderNumber).toMatch(/^ER-\d{4}-\d{4}$/);
   });
+
+  it("fetches authenticated user orders history", async () => {
+    const userContext: TrpcContext = {
+      user: {
+        id: 999,
+        openId: "test-openid-999",
+        email: "colecionador@eraslabel.com",
+        name: "Colecionador Eras",
+        loginMethod: "manus",
+        role: "user",
+        createdAt: new Date(),
+        lastSignedIn: new Date(),
+      },
+      req: { protocol: "https", headers: {} } as TrpcContext["req"],
+      res: { clearCookie: () => undefined } as TrpcContext["res"],
+    };
+    const caller = appRouter.createCaller(userContext);
+    const myOrders = await caller.orders.myOrders();
+    expect(Array.isArray(myOrders)).toBe(true);
+  });
 });
