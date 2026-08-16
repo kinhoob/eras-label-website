@@ -33,8 +33,9 @@ describe("Resend email service", () => {
     });
 
     expect(result).toEqual({ sent: true, id: "email_123" });
+    const expectedSender = `Eras Label <${originalFromEmail}>`;
     expect(resendMocks.send).toHaveBeenCalledWith({
-      from: originalFromEmail,
+      from: expectedSender,
       to: "cliente@example.com",
       subject: "Pedido confirmado",
       html: "<p>Pedido confirmado</p>",

@@ -42,8 +42,13 @@ export async function sendResendEmail(message: ResendMessage, templateType = "tr
   }
 
   try {
+    // Garante que o remetente inclua o nome de apresentação oficial da marca "Eras Label"
+    const sender = ENV.resendFromEmail.includes("Eras Label")
+      ? ENV.resendFromEmail
+      : `Eras Label <${ENV.resendFromEmail.replace(/^.*<([^>]+)>.*$/, "$1").trim()}>`;
+
     const response = await resend.emails.send({
-      from: ENV.resendFromEmail,
+      from: sender,
       to: message.to,
       subject: message.subject,
       html: message.html,

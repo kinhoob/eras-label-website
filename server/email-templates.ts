@@ -56,7 +56,7 @@ export function orderConfirmationEmail(order: EmailOrderData) {
     `<p style="margin:0 0 16px;font-size:16px">Olá, ${safeName}.</p><p style="margin:0 0 24px;color:#555;line-height:1.6">Recebemos o seu pedido e o pagamento foi confirmado. Acompanhe abaixo o resumo da sua compra.</p><div style="padding:16px;background:#f7f5f1;margin-bottom:24px"><p style="margin:0 0 6px;color:#777;font-size:12px;text-transform:uppercase;letter-spacing:.12em">Pedido</p><strong style="font-size:18px">${escapeHtml(order.orderNumber)}</strong></div><table style="width:100%;border-collapse:collapse"><tbody>${orderItemsHtml(order.items)}</tbody><tfoot><tr><td style="padding:18px 0 5px;color:#777">Subtotal</td><td style="padding:18px 0 5px;text-align:right">${currency.format(order.subtotal)}</td></tr><tr><td style="padding:5px 0;color:#777">Desconto</td><td style="padding:5px 0;text-align:right;color:#26734d">-${currency.format(order.discount)}</td></tr><tr><td style="padding:5px 0;color:#777">Envio</td><td style="padding:5px 0;text-align:right">${order.shippingCost ? currency.format(order.shippingCost) : "Grátis"}</td></tr><tr><td style="padding:14px 0 0;font-weight:700;border-top:1px solid #ddd">Total</td><td style="padding:14px 0 0;text-align:right;font-weight:700;border-top:1px solid #ddd">${currency.format(order.total)}</td></tr></tfoot></table><p style="margin:24px 0 0;color:#555;line-height:1.6"><strong>Pagamento:</strong> ${paymentLabel}<br><strong>Entrega:</strong> ${escapeHtml(address)}</p>`,
   );
   const text = `Olá, ${order.customerName}.\n\nRecebemos o seu pedido ${order.orderNumber} e o pagamento foi confirmado.\n\nItens:\n${orderItemsText(order.items)}\n\nSubtotal: ${currency.format(order.subtotal)}\nDesconto: -${currency.format(order.discount)}\nEnvio: ${order.shippingCost ? currency.format(order.shippingCost) : "Grátis"}\nTotal: ${currency.format(order.total)}\nPagamento: ${paymentLabel}\nEntrega: ${address}`;
-  return { subject: `Pedido ${order.orderNumber} confirmado | Eras Label`, html, text };
+  return { subject: `Eras Label — Pedido ${order.orderNumber} Confirmado`, html, text };
 }
 
 export function adminOrderEmail(order: EmailOrderData) {
@@ -78,7 +78,7 @@ export function paymentConfirmationEmail(order: EmailOrderData) {
     `<p style="margin:0 0 16px;font-size:16px">Olá, ${escapeHtml(order.customerName)}.</p><p style="margin:0;color:#555;line-height:1.6">O pagamento do pedido <strong>${escapeHtml(order.orderNumber)}</strong>, no valor de <strong>${currency.format(order.total)}</strong>, foi confirmado. Em breve enviaremos as próximas atualizações da entrega.</p>`,
   );
   const text = `Olá, ${order.customerName}.\n\nO pagamento do pedido ${order.orderNumber}, no valor de ${currency.format(order.total)}, foi confirmado. Em breve enviaremos as próximas atualizações da entrega.`;
-  return { subject: `Pagamento confirmado ${order.orderNumber} | Eras Label`, html, text };
+  return { subject: `Eras Label — Pagamento Recebido (${order.orderNumber})`, html, text };
 }
 
 export function newsletterWelcomeEmail(name: string, couponCode: string) {
@@ -88,7 +88,7 @@ export function newsletterWelcomeEmail(name: string, couponCode: string) {
     `<p style="margin:0 0 16px;font-size:16px">Olá, ${escapeHtml(name)}.</p><p style="margin:0 0 24px;color:#555;line-height:1.6">A sua inscrição foi confirmada. Use o seu cupom de boas-vindas na primeira compra:</p><div style="padding:18px;text-align:center;background:#f7f5f1;font-size:23px;letter-spacing:.12em;font-weight:700">${escapeHtml(couponCode)}</div><p style="margin:24px 0 0;color:#777;line-height:1.6">Obrigado por fazer parte da próxima era da Eras Label.</p>`,
   );
   const text = `Olá, ${name}.\n\nA sua inscrição foi confirmada. Use o cupom de boas-vindas na primeira compra: ${couponCode}\n\nObrigado por fazer parte da próxima era da Eras Label.`;
-  return { subject: "Bem-vindo à Eras Label · seu cupom está aqui", html, text };
+  return { subject: "Eras Label — Boas-vindas e Cupom Exclusivo", html, text };
 }
 
 export function orderTrackingEmail(orderNumber: string, customerName: string, trackingCode: string, carrier?: string) {
@@ -101,5 +101,5 @@ export function orderTrackingEmail(orderNumber: string, customerName: string, tr
     `<p style="margin:0 0 16px;font-size:16px">Olá, ${safeName}.</p><p style="margin:0 0 24px;color:#555;line-height:1.6">O seu pedido <strong>${escapeHtml(orderNumber)}</strong> já foi despachado e está a caminho da morada de entrega.</p><div style="padding:20px;background:#fcfbf9;border:1px dashed #b22222;margin-bottom:24px;text-align:center"><p style="margin:0 0 6px;color:#b22222;font-size:12px;text-transform:uppercase;letter-spacing:.14em;font-weight:700">Código de Rastreio (${safeCarrier})</p><strong style="font-size:20px;font-family:monospace;letter-spacing:.1em">${safeCode}</strong></div><p style="margin:0;color:#555;line-height:1.6">Pode acompanhar a entrega diretamente no site da transportadora utilizando o código acima.</p>`,
   );
   const text = `Olá, ${customerName}.\n\nO seu pedido ${orderNumber} foi despachado.\nTransportadora: ${carrier || "Correios"}\nCódigo de rastreio: ${trackingCode}\n\nAcompanhe a entrega utilizando o código acima.`;
-  return { subject: `Pedido ${orderNumber} despachado · Rastreio | Eras Label`, html, text };
+  return { subject: `Eras Label — Código de Rastreio do Pedido ${orderNumber}`, html, text };
 }
