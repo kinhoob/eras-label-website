@@ -193,3 +193,10 @@
 - [ ] Revalidar criação de token e mutation `checkout.create` com cartão no navegador, sem deixar o fluxo preso em processamento
 - [ ] Confirmar o webhook `/api/mercadopago/webhook` e a renderização completa do histórico de pedidos após uma mudança de status
 - [ ] Executar TypeScript, suíte Vitest completa e build de produção; guardar checkpoint final
+
+
+## Gestão de Vendas & Integração Melhor Envio
+- [ ] Criar aba e secção de Vendas no Painel Administrativo (listagem de pedidos, pagamento, itens, morada e método de entrega)
+- [ ] Criar rotas tRPC e helpers para integração com a API do Melhor Envio (cálculo de frete, geração de etiqueta e consulta de rastreio)
+- [ ] Adicionar suporte a configuração de token do Melhor Envio via painel/secrets
+- [ ] Cobrir com testes unitários em Vitest a gestão de vendas e as chamadas do Melhor Envio

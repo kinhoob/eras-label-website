@@ -38,6 +38,7 @@ import { trpc } from "@/lib/trpc";
 import { getInventorySizeOptions } from "@shared/inventory";
 import { AdminProductThumbnail } from "@/components/AdminProductThumbnail";
 import AdminCategoriesSection from "@/pages/AdminCategoriesSection";
+import AdminSalesSection from "@/pages/AdminSalesSection";
 import { exportToCSV } from "@/lib/csv-export";
 
 const orders = [
@@ -619,6 +620,7 @@ export default function Admin() {
   const navItems = [
     { label: "Visão geral", icon: LayoutDashboard },
     { label: "Estatísticas", icon: BarChart3 },
+    { label: "Vendas", icon: ClipboardList },
     { label: "Pedidos", icon: ClipboardList },
     { label: "Produtos", icon: Package },
     { label: "Inventário", icon: Package },
@@ -924,6 +926,7 @@ export default function Admin() {
             </div>
           </div>
         )}
+        {active === "Vendas" && <AdminSalesSection />}
         {active === "Pedidos" && <section className="admin-content"><div className="order-cards"><div className="metric-card"><span>Todos os pedidos</span><strong>108</strong></div><div className="metric-card"><span>Aguardando pagamento</span><strong>6</strong></div><div className="metric-card"><span>Em preparação</span><strong>11</strong></div><div className="metric-card"><span>Enviados</span><strong>21</strong></div></div><div className="admin-panel table-panel"><table><thead><tr><th>Pedido</th><th>Cliente</th><th>Data</th><th>Total</th><th>Pagamento</th><th>Status</th><th /></tr></thead><tbody>{orders.map((order) => <tr key={order.id}><td><strong>{order.id}</strong></td><td>{order.customer}</td><td>{order.date}</td><td>{order.total}</td><td><span className={order.payment === "Pago" ? "stock-ok" : "stock-warning"}>{order.payment}</span></td><td><span className="status-pill success">{order.status}</span></td><td><button className="table-more" onClick={() => toast.info(`Detalhes do pedido ${order.id}`)}><Eye size={17} /></button></td></tr>)}</tbody></table></div></section>}
         {active === "Cupons" && <section className="admin-content"><div className="content-toolbar"><div><span className="section-kicker">DESCONTOS</span><h2 className="content-title">Cupons de desconto</h2></div><Button onClick={() => toast.success("Novo cupom criado.")}><Plus size={16} /> Criar cupom</Button></div><div className="coupon-admin-grid"><div className="admin-panel coupon-admin-card"><div className="coupon-code">ERAS10 <span className="status-pill success">Ativo</span></div><p>10% de desconto para novos inscritos da newsletter.</p><div className="coupon-info"><span>Usos <strong>34 / ilimitado</strong></span><span>Válido até <strong>31 Dez 2026</strong></span></div><button className="coupon-toggle" onClick={() => setCouponActive((value) => !value)}>{couponActive ? "Desativar cupom" : "Ativar cupom"}</button></div><div className="admin-panel coupon-admin-card"><div className="coupon-code">PARADOX20 <span className="status-pill warning">Rascunho</span></div><p>20% no lançamento da coleção Paradox.</p><div className="coupon-info"><span>Usos <strong>0 / 100</strong></span><span>Válido até <strong>14 Ago 2026</strong></span></div><button className="coupon-toggle" onClick={() => toast.success("Cupom publicado.")}>Publicar cupom</button></div></div></section>}
         {active === "Aparência" && <section className="admin-content"><div className="content-toolbar"><div><span className="section-kicker">EDITOR DA LOJA</span><h2 className="content-title">Home oficial e banners</h2></div><Button onClick={() => {

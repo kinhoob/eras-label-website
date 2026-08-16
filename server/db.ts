@@ -592,7 +592,8 @@ export async function listCollectionMarketingRecipients(collection: string) {
 export async function listOrders() {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(orders).orderBy(desc(orders.id));
+  const rows = await db.select().from(orders).orderBy(desc(orders.id));
+  return rows.map(normalizeOrderForClient);
 }
 
 export async function createOrder(data: typeof orders.$inferInsert) {

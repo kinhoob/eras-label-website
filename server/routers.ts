@@ -557,6 +557,30 @@ Seja objetivo, elegante e direto ao ponto.`;
     listOrders: adminProcedure.query(async () => {
       return listOrders();
     }),
+    calculateShippingQuote: adminProcedure.input(z.object({
+      cepDestination: z.string().min(8),
+      items: z.array(z.object({
+        price: z.number(),
+        quantity: z.number(),
+      })),
+    })).mutation(async ({ input }) => {
+      const { calculateMelhorEnvioShipping } = await import("./melhor-envio");
+      const subtotal = input.items.reduce((acc, it) => acc + it.price * it.quantity, 0);
+      const quotes = await calculateMelhorEnvioShipping({
+        from: { postal_code: "50000000" }, // Origem padrão Eras Label (Recife/PE)
+        to: { postal_code: input.cepDestination },
+        products: input.items.map((it, idx) => ({
+          id: String(idx + 1),
+          width: 15,
+          height: 10,
+          length: 20,
+          weight: 0.5 * it.quantity,
+          insurance_value: it.price,
+          quantity: it.quantity,
+        })),
+      });
+      return { success: true, quotes };
+    }),
     updateOrderTracking: adminProcedure.input(z.object({
       orderId: z.number().int().positive(),
       trackingCode: z.string().min(3),
