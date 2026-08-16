@@ -9,7 +9,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { storagePut } from "./storage";
 import { createMercadoPagoPayment } from "./mercadopago";
-import { createMelhorEnvioCartItem, getMelhorEnvioTracking } from "./melhor-envio";
+import { createMelhorEnvioCartItem, downloadMelhorEnvioLabelFile, getMelhorEnvioTracking } from "./melhor-envio";
 import {
   getAdminSummary,
   getAdminProducts,
@@ -49,9 +49,12 @@ import {
   updateInventoryStock,
   listOrders,
   listOrdersByUser,
+  getOrderById,
+  getOrderItems,
   createOrder,
   updateOrderPaymentStatus,
   updateOrderTracking,
+  updateOrderLabelData,
   upsertUser,
 } from "./db";
 import { adminOrderEmail, newsletterWelcomeEmail, orderConfirmationEmail, paymentConfirmationEmail } from "./email-templates";
@@ -613,6 +616,11 @@ Seja objetivo, elegante e direto ao ponto.`;
       if (!order) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Pedido não encontrado." });
       }
+      const address = (order.shippingAddress ?? {}) as Record<string, unknown>;
+      const addressValue = (keys: string[], fallback: string) => {
+        const value = keys.map((key) => address[key]).find((candidate) => candidate !== undefined && candidate !== null && String(candidate).trim() !== "");
+        return value === undefined ? fallback : String(value);
+      };
       const items = await getOrderItems(input.orderId);
       const totalWeight = items.reduce((sum: number, item: any) => sum + (item.quantity * 0.3), 0.3); // estimativa 300g por peça
       
@@ -632,16 +640,16 @@ Seja objetivo, elegante e direto ao ponto.`;
         },
         to: {
           name: order.customerName,
-          phone: order.customerPhone || "11999999999",
+          phone: order.phone || "11999999999",
           email: order.customerEmail,
-          document: order.customerDocument || "00000000000",
-          address: order.shippingAddress,
-          number: order.shippingNumber || "1",
-          complement: order.shippingComplement || undefined,
-          district: order.shippingDistrict || "Centro",
-          city: order.shippingCity || "São Paulo",
-          state_abbr: order.shippingState || "SP",
-          postal_code: order.shippingCep,
+          document: order.customerCpf || "00000000000",
+          address: addressValue(["street", "address", "logradouro"], "Rua não informada"),
+          number: addressValue(["number", "numero"], "1"),
+          complement: addressValue(["complement", "complemento"], "") || undefined,
+          district: addressValue(["neighborhood", "district", "bairro"], "Centro"),
+          city: addressValue(["city", "cidade"], "São Paulo"),
+          state_abbr: addressValue(["state", "state_abbr", "estado"], "SP"),
+          postal_code: addressValue(["cep", "postal_code", "postalCode"], "01001000"),
         },
         products: items.map((item: any) => ({
           name: item.productName || "Peça Eras Label",
@@ -662,7 +670,42 @@ Seja objetivo, elegante e direto ao ponto.`;
         ],
       });
 
-      return { success: true, cartResult };
+      const shippingOrderId = typeof cartResult?.id === "string" ? cartResult.id : "";
+      if (!shippingOrderId) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "O Melhor Envio não retornou o ID da etiqueta." });
+      }
+      await updateOrderLabelData(input.orderId, { shippingOrderId });
+      return { success: true, shippingOrderId, cartResult };
+    }),
+
+    downloadShippingLabel: adminProcedure.input(z.object({
+      orderId: z.number(),
+      shipmentId: z.string().trim().min(3).optional(),
+    })).mutation(async ({ input }) => {
+      const order = await getOrderById(input.orderId);
+      if (!order) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Pedido não encontrado." });
+      }
+
+      const shippingOrderId = input.shipmentId?.trim() || order.shippingOrderId;
+      if (!shippingOrderId) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Esta venda ainda não possui um ID de etiqueta do Melhor Envio." });
+      }
+      if (!input.shipmentId && order.labelPdfUrl) {
+        return { success: true, shippingOrderId, labelPdfUrl: order.labelPdfUrl };
+      }
+
+      try {
+        const file = await downloadMelhorEnvioLabelFile(shippingOrderId);
+        const labelPdfUrl = file.kind === "url"
+          ? file.url
+          : (await storagePut(`orders/${order.orderNumber}/label.pdf`, file.bytes, file.contentType)).url;
+        await updateOrderLabelData(input.orderId, { shippingOrderId, labelPdfUrl });
+        return { success: true, shippingOrderId, labelPdfUrl };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Não foi possível obter o PDF da etiqueta.";
+        throw new TRPCError({ code: "BAD_REQUEST", message });
+      }
     }),
 
     trackOrderShipping: publicProcedure.input(z.object({

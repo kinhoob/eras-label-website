@@ -186,3 +186,87 @@ export async function getMelhorEnvioTracking(shippingCodeOrId: string) {
   }
   return data;
 }
+
+/**
+ * Solicita a impressão da etiqueta (PDF) no Melhor Envio para os IDs de pedidos informados no carrinho.
+ */
+export async function getMelhorEnvioPrintUrl(orderIds: string[]) {
+  const token = ENV.melhorEnvioToken || process.env.MELHOR_ENVIO_TOKEN || "";
+  const isSandbox = process.env.MELHOR_ENVIO_SANDBOX === "true";
+  const baseUrl = isSandbox 
+    ? "https://sandbox.melhorenvio.com.br/api/v2" 
+    : "https://www.melhorenvio.com.br/api/v2";
+
+  if (!token) {
+    throw new Error("Token do Melhor Envio não configurado.");
+  }
+
+  const response = await fetch(`${baseUrl}/me/shipment/print`, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      "User-Agent": "ErasLabelE-commerce (contato@eraslabel.com)",
+    },
+    body: JSON.stringify({ orders: orderIds }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(`Erro ao gerar PDF da etiqueta no Melhor Envio: ${JSON.stringify(data)}`);
+  }
+  return data; // Retorna { url: "https://..." } ou similar
+}
+
+/**
+ * Baixa o arquivo da etiqueta pelo endpoint oficial e normaliza a resposta.
+ * O Melhor Envio retorna o PDF como binário; algumas versões podem retornar um URL JSON.
+ */
+export async function downloadMelhorEnvioLabelFile(shipmentId: string) {
+  const token = ENV.melhorEnvioToken || process.env.MELHOR_ENVIO_TOKEN || "";
+  const isSandbox = process.env.MELHOR_ENVIO_SANDBOX === "true";
+  const baseUrl = isSandbox
+    ? "https://sandbox.melhorenvio.com.br/api/v2"
+    : "https://www.melhorenvio.com.br/api/v2";
+
+  if (!token) {
+    throw new Error("Token do Melhor Envio não configurado.");
+  }
+
+  const response = await fetch(`${baseUrl}/me/imprimir/pdf/${encodeURIComponent(shipmentId)}`, {
+    method: "GET",
+    headers: {
+      Accept: "application/pdf, application/json",
+      Authorization: `Bearer ${token}`,
+      "User-Agent": "ErasLabelE-commerce (contato@eraslabel.com)",
+    },
+  });
+
+  const contentType = response.headers.get("content-type") || "";
+  const body = new Uint8Array(await response.arrayBuffer());
+  if (!response.ok) {
+    const message = new TextDecoder().decode(body);
+    throw new Error(`Erro ao baixar PDF da etiqueta no Melhor Envio: ${response.status} - ${message}`);
+  }
+
+  if (contentType.includes("application/pdf") || contentType.includes("application/octet-stream")) {
+    return { kind: "binary" as const, bytes: body, contentType: "application/pdf" };
+  }
+
+  const text = new TextDecoder().decode(body);
+  try {
+    const parsed = JSON.parse(text) as { url?: unknown };
+    if (typeof parsed.url === "string" && parsed.url.trim()) {
+      return { kind: "url" as const, url: parsed.url };
+    }
+  } catch {
+    // A resposta não-JSON é tratada abaixo como URL textual, quando aplicável.
+  }
+
+  if (/^https?:\/\//i.test(text.trim())) {
+    return { kind: "url" as const, url: text.trim() };
+  }
+
+  throw new Error("O Melhor Envio não retornou um PDF ou URL válido para a etiqueta.");
+}

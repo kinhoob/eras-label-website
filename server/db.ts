@@ -596,6 +596,13 @@ export async function listOrders() {
   return rows.map(normalizeOrderForClient);
 }
 
+export async function getOrderById(orderId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
+  return rows[0];
+}
+
 export async function createOrder(data: typeof orders.$inferInsert) {
   const db = await getDb();
   if (!db) return undefined;
@@ -647,6 +654,12 @@ export async function updateOrderTracking(orderId: number, trackingCode: string,
   const db = await getDb();
   if (!db) return;
   await db.update(orders).set({ trackingCode, carrier: carrier?.trim() || "Correios / Logística" }).where(eq(orders.id, orderId));
+}
+
+export async function updateOrderLabelData(orderId: number, data: { shippingOrderId?: string; labelPdfUrl?: string }) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(orders).set(data).where(eq(orders.id, orderId));
 }
 
 export async function getAdminAnalytics(periodDays: number = 7) {
@@ -896,7 +909,12 @@ export async function deleteAdminUser(id: number) {
 }
 
 export async function getOrderItems(orderId: number) {
-  const db = await getDb();
-  if (!db) return [];
-  return db.select().from(orderItems).where(eq(orderItems.orderId, orderId));
+  const order = await getOrderById(orderId);
+  if (!order || !Array.isArray(order.items)) return [];
+  return (order.items as Array<Record<string, unknown>>).map((item) => ({
+    productName: String(item.productName ?? item.name ?? "Peça Eras Label"),
+    quantity: Number(item.quantity ?? 1),
+    unitPrice: Number(item.unitPrice ?? item.price ?? 0),
+    size: String(item.size ?? "Único"),
+  }));
 }

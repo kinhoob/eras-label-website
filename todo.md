@@ -232,3 +232,11 @@
 - [ ] Adicionar botão de "Gerar Etiqueta de Envio" e visualizador/impressão de etiqueta na seção de Vendas do painel admin
 - [ ] Criar página/seção dedicada de rastreio de entrega para o cliente (com input de código de rastreio e timeline de status)
 - [ ] Cobrir com testes unitários em Vitest e build de produção validado
+
+## PDF de etiquetas do Melhor Envio (solicitação de 2026-08-16)
+- [x] Adicionar visualização em PDF e opção de descarregamento da etiqueta no painel administrativo
+- [x] Corrigir e validar os contratos TypeScript pendentes do fluxo de etiquetas do Melhor Envio
+- [x] Criar testes unitários para a solicitação de impressão e ações de visualização/descarregamento
+- [x] Validar a interface do painel, a suíte Vitest e o build de produção
+- [ ] Salvar checkpoint da funcionalidade de PDF da etiqueta
+

@@ -1,8 +1,8 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "8c3de138-1415-4cf4-a6ae-b010d7ec4a57",
-  "prevId": "b8d0eb02-3f95-4dcc-85f1-e3230de73480",
+  "id": "d825995d-648a-4ea1-8a7c-db5fc50d873c",
+  "prevId": "cc4fd286-c3e9-4497-84d9-d564ea326ead",
   "tables": {
     "abandoned_carts": {
       "name": "abandoned_carts",
@@ -733,7 +733,16 @@
           "type": "varchar(100)",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": "'standard'"
+        },
+        "paymentMethod": {
+          "name": "paymentMethod",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'pix'"
         },
         "shippingCost": {
           "name": "shippingCost",
@@ -790,6 +799,20 @@
         "carrier": {
           "name": "carrier",
           "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "shippingOrderId": {
+          "name": "shippingOrderId",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "labelPdfUrl": {
+          "name": "labelPdfUrl",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false

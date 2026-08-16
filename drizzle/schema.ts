@@ -106,6 +106,8 @@ export const orders = mysqlTable("orders", {
   paymentStatus: varchar("paymentStatus", { length: 50 }).default("pending").notNull(),
   trackingCode: varchar("trackingCode", { length: 100 }),
   carrier: varchar("carrier", { length: 100 }),
+  shippingOrderId: varchar("shippingOrderId", { length: 100 }),
+  labelPdfUrl: text("labelPdfUrl"),
   proofUrl: text("proofUrl"),
   notes: text("notes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

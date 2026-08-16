@@ -3,13 +3,14 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { ClipboardList, Eye, Truck, Package, Check, LoaderCircle, MapPin, CreditCard, Users } from "lucide-react";
+import { Download, Eye, FileText, ExternalLink, Truck, Package, LoaderCircle, CreditCard, Users } from "lucide-react";
 
 export default function AdminSalesSection() {
   const { data: orders = [], isLoading, refetch } = trpc.admin.listOrders.useQuery();
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const [shippingQuotes, setShippingQuotes] = useState<any[]>([]);
   const [calculatingShipping, setCalculatingShipping] = useState(false);
+  const [labelPdfUrl, setLabelPdfUrl] = useState<string | null>(null);
 
   const calculateShippingMutation = trpc.admin.calculateShippingQuote.useMutation({
     onSuccess: (data) => {
@@ -36,8 +37,10 @@ export default function AdminSalesSection() {
   };
 
   const generateLabelMutation = trpc.admin.generateShippingLabel.useMutation({
-    onSuccess: () => {
-      toast.success("Etiqueta gerada com sucesso e adicionada ao carrinho do Melhor Envio!");
+    onSuccess: (data) => {
+      setSelectedOrder((current: any) => current ? { ...current, shippingOrderId: data.shippingOrderId, labelPdfUrl: undefined } : current);
+      setLabelPdfUrl(null);
+      toast.success("Etiqueta adicionada ao carrinho do Melhor Envio. Após a compra e geração, o PDF poderá ser visualizado aqui.");
     },
     onError: (err) => {
       toast.error("Erro ao gerar etiqueta: " + err.message);
@@ -48,6 +51,28 @@ export default function AdminSalesSection() {
     if (!confirm("Deseja enviar este pedido para o carrinho do Melhor Envio e gerar a etiqueta de postagem?")) return;
     generateLabelMutation.mutate({ orderId, serviceId });
   };
+
+  const downloadLabelMutation = trpc.admin.downloadShippingLabel.useMutation({
+    onSuccess: (data) => {
+      setLabelPdfUrl(data.labelPdfUrl);
+      setSelectedOrder((current: any) => current ? { ...current, shippingOrderId: data.shippingOrderId, labelPdfUrl: data.labelPdfUrl } : current);
+      toast.success("PDF da etiqueta disponível para visualização e download.");
+    },
+    onError: (err) => {
+      toast.error("Não foi possível obter o PDF da etiqueta: " + err.message);
+    },
+  });
+
+  const handleVisualizarEtiqueta = (order: any) => {
+    const existingUrl = order.labelPdfUrl;
+    if (existingUrl) {
+      setLabelPdfUrl(existingUrl);
+      return;
+    }
+    downloadLabelMutation.mutate({ orderId: order.id, shipmentId: order.shippingOrderId || undefined });
+  };
+
+  const activeLabelPdfUrl = labelPdfUrl || selectedOrder?.labelPdfUrl || null;
 
   return (
     <section className="admin-content">
@@ -139,7 +164,7 @@ export default function AdminSalesSection() {
                 <span className="section-kicker">DETALHES DO PEDIDO</span>
                 <h3 style={{ fontSize: "1.25rem", fontWeight: 700 }}>{selectedOrder.orderNumber}</h3>
               </div>
-              <Button variant="outline" onClick={() => { setSelectedOrder(null); setShippingQuotes([]); }}>Fechar</Button>
+              <Button variant="outline" onClick={() => { setSelectedOrder(null); setShippingQuotes([]); setLabelPdfUrl(null); }}>Fechar</Button>
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", marginBottom: "1.5rem" }}>
@@ -227,6 +252,53 @@ export default function AdminSalesSection() {
                   ))}
                 </div>
               )}
+
+              <div style={{ marginTop: "1rem", background: "var(--card)", border: "1px solid var(--border)", borderRadius: "8px", padding: "1rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem", flexWrap: "wrap" }}>
+                  <div>
+                    <h4 style={{ fontSize: "0.9rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
+                      <FileText size={15} /> PDF da etiqueta
+                    </h4>
+                    <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", marginTop: "4px" }}>
+                      Depois de comprar e gerar o envio no Melhor Envio, obtenha o PDF diretamente nesta tela.
+                    </p>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                    <Button
+                      size="sm"
+                      onClick={() => handleVisualizarEtiqueta(selectedOrder)}
+                      disabled={downloadLabelMutation.isPending || (!selectedOrder.shippingOrderId && !selectedOrder.labelPdfUrl)}
+                    >
+                      {downloadLabelMutation.isPending ? <><LoaderCircle className="spin" size={14} /> A obter PDF...</> : <><Eye size={14} /> Visualizar PDF</>}
+                    </Button>
+                    {activeLabelPdfUrl && (
+                      <a
+                        href={activeLabelPdfUrl}
+                        download={`etiqueta-${selectedOrder.orderNumber}.pdf`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="button outline"
+                        style={{ display: "inline-flex", alignItems: "center", gap: "6px", textDecoration: "none", fontSize: "0.8rem" }}
+                      >
+                        <Download size={14} /> Descarregar PDF
+                      </a>
+                    )}
+                  </div>
+                </div>
+                {activeLabelPdfUrl ? (
+                  <div style={{ marginTop: "1rem", border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden", background: "#fff" }}>
+                    <iframe
+                      src={activeLabelPdfUrl}
+                      title={`Etiqueta de envio do pedido ${selectedOrder.orderNumber}`}
+                      style={{ display: "block", width: "100%", height: "520px", border: 0 }}
+                    />
+                  </div>
+                ) : (
+                  <p style={{ marginTop: "0.75rem", fontSize: "0.78rem", color: "var(--muted-foreground)" }}>
+                    A etiqueta ainda não tem um PDF disponível. Gere e compre o envio no Melhor Envio para habilitar esta ação.
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>

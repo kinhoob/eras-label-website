@@ -50,6 +50,13 @@
       "when": 1786819600000,
       "tag": "0006_catalog_management",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1786869719189,
+      "tag": "0007_worthless_rockslide",
+      "breakpoints": true
     }
   ]
 }
