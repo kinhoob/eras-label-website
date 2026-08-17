@@ -1445,31 +1445,33 @@ function AdminAnalyticsSection() {
           {aiLoading ? (
             <div style={{ padding: "1.5rem", textAlign: "center", color: "#666", fontSize: "0.9rem" }}>
               <LoaderCircle className="spin" size={20} style={{ margin: "0 auto 0.5rem" }} />
-              Calculando tendências de vendas e projetando esgotamento com IA...
+              Analisando dados reais de vendas e stock com IA...
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               <div style={{ fontSize: "0.9rem", color: "#333", lineHeight: "1.6", whiteSpace: "pre-line", background: "#fff", padding: "1.25rem", borderRadius: "8px", border: "1px solid #e8e0d5" }}>
                 {String(aiData?.summary || "Nenhum resumo gerado.")}
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "0.85rem" }}>
-                <div style={{ background: "#fff5f5", border: "1px solid #feb2b2", padding: "1rem", borderRadius: "8px" }}>
-                  <div style={{ fontWeight: 600, color: "#9b2c2c", fontSize: "0.85rem", marginBottom: "0.35rem", display: "flex", alignItems: "center", gap: "0.35rem" }}>
-                    <AlertTriangle size={15} /> Alerta de Risco de Ruptura (Próximos 7 dias)
+              {!aiData?.isInsufficientData && (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "0.85rem" }}>
+                  <div style={{ background: "#fff5f5", border: "1px solid #feb2b2", padding: "1rem", borderRadius: "8px" }}>
+                    <div style={{ fontWeight: 600, color: "#9b2c2c", fontSize: "0.85rem", marginBottom: "0.35rem", display: "flex", alignItems: "center", gap: "0.35rem" }}>
+                      <AlertTriangle size={15} /> Alerta de Risco de Ruptura Real
+                    </div>
+                    <p style={{ fontSize: "0.8rem", color: "#742a2a", margin: 0 }}>
+                      Calculado com base estritamente nas unidades vendidas e no ritmo de saída do período. Produtos abaixo de 5 unidades requerem reabastecimento no inventário.
+                    </p>
                   </div>
-                  <p style={{ fontSize: "0.8rem", color: "#742a2a", margin: 0 }}>
-                    Com base no fluxo de visitantes e na velocidade média de saída, peças com menos de 5 unidades correm risco iminente de esgotamento. Clique em qualquer item no Inventário para realizar reabastecimento imediato.
-                  </p>
-                </div>
-                <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "1rem", borderRadius: "8px" }}>
-                  <div style={{ fontWeight: 600, color: "#166534", fontSize: "0.85rem", marginBottom: "0.35rem", display: "flex", alignItems: "center", gap: "0.35rem" }}>
-                    <TrendingUp size={15} /> Oportunidade de Destaque Comercial
+                  <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "1rem", borderRadius: "8px" }}>
+                    <div style={{ fontWeight: 600, color: "#166534", fontSize: "0.85rem", marginBottom: "0.35rem", display: "flex", alignItems: "center", gap: "0.35rem" }}>
+                      <TrendingUp size={15} /> Indicador de Demanda Efetiva
+                    </div>
+                    <p style={{ fontSize: "0.8rem", color: "#14532d", margin: 0 }}>
+                      Derivado diretamente do faturamento e dos pedidos confirmados no intervalo selecionado.
+                    </p>
                   </div>
-                  <p style={{ fontSize: "0.8rem", color: "#14532d", margin: 0 }}>
-                    As categorias com maior conversão apresentam picos de visualização no período noturno. Recomenda-se disparar campanhas no grupo VIP e e-mails de remarketing via Resend para capitalizar a demanda.
-                  </p>
                 </div>
-              </div>
+              )}
             </div>
           )}
         </section>

@@ -848,15 +848,38 @@ export async function getAdminAnalytics(periodDays: number = 7, range?: { startA
     };
   });
 
+  // Calcular velocidade real de saída por produto com base nos itens dos pedidos filtrados
+  const productSalesMap = new Map<number, number>();
+  for (const o of filteredOrders) {
+    try {
+      const items = typeof o.items === "string" ? JSON.parse(o.items) : (o.items || []);
+      for (const item of items) {
+        const pId = Number(item.productId || item.id || 0);
+        const qty = Number(item.quantity || 1);
+        if (pId > 0) {
+          productSalesMap.set(pId, (productSalesMap.get(pId) || 0) + qty);
+        }
+      }
+    } catch {
+      // ignore parse error
+    }
+  }
+
   const allProducts = await db.select().from(products);
-  const topProducts = allProducts.map((p: any) => ({
-    id: p.id,
-    name: p.name,
-    category: p.category || "Geral",
-    price: Number(p.price || 0),
-    stock: p.stock ?? 10,
-    velocity: 0,
-  })).sort((a, b) => b.velocity - a.velocity).slice(0, 5);
+  const topProducts = allProducts.map((p: any) => {
+    const unitsSold = productSalesMap.get(p.id) || 0;
+    // Velocidade diária real no período
+    const velocity = Number((unitsSold / Math.max(1, effectivePeriodDays)).toFixed(2));
+    return {
+      id: p.id,
+      name: p.name,
+      category: p.category || "Geral",
+      price: Number(p.price || 0),
+      stock: p.stock ?? 10,
+      velocity,
+      unitsSold,
+    };
+  }).sort((a, b) => b.unitsSold - a.unitsSold).slice(0, 5);
 
   return {
     summary: {

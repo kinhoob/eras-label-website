@@ -606,20 +606,29 @@ export const appRouter = router({
       const endAt = input?.endDate ? Date.parse(`${input.endDate}T23:59:59.999Z`) : undefined;
       const analytics = await getAdminAnalytics(days, { startAt, endAt });
       const lowStockList = await getLowStockAlerts();
+
+      // Verificar se há dados suficientes para gerar análise (ex: vendas === 0 e sem histórico relevante)
+      if (analytics.summary.sales === 0) {
+        return {
+          success: true,
+          isInsufficientData: true,
+          summary: `Ainda não existem dados de vendas suficientes no período selecionado (${days} dias) para gerar uma análise executiva fundamentada. Assim que as primeiras encomendas forem registadas, a inteligência da Eras Label cruzará o ritmo de saída, o stock e a conversão automaticamente.`,
+        };
+      }
+
       try {
-        const prompt = `Analise os seguintes dados operacionais e de e-commerce da marca de streetwear Eras Label para um período de ${days} dias:
-- Visitas: ${analytics.summary.visits}
-- Vendas: ${analytics.summary.sales}
+        const prompt = `Analise estritamente com base nos dados reais de e-commerce da marca de streetwear Eras Label para o período selecionado (${days} dias):
+- Total de Pedidos/Vendas: ${analytics.summary.sales}
 - Receita Total: R$ ${analytics.summary.revenue.toFixed(2)}
 - Ticket Médio: R$ ${analytics.summary.averageTicket.toFixed(2)}
 - Taxa de Conversão: ${analytics.summary.conversionRate}%
-- Peças em Destaque e Velocidade de Saída: ${analytics.topProducts.map((p: any) => `${p.name} (${p.category}, Estoque: ${p.stock} un., Saída Est.: ${p.velocity}/dia)`).join("; ") || "Nenhuma registrada"}
+- Desempenho por Peça e Velocidade de Saída Real: ${analytics.topProducts.map((p: any) => `${p.name} (${p.category}, Estoque: ${p.stock} un., Unidades Vendidas: ${p.unitsSold}, Velocidade Real: ${p.velocity}/dia)`).join("; ") || "Nenhum item vendido no período"}
 - Peças com Estoque Crítico (< 5 un.): ${lowStockList.map((p: any) => `${p.name} (${p.stock} un.)`).join(", ") || "Nenhum no momento"}
 
 Por favor, forneça um resumo executivo inteligente e sofisticado em português (estilo consultoria de moda streetwear) estruturado em duas partes:
-1. Resumo de Desempenho e Tendências de Vendas (comparando com o ritmo atual).
-2. Previsão de Risco de Ruptura e Esgotamento (cruzando o ritmo de vendas e velocidade de saída com o estoque atual de cada peça, projetando quais produtos esgotarão nos próximos dias e recomendando reposição imediata).
-Seja objetivo, elegante e direto ao ponto.`;
+1. Resumo de Desempenho e Tendências de Vendas (analisando rigorosamente os dados reais fornecidos).
+2. Previsão de Risco de Ruptura e Esgotamento (cruzando exclusivamente a velocidade de saída real e o estoque atual, projetando quais produtos esgotarão nos próximos dias com base estritamente nos números).
+Seja objetivo, elegante, verdadeiro aos dados e direto ao ponto. Não invente números.`;
 
         const res = await invokeLLM({
           messages: [

@@ -476,15 +476,22 @@
 
 
 ## Refinamento do Painel Administrativo e Anúncios (2026-08-17)
-- [ ] Reorganizar a sidebar do painel administrativo em grupos expansíveis por função (Catálogo, Vendas & Clientes, Marketing & E-mails, Aparência & CMS, Configurações).
-- [ ] Corrigir o erro de datas personalizadas no gráfico de receita e estatísticas.
-- [ ] Redesenhar o componente de CMS Institucional com campos limpos por URL de imagem e pré-visualização.
-- [ ] Suavizar a animação de transição da barra de anúncio na Home.
-- [ ] Tornar as notificações flutuantes e do menu interativas para marcar como lidas ao clicar e redirecionar corretamente.
-- [ ] Executar testes Vitest, TypeScript, build e checkpoint.
+- [x] Reorganizar a sidebar do painel administrativo em grupos expansíveis por função (Catálogo, Vendas & Clientes, Marketing & E-mails, Aparência & CMS, Configurações).
+- [x] Corrigir o erro de datas personalizadas no gráfico de receita e estatísticas.
+- [x] Redesenhar o componente de CMS Institucional com campos limpos por URL de imagem e pré-visualização.
+- [x] Suavizar a animação de transição da barra de anúncio na Home.
+- [x] Tornar as notificações flutuantes e do menu interativas para marcar como lidas ao clicar e redirecionar corretamente.
+- [x] Executar testes Vitest, TypeScript, build e checkpoint.
 
 ## Adicionar Pré-visualização CMS e Feedbacks Toast/Loading no Admin
 - [x] Adicionar modal/aba de pré-visualização ao CMS para testar conteúdo antes de salvar
 - [x] Padronizar estados de carregamento (loading), toast de sucesso e toast de erro em todas as ações do painel administrativo
 - [x] Validar testes unitários Vitest e build de produção
 - [x] Salvar checkpoint final com todas as validações concluídas
+
+
+## Métricas Reais e Validação de Dados Suficientes para IA (2026-08-17)
+- [x] Atualizar getAdminAnalytics no server/db.ts para calcular vendas, itens vendidos e velocidade de saída baseados exclusivamente em pedidos reais persistidos
+- [x] Implementar verificação de dados insuficientes no aiSummary do server/routers.ts para exibir mensagem clara caso não existam vendas ou dados suficientes no período
+- [x] Atualizar o painel administrativo para exibir claramente o aviso de dados insuficientes quando a amostra for nula
+- [x] Executar testes Vitest, TypeScript, build e checkpoint final
