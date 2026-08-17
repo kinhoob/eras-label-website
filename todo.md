@@ -383,3 +383,15 @@
 - [x] Adicionar indicadores visuais (pontos vermelhos) nos itens da sidebar correspondentes a novas encomendas e stock crítico.
 - [x] Incluir uma opção nas configurações do painel para ativar ou desativar o aviso sonoro das notificações.
 - [x] Garantir persistência e sincronização em tempo real dos alertas na interface.
+
+
+## Toques de Notificação e Histórico de Alertas (2026-08-16)
+- [x] Adicionar opções nas configurações para selecionar entre três toques de notificação diferentes (Clássico, Suave e Alerta Digital).
+- [x] Criar uma aba ou modal de Histórico de Notificações no painel para rever todos os alertas antigos já marcados como lidos.
+- [x] Integrar a reprodução do som escolhido com Web Audio API respeitando o estado de silêncio e as preferências do utilizador.
+
+
+## Toques de Notificação e Histórico de Alertas (2026-08-16)
+- [x] Adicionar opções nas configurações para selecionar entre três toques de notificação diferentes (Clássico, Suave e Alerta Digital).
+- [x] Criar uma aba ou modal de Histórico de Notificações no painel para rever todos os alertas antigos já marcados como lidos.
+- [x] Integrar a reprodução do som escolhido com Web Audio API respeitando o estado de silêncio e as preferências do utilizador.
