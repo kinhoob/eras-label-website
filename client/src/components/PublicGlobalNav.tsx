@@ -28,7 +28,6 @@ export default function PublicGlobalNav() {
   }, [location]);
 
   useEffect(() => {
-    if (!isHome) return;
     let previousY = window.scrollY;
     let stopTimer: number | undefined;
     const handleScroll = () => {
@@ -56,21 +55,12 @@ export default function PublicGlobalNav() {
           <span>MENU</span>
         </button>
         <Link href="/" className="public-global-brand" aria-label="Voltar para a loja Eras Label">ERAS<span>.</span></Link>
-        {isHome ? (
-          <button type="button" className="public-global-bag" aria-label={`Abrir sacola${cartCount ? ` com ${cartCount} itens` : " vazia"}`} onClick={() => window.dispatchEvent(new Event("eras-open-cart"))}>
-            <ShoppingBag size={16} strokeWidth={1.7} />
-            <span>SACOLA</span>
-            {cartCount > 0 && <strong>{cartCount}</strong>}
-            <ArrowRight size={14} aria-hidden="true" />
-          </button>
-        ) : (
-          <Link href="/checkout" className="public-global-bag" aria-label={`Abrir sacola${cartCount ? ` com ${cartCount} itens` : " vazia"}`}>
-            <ShoppingBag size={16} strokeWidth={1.7} />
-            <span>SACOLA</span>
-            {cartCount > 0 && <strong>{cartCount}</strong>}
-            <ArrowRight size={14} aria-hidden="true" />
-          </Link>
-        )}
+        <button type="button" className="public-global-bag" aria-label={`Abrir sacola${cartCount ? ` com ${cartCount} itens` : " vazia"}`} onClick={() => window.dispatchEvent(new Event("eras-open-cart"))}>
+          <ShoppingBag size={16} strokeWidth={1.7} />
+          <span>SACOLA</span>
+          {cartCount > 0 && <strong>{cartCount}</strong>}
+          <ArrowRight size={14} aria-hidden="true" />
+        </button>
       </div>
       <SidebarMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} onPlaySound={() => undefined} />
     </>

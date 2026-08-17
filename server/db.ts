@@ -474,10 +474,12 @@ export async function saveCommercialConfig(config: CommercialConfig) {
   return normalized;
 }
 
+export type HomeBannerTargetType = "custom" | "catalog" | "category" | "collection";
+
 export type HomeContent = {
-  banners: Array<{ id: string; eyebrow: string; title: string; subtitle: string; imageUrl: string; href: string; cta: string }>;
+  banners: Array<{ id: string; eyebrow: string; title: string; subtitle: string; imageUrl: string; href: string; cta: string; targetType?: HomeBannerTargetType; targetValue?: string }>;
   highlights: Array<{ id: string; productId: number; label: string }>;
-  vipBanner: { eyebrow: string; title: string; subtitle: string; imageUrl: string; href: string; cta: string };
+  vipBanner: { eyebrow: string; title: string; subtitle: string; imageUrl: string; href: string; cta: string; targetType?: HomeBannerTargetType; targetValue?: string };
 };
 
 export const defaultHomeContent: HomeContent = {

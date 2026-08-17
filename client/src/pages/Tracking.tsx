@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Link } from "wouter";
 import { PageTransitionHandler } from "@/components/PageTransition";
 import { playInteractionSound } from "@/lib/interaction-sound";
 import { Button } from "@/components/ui/button";
@@ -66,26 +65,10 @@ export default function TrackingPage() {
     : null;
 
   return (
-    <div className="min-h-screen bg-[#f6f3ee] text-[#23221e] flex flex-col font-sans">
+    <div className="public-page-shell min-h-screen bg-[#f6f3ee] text-[#23221e] flex flex-col font-sans">
       <PageTransitionHandler />
 
-      {/* Header */}
-      <header className="border-b border-[#dfd7cc] px-6 py-4 flex items-center justify-between sticky top-0 bg-[#f6f3ee]/95 backdrop-blur z-40">
-        <div className="flex items-center gap-4">
-          <Link href="/" onClick={playClickSound} className="font-serif text-2xl font-black tracking-widest uppercase">
-            ERAS.
-          </Link>
-        </div>
-        <div className="flex items-center gap-6">
-          <button onClick={() => setSoundEnabled(!soundEnabled)} className="text-xs uppercase tracking-widest flex items-center gap-1 hover:text-[#c95139]">
-            {soundEnabled ? "Som Ativo" : "Mudo"}
-          </button>
-          <Link href="/orders" onClick={playClickSound} className="text-xs uppercase tracking-widest hover:text-[#c95139]">Meus Pedidos</Link>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="flex-1 max-w-3xl mx-auto px-6 py-16 w-full">
+      <main className="public-page-content flex-1 max-w-3xl mx-auto px-6 pt-32 pb-16 md:pt-40 md:pb-24 w-full">
         <span className="text-xs uppercase tracking-widest text-[#8c8378] block mb-2">LOGÍSTICA & TRANSPORTE</span>
         <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tight mb-4">Rastreamento de Pedido</h1>
         <p className="text-sm text-[#554f46] mb-10">

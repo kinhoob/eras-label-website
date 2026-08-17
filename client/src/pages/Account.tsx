@@ -3,6 +3,8 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Package, Truck, CheckCircle2, Clock, ArrowLeft, ExternalLink, ShieldCheck, User as UserIcon, LogOut, Check, X, Box, Copy, RefreshCw } from "lucide-react";
 import { Link, useLocation } from "wouter";
+import { PageTransitionHandler } from "@/components/PageTransition";
+import OfficialFooter from "@/components/OfficialFooter";
 
 /* Função utilitária para formatar valores monetários em Reais (BRL) */
 function formatPrice(value: number) {
@@ -30,10 +32,9 @@ export default function Account() {
   // Se o usuário não estiver autenticado, exibe tela de prompt de login
   if (!user) {
     return (
-      <div className="eras-site auth-required-page">
-        <header className="site-header">
-          <Link href="/" className="brand-logo">ERAS.</Link>
-        </header>
+      <div className="public-page-shell eras-site auth-required-page min-h-screen flex flex-col">
+        <PageTransitionHandler />
+        <main className="public-page-content flex-1 pt-32 pb-16 md:pt-40 md:pb-24">
         <div className="auth-prompt-container">
           <div className="auth-card">
             <h2>ÁREA DO CLIENTE</h2>
@@ -44,25 +45,21 @@ export default function Account() {
             <Link href="/" className="back-home-link">Voltar para a Loja</Link>
           </div>
         </div>
+        </main>
+        <OfficialFooter />
       </div>
     );
   }
 
   return (
-    <div className="eras-site account-page">
-      <header className="site-header">
-        <Link href="/" className="brand-logo">ERAS.</Link>
-        <div className="header-actions">
-              <Link href="/" className="header-link">LOJA</Link>
-              {!isOrdersPage && <Link href="/orders" className="header-link">PEDIDOS</Link>}
-              <button className="icon-button" onClick={() => logout()} title="Terminar sessão">
-            <LogOut size={18} />
-          </button>
-        </div>
-      </header>
-
-      <main className="account-main">
+    <div className="public-page-shell eras-site account-page min-h-screen flex flex-col">
+      <PageTransitionHandler />
+      <main className="public-page-content account-main flex-1 pt-32 pb-16 md:pt-40 md:pb-24">
         <div className="account-container">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
+            <div className="flex items-center gap-3 text-xs uppercase tracking-[0.18em] text-[#8c8378]"><Link href="/" className="hover:text-[#b22222]">Loja</Link>{!isOrdersPage && <><span>/</span><Link href="/orders" className="hover:text-[#b22222]">Pedidos</Link></>}</div>
+            <button className="text-xs uppercase tracking-[0.18em] text-[#8c8378] hover:text-[#b22222] inline-flex items-center gap-2" onClick={() => logout()} title="Terminar sessão"><LogOut size={15} /> Sair</button>
+          </div>
           {/* Cartão de boas-vindas do colecionador */}
           <div className="account-welcome">
             <div className="user-avatar-badge">
@@ -143,6 +140,7 @@ export default function Account() {
           </section>
         </div>
       </main>
+      <OfficialFooter />
 
       {/* Modal de Detalhes do Pedido com Linha do Tempo de Entrega Animada */}
       {selectedOrder && (

@@ -563,3 +563,19 @@
 - [x] Corrigir links/rotas de produto que retornavam 404 ao usar IDs numéricos, adicionando fallback público por ID e preferindo slugs quando disponíveis.
 
 - [x] Adicionar fallback editorial para imagens legadas que retornam 403, sem substituir URLs de upload válidas no catálogo e na página de produto.
+
+## Unificação pública e banners editáveis
+- [ ] Padronizar o shell visual de manifesto, catálogo, categorias, coleções e demais páginas públicas vindas da Home.
+- [ ] Garantir que todas as páginas públicas compartilhem a mesma sacola global e comportamento do carrinho da Home.
+- [ ] Remover textos “Fechar” dos menus/modais públicos e manter apenas o ícone X acessível.
+- [ ] Fazer a navbar reaparecer ao parar o scroll ou ao rolar um pouco para cima em qualquer posição da página.
+- [ ] Adicionar destino editável aos banners da Home no painel administrativo, com categorias visíveis e não listadas.
+- [ ] Atualizar testes e validar desktop, mobile, TypeScript, Vitest e build.
+
+## Unificação pública e destinos de banners (Sessão atual)
+- [x] Unificar o shell visual e a sacola global de todas as páginas públicas (catálogo, manifesto, produto, tracking, conta), eliminando desvios estéticos em relação à Home.
+- [x] Corrigir o fechamento do menu para exibir somente o ícone X, removendo rótulos textuais redundantes.
+- [x] Ajustar o comportamento global da navbar para reaparecer assim que o usuário parar de rolar a página ou inverter o sentido do scroll em qualquer rota.
+- [x] Estender o modelo e persistência de banners no backend para suportar links estruturados de destino (link personalizado, catálogo ou categorias publicadas/não listadas).
+- [x] Atualizar o painel administrativo de Aparência para permitir a seleção interativa dos destinos dos banners rotativos.
+- [x] Executar testes Vitest (143 testes aprovados), verificação TypeScript sem erros e build de produção validado.

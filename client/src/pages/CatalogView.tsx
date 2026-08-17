@@ -2,6 +2,7 @@ import { Link, useRoute } from "wouter";
 import { PageTransitionHandler } from "@/components/PageTransition";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
+import OfficialFooter from "@/components/OfficialFooter";
 
 const catalogImageFallback = "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1200&q=85";
 
@@ -48,10 +49,10 @@ export default function CatalogViewPage() {
   const displayProducts = filteredProducts;
 
   return (
-    <div className="catalog-page-shell min-h-screen bg-[#f6f3ee] text-[#23221e] flex flex-col font-sans">
+    <div className="public-page-shell catalog-page-shell min-h-screen bg-[#f6f3ee] text-[#23221e] flex flex-col font-sans">
       <PageTransitionHandler />
 
-      <main className="catalog-page-main flex-1 max-w-6xl mx-auto px-6 pt-28 pb-16 w-full">
+      <main className="public-page-content catalog-page-main flex-1 max-w-6xl mx-auto px-6 pt-32 pb-16 md:pt-40 md:pb-24 w-full">
         {(() => {
           const matchedCategory = filterType === "category" ? categories.find((c: any) => c.slug.toLowerCase() === filterSlug.toLowerCase()) : null;
           const subcategories = matchedCategory ? categories.filter((c: any) => c.parentId === matchedCategory.id && c.active) : [];
@@ -124,6 +125,7 @@ export default function CatalogViewPage() {
           </div>
         )}
       </main>
+      <OfficialFooter />
     </div>
   );
 }

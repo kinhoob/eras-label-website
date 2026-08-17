@@ -582,12 +582,6 @@ export default function Home() {
   }, [cart]);
 
   useEffect(() => {
-    const openCart = () => setIsCartOpen(true);
-    window.addEventListener("eras-open-cart", openCart);
-    return () => window.removeEventListener("eras-open-cart", openCart);
-  }, []);
-
-  useEffect(() => {
     return () => {
       if (searchLoadingTimeoutRef.current !== null) window.clearTimeout(searchLoadingTimeoutRef.current);
     };
@@ -713,7 +707,7 @@ export default function Home() {
     addedProductTimeoutRef.current = window.setTimeout(() => {
       setAddedProductId(null);
       setSelectedProduct(null);
-      setIsCartOpen(true);
+      window.dispatchEvent(new Event("eras-open-cart"));
       addedProductTimeoutRef.current = null;
     }, 620);
     toast.success("Adicionado à sacola", { description: `${product.name} · tamanho ${size}`, duration: 2200 });
@@ -1016,7 +1010,7 @@ export default function Home() {
           <Link href="/account" className="icon-button" aria-label="Minha Conta e Pedidos" onClick={() => playClick(soundsOn)}>
             <CircleUserRound size={18} />
           </Link>
-          <button className="bag-button" aria-label={`Abrir sacola${cartCount > 0 ? ` com ${cartCount} ${cartCount === 1 ? "item" : "itens"}` : " vazia"}`} onClick={() => { playClick(soundsOn); setIsCartOpen(true); }}>
+          <button className="bag-button" aria-label={`Abrir sacola${cartCount > 0 ? ` com ${cartCount} ${cartCount === 1 ? "item" : "itens"}` : " vazia"}`} onClick={() => { playClick(soundsOn); window.dispatchEvent(new Event("eras-open-cart")); }}>
             SACOLA {cartCount > 0 && <span key={cartCount} className="bag-badge" aria-hidden="true">{cartCount}</span>}
           </button>
         </div>

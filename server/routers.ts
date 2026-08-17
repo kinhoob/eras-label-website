@@ -543,6 +543,8 @@ export const appRouter = router({
         imageUrl: imageUrlInput,
         href: z.string().min(1),
         cta: z.string(),
+        targetType: z.enum(["custom", "catalog", "category", "collection"]).optional(),
+        targetValue: z.string().max(180).optional(),
       })).min(1).max(6),
       highlights: z.array(z.object({
         id: z.string().min(1),
@@ -556,6 +558,8 @@ export const appRouter = router({
         imageUrl: imageUrlInput,
         href: z.string().min(1),
         cta: z.string(),
+        targetType: z.enum(["custom", "catalog", "category", "collection"]).optional(),
+        targetValue: z.string().max(180).optional(),
       }),
     })).mutation(async ({ input }) => {
       const saved = await saveHomeContent(input);

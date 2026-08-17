@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useRoute } from "wouter";
 import { Check, ChevronLeft, ChevronRight, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PageTransitionHandler } from "@/components/PageTransition";
 import OfficialFooter from "@/components/OfficialFooter";
 import NotFound from "@/pages/NotFound";
 import { trpc } from "@/lib/trpc";
@@ -71,8 +72,10 @@ export default function ProductPage() {
   };
 
   return (
-    <main className="product-page-shell min-h-screen bg-[#f6f3ee] text-[#23221e]">
-      <div className="container py-10 md:py-16">
+    <div className="public-page-shell product-page-shell min-h-screen bg-[#f6f3ee] text-[#23221e] flex flex-col font-sans">
+      <PageTransitionHandler />
+      <main className="public-page-content flex-1">
+      <div className="container pt-32 pb-16 md:pt-40 md:pb-24">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)] lg:gap-16">
           <section className="product-page-gallery" aria-label={`Imagens de ${product.name}`}>
             <div
@@ -118,7 +121,8 @@ export default function ProductPage() {
           </section>
         </div>
       </div>
+      </main>
       <OfficialFooter />
-    </main>
+    </div>
   );
 }
