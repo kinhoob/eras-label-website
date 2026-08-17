@@ -2,12 +2,14 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { PageTransitionHandler } from "@/components/PageTransition";
 import { playInteractionSound } from "@/lib/interaction-sound";
+import { trpc } from "@/lib/trpc";
 
 export default function ManifestoPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
-
   const playClickSound = () => playInteractionSound(soundEnabled);
+
+  const { data: cms } = trpc.catalog.getCmsPage.useQuery({ slug: "manifesto" });
 
   return (
     <div className="min-h-screen bg-[#f6f3ee] text-[#23221e] flex flex-col font-sans">
@@ -37,22 +39,33 @@ export default function ManifestoPage() {
 
       {/* Content */}
       <main className="flex-1 max-w-4xl mx-auto px-6 py-16 w-full">
-        <span className="text-xs uppercase tracking-widest text-[#8c8378] block mb-2">02 / FILOSOFIA</span>
-        <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tight mb-8">Manifesto Completo</h1>
+        {cms?.bannerUrl && (
+          <div className="mb-8 w-full h-[320px] rounded-lg overflow-hidden border border-[#dfd7cc]">
+            <img src={cms.bannerUrl} alt={cms.title || "Manifesto Eras"} className="w-full h-full object-cover" />
+          </div>
+        )}
+        <span className="text-xs uppercase tracking-widest text-[#8c8378] block mb-2">{cms?.subtitle || "02 / FILOSOFIA"}</span>
+        <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tight mb-8">{cms?.title || "Manifesto Completo"}</h1>
         
-        <div className="prose prose-neutral max-w-none space-y-6 text-[#554f46] text-lg leading-relaxed">
-          <p className="font-serif text-2xl text-[#23221e] italic mb-6">
-            "Não criamos apenas roupas. Criamos artefactos de tempo para vestir a alma de quem recusa o esquecimento."
-          </p>
-          <p>
-            A Eras Label nasce da convicção de que o vestuário é a forma mais íntima de arquivo histórico que possuímos. Cada época traz consigo texturas, dores, vitórias e visões estéticas que moldam quem somos.
-          </p>
-          <p>
-            Reviver ou reinventar eras não é nostalgia estéril; é uma ferramenta de resgate. Pegamos em elementos esquecidos do passado analógico, da contracultura e das raízes regionais para fundi-los com o design utilitário do streetwear contemporâneo.
-          </p>
-          <p>
-            Cada peça numerada carrega a assinatura de uma era. Vista sua história. Conecte-se com o futuro honrando de onde viemos.
-          </p>
+        <div className="prose prose-neutral max-w-none space-y-6 text-[#554f46] text-lg leading-relaxed whitespace-pre-wrap">
+          {cms?.content ? (
+            cms.content
+          ) : (
+            <>
+              <p className="font-serif text-2xl text-[#23221e] italic mb-6">
+                "Não criamos apenas roupas. Criamos artefactos de tempo para vestir a alma de quem recusa o esquecimento."
+              </p>
+              <p>
+                A Eras Label nasce da convicção de que o vestuário é a forma mais íntima de arquivo histórico que possuímos. Cada época traz consigo texturas, dores, vitórias e visões estéticas que moldam quem somos.
+              </p>
+              <p>
+                Reviver ou reinventar eras não é nostalgia estéril; é uma ferramenta de resgate. Pegamos em elementos esquecidos do passado analógico, da contracultura e das raízes regionais para fundi-los com o design utilitário do streetwear contemporâneo.
+              </p>
+              <p>
+                Cada peça numerada carrega a assinatura de uma era. Vista sua história. Conecte-se com o futuro honrando de onde viemos.
+              </p>
+            </>
+          )}
         </div>
       </main>
 

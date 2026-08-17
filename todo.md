@@ -460,3 +460,16 @@
 - [x] 5. **Correção dos Links dos Cards de Produtos**
 - [x] 6. **Dinamização do Rodapé Oficial**
 - [x] 7. **Consistência do Rastreio e Formulário Mobile**
+
+## Nova Avaliação: Experiência de Conteúdo, Manifesto e Editabilidade (2026-08-17)
+- [x] Auditar rotas institucionais (Manifesto, História, Encontros/Eventos) e menus editáveis.
+- [x] Executar testes automatizados (Vitest) para garantir integridade.
+- [x] Avaliar a jornada do cliente na imersão cultural da marca (streetwear e storytelling).
+- [x] Consolidar diagnóstico e recomendações de melhorias urgentes.
+
+## Implementação das Urgências 1 e 2 — CMS Institucional e Menus Dinâmicos (2026-08-17)
+- [x] Criar tabelas no schema Drizzle para páginas institucionais (CMS) e itens de menu customizados.
+- [x] Implementar rotas tRPC para leitura pública e gravação administrativa de CMS e Menus.
+- [x] Criar aba de Gestão de Conteúdo e Menus no Painel Administrativo.
+- [x] Conectar o site público (Manifesto, História, Encontros, Menus e Rodapé) aos dados dinâmicos com fallback seguro.
+- [x] Executar testes unitários (Vitest), TypeScript check e build de produção.

@@ -754,6 +754,8 @@ export default function Admin() {
     { label: "E-mail Marketing", icon: Mail },
     { label: "Cupons", icon: Tag },
     { label: "Aparência", icon: Palette },
+    { label: "CMS Institucional", icon: Pencil },
+    { label: "Menus Dinâmicos", icon: SlidersHorizontal },
     { label: "Newsletter", icon: Mail },
     { label: "E-mails (Resend)", icon: Mail },
     ...(isSuperAdmin ? [{ label: "Gestão de Equipe", icon: ShieldCheck }] : []),
@@ -834,6 +836,8 @@ export default function Admin() {
         <AdminHeaderBar authUser={authUser} active={active} setMenuOpen={setMenuOpen} adminInitial={adminInitial} adminName={adminName} onNavigate={selectNav} />
         {active === "Estatísticas" && <AdminAnalyticsSection />}
         {active === "Histórico de Estoque" && <InventoryAuditSection />}
+        {active === "CMS Institucional" && <AdminCmsManager />}
+        {active === "Menus Dinâmicos" && <AdminMenuManager />}
         {active === "Visão geral" && <AdminDashboardHome adminName={adminName} adminOrders={adminOrders} adminOrdersLoading={adminOrdersLoading} catalogCount={adminProducts.length} onNavigate={selectNav} />}
         {active === "Produtos" && <section className="admin-content">
           <div className="inventory-heading">
@@ -2318,6 +2322,313 @@ function LowStockNotificationsSection() {
           ))}
         </div>
       )}
+    </section>
+  );
+}
+
+
+/**
+ * Componente AdminCmsManager: Gestão administrativa de conteúdo institucional (CMS)
+ * Permite editar o título, subtítulo e texto das páginas manifesto, history, events e about.
+ */
+function AdminCmsManager() {
+  const [selectedSlug, setSelectedSlug] = useState("manifesto");
+  const { data: pageData, isLoading, refetch } = trpc.catalog.getCmsPage.useQuery({ slug: selectedSlug });
+  
+  const [title, setTitle] = useState("");
+  const [subtitle, setSubtitle] = useState("");
+  const [content, setContent] = useState("");
+  const [bannerUrl, setBannerUrl] = useState("");
+
+  useEffect(() => {
+    if (pageData) {
+      setTitle(pageData.title || "");
+      setSubtitle(pageData.subtitle || "");
+      setContent(pageData.content || "");
+      setBannerUrl(pageData.bannerUrl || "");
+    } else {
+      // Valores padrão para iniciar se não houver no banco
+      if (selectedSlug === "manifesto") {
+        setTitle("Manifesto Eras Label");
+        setSubtitle("Reviver ou reinventar eras através da moda autoral e consciente.");
+        setContent("Acreditamos que cada peça carrega um tempo, uma história e uma identidade. Nossa missão é conectar o passado e o futuro em vestimentas atemporais que desafiam o convencional.");
+      } else if (selectedSlug === "history") {
+        setTitle("A História da Eras");
+        setSubtitle("Do conceito urbano à consolidação de uma nova era no streetwear.");
+        setContent("Fundada em Pernambuco, a Eras Label nasceu da necessidade de criar roupas com significado profundo, unindo a força cultural da nossa gente ao design contemporâneo de alta qualidade.");
+      } else if (selectedSlug === "events") {
+        setTitle("Encontros & Drop Sessions");
+        setSubtitle("Experiências presenciais e lançamentos exclusivos pelo Brasil.");
+        setContent("Acompanhe os nossos próximos encontros, pop-ups e sessões de lançamento de coleções. Conecte-se com a comunidade Eras.");
+      } else {
+        setTitle("Sobre a Marca");
+        setSubtitle("Propósito, ética e compromisso com a excelência criativa.");
+        setContent("Cada coleção da Eras Label é desenvolvida sob rigorosos padrões de alfaiataria urbana, garantindo durabilidade, caimento perfeito e exclusividade.");
+      }
+      setBannerUrl("");
+    }
+  }, [pageData, selectedSlug]);
+
+  const saveMutation = trpc.admin.saveCmsPage.useMutation({
+    onSuccess: () => {
+      toast.success("Página institucional atualizada com sucesso!");
+      void refetch();
+    },
+    onError: (err) => toast.error(err.message || "Erro ao salvar página."),
+  });
+
+  const uploadMutation = trpc.admin.uploadImage.useMutation();
+  const [uploading, setUploading] = useState(false);
+
+  function handleUploadBanner(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setUploading(true);
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const fileBase64 = reader.result as string;
+        const res = await uploadMutation.mutateAsync({
+          fileName: file.name,
+          fileBase64,
+          contentType: file.type || "image/png",
+        });
+        if (res.url) {
+          setBannerUrl(res.url);
+          toast.success("Banner de capa carregado com sucesso!");
+        }
+      } catch (err: any) {
+        toast.error(err.message || "Falha ao enviar imagem.");
+      } finally {
+        setUploading(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  return (
+    <section className="admin-content">
+      <div className="content-toolbar">
+        <div>
+          <span className="section-kicker">CMS INSTITUCIONAL (URGÊNCIA 1)</span>
+          <h2 className="content-title">Gestão de Conteúdo das Páginas</h2>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem", flexWrap: "wrap" }}>
+        {[
+          { slug: "manifesto", label: "Manifesto" },
+          { slug: "history", label: "História / Quem Somos" },
+          { slug: "events", label: "Encontros & Eventos" },
+          { slug: "about", label: "Sobre a Marca" },
+        ].map((tab) => (
+          <Button
+            key={tab.slug}
+            variant={selectedSlug === tab.slug ? "default" : "outline"}
+            onClick={() => setSelectedSlug(tab.slug)}
+            style={selectedSlug === tab.slug ? { background: "#b22222", color: "#fff" } : {}}
+          >
+            {tab.label}
+          </Button>
+        ))}
+      </div>
+
+      <div className="admin-panel" style={{ background: "#fff", padding: "2rem", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
+        {isLoading ? (
+          <div className="inventory-state"><LoaderCircle className="spin" size={22} /><strong>Carregando conteúdo...</strong></div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+            <div>
+              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.3rem" }}>Título Principal</label>
+              <Input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Título da página"
+              />
+            </div>
+
+            <div>
+              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.3rem" }}>Subtítulo / Chamada</label>
+              <Input
+                type="text"
+                value={subtitle}
+                onChange={(e) => setSubtitle(e.target.value)}
+                placeholder="Breve descrição ou slogan"
+              />
+            </div>
+
+            <div>
+              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.3rem" }}>Imagem de Capa (Banner)</label>
+              <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+                <Input
+                  type="text"
+                  value={bannerUrl}
+                  onChange={(e) => setBannerUrl(e.target.value)}
+                  placeholder="URL da imagem (ou faça upload)"
+                />
+                <label className="admin-action-btn" style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.4rem", padding: "0.5rem 1rem", background: "#f3f4f6", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "0.85rem", fontWeight: 600, color: "#111", whiteSpace: "nowrap" }}>
+                  <Upload size={16} />
+                  {uploading ? "Enviando..." : "Enviar Foto"}
+                  <input type="file" accept="image/*" onChange={handleUploadBanner} style={{ display: "none" }} />
+                </label>
+              </div>
+              {bannerUrl && (
+                <div style={{ marginTop: "0.75rem", width: "100%", maxHeight: "200px", overflow: "hidden", borderRadius: "6px", border: "1px solid #ddd" }}>
+                  <img src={bannerUrl} alt="Preview Banner" style={{ width: "100%", height: "200px", objectFit: "cover" }} />
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.3rem" }}>Conteúdo Completo (Markdown / Texto)</label>
+              <textarea
+                rows={8}
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="Escreva o conteúdo da página institucional aqui..."
+                style={{ width: "100%", padding: "0.75rem", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "0.95rem", lineHeight: "1.6", fontFamily: "inherit" }}
+              />
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "1rem" }}>
+              <Button
+                onClick={() => saveMutation.mutate({ slug: selectedSlug, title, subtitle, content, bannerUrl })}
+                disabled={saveMutation.isPending || !title.trim() || !content.trim()}
+                style={{ background: "#b22222", color: "#fff", padding: "0.75rem 1.5rem" }}
+              >
+                {saveMutation.isPending ? "Salvando..." : "Publicar Alterações"}
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Componente AdminMenuManager: Gestor Dinâmico de Menus (Urgência 2)
+ * Permite ao administrador adicionar, renomear, reordenar ou remover itens do menu superior e do rodapé.
+ */
+function AdminMenuManager() {
+  const { data: menus = [], refetch } = trpc.catalog.listCustomMenus.useQuery();
+  const [location, setLocation] = useState("header");
+  const [label, setLabel] = useState("");
+  const [url, setUrl] = useState("");
+  const [sortOrder, setSortOrder] = useState(0);
+
+  const saveMutation = trpc.admin.saveCustomMenu.useMutation({
+    onSuccess: () => {
+      toast.success("Item de menu guardado com sucesso!");
+      setLabel("");
+      setUrl("");
+      setSortOrder(0);
+      void refetch();
+    },
+    onError: (err) => toast.error(err.message || "Erro ao salvar menu."),
+  });
+
+  const deleteMutation = trpc.admin.deleteCustomMenu.useMutation({
+    onSuccess: () => {
+      toast.success("Item de menu removido.");
+      void refetch();
+    },
+  });
+
+  return (
+    <section className="admin-content">
+      <div className="content-toolbar">
+        <div>
+          <span className="section-kicker">MENUS DINÂMICOS (URGÊNCIA 2)</span>
+          <h2 className="content-title">Gestão da Navegação e Rodapé</h2>
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "2rem", alignItems: "start" }}>
+        <div className="admin-panel" style={{ background: "#fff", padding: "1.5rem", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
+          <h3 style={{ fontSize: "1.1rem", fontWeight: 600, marginBottom: "1rem", color: "#111" }}>Adicionar Novo Link</h3>
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <div>
+              <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 600, marginBottom: "0.3rem" }}>Localização</label>
+              <select
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                style={{ width: "100%", padding: "0.6rem", borderRadius: "6px", border: "1px solid #d1d5db", background: "#fff" }}
+              >
+                <option value="header">Menu Superior / Cabeçalho</option>
+                <option value="footer">Rodapé da Loja</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 600, marginBottom: "0.3rem" }}>Nome / Rótulo</label>
+              <Input
+                type="text"
+                value={label}
+                onChange={(e) => setLabel(e.target.value)}
+                placeholder="Ex: Coleção Inverno"
+              />
+            </div>
+            <div>
+              <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 600, marginBottom: "0.3rem" }}>URL ou Caminho</label>
+              <Input
+                type="text"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                placeholder="Ex: /catalog ou https://..."
+              />
+            </div>
+            <div>
+              <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 600, marginBottom: "0.3rem" }}>Ordem (número)</label>
+              <Input
+                type="number"
+                value={sortOrder}
+                onChange={(e) => setSortOrder(Number(e.target.value))}
+                placeholder="0"
+              />
+            </div>
+            <Button
+              onClick={() => saveMutation.mutate({ location, label, url, sortOrder, isVisible: 1 })}
+              disabled={saveMutation.isPending || !label.trim() || !url.trim()}
+              style={{ background: "#b22222", color: "#fff", width: "100%", marginTop: "0.5rem" }}
+            >
+              {saveMutation.isPending ? "Adicionando..." : "Adicionar ao Menu"}
+            </Button>
+          </div>
+        </div>
+
+        <div className="admin-panel" style={{ background: "#fff", padding: "1.5rem", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
+          <h3 style={{ fontSize: "1.1rem", fontWeight: 600, marginBottom: "1rem", color: "#111" }}>Itens Atuais na Navegação</h3>
+          {menus.length === 0 ? (
+            <p style={{ color: "#666", fontSize: "0.9rem" }}>Nenhum menu customizado cadastrado ainda. A plataforma está usando os links padrão.</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+              {menus.map((m: any) => (
+                <div key={m.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.75rem 1rem", background: "#f9fafb", borderRadius: "6px", border: "1px solid #e5e7eb" }}>
+                  <div>
+                    <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", marginBottom: "0.2rem" }}>
+                      <span style={{ fontSize: "0.7rem", fontWeight: 700, background: m.location === "header" ? "#111" : "#b22222", color: "#fff", padding: "0.1rem 0.4rem", borderRadius: "4px", textTransform: "uppercase" }}>
+                        {m.location === "header" ? "Cabeçalho" : "Rodapé"}
+                      </span>
+                      <strong style={{ fontSize: "0.95rem", color: "#111" }}>{m.label}</strong>
+                    </div>
+                    <span style={{ fontSize: "0.8rem", color: "#666" }}>Destino: {m.url} (Ordem: {m.sortOrder})</span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => deleteMutation.mutate({ id: m.id })}
+                    style={{ color: "#b22222", borderColor: "#fecaca" }}
+                  >
+                    Remover
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </section>
   );
 }

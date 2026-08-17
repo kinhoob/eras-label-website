@@ -227,3 +227,38 @@ export const adminUsers = mysqlTable("admin_users", {
 
 export type AdminUser = typeof adminUsers.$inferSelect;
 export type InsertAdminUser = typeof adminUsers.$inferInsert;
+
+
+/**
+ * Tabela cmsPages: Armazena o conteúdo editorável das páginas institucionais (Manifesto, História, Encontros, etc.)
+ * Gerida pelo painel administrativo para dar autonomia total ao lojista.
+ */
+export const cmsPages = mysqlTable("cms_pages", {
+  id: int("id").primaryKey().autoincrement(),
+  slug: varchar("slug", { length: 100 }).notNull().unique(), // Ex: manifesto, history, events, about
+  title: varchar("title", { length: 255 }).notNull(),
+  subtitle: varchar("subtitle", { length: 500 }),
+  content: text("content").notNull(), // Texto em Markdown ou HTML formatado
+  bannerUrl: text("bannerUrl"), // Imagem de capa opcional
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+export type CmsPage = typeof cmsPages.$inferSelect;
+export type InsertCmsPage = typeof cmsPages.$inferInsert;
+
+/**
+ * Tabela customMenus: Armazena os itens personalizáveis do menu de navegação superior e rodapé.
+ * Permite adicionar, renomear, reordenar ou ocultar links sem alterar código.
+ */
+export const customMenus = mysqlTable("custom_menus", {
+  id: int("id").primaryKey().autoincrement(),
+  location: varchar("location", { length: 50 }).notNull().default("header"), // header ou footer
+  label: varchar("label", { length: 100 }).notNull(),
+  url: varchar("url", { length: 255 }).notNull(),
+  sortOrder: int("sortOrder").notNull().default(0),
+  isVisible: int("isVisible").notNull().default(1),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type CustomMenu = typeof customMenus.$inferSelect;
+export type InsertCustomMenu = typeof customMenus.$inferInsert;

@@ -38,6 +38,11 @@ import {
   validateCoupon,
   getCommercialConfig,
   saveCommercialConfig,
+  getCmsPage,
+  saveCmsPage,
+  listCustomMenus,
+  saveCustomMenu,
+  deleteCustomMenu,
   getHomeContent,
   saveHomeContent,
   getStorefrontConfig,
@@ -161,6 +166,12 @@ export const appRouter = router({
     getHomeContent: publicProcedure.query(() => getHomeContent()),
     getStorefrontConfig: publicProcedure.query(() => getStorefrontConfig()),
     categories: publicProcedure.query(() => listPublicCategories()),
+    getCmsPage: publicProcedure.input(z.object({ slug: z.string() })).query(async ({ input }) => {
+      return await getCmsPage(input.slug);
+    }),
+    listCustomMenus: publicProcedure.input(z.object({ location: z.string().optional() }).optional()).query(async ({ input }) => {
+      return await listCustomMenus(input?.location);
+    }),
     calculateShipping: publicProcedure.input(z.object({
       cep: z.string().min(8),
       subtotal: z.number().nonnegative(),
@@ -799,6 +810,29 @@ Seja objetivo, elegante e direto ao ponto.`;
       }
     }),
 
+    saveCmsPage: adminProcedure.input(z.object({
+      slug: z.string().min(2),
+      title: z.string().min(2),
+      subtitle: z.string().optional(),
+      content: z.string().min(5),
+      bannerUrl: z.string().optional(),
+    })).mutation(async ({ input }) => {
+      return await saveCmsPage(input.slug, input);
+    }),
+    saveCustomMenu: adminProcedure.input(z.object({
+      id: z.number().int().positive().optional(),
+      location: z.string().default("header"),
+      label: z.string().min(1),
+      url: z.string().min(1),
+      sortOrder: z.number().int().default(0),
+      isVisible: z.number().int().min(0).max(1).default(1),
+    })).mutation(async ({ input }) => {
+      return await saveCustomMenu(input);
+    }),
+    deleteCustomMenu: adminProcedure.input(z.object({ id: z.number().int().positive() })).mutation(async ({ input }) => {
+      return await deleteCustomMenu(input.id);
+    }),
+
     downloadBulkShippingLabels: adminProcedure.input(z.object({
       orderIds: z.array(z.number().int().positive()).min(1).max(50),
     })).mutation(async ({ input }) => {
@@ -1033,6 +1067,11 @@ Seja objetivo, elegante e direto ao ponto.`;
         isSuperAdmin: false,
       };
     }),
+
+    /**
+     * Procedimentos de CMS Institucional e Menus Dinâmicos
+     */
+
   }),
 });
 

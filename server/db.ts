@@ -17,6 +17,8 @@ import {
   productCategories,
   inventoryAuditLogs,
   adminUsers,
+  cmsPages,
+  customMenus,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 import { collectCollectionRecipients } from "./marketing-audience";
@@ -1124,4 +1126,81 @@ export async function saveStorefrontConfig(config: StorefrontConfig): Promise<St
     await db.insert(siteAppearance).values({ sectionKey: "storefront_config", content: normalized as any });
   }
   return normalized;
+}
+
+
+/**
+ * Funções auxiliares para Gestão de Conteúdo (CMS) e Menus Dinâmicos
+ * Permitem ler e salvar páginas institucionais e itens de menu customizados no banco de dados.
+ */
+
+export async function getCmsPage(slug: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(cmsPages).where(eq(cmsPages.slug, slug)).limit(1);
+  return rows[0] || null;
+}
+
+export async function saveCmsPage(slug: string, data: { title: string; subtitle?: string; content: string; bannerUrl?: string }) {
+  const db = await getDb();
+  if (!db) return null;
+  const existing = await db.select().from(cmsPages).where(eq(cmsPages.slug, slug)).limit(1);
+  if (existing[0]) {
+    await db.update(cmsPages).set({
+      title: data.title,
+      subtitle: data.subtitle ?? null,
+      content: data.content,
+      bannerUrl: data.bannerUrl ?? null,
+      updatedAt: new Date(),
+    }).where(eq(cmsPages.slug, slug));
+  } else {
+    await db.insert(cmsPages).values({
+      slug,
+      title: data.title,
+      subtitle: data.subtitle ?? null,
+      content: data.content,
+      bannerUrl: data.bannerUrl ?? null,
+    });
+  }
+  return getCmsPage(slug);
+}
+
+export async function listCustomMenus(location?: string) {
+  const db = await getDb();
+  if (!db) return [];
+  if (location) {
+    return db.select().from(customMenus).where(eq(customMenus.location, location)).orderBy(customMenus.sortOrder);
+  }
+  return db.select().from(customMenus).orderBy(customMenus.sortOrder);
+}
+
+export async function saveCustomMenu(data: { id?: number; location: string; label: string; url: string; sortOrder?: number; isVisible?: number }) {
+  const db = await getDb();
+  if (!db) return null;
+  if (data.id) {
+    await db.update(customMenus).set({
+      location: data.location,
+      label: data.label,
+      url: data.url,
+      sortOrder: data.sortOrder ?? 0,
+      isVisible: data.isVisible ?? 1,
+    }).where(eq(customMenus.id, data.id));
+    return data.id;
+  } else {
+    const res = await db.insert(customMenus).values({
+      location: data.location,
+      label: data.label,
+      url: data.url,
+      sortOrder: data.sortOrder ?? 0,
+      isVisible: data.isVisible ?? 1,
+    });
+    return Number(res[0].insertId);
+  }
+}
+
+export async function deleteCustomMenu(id: number) {
+  const db = await getDb();
+  if (!db) return false;
+  await db.delete(customMenus).where(eq(customMenus.id, id));
+  return true;
 }
