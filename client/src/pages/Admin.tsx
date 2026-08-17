@@ -2390,12 +2390,21 @@ function AdminCmsManager() {
     }
   }, [pageData, selectedSlug]);
 
+  const [showPreview, setShowPreview] = useState(false);
+
   const saveMutation = trpc.admin.saveCmsPage.useMutation({
+    onMutate: () => {
+      toast.loading("Salvando alterações institucionais...", { id: "save-cms" });
+    },
     onSuccess: () => {
-      toast.success("Página institucional atualizada com sucesso!");
+      toast.dismiss("save-cms");
+      toast.success("Página institucional atualizada e publicada com sucesso!");
       void refetch();
     },
-    onError: (err) => toast.error(err.message || "Erro ao salvar página."),
+    onError: (err) => {
+      toast.dismiss("save-cms");
+      toast.error(err.message || "Erro ao salvar página. Verifique os campos.");
+    },
   });
 
   const uploadMutation = trpc.admin.uploadImage.useMutation();
@@ -2513,7 +2522,16 @@ function AdminCmsManager() {
               />
             </div>
 
-            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "1rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "1rem" }}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowPreview(true)}
+                style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem" }}
+              >
+                <Eye size={16} /> Pré-visualizar Página
+              </Button>
+
               <Button
                 onClick={() => saveMutation.mutate({ slug: selectedSlug, title, subtitle, content, bannerUrl })}
                 disabled={saveMutation.isPending || !title.trim() || !content.trim()}
@@ -2522,6 +2540,66 @@ function AdminCmsManager() {
                 {saveMutation.isPending ? "Salvando..." : "Publicar Alterações"}
               </Button>
             </div>
+
+            {/* Modal de Pré-visualização Institucional */}
+            {showPreview && (
+              <div style={{
+                position: "fixed",
+                inset: 0,
+                background: "rgba(0,0,0,0.6)",
+                zIndex: 9999,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "1rem"
+              }}>
+                <div style={{
+                  background: "#f6f3ee",
+                  borderRadius: "12px",
+                  maxWidth: "800px",
+                  width: "100%",
+                  maxHeight: "90vh",
+                  overflowY: "auto",
+                  padding: "2.5rem",
+                  boxShadow: "0 20px 40px rgba(0,0,0,0.25)",
+                  position: "relative",
+                  border: "1px solid #e5dfd3"
+                }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", borderBottom: "1px solid #e0dbd0", paddingBottom: "1rem" }}>
+                    <div>
+                      <span style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#b22222" }}>PRÉ-VISUALIZAÇÃO AO VIVO • {selectedSlug.toUpperCase()}</span>
+                      <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "#111", margin: 0 }}>Como os clientes verão a página</h3>
+                    </div>
+                    <Button variant="outline" onClick={() => setShowPreview(false)}>Fechar Preview</Button>
+                  </div>
+
+                  {bannerUrl && (
+                    <div style={{ width: "100%", height: "260px", borderRadius: "8px", overflow: "hidden", marginBottom: "1.5rem", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}>
+                      <img src={bannerUrl} alt="Banner preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    </div>
+                  )}
+
+                  <h1 style={{ fontSize: "2.25rem", fontWeight: 700, color: "#111", fontFamily: "serif", marginBottom: "0.5rem" }}>
+                    {title || "Sem título"}
+                  </h1>
+                  {subtitle && (
+                    <p style={{ fontSize: "1.1rem", color: "#555", fontStyle: "italic", marginBottom: "1.5rem" }}>
+                      {subtitle}
+                    </p>
+                  )}
+                  <div style={{ height: "1px", background: "#e0dbd0", width: "100%", margin: "1.5rem 0" }} />
+                  <div style={{ fontSize: "1.05rem", color: "#222", lineHeight: "1.8", whiteSpace: "pre-wrap" }}>
+                    {content || "Sem conteúdo inserido."}
+                  </div>
+
+                  <div style={{ marginTop: "2.5rem", display: "flex", justifyContent: "flex-end" }}>
+                    <Button onClick={() => setShowPreview(false)} style={{ background: "#111", color: "#fff" }}>
+                      Voltar ao Editor
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

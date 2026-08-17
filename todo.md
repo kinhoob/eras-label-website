@@ -482,3 +482,9 @@
 - [ ] Suavizar a animação de transição da barra de anúncio na Home.
 - [ ] Tornar as notificações flutuantes e do menu interativas para marcar como lidas ao clicar e redirecionar corretamente.
 - [ ] Executar testes Vitest, TypeScript, build e checkpoint.
+
+## Adicionar Pré-visualização CMS e Feedbacks Toast/Loading no Admin
+- [x] Adicionar modal/aba de pré-visualização ao CMS para testar conteúdo antes de salvar
+- [x] Padronizar estados de carregamento (loading), toast de sucesso e toast de erro em todas as ações do painel administrativo
+- [x] Validar testes unitários Vitest e build de produção
+- [x] Salvar checkpoint final com todas as validações concluídas
