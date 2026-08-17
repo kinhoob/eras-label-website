@@ -3729,3 +3729,21 @@ body {
   .settings-link-list button,
   .period-btn { transition: none; }
 }
+
+/* Rodapé oficial com informações públicas verificadas */
+.official-footer { background: #f6f3ee; color: #23221e; }
+.official-footer .footer-grid { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(180px, 1fr) minmax(220px, 1.25fr) minmax(220px, 1fr); gap: 44px; }
+.official-footer .footer-column { display: flex; flex-direction: column; align-items: flex-start; gap: 11px; min-width: 0; }
+.official-footer .footer-column strong { margin-bottom: 7px; color: #23221e; font-size: 10px; letter-spacing: .16em; }
+.official-footer .footer-column a { display: inline-flex; align-items: center; gap: 7px; line-height: 1.35; }
+.official-footer .footer-contact { gap: 13px; }
+.official-footer .footer-vip-link { margin-top: 5px; color: #b22222; }
+.official-footer .footer-vip-link:hover { color: #7f1717; }
+@media (max-width: 760px) {
+  .official-footer .footer-grid { grid-template-columns: 1fr 1fr; gap: 34px 24px; }
+  .official-footer .footer-contact { grid-column: 1 / -1; }
+}
+@media (max-width: 460px) {
+  .official-footer .footer-grid { grid-template-columns: 1fr; gap: 30px; }
+  .official-footer .footer-contact { grid-column: auto; }
+}

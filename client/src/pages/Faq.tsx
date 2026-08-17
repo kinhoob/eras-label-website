@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { PageTransitionHandler } from "@/components/PageTransition";
 import { playInteractionSound } from "@/lib/interaction-sound";
 import { ChevronDown, ArrowRight, ShieldCheck, Truck, RotateCcw, Sparkles } from "lucide-react";
+import OfficialFooter from "@/components/OfficialFooter";
 
 type FaqItem = {
   question: string;
@@ -19,32 +20,32 @@ const faqList: FaqItem[] = [
   {
     category: "Envios",
     question: "Qual é o prazo de postagem e como recebo o código de rastreio?",
-    answer: "As peças são preparadas e despachadas em até 2 dias úteis após a confirmação do pagamento. Assim que a etiqueta é gerada no Melhor Envio, o sistema envia automaticamente um e-mail com o código de rastreio, que também pode ser consultado a qualquer momento na nossa página de rastreio ou na área de cliente.",
+    answer: "Assim que o pedido é enviado, o código de rastreio chega no e-mail de cadastro feito na hora da compra. No nosso site, o código também pode ser acompanhado pela página de rastreamento quando estiver disponível.",
   },
   {
     category: "Envios",
     question: "Como funciona a política de frete grátis?",
-    answer: "Oferecemos frete grátis para compras acima do valor estipulado na barra de anúncio e nas regras vigentes de cada coleção. O valor exato para o seu CEP pode ser calculado diretamente no carrinho de compras ou na página de checkout.",
+    answer: "A página oficial informa frete grátis para todo o Brasil na modalidade SEDEX em pedidos acima de R$300,00. No checkout, o valor e a disponibilidade são calculados conforme o CEP e a configuração vigente da loja.",
   },
   {
     category: "Trocas",
     question: "Qual é o prazo e o procedimento para trocas e devoluções?",
-    answer: "Você tem até 7 dias corridos após o recebimento da encomenda para solicitar a troca ou devolução de qualquer peça, desde que esteja sem marcas de uso, com etiquetas originais e acompanhada da nota fiscal. O processo é iniciado diretamente através do nosso canal de atendimento por e-mail ou WhatsApp.",
+    answer: "Você tem até 7 dias úteis após o recebimento da encomenda para solicitar a troca ou devolução. O produto deve estar sem resquício de uso ou avaria, com lacres ou adesivos de segurança preservados. O processo começa pelo suporte via e-mail ou WhatsApp; na devolução, o reembolso ocorre em até 3 dias após a confirmação de recebimento e análise.",
   },
   {
     category: "Trocas",
-    question: "As peças possuem garantia contra defeitos de fabricação?",
-    answer: "Sim. Todas as peças passam por um rigoroso controle de qualidade em nosso ateliê. Caso identifique qualquer imperfeição de fabricação, a substituição é garantida sem custos adicionais de frete.",
+    question: "Quem paga o frete em uma troca?",
+    answer: "A marca paga o frete de retorno do produto para análise. Quando a troca é concluída e o novo produto é enviado, o cliente paga o frete de reenvio.",
   },
   {
     category: "Marca",
     question: "Qual é o propósito e a essência da Eras Label?",
-    answer: "A Eras Label é uma marca de streetwear autoral cujo propósito é criar roupas com significado, que dialoguem com a cultura, identidade e evolução das pessoas e da sociedade. O nosso lema é 'Reviver ou reinventar eras', resgatando e reinterpretando fases da história e da vida.",
+    answer: "A Eras Label nasceu para conectar passado, presente e futuro através do streetwear. Inspirados pela cultura, arte e identidade das ruas, criamos peças que contam histórias e carregam significados. Nosso conceito gira em torno de reviver e reinventar eras.",
   },
   {
     category: "Marca",
-    question: "Onde são produzidas as coleções da Eras Label?",
-    answer: "As nossas peças são desenvolvidas com processos de curadoria rigorosa, modelagem oversized exclusiva e tiragens limitadas, garantindo que cada lançamento carregue uma narrativa única e sustentável para a comunidade.",
+    question: "Como posso falar com a Eras Label sobre uma dúvida?",
+    answer: "Você pode falar com a Eras Label pelo e-mail theeraslabel@gmail.com ou pelo WhatsApp oficial disponível no rodapé. Também é possível iniciar o atendimento pela página de contato.",
   },
 ];
 
@@ -95,7 +96,7 @@ export default function FaqPage() {
           </div>
           <div className="bg-white border border-[#dfd7cc] p-6 rounded-lg">
             <RotateCcw size={22} className="text-[#c95139] mb-3" />
-            <strong className="block text-xs uppercase tracking-widest mb-1">7 Dias para Trocas</strong>
+            <strong className="block text-xs uppercase tracking-widest mb-1">7 Dias Úteis para Trocas</strong>
             <span className="text-xs text-[#554f46]">Processo simples e transparente.</span>
           </div>
           <div className="bg-white border border-[#dfd7cc] p-6 rounded-lg">
@@ -162,16 +163,7 @@ export default function FaqPage() {
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-[#dfd7cc] px-6 py-8 text-center text-xs text-[#8c8378] uppercase tracking-widest flex flex-col md:flex-row justify-between items-center max-w-4xl mx-auto w-full gap-4">
-        <span>© 2026 ERAS LABEL</span>
-        <div className="flex gap-6">
-          <Link href="/tracking" onClick={playClickSound} className="hover:text-[#c95139]">Rastreio</Link>
-          <Link href="/contact" onClick={() => playClickSound()} className="hover:text-[#c95139]">Contato</Link>
-          <Link href="/" onClick={playClickSound} className="hover:text-[#c95139]">Início</Link>
-        </div>
-        <span>Reviver. Reinventar Eras.</span>
-      </footer>
+      <OfficialFooter onInteraction={playClickSound} />
     </div>
   );
 }

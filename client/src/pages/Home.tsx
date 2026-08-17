@@ -41,6 +41,7 @@ import { saveCheckoutDraft } from "@/lib/checkout-draft";
 import { filterStorefrontProducts, getStorefrontFilterOptions } from "@/lib/storefront-filters";
 import { getSearchSuggestionText, searchStorefrontProducts, sortStorefrontProducts, type StorefrontSearchSort } from "@/lib/storefront-search";
 import { clearRecentSearches, loadRecentSearches, removeRecentSearch, saveRecentSearch } from "@/lib/recent-searches";
+import OfficialFooter from "@/components/OfficialFooter";
 
 type Category = "Todos" | "Camisetas" | "Bonés";
 type PriceRange = "all" | "under150" | "150to200" | "over200";
@@ -1175,20 +1176,7 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="site-footer official-footer">
-        <div className="footer-socials" aria-label="Redes sociais da Eras Label">
-          <a className="footer-social-link" href="https://www.instagram.com/eraslabel/" target="_blank" rel="noreferrer" aria-label="Instagram da Eras Label" title="Instagram">
-            <Instagram size={20} strokeWidth={1.7} aria-hidden="true" />
-          </a>
-          <a className="footer-social-link" href="https://www.tiktok.com/@eraslabel" target="_blank" rel="noreferrer" aria-label="TikTok da Eras Label" title="TikTok">
-            <TikTokIcon size={20} />
-          </a>
-        </div>
-        <div className="footer-column"><strong>PRINCIPAL</strong><Link href="/" onClick={() => playClick(soundsOn)}>Início</Link><a href="#shop" onClick={() => playClick(soundsOn)}>Produtos</a><div className="footer-collection-wrap"><button onClick={() => setCollectionsOpen((value) => !value)}>Coleções <ArrowDown size={12} /></button>{collectionsOpen && <div className="footer-collection-menu"><Link href="/collection/paradox">Paradox Collection</Link><Link href="/archive">Raízes 2025 S'1</Link></div>}</div><a href="#shop" onClick={() => { playClick(soundsOn); setCategory("Camisetas"); }}>Camisetas</a><a href="#shop" onClick={() => { playClick(soundsOn); setCategory("Bonés"); }}>Bonés</a></div>
-        <div className="footer-column"><strong>INFORMAÇÕES</strong><Link href="/contact" onClick={() => playClick(soundsOn)}>Contato</Link><Link href="/contact" onClick={() => playClick(soundsOn)}>Envios</Link><Link href="/contact" onClick={() => playClick(soundsOn)}>Política de Privacidade</Link><Link href="/manifesto" onClick={() => playClick(soundsOn)}>Quem Somos</Link><Link href="/contact" onClick={() => playClick(soundsOn)}>Trocas e Devoluções</Link></div>
-        <div className="footer-column footer-contact"><strong>FALE COM A ERAS</strong><a href="https://wa.me/5500000000000" target="_blank" rel="noreferrer">WhatsApp ↗</a><a href="mailto:atelie@eraslabel.com">atelie@eraslabel.com</a><span>São Paulo · Brasil</span><span>Seg–Sex · 10h às 18h</span></div>
-        <div className="footer-bottom"><span>© 2026 ERAS LABEL</span><span>REVIVER. REINVENTAR ERAS.</span><span>DESENVOLVIDO COM INTENÇÃO</span></div>
-      </footer>
+      <OfficialFooter onInteraction={() => playClick(soundsOn)} />
 
       {/* Side Menu identical to Lovable with direct routing to Manifesto and Events */}
       {isMenuOpen && (

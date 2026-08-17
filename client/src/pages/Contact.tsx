@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import OfficialFooter from "@/components/OfficialFooter";
 
 export default function ContactPage() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -80,6 +81,8 @@ export default function ContactPage() {
           </form>
         )}
       </main>
+
+      <OfficialFooter onInteraction={playClickSound} />
 
       {/* Side Menu Drawer */}
       {menuOpen && (

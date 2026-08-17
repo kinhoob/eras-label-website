@@ -20,6 +20,10 @@ const AccountPage = lazy(() => import("@/pages/Account"));
 const CheckoutPage = lazy(() => import("@/pages/Checkout"));
 const TrackingPage = lazy(() => import("./pages/Tracking"));
 const FaqPage = lazy(() => import("./pages/Faq"));
+const PrivacyPage = lazy(() => import("./pages/Privacy"));
+const ReturnsPage = lazy(() => import("./pages/Returns"));
+const ShippingPage = lazy(() => import("./pages/Shipping"));
+const AboutPage = lazy(() => import("./pages/About"));
 
 function RouteLoading() {
   return (
@@ -59,6 +63,10 @@ function Router() {
         <Route path="/checkout" component={CheckoutPage} />
         <Route path="/tracking" component={TrackingPage} />
         <Route path="/faq" component={FaqPage} />
+        <Route path="/privacy" component={PrivacyPage} />
+        <Route path="/returns" component={ReturnsPage} />
+        <Route path="/shipping" component={ShippingPage} />
+        <Route path="/about" component={AboutPage} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>

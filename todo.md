@@ -395,3 +395,14 @@
 - [x] Adicionar opções nas configurações para selecionar entre três toques de notificação diferentes (Clássico, Suave e Alerta Digital).
 - [x] Criar uma aba ou modal de Histórico de Notificações no painel para rever todos os alertas antigos já marcados como lidos.
 - [x] Integrar a reprodução do som escolhido com Web Audio API respeitando o estado de silêncio e as preferências do utilizador.
+
+
+## Rodapé e páginas oficiais da marca (2026-08-17)
+- [x] Consultar o site oficial da Eras Label e registrar contacto, WhatsApp, redes sociais, privacidade, trocas, envios e institucional em `docs/official-brand-data.md`.
+- [x] Centralizar os dados públicos oficiais em `client/src/lib/official-brand.ts` e eliminar placeholders de contacto do rodapé.
+- [x] Substituir o rodapé da loja por um componente reutilizável com links oficiais de contacto, privacidade, trocas, envios, FAQ, rastreio e grupo VIP.
+- [x] Criar e registrar as páginas públicas `/privacy`, `/returns`, `/shipping` e `/about` com conteúdo alinhado às páginas oficiais consultadas.
+- [x] Aplicar o rodapé oficial também em Home, FAQ, Contact, Tracking e páginas legais, com responsividade desktop/mobile.
+- [x] Atualizar a FAQ com o prazo oficial de 7 dias úteis para trocas.
+- [x] Criar testes Vitest para contactos, links sociais, políticas oficiais e ausência dos valores placeholder.
+- [x] Executar TypeScript, 126 testes Vitest e build de produção com sucesso; validar o rodapé visualmente em desktop e mobile.

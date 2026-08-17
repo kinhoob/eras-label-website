@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
+import OfficialFooter from "@/components/OfficialFooter";
 import { Truck, Package, Search, Copy, Check, ExternalLink, Clock, CheckCircle2, ShieldCheck, ArrowRight } from "lucide-react";
 
 export default function TrackingPage() {
@@ -185,10 +186,7 @@ export default function TrackingPage() {
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-[#dfd7cc] px-6 py-6 text-center text-xs text-[#8c8378] uppercase tracking-widest">
-        Eras Label · Todos os direitos reservados
-      </footer>
+      <OfficialFooter onInteraction={playClickSound} />
     </div>
   );
 }
