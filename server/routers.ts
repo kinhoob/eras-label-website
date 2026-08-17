@@ -200,19 +200,28 @@ export const appRouter = router({
       if (cleanCep.length !== 8) {
         throw new Error("CEP inválido");
       }
-      // Frete grátis se subtotal >= freeShippingThreshold
+      // Frete grátis se subtotal >= freeShippingThreshold. Ainda devolvemos uma opção
+      // explícita para que o cliente possa visualizá-la e selecioná-la no checkout.
       if (input.subtotal >= config.freeShippingThreshold) {
-        return { cost: 0, service: "Frete Grátis Eras", deadline: "3 a 6 dias úteis", free: true };
+        const options = [{ id: "free-eras", service: "Frete Grátis Eras", cost: 0, deadline: "3 a 6 dias úteis", free: true }];
+        return { ...options[0], options };
       }
-      // Região simulada por CEP (ex: Sudeste mais barato, Norte/Nordeste proporcional)
+      // Região simulada por CEP (ex: Sudeste mais barato, Norte/Nordeste proporcional).
+      // O formato com options permite que a UI apresente diferentes serviços sem
+      // obrigar o cliente a rolar ou sair da sacola para escolher o frete.
       const firstDigit = cleanCep.charAt(0);
       let baseCost = 25.0;
       if (["0", "1", "2"].includes(firstDigit)) baseCost = 20.0; // SP/RJ/ES
       else if (["3", "4"].includes(firstDigit)) baseCost = 25.0; // MG/BA/SE
       else if (["5", "6", "7"].includes(firstDigit)) baseCost = 32.0; // NE/N
       else baseCost = 28.0; // Sul/CO
-
-      return { cost: baseCost, service: "SEDEX / PAC Expresso", deadline: "4 a 8 dias úteis", free: false };
+      const options = [
+        { id: "pac", service: "PAC", cost: Math.max(0, baseCost - 4), deadline: "6 a 10 dias úteis", free: false },
+        { id: "sedex", service: "SEDEX", cost: baseCost + 8, deadline: "3 a 6 dias úteis", free: false },
+        { id: "jadlog-economico", service: "Jadlog Econômico", cost: Math.max(0, baseCost - 2), deadline: "5 a 9 dias úteis", free: false },
+        { id: "jadlog-rapido", service: "Jadlog Rápido", cost: baseCost + 4, deadline: "3 a 7 dias úteis", free: false },
+      ];
+      return { ...options[0], options };
     }),
   }),
   newsletter: router({

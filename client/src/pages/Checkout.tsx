@@ -144,6 +144,7 @@ export default function CheckoutPage() {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<CheckoutPaymentMethod>(() => loadCheckoutDraft().selectedPaymentMethod ?? "pix");
   const [selectedInstallments, setSelectedInstallments] = useState(1);
   const [cep, setCep] = useState(() => loadCheckoutDraft().shippingCep ?? "");
+  const [shippingMethod, setShippingMethod] = useState(() => loadCheckoutDraft().shippingMethod ?? "");
   const [orderNumber] = useState(() => loadCheckoutDraft().orderNumber || createOrderReference());
   const [addressFields, setAddressFields] = useState({ street: "", neighborhood: "", city: "", state: "" });
   const [cepLookupStatus, setCepLookupStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -169,7 +170,9 @@ export default function CheckoutPage() {
   const subtotal = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.quantity, 0), [cart]);
   const couponValidationQuery = trpc.coupons.validate.useQuery({ code: coupon.trim() || "ERAS10", subtotal }, { enabled: false });
   const discount = couponApplied ? subtotal * (couponDiscountRate / 100) : 0;
-  const shippingCost = shippingQuery.data?.free ? 0 : (shippingQuery.data?.cost ?? 0);
+  const shippingOptions = shippingQuery.data?.options ?? (shippingQuery.data ? [{ id: "default", service: shippingQuery.data.service, cost: shippingQuery.data.cost, deadline: shippingQuery.data.deadline, free: shippingQuery.data.free }] : []);
+  const selectedShippingOption = shippingOptions.find((option) => option.service === shippingMethod) ?? shippingOptions[0];
+  const shippingCost = selectedShippingOption?.free ? 0 : Number(selectedShippingOption?.cost ?? 0);
   const totalBeforePayment = Math.max(0, subtotal - discount + shippingCost);
   const pixSavings = selectedPaymentMethod === "pix" ? subtotal * (pixDiscountPercent / 100) : 0;
   const cardTotal = selectedPaymentMethod === "credit_card" ? calculateInstallmentTotal(totalBeforePayment, selectedInstallments, installmentInterestRate) : totalBeforePayment;
@@ -181,6 +184,11 @@ export default function CheckoutPage() {
   }, [maxInstallments]);
 
   useEffect(() => {
+    if (!shippingOptions.length) return;
+    setShippingMethod((current) => shippingOptions.some((option) => option.service === current) ? current : (shippingOptions[0]?.service ?? ""));
+  }, [shippingQuery.data]);
+
+  useEffect(() => {
     saveCart(cart);
   }, [cart]);
 
@@ -190,9 +198,10 @@ export default function CheckoutPage() {
       couponApplied,
       selectedPaymentMethod,
       shippingCep: cep,
+      shippingMethod,
       orderNumber,
     });
-  }, [cep, coupon, couponApplied, selectedPaymentMethod]);
+  }, [cep, coupon, couponApplied, selectedPaymentMethod, shippingMethod]);
 
   useEffect(() => {
     const normalizedCep = normalizeCep(cep);
@@ -333,6 +342,7 @@ export default function CheckoutPage() {
       items: cart.map((item) => ({ productId: item.id, name: item.name, size: item.size, color: item.color ?? "Preto", quantity: item.quantity, price: item.price })),
       subtotal,
       shippingCost,
+      shippingMethod: selectedShippingOption?.service,
       discount: discount + pixSavings,
       total,
       paymentMethod: selectedPaymentMethod,
@@ -351,7 +361,7 @@ export default function CheckoutPage() {
           discount: discount + pixSavings,
           shippingCost,
           paymentMethod: selectedPaymentMethod,
-          estimatedDelivery: shippingQuery.data?.deadline ?? "5 a 7 dias úteis",
+          estimatedDelivery: selectedShippingOption?.deadline ?? "5 a 7 dias úteis",
           total,
           paymentStatus: result.paymentStatus || "pending",
           installments: selectedPaymentMethod === "credit_card" ? selectedInstallments : undefined,

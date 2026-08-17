@@ -612,3 +612,15 @@
 - [x] Validar end-to-end o fluxo produto → sacola → checkout e corrigir regressões visuais ou funcionais.
 - [x] Executar testes Vitest, TypeScript, build e screenshots responsivos antes do checkpoint final.
 - [x] Salvar checkpoint final das correções de UX e design.
+
+## Refinamento da sacola e navbar — 2026-08-17
+- [x] Corrigir o erro React de atualização de PublicGlobalNav durante a renderização de PublicCartDrawer.
+- [x] Reorganizar a sacola para eliminar o scroll interno desnecessário e manter as informações principais visíveis no viewport.
+- [x] Redesenhar os controles de quantidade com sinais de + e - mais claros, equilibrados e acessíveis.
+- [x] Redesenhar o campo de cupom com placeholder "Insira seu cupom" e confirmação textual em vermelho sobre o fundo da sacola.
+- [x] Redesenhar o campo de CEP com cálculo de frete e opções de transportadora exibidas em seleção tipo checkbox.
+- [x] Exibir Pix e cartão lado a lado e informar parcelamento em até 2x sem juros.
+- [x] Refinar a hierarquia visual de subtotal, frete, descontos e valor final.
+- [x] Ajustar a navbar desktop para se aproximar da referência oficial da Eras Label sem prejudicar o mobile.
+- [x] Validar sacola, checkout, frete, pagamento, navbar e ausência do erro no console com Vitest, TypeScript, build e screenshots.
+- [x] Salvar checkpoint final desta rodada.

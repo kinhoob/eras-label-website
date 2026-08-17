@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { ArrowRight, Menu, ShoppingBag } from "lucide-react";
+import { ArrowRight, Menu, Search, ShoppingBag, UserRound } from "lucide-react";
 import { CART_STORAGE_KEY, loadCart } from "@/lib/cart-storage";
 import { SidebarMenu } from "@/components/SidebarMenu";
 import { trpc } from "@/lib/trpc";
@@ -20,8 +20,10 @@ export default function PublicGlobalNav() {
   const extraCategories = getExtraPublicCategories(publicCategories);
 
   useEffect(() => {
-    const syncCart = () => setCartCount(loadCart<{ quantity: number }>().reduce((sum, item) => sum + item.quantity, 0));
-    syncCart();
+    const syncCart = () => {
+      const nextCount = loadCart<{ quantity: number }>().reduce((sum, item) => sum + item.quantity, 0);
+      setCartCount((current) => current === nextCount ? current : nextCount);
+    };
     window.addEventListener("storage", syncCart);
     window.addEventListener("eras-cart-updated", syncCart);
     return () => {
@@ -57,12 +59,30 @@ export default function PublicGlobalNav() {
 
   return (
     <>
+      <div className="public-global-announcement" role="status">5% OFF PARA PAGAMENTOS NO PIX</div>
       <div className={`public-global-nav ${isHome ? "public-global-nav--home" : ""} ${isVisible ? "is-visible" : "is-hidden"}`} role="banner">
-        <button className="public-global-menu-trigger" type="button" onClick={() => setIsMenuOpen(true)} aria-label="Abrir menu público">
-          <Menu size={18} strokeWidth={1.7} />
-          <span>MENU</span>
-        </button>
+        <div className="public-global-left-tools">
+          <button className="public-global-menu-trigger" type="button" onClick={() => setIsMenuOpen(true)} aria-label="Abrir menu público">
+            <Menu size={18} strokeWidth={1.7} />
+            <span>MENU</span>
+          </button>
+          <Link href="/catalog" className="public-global-search" aria-label="Pesquisar produtos no catálogo">
+            <Search size={16} strokeWidth={1.7} />
+            <span>O que você está buscando?</span>
+          </Link>
+        </div>
         <Link href="/" className="public-global-brand" aria-label="Voltar para a loja Eras Label">ERAS<span>.</span></Link>
+        <div className="public-global-right-tools">
+          <Link href="/account" className="public-global-account" aria-label="Abrir minha conta">
+            <UserRound size={17} strokeWidth={1.7} />
+          </Link>
+          <button type="button" className="public-global-bag" aria-label={`Abrir sacola${cartCount ? ` com ${cartCount} itens` : " vazia"}`} onClick={() => window.dispatchEvent(new Event("eras-open-cart"))}>
+            <ShoppingBag size={16} strokeWidth={1.7} />
+            <span>SACOLA</span>
+            {cartCount > 0 && <strong>{cartCount}</strong>}
+            <ArrowRight size={14} aria-hidden="true" />
+          </button>
+        </div>
         <nav className="public-global-links" aria-label="Navegação da loja">
           <Link href="/" className={location === "/" ? "is-active" : ""}>Início</Link>
           <Link href="/catalog" className={location === "/catalog" ? "is-active" : ""}>Produtos</Link>
@@ -70,12 +90,6 @@ export default function PublicGlobalNav() {
           <Link href={publicCategoryHref(bonesCategory, "/category/bones")} className={location.includes("bone") ? "is-active" : ""}>Bonés</Link>
           {extraCategories.map((category) => <Link key={category.id} href={publicCategoryHref(category, "/catalog")} className={location.includes(category.slug) ? "is-active" : ""}>{category.name}</Link>)}
         </nav>
-        <button type="button" className="public-global-bag" aria-label={`Abrir sacola${cartCount ? ` com ${cartCount} itens` : " vazia"}`} onClick={() => window.dispatchEvent(new Event("eras-open-cart"))}>
-          <ShoppingBag size={16} strokeWidth={1.7} />
-          <span>SACOLA</span>
-          {cartCount > 0 && <strong>{cartCount}</strong>}
-          <ArrowRight size={14} aria-hidden="true" />
-        </button>
       </div>
       <SidebarMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} onPlaySound={() => undefined} />
     </>

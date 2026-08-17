@@ -7,6 +7,7 @@ export type CheckoutDraft = {
   couponApplied: boolean;
   selectedPaymentMethod: CheckoutPaymentMethod;
   shippingCep: string;
+  shippingMethod?: string;
   orderNumber?: string;
 };
 
@@ -32,11 +33,13 @@ export function loadCheckoutDraft(storage?: StorageLike): Partial<CheckoutDraft>
     const parsed: unknown = JSON.parse(raw);
     if (!parsed || typeof parsed !== "object") return {};
     const draft = parsed as Record<string, unknown>;
+    const shippingMethod = typeof draft.shippingMethod === "string" ? draft.shippingMethod.slice(0, 120) : "";
     return {
       coupon: typeof draft.coupon === "string" ? draft.coupon : "",
       couponApplied: draft.couponApplied === true,
       selectedPaymentMethod: draft.selectedPaymentMethod === "credit_card" ? "credit_card" : "pix",
       shippingCep: typeof draft.shippingCep === "string" ? draft.shippingCep.replace(/\D/g, "").slice(0, 8) : "",
+      ...(shippingMethod ? { shippingMethod } : {}),
       orderNumber: typeof draft.orderNumber === "string" && /^ER-\d{4}-\d{4,12}$/.test(draft.orderNumber) ? draft.orderNumber : "",
     };
   } catch {
