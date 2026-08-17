@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { filterOrdersWithReadyLabels } from "@/lib/order-label-filter";
-import { Download, Eye, FileText, ExternalLink, Truck, Package, LoaderCircle, CreditCard, Users, Check, Minus, Files } from "lucide-react";
+import { Download, Eye, FileText, ExternalLink, Truck, Package, LoaderCircle, CreditCard, Users, Check, Minus, Files, X } from "lucide-react";
 
 export default function AdminSalesSection() {
   const { data: orders = [], isLoading, refetch } = trpc.admin.listOrders.useQuery();
@@ -30,7 +30,12 @@ export default function AdminSalesSection() {
     },
     onError: (err) => {
       setCalculatingShipping(false);
-      toast.error("Erro ao cotar frete no Melhor Envio: " + err.message);
+      const msg = err.message || "";
+      if (msg.includes("401") || msg.includes("Unauthenticated")) {
+        toast.error("Token do Melhor Envio inválido ou não configurado para produção. Configure o token em Configurações > Secrets.");
+      } else {
+        toast.error("Erro ao cotar frete no Melhor Envio: " + msg);
+      }
     },
   });
 
@@ -281,7 +286,13 @@ export default function AdminSalesSection() {
                 <span className="section-kicker">DETALHES DO PEDIDO</span>
                 <h3 style={{ fontSize: "1.25rem", fontWeight: 700 }}>{selectedOrder.orderNumber}</h3>
               </div>
-              <Button variant="outline" onClick={() => { setSelectedOrder(null); setShippingQuotes([]); setLabelPdfUrl(null); }}>Fechar</Button>
+              <button
+                onClick={() => { setSelectedOrder(null); setShippingQuotes([]); setLabelPdfUrl(null); }}
+                style={{ background: "transparent", border: "1px solid var(--border)", borderRadius: "50%", width: "36px", height: "36px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--foreground)" }}
+                title="Fechar"
+              >
+                <X size={18} />
+              </button>
             </div>
 
             <div className="admin-sales-summary-grid" style={{ marginBottom: "1.5rem" }}>

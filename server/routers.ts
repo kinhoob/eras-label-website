@@ -617,18 +617,19 @@ export const appRouter = router({
       }
 
       try {
-        const prompt = `Analise estritamente com base nos dados reais de e-commerce da marca de streetwear Eras Label para o período selecionado (${days} dias):
-- Total de Pedidos/Vendas: ${analytics.summary.sales}
-- Receita Total: R$ ${analytics.summary.revenue.toFixed(2)}
-- Ticket Médio: R$ ${analytics.summary.averageTicket.toFixed(2)}
-- Taxa de Conversão: ${analytics.summary.conversionRate}%
-- Desempenho por Peça e Velocidade de Saída Real: ${analytics.topProducts.map((p: any) => `${p.name} (${p.category}, Estoque: ${p.stock} un., Unidades Vendidas: ${p.unitsSold}, Velocidade Real: ${p.velocity}/dia)`).join("; ") || "Nenhum item vendido no período"}
-- Peças com Estoque Crítico (< 5 un.): ${lowStockList.map((p: any) => `${p.name} (${p.stock} un.)`).join(", ") || "Nenhum no momento"}
-
-Por favor, forneça um resumo executivo inteligente e sofisticado em português (estilo consultoria de moda streetwear) estruturado em duas partes:
-1. Resumo de Desempenho e Tendências de Vendas (analisando rigorosamente os dados reais fornecidos).
-2. Previsão de Risco de Ruptura e Esgotamento (cruzando exclusivamente a velocidade de saída real e o estoque atual, projetando quais produtos esgotarão nos próximos dias com base estritamente nos números).
-Seja objetivo, elegante, verdadeiro aos dados e direto ao ponto. Não invente números.`;
+        const topProductsStr = analytics.topProducts.map((p: any) => p.name + " (" + p.category + ", Estoque: " + p.stock + " un., Unidades Vendidas: " + p.unitsSold + ", Velocidade Real: " + p.velocity + "/dia)").join("; ") || "Nenhum item vendido no período";
+        const lowStockStr = lowStockList.map((p: any) => p.name + " (" + p.stock + " un.)").join(", ") || "Nenhum no momento";
+        const prompt = "Analise estritamente com base nos dados reais de e-commerce da marca de streetwear Eras Label para o período selecionado (" + days + " dias):\n" +
+          "- Total de Pedidos/Vendas: " + analytics.summary.sales + "\n" +
+          "- Receita Total: R$ " + analytics.summary.revenue.toFixed(2) + "\n" +
+          "- Ticket Médio: R$ " + analytics.summary.averageTicket.toFixed(2) + "\n" +
+          "- Taxa de Conversão: " + analytics.summary.conversionRate + "%\n" +
+          "- Desempenho por Peça e Velocidade de Saída Real: " + topProductsStr + "\n" +
+          "- Peças com Estoque Crítico (< 5 un.): " + lowStockStr + "\n\n" +
+          "Por favor, forneça um resumo executivo inteligente e sofisticado em português (estilo consultoria de moda streetwear) estruturado em duas partes:\n" +
+          "1. Resumo de Desempenho e Tendências de Vendas (analisando rigorosamente os dados reais fornecidos).\n" +
+          "2. Previsão de Risco de Ruptura e Esgotamento (cruzando exclusivamente a velocidade de saída real e o estoque atual, projetando quais produtos esgotarão nos próximos dias com base estritamente nos números).\n" +
+          "Seja objetivo, elegante, verdadeiro aos dados e direto ao ponto. Não invente números.";
 
         const res = await invokeLLM({
           messages: [

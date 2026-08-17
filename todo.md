@@ -497,5 +497,11 @@
 - [x] Executar testes Vitest, TypeScript, build e checkpoint final
 
 ## Funcionalidade de Limpar Notificações
-- [ ] Adicionar botão de limpar histórico de notificações no painel administrativo
-- [ ] Validar comportamento de confirmação, estado vazio e persistência local/servidor
+- [x] Adicionar botão de limpar histórico de notificações no painel administrativo
+- [x] Validar comportamento de confirmação, estado vazio e persistência local/servidor
+
+## Correção de Cotação Melhor Envio e Modais (2026-08-17)
+- [ ] Tratar erro 401 do Melhor Envio no painel com mensagem orientando a verificar as credenciais reais de produção
+- [ ] Centralizar modais na tela (viewport) com posicionamento fixo/flex e scroll interno para evitar rolagem da página
+- [ ] Substituir botões textuais de fechar por um botão X acessível e elegante em todos os modais do painel
+- [ ] Validar com testes Vitest e build de produção
