@@ -403,3 +403,10 @@
 - [x] Atualizar a FAQ com o prazo oficial de 7 dias úteis para trocas.
 - [x] Criar testes Vitest para contactos, links sociais, políticas oficiais e ausência dos valores placeholder.
 - [x] Executar TypeScript, 126 testes Vitest e build de produção com sucesso; validar o rodapé visualmente em desktop e mobile.
+
+
+## Backgrounds animados e movimento premium (2026-08-17)
+- [x] Auditar os backgrounds atuais da Home, catálogo e páginas públicas para definir pontos de animação sem competir com produtos.
+- [x] Implementar camadas de background animadas com gradientes, textura e profundidade usando CSS/React performáticos.
+- [x] Garantir contraste, responsividade e suporte a `prefers-reduced-motion`, com fallback estático acessível.
+- [x] Validar a experiência em desktop/mobile, executar Vitest (131 testes aprovados), TypeScript e build, e salvar checkpoint.

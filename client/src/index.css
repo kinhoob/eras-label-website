@@ -3747,3 +3747,181 @@ body {
   .official-footer .footer-grid { grid-template-columns: 1fr; gap: 30px; }
   .official-footer .footer-contact { grid-column: auto; }
 }
+
+
+/* Camadas atmosféricas premium — movimento sutil, sem competir com o catálogo. */
+.home-hero,
+.vip-home-banner > a,
+.highlights-section,
+.shop-section {
+  isolation: isolate;
+}
+
+.home-hero::before,
+.home-hero::after,
+.vip-home-banner > a::before,
+.vip-home-banner > a::after,
+.highlights-section::before,
+.highlights-section::after,
+.shop-section::before,
+.shop-section::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.home-hero::before {
+  z-index: 1;
+  inset: -32%;
+  background:
+    radial-gradient(circle at 18% 38%, rgba(178, 34, 34, .32) 0, rgba(178, 34, 34, 0) 28%),
+    radial-gradient(circle at 76% 24%, rgba(245, 210, 175, .18) 0, rgba(245, 210, 175, 0) 24%),
+    radial-gradient(circle at 58% 86%, rgba(255, 255, 255, .08) 0, rgba(255, 255, 255, 0) 26%);
+  filter: blur(22px);
+  opacity: .7;
+  mix-blend-mode: screen;
+  transform: translate3d(-2%, -1%, 0) rotate(-2deg) scale(1.04);
+  animation: eras-hero-atmosphere 16s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+}
+
+.home-hero::after {
+  z-index: 1;
+  inset: -10%;
+  background: linear-gradient(112deg, transparent 0 42%, rgba(255,255,255,.10) 49%, transparent 57% 100%);
+  opacity: .32;
+  transform: translate3d(-12%, 0, 0) skewX(-8deg);
+  animation: eras-hero-sheen 12s cubic-bezier(.23,1,.32,1) infinite;
+  will-change: transform, opacity;
+}
+
+.home-hero-media { z-index: 0; }
+.home-hero-overlay { z-index: 2; }
+.home-hero-content { z-index: 3; }
+.home-hero-controls { z-index: 4; }
+
+.highlights-section,
+.shop-section {
+  position: relative;
+  overflow: hidden;
+}
+
+.highlights-section::before,
+.shop-section::before {
+  z-index: 0;
+  inset: -24% -16% auto;
+  height: 80%;
+  background:
+    radial-gradient(circle at 20% 28%, rgba(178, 34, 34, .13) 0, rgba(178, 34, 34, 0) 30%),
+    radial-gradient(circle at 80% 18%, rgba(222, 193, 166, .24) 0, rgba(222, 193, 166, 0) 33%);
+  filter: blur(16px);
+  opacity: .82;
+  transform: translate3d(-3%, -2%, 0) scale(1.08);
+  animation: eras-section-glow 19s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+}
+
+.highlights-section::after,
+.shop-section::after {
+  z-index: 0;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(52, 45, 39, .035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(52, 45, 39, .035) 1px, transparent 1px);
+  background-size: 42px 42px;
+  opacity: .34;
+  transform: translate3d(0, 0, 0) rotate(-1deg) scale(1.06);
+  animation: eras-grid-drift 24s linear infinite;
+  will-change: transform;
+}
+
+.highlights-section > *,
+.shop-section > * {
+  position: relative;
+  z-index: 1;
+}
+
+.vip-home-banner > a::before {
+  z-index: 1;
+  inset: -28%;
+  background:
+    radial-gradient(circle at 22% 42%, rgba(178, 34, 34, .28) 0, rgba(178, 34, 34, 0) 26%),
+    radial-gradient(circle at 78% 62%, rgba(244, 206, 168, .16) 0, rgba(244, 206, 168, 0) 24%);
+  filter: blur(22px);
+  opacity: .78;
+  mix-blend-mode: screen;
+  transform: translate3d(2%, -2%, 0) scale(1.05);
+  animation: eras-vip-atmosphere 15s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+}
+
+.vip-home-banner > a::after {
+  z-index: 2;
+  inset: -10% 20%;
+  background: linear-gradient(112deg, transparent 0 42%, rgba(255,255,255,.13) 49%, transparent 57% 100%);
+  opacity: .26;
+  transform: translate3d(-42%, 0, 0) skewX(-9deg);
+  animation: eras-vip-sheen 14s cubic-bezier(.23,1,.32,1) infinite;
+  will-change: transform, opacity;
+}
+
+.vip-home-media { z-index: 0; }
+.vip-home-overlay { z-index: 3; }
+.vip-home-content { z-index: 4; }
+
+@keyframes eras-hero-atmosphere {
+  0% { opacity: .5; transform: translate3d(-2%, -1%, 0) rotate(-2deg) scale(1.04); }
+  48% { opacity: .82; transform: translate3d(4%, 3%, 0) rotate(1deg) scale(1.1); }
+  100% { opacity: .62; transform: translate3d(-1%, 6%, 0) rotate(3deg) scale(1.06); }
+}
+
+@keyframes eras-hero-sheen {
+  0%, 45% { opacity: 0; transform: translate3d(-34%, 0, 0) skewX(-8deg); }
+  58% { opacity: .35; }
+  72%, 100% { opacity: 0; transform: translate3d(58%, 0, 0) skewX(-8deg); }
+}
+
+@keyframes eras-section-glow {
+  0% { opacity: .62; transform: translate3d(-3%, -2%, 0) scale(1.08); }
+  100% { opacity: .92; transform: translate3d(5%, 5%, 0) scale(1.16); }
+}
+
+@keyframes eras-grid-drift {
+  0% { transform: translate3d(0, 0, 0) rotate(-1deg) scale(1.06); }
+  50% { transform: translate3d(18px, 10px, 0) rotate(0deg) scale(1.06); }
+  100% { transform: translate3d(0, 0, 0) rotate(-1deg) scale(1.06); }
+}
+
+@keyframes eras-vip-atmosphere {
+  0% { opacity: .54; transform: translate3d(2%, -2%, 0) scale(1.05); }
+  100% { opacity: .9; transform: translate3d(-4%, 5%, 0) scale(1.13); }
+}
+
+@keyframes eras-vip-sheen {
+  0%, 42% { opacity: 0; transform: translate3d(-42%, 0, 0) skewX(-9deg); }
+  56% { opacity: .3; }
+  72%, 100% { opacity: 0; transform: translate3d(58%, 0, 0) skewX(-9deg); }
+}
+
+@media (max-width: 760px) {
+  .home-hero::before,
+  .vip-home-banner > a::before { filter: blur(18px); opacity: .62; }
+  .home-hero::after,
+  .vip-home-banner > a::after { opacity: .18; }
+  .highlights-section::after,
+  .shop-section::after { background-size: 34px 34px; opacity: .22; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-hero::before,
+  .home-hero::after,
+  .highlights-section::before,
+  .highlights-section::after,
+  .shop-section::before,
+  .shop-section::after,
+  .vip-home-banner > a::before,
+  .vip-home-banner > a::after {
+    animation: none;
+    transform: none;
+  }
+}
