@@ -459,4 +459,4 @@
 - [x] 4. **Criação da Rota de Catálogo e Correção do Erro 404**
 - [x] 5. **Correção dos Links dos Cards de Produtos**
 - [x] 6. **Dinamização do Rodapé Oficial**
-- [ ] 7. **Consistência do Rastreio e Formulário Mobile**
+- [x] 7. **Consistência do Rastreio e Formulário Mobile**
