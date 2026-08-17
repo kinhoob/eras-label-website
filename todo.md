@@ -597,11 +597,11 @@
 - [x] Validar o drawer em desktop/mobile, executar Vitest e build e salvar checkpoint.
 
 ## Nova Solicitação: Deslizamento do Carrinho e Cores/Tamanhos no Admin
-- [ ] Adicionar animação suave de deslizamento (slide-in/slide-out) no carrinho global
-- [ ] Criar estado vazio amigável e refinado no carrinho global com CTA para o catálogo
-- [ ] Ampliar o painel administrativo (Inventário / Produtos) para gerenciar variações de tamanho e cor para camisetas e vestuário
-- [ ] Atualizar persistência backend e testes unitários Vitest
-- [ ] Executar build de produção e guardar checkpoint final
+- [x] Adicionar animação suave de deslizamento (slide-in/slide-out) no carrinho global
+- [x] Criar estado vazio amigável e refinado no carrinho global com CTA para o catálogo
+- [x] Ampliar o painel administrativo (Inventário / Produtos) para gerenciar variações de tamanho e cor para camisetas e vestuário
+- [x] Atualizar persistência backend e testes unitários Vitest
+- [x] Executar build de produção e guardar checkpoint final
 
 ## Correções de UX e design solicitadas — 2026-08-17
 - [x] Corrigir a sobreposição da navbar pública sobre o botão X e ajustar o tamanho/área de toque do X no mobile.

@@ -30,6 +30,7 @@ function formatPrice(value: number) {
 export default function PublicCartDrawer() {
   const [location] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const [cart, setCart] = useState<PublicCartLine[]>(() => loadCart<PublicCartLine>());
   const [coupon, setCoupon] = useState("");
   const [couponApplied, setCouponApplied] = useState<boolean | null>(null);
@@ -66,6 +67,16 @@ export default function PublicCartDrawer() {
     }
     setSelectedShippingId((current) => shippingOptions.some((option) => option.id === current) ? current : (shippingOptions[0]?.id ?? ""));
   }, [shippingData]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsMounted(true);
+      return;
+    }
+    if (!isMounted) return;
+    const timeoutId = window.setTimeout(() => setIsMounted(false), 320);
+    return () => window.clearTimeout(timeoutId);
+  }, [isOpen, isMounted]);
 
   useEffect(() => {
     if (location.startsWith("/admin") || location.startsWith("/auth")) {
@@ -176,11 +187,11 @@ export default function PublicCartDrawer() {
     window.setTimeout(() => window.location.assign("/checkout"), 0);
   }
 
-  if (location.startsWith("/admin") || location.startsWith("/auth") || !isOpen) return null;
+  if (location.startsWith("/admin") || location.startsWith("/auth") || !isMounted) return null;
 
   return (
-    <div className="overlay public-cart-overlay" onClick={() => setIsOpen(false)}>
-      <aside className="side-cart public-cart-drawer" role="dialog" aria-modal="true" aria-labelledby="public-cart-drawer-title" onClick={(event) => event.stopPropagation()}>
+    <div className={`overlay public-cart-overlay ${isOpen ? "is-open" : "is-closing"}`} onClick={() => setIsOpen(false)}>
+      <aside className={`side-cart public-cart-drawer ${isOpen ? "is-open" : "is-closing"}`} role="dialog" aria-modal="true" aria-labelledby="public-cart-drawer-title" onClick={(event) => event.stopPropagation()}>
         <div className="drawer-head">
           <div>
             <span className="section-kicker">SACOLA</span>
