@@ -445,3 +445,18 @@
 - [x] Substituir categorias hard-coded do menu móvel por categorias dinâmicas vindas do catálogo público.
 - [x] Condicionar a consulta `admin.myAdminDetails` à sessão de administrador para evitar pedidos protegidos na área pública.
 - [x] Executar TypeScript, 46 ficheiros de teste com 135 testes Vitest aprovados, build de produção e verificação visual desktop/mobile.
+
+## Credenciais de produção — Mercado Pago e Melhor Envio (2026-08-17)
+- [ ] Solicitar e configurar de forma segura as credenciais de produção do Mercado Pago e do Melhor Envio.
+- [ ] Validar presença e formato das configurações sem expor segredos, mantendo os testes reais sob confirmação do proprietário.
+- [ ] Executar verificação final e guardar checkpoint da configuração de produção.
+
+
+## Plano de Execução Sequencial P0 e P1
+- [x] 1. **Validação Server-Side e Recálculo de Preços no Servidor (Checkout)**
+- [ ] 2. **Webhook e Reconciliação de Pagamento (Mercado Pago)**
+- [ ] 3. **Remoção de Dados Demonstrativos e Limpeza para Produção**
+- [ ] 4. **Criação da Rota de Catálogo e Correção do Erro 404**
+- [ ] 5. **Correção dos Links dos Cards de Produtos**
+- [ ] 6. **Dinamização do Rodapé Oficial**
+- [ ] 7. **Consistência do Rastreio e Formulário Mobile**

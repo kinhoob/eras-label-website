@@ -9,6 +9,9 @@ import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { storageGetSignedUrl, storagePut } from "./storage";
 import { createMercadoPagoPayment } from "./mercadopago";
+import { getDb } from "./db";
+import { products } from "../drizzle/schema";
+import { eq } from "drizzle-orm";
 import { createMelhorEnvioCartItem, downloadMelhorEnvioLabelFile, getMelhorEnvioTracking } from "./melhor-envio";
 import {
   getAdminSummary,
@@ -229,10 +232,30 @@ export const appRouter = router({
     })).mutation(async ({ input, ctx }) => {
       const orderNumber = input.orderNumber ?? `ER-${new Date().getFullYear()}-${Math.floor(Math.random() * 9000 + 1000)}`;
       const commercialConfig = await getCommercialConfig();
+
+      // Recálculo server-side rigoroso dos preços a partir do banco de dados
+      let verifiedSubtotal = 0;
+      const verifiedItems = [];
+      for (const item of input.items) {
+        const [dbProd] = await getDb() ? await (await getDb())!.select().from(products).where(eq(products.id, item.productId)).limit(1) : [];
+        const unitPrice = dbProd ? Number(dbProd.price) : Number(item.price);
+        verifiedSubtotal += unitPrice * item.quantity;
+        verifiedItems.push({
+          ...item,
+          name: dbProd?.name ?? item.name ?? `Produto #${item.productId}`,
+          price: unitPrice,
+        });
+      }
+
+      const verifiedDiscount = Number(input.discount || 0);
+      const verifiedShippingCost = Number(input.shippingCost || 0);
+      const pixDiscountRate = input.paymentMethod === "pix" ? (commercialConfig.pixDiscountPercent / 100) : 0;
+      const pixSavings = verifiedSubtotal * pixDiscountRate;
+      
+      const baseTotal = Math.max(0, verifiedSubtotal - verifiedDiscount - pixSavings + verifiedShippingCost);
       const actualInstallments = input.paymentMethod === "credit_card"
         ? Math.min(Math.max(1, input.installments ?? 1), commercialConfig.maxInstallments)
         : 1;
-      const baseTotal = Math.max(0, input.subtotal - input.discount + input.shippingCost);
       const serverTotal = input.paymentMethod === "credit_card"
         ? baseTotal * Math.pow(1 + commercialConfig.installmentInterestRate / 100, actualInstallments)
         : baseTotal;

@@ -699,6 +699,40 @@ export async function getOrderById(orderId: number) {
 export async function createOrder(data: typeof orders.$inferInsert) {
   const db = await getDb();
   if (!db) return undefined;
+  
+  // Validação server-side de estoque e baixa transacional das variações
+  const rawItems = Array.isArray(data.items) ? (data.items as Array<any>) : [];
+  for (const item of rawItems) {
+    const productId = Number(item.productId);
+    const size = String(item.size || "").trim();
+    const qty = Number(item.quantity || 1);
+    if (!productId || !size || qty <= 0) continue;
+
+    const [prod] = await db.select().from(products).where(eq(products.id, productId)).limit(1);
+    if (prod) {
+      if (prod.status !== "active" || prod.visibility === "hidden") {
+        throw new Error(`O produto "${item.name || productId}" não está disponível para compra.`);
+      }
+
+      const [variation] = await db
+        .select()
+        .from(productVariations)
+        .where(and(eq(productVariations.productId, productId), eq(productVariations.size, size)))
+        .limit(1);
+
+      if (variation) {
+        if (variation.stock < qty) {
+          throw new Error(`Estoque insuficiente para o produto "${prod.name}" no tamanho ${size}. Disponível: ${variation.stock}, solicitado: ${qty}.`);
+        }
+        const newStock = variation.stock - qty;
+        await db
+          .update(productVariations)
+          .set({ stock: newStock })
+          .where(eq(productVariations.id, variation.id));
+      }
+    }
+  }
+
   await db.insert(orders).values(data);
   const created = await db.select().from(orders).where(eq(orders.orderNumber, data.orderNumber)).limit(1);
   return created[0];
