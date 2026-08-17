@@ -1051,7 +1051,10 @@ export default function Home() {
                     <span className="product-arrow"><ArrowRight size={15} /></span>
                   </button>
                   <div className="product-meta">
-                    <div><p className="product-name">{product.name}</p><p className="product-collection">{product.collection}</p></div>
+                    <div>
+                      <a href={`/produto/${product.id}`} className="product-name-link" onClick={(event) => { event.preventDefault(); playClick(soundsOn); window.location.href = `/produto/${product.id}`; }}>{product.name}</a>
+                      <p className="product-collection">{product.collection}</p>
+                    </div>
                     <div className="product-price"><strong>{formatPrice(product.price)}</strong><span>{formatPrice(product.pixPrice)} NO PIX</span></div>
                   </div>
                 </article>
@@ -1110,7 +1113,10 @@ export default function Home() {
                   <span className="product-arrow"><ArrowRight size={15} /></span>
                 </button>
                 <div className="product-meta">
-                  <div><p className="product-name">{product.name}</p><p className="product-collection">{product.collection}</p></div>
+                  <div>
+                    <a href={`/produto/${product.id}`} className="product-name-link" onClick={(event) => { event.preventDefault(); playClick(soundsOn); window.location.href = `/produto/${product.id}`; }}>{product.name}</a>
+                    <p className="product-collection">{product.collection}</p>
+                  </div>
                   <div className="product-price"><strong>{formatPrice(product.price)}</strong><span>{formatPrice(product.pixPrice)} NO PIX</span></div>
                 </div>
               </article>
