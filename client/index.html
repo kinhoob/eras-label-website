@@ -1,27 +1,52 @@
-<!doctype html>
-<html lang="en">
-
+<!DOCTYPE html>
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1" />
-    <title>Eras Label - Reviver. Reinventar Eras.</title>    
-    <!-- THIS IS THE START OF A COMMENT BLOCK, BLOCK TO BE DELETED: Google Fonts here, example:
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    
+    <!-- SEO Principal e Metatags de Indexação -->
+    <title>Eras Label — Reviver. Reinventar Eras. | Streetwear & Curadoria</title>
+    <meta name="description" content="Plataforma oficial da Eras Label. Streetwear de alta qualidade, coleções exclusivas, curadoria rigorosa e entrega para todo o Brasil com Mercado Pago e Melhor Envio." />
+    <meta name="keywords" content="Eras Label, streetwear brasil, roupas oversized, camisetas premium, moda masculina feminina, curadoria eras" />
+    <meta name="author" content="Eras Label" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <link rel="canonical" href="https://www.eraslabel.com/" />
+
+    <!-- Open Graph / Facebook para Partilhas Sociais -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.eraslabel.com/" />
+    <meta property="og:title" content="Eras Label — Reviver. Reinventar Eras." />
+    <meta property="og:description" content="Streetwear de alta qualidade, coleções exclusivas e curadoria rigorosa da Eras Label." />
+    <meta property="og:image" content="https://www.eraslabel.com/og-cover.jpg" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:site_name" content="Eras Label" />
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Eras Label — Reviver. Reinventar Eras." />
+    <meta name="twitter:description" content="Streetwear de alta qualidade e coleções exclusivas. Descubra a nova era." />
+    <meta name="twitter:image" content="https://www.eraslabel.com/og-cover.jpg" />
+
+    <!-- Fontes e Estilos Globais -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    THIS IS THE END OF A COMMENT BLOCK, BLOCK TO BE DELETED -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
   </head>
 
   <body>
+    <!-- Elemento raiz onde a aplicação React é montada -->
     <div id="root"></div>
+
+    <!-- SDK Oficial do Mercado Pago para Checkout Transparente -->
     <script src="https://sdk.mercadopago.com/js/v2"></script>
+
+    <!-- Script de Inicialização da Aplicação Frontend -->
     <script type="module" src="/src/main.tsx"></script>
+
+    <!-- Analytics Integrado com Configuração Segura -->
     <script
       defer
       src="%VITE_ANALYTICS_ENDPOINT%/umami"
       data-website-id="%VITE_ANALYTICS_WEBSITE_ID%"></script>
   </body>
-
 </html>

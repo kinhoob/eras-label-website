@@ -417,3 +417,9 @@
 - [x] Corrigir responsividade do carrinho lateral, checkout, modais, páginas legais, FAQ, contato, rastreio e rodapé.
 - [x] Corrigir o painel administrativo em telas pequenas sem overflow horizontal e preservar ações essenciais.
 - [x] Validar acessibilidade, fluxos móveis, Vitest (131 testes aprovados), TypeScript e build; salvar checkpoint atualizado.
+
+
+## Otimização de SEO e Sitemap Dinâmico (2026-08-17)
+- [x] Auditar e estruturar metatags de SEO por página (título, descrição, canonical, Open Graph, Twitter Cards).
+- [x] Implementar rota de sitemap XML dinâmico no servidor (`/sitemap.xml`) e arquivo `robots.txt` otimizado para o Googlebot.
+- [x] Escrever testes unitários Vitest para o sitemap e metatags, executar TypeScript, build e salvar checkpoint.
