@@ -371,3 +371,9 @@
 - [x] Criar opção nas configurações do painel para definir o limite mínimo de stock crítico.
 - [x] Implementar alerta visual flutuante (toast) para novas notificações recebidas no painel.
 - [x] Validar build e integridade sem dados fictícios.
+
+
+## Toasts Clicáveis e Animação do Sino (2026-08-16)
+- [x] Tornar os toasts flutuantes interativos para abrir diretamente a encomenda ou o produto ao ser clicados.
+- [x] Incluir efeito de destaque e animação suave no ícone do sino na chegada de novos alertas.
+- [x] Garantir compatibilidade com preferências de acessibilidade e movimento reduzido.
