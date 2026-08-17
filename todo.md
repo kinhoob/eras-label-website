@@ -501,9 +501,13 @@
 - [x] Validar comportamento de confirmação, estado vazio e persistência local/servidor
 
 ## Correção de Cotação Melhor Envio e Modais (2026-08-17)
-- [ ] Tratar erro 401 do Melhor Envio no painel com mensagem orientando a verificar as credenciais reais de produção
-- [ ] Centralizar modais na tela (viewport) com posicionamento fixo/flex e scroll interno para evitar rolagem da página
-- [ ] Substituir botões textuais de fechar por um botão X acessível e elegante em todos os modais do painel
-- [ ] Validar com testes Vitest e build de produção
+- [x] Tratar erro 401 do Melhor Envio no painel com mensagem orientando a verificar as credenciais reais de produção
+- [x] Centralizar modais na tela (viewport) com posicionamento fixo/flex e scroll interno para evitar rolagem da página
+- [x] Substituir botões textuais de fechar por um botão X acessível e elegante em todos os modais do painel
+- [x] Validar com testes Vitest e build de produção
 
 - [x] Reorganizar a sidebar administrativa para mostrar somente categorias em dropdowns colapsáveis, sem itens soltos, mantendo navegação responsiva e acessível.
+
+- [x] Corrigir a tipagem de Tracking.tsx para acessar eventos de rastreio sem índice implícito.
+- [x] Tipar o retorno do carrinho do Melhor Envio antes de persistir o ID da remessa.
+- [x] Confirmar que o server/routers.ts permanece compilável após o tratamento de erros da cotação.

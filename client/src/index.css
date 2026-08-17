@@ -4883,3 +4883,104 @@ body {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+
+/* Modais administrativos: centralização consistente, rolagem interna e fechamento acessível. */
+.admin-modal-overlay,
+.admin-sales-modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(0.75rem, 2vw, 1.5rem);
+  overflow: hidden;
+  overscroll-behavior: contain;
+  background: rgba(20, 18, 16, 0.66);
+  z-index: 1000;
+  animation: admin-modal-overlay-in 180ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+.admin-modal {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 720px);
+  max-height: min(90vh, 860px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(178, 34, 34, 0.55) transparent;
+  animation: admin-modal-in 220ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+.admin-modal--compact { width: min(100%, 520px); }
+.admin-modal--preview { width: min(100%, 800px); }
+.admin-modal-header,
+.admin-modal .panel-heading {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid rgba(35, 34, 30, 0.12);
+  background: inherit;
+}
+
+.admin-modal-close {
+  display: inline-grid;
+  flex: 0 0 auto;
+  width: 2.25rem;
+  height: 2.25rem;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgba(35, 34, 30, 0.18);
+  border-radius: 999px;
+  background: transparent;
+  color: currentColor;
+  cursor: pointer;
+  transition: color 180ms ease-out, background-color 180ms ease-out, border-color 180ms ease-out, transform 180ms ease-out;
+}
+
+.admin-modal-close:hover {
+  border-color: #b22222;
+  background: rgba(178, 34, 34, 0.08);
+  color: #b22222;
+}
+
+.admin-modal-close:active { transform: scale(0.96); }
+.admin-modal-close:focus-visible { outline: 2px solid #b22222; outline-offset: 3px; }
+.admin-sales-modal { width: min(100%, 720px); }
+.admin-sales-modal > .admin-sales-summary-grid { min-width: 0; }
+
+@keyframes admin-modal-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes admin-modal-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 640px) {
+  .admin-modal-overlay,
+  .admin-sales-modal-overlay { align-items: center; padding: 0.65rem; }
+  .admin-modal,
+  .admin-sales-modal { max-height: calc(100vh - 1.3rem); padding: 1.15rem !important; border-radius: 10px; }
+  .admin-modal--preview { padding: 1.15rem !important; }
+  .admin-modal-header,
+  .admin-modal .panel-heading { gap: 0.65rem; }
+  .admin-modal-close { width: 2rem; height: 2rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-modal-overlay,
+  .admin-sales-modal-overlay,
+  .admin-modal { animation: none; }
+  .admin-modal-close { transition: none; }
+}

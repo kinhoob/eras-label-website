@@ -12,7 +12,7 @@ import { createMercadoPagoPayment } from "./mercadopago";
 import { getDb } from "./db";
 import { products, orders } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
-import { createMelhorEnvioCartItem, downloadMelhorEnvioLabelFile, getMelhorEnvioTracking } from "./melhor-envio";
+import { MelhorEnvioApiError, createMelhorEnvioCartItem, downloadMelhorEnvioLabelFile, getMelhorEnvioTracking } from "./melhor-envio";
 import {
   getAdminSummary,
   getAdminProducts,
@@ -91,6 +91,25 @@ export function isValidImageUrl(value: string) {
 }
 
 const imageUrlInput = z.string().refine(isValidImageUrl, "Informe uma URL de imagem válida ou um upload interno do armazenamento.");
+
+function toMelhorEnvioTrpcError(error: unknown, operation: string) {
+  if (error instanceof MelhorEnvioApiError && error.isUnauthorized) {
+    return new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "O Melhor Envio rejeitou a autenticação. Verifique se MELHOR_ENVIO_TOKEN é um access token de produção válido, diferente do client secret, e se os escopos de cotação e envio estão autorizados.",
+    });
+  }
+
+  if (error instanceof MelhorEnvioApiError) {
+    return new TRPCError({
+      code: "BAD_REQUEST",
+      message: `${operation}: ${error.details}`,
+    });
+  }
+
+  const message = error instanceof Error ? error.message : "Erro desconhecido na integração com o Melhor Envio.";
+  return new TRPCError({ code: "BAD_REQUEST", message: `${operation}: ${message}` });
+}
 
 export const appRouter = router({
   system: systemRouter,
@@ -672,21 +691,24 @@ export const appRouter = router({
       })),
     })).mutation(async ({ input }) => {
       const { calculateMelhorEnvioShipping } = await import("./melhor-envio");
-      const subtotal = input.items.reduce((acc, it) => acc + it.price * it.quantity, 0);
-      const quotes = await calculateMelhorEnvioShipping({
-        from: { postal_code: ENV.melhorEnvioCep || "50000000" }, // Origem configurada Eras Label
-        to: { postal_code: input.cepDestination },
-        products: input.items.map((it, idx) => ({
-          id: String(idx + 1),
-          width: 15,
-          height: 10,
-          length: 20,
-          weight: 0.5 * it.quantity,
-          insurance_value: it.price,
-          quantity: it.quantity,
-        })),
-      });
-      return { success: true, quotes };
+      try {
+        const quotes = await calculateMelhorEnvioShipping({
+          from: { postal_code: ENV.melhorEnvioCep || "50000000" },
+          to: { postal_code: input.cepDestination },
+          products: input.items.map((it, idx) => ({
+            id: String(idx + 1),
+            width: 15,
+            height: 10,
+            length: 20,
+            weight: 0.5 * it.quantity,
+            insurance_value: it.price,
+            quantity: it.quantity,
+          })),
+        });
+        return { success: true, quotes };
+      } catch (error) {
+        throw toMelhorEnvioTrpcError(error, "Não foi possível calcular o frete");
+      }
     }),
     updateOrderTracking: adminProcedure.input(z.object({
       orderId: z.number().int().positive(),
@@ -736,8 +758,10 @@ export const appRouter = router({
       const items = await getOrderItems(input.orderId);
       const totalWeight = items.reduce((sum: number, item: any) => sum + (item.quantity * 0.3), 0.3); // estimativa 300g por peça
       
-      const cartResult = await createMelhorEnvioCartItem({
-        serviceId: input.serviceId,
+      let cartResult: unknown;
+      try {
+        cartResult = await createMelhorEnvioCartItem({
+          serviceId: input.serviceId,
         from: {
           name: "Eras Label Oficial",
           phone: "11999999999",
@@ -772,17 +796,21 @@ export const appRouter = router({
           height: 5,
           length: 20,
         })),
-        volumes: [
-          {
-            height: 10,
-            width: 20,
-            length: 25,
-            weight: Math.max(totalWeight, 0.3),
-          },
-        ],
-      });
+          volumes: [
+            {
+              height: 10,
+              width: 20,
+              length: 25,
+              weight: Math.max(totalWeight, 0.3),
+            },
+          ],
+        });
+      } catch (error) {
+        throw toMelhorEnvioTrpcError(error, "Não foi possível criar o envio");
+      }
 
-      const shippingOrderId = typeof cartResult?.id === "string" ? cartResult.id : "";
+      const cart = cartResult as { id?: unknown };
+      const shippingOrderId = typeof cart.id === "string" ? cart.id : "";
       if (!shippingOrderId) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "O Melhor Envio não retornou o ID da etiqueta." });
       }
@@ -815,8 +843,7 @@ export const appRouter = router({
         await updateOrderLabelData(input.orderId, { shippingOrderId, labelPdfUrl });
         return { success: true, shippingOrderId, labelPdfUrl };
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Não foi possível obter o PDF da etiqueta.";
-        throw new TRPCError({ code: "BAD_REQUEST", message });
+        throw toMelhorEnvioTrpcError(error, "Não foi possível obter o PDF da etiqueta");
       }
     }),
 

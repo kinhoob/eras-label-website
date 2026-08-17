@@ -280,7 +280,7 @@ export default function AdminSalesSection() {
 
       {selectedOrder && (
         <div className="admin-sales-modal-overlay" style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
-          <div className="admin-panel admin-sales-modal" style={{ background: "var(--background)", width: "100%", maxWidth: "720px", maxHeight: "90vh", overflowY: "auto", padding: "2rem" }}>
+          <div className="admin-panel admin-modal admin-sales-modal" style={{ background: "var(--background)", width: "100%", maxWidth: "720px", maxHeight: "90vh", overflowY: "auto", padding: "2rem" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
               <div>
                 <span className="section-kicker">DETALHES DO PEDIDO</span>

@@ -33,6 +33,7 @@ import {
   UserRound,
   SlidersHorizontal,
   Megaphone,
+  X,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -963,13 +964,13 @@ export default function Admin() {
 
         {editingProduct && (
           <div className="admin-modal-overlay" style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '1rem' }}>
-            <div className="admin-panel" style={{ width: '100%', maxWidth: '700px', maxHeight: '90vh', overflowY: 'auto', background: '#fff', padding: '2rem' }}>
+            <div className="admin-panel admin-modal admin-modal--product" style={{ width: '100%', maxWidth: '700px', maxHeight: '90vh', overflowY: 'auto', background: '#fff', padding: '2rem' }}>
               <div className="panel-heading">
                 <div>
                   <span className="section-kicker">{editorMode === "inventory" ? "ATUALIZAÇÃO RÁPIDA" : "GESTÃO DE CATÁLOGO"}</span>
                   <h3>{editorMode === "inventory" ? `Estoque: ${editingProduct.name}` : editingProduct.name ? `Editar: ${editingProduct.name}` : "Novo Produto"}</h3>
                 </div>
-                <button onClick={() => setEditingProduct(null)} className="table-more">✕</button>
+                <button type="button" onClick={() => setEditingProduct(null)} className="admin-modal-close" aria-label="Fechar editor de produto" title="Fechar"><X size={18} /></button>
               </div>
 
               {editorMode === "product" && <>
@@ -1860,9 +1861,12 @@ function SubAdminsManagementSection() {
 
       {/* Modal Criar Administrador */}
       {showCreateModal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
-          <div style={{ background: "#fff", width: "100%", maxWidth: "520px", borderRadius: "10px", padding: "2rem", boxShadow: "0 10px 25px rgba(0,0,0,0.15)" }}>
-            <h3 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.5rem" }}>Adicionar Novo Administrador</h3>
+        <div className="admin-modal-overlay" style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+          <div className="admin-modal admin-modal--compact" style={{ background: "#fff", width: "100%", maxWidth: "520px", borderRadius: "10px", padding: "2rem", boxShadow: "0 10px 25px rgba(0,0,0,0.15)" }}>
+            <div className="admin-modal-header">
+              <h3 style={{ fontSize: "1.25rem", fontWeight: 700, margin: 0 }}>Adicionar Novo Administrador</h3>
+              <button type="button" className="admin-modal-close" onClick={() => setShowCreateModal(false)} aria-label="Fechar criação de administrador" title="Fechar"><X size={18} /></button>
+            </div>
             <p style={{ fontSize: "0.9rem", color: "#666", marginBottom: "1.5rem" }}>Defina as credenciais e escolha quais abas o membro da equipe poderá visualizar.</p>
 
             <div style={{ display: "grid", gap: "1rem", marginBottom: "1.5rem" }}>
@@ -1942,9 +1946,12 @@ function SubAdminsManagementSection() {
 
       {/* Modal Editar Administrador */}
       {editingAdmin && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
-          <div style={{ background: "#fff", width: "100%", maxWidth: "520px", borderRadius: "10px", padding: "2rem", boxShadow: "0 10px 25px rgba(0,0,0,0.15)" }}>
-            <h3 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.5rem" }}>Editar Administrador</h3>
+        <div className="admin-modal-overlay" style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+          <div className="admin-modal admin-modal--compact" style={{ background: "#fff", width: "100%", maxWidth: "520px", borderRadius: "10px", padding: "2rem", boxShadow: "0 10px 25px rgba(0,0,0,0.15)" }}>
+            <div className="admin-modal-header">
+              <h3 style={{ fontSize: "1.25rem", fontWeight: 700, margin: 0 }}>Editar Administrador</h3>
+              <button type="button" className="admin-modal-close" onClick={() => setEditingAdmin(null)} aria-label="Fechar edição de administrador" title="Fechar"><X size={18} /></button>
+            </div>
             <p style={{ fontSize: "0.9rem", color: "#666", marginBottom: "1.5rem" }}>Modifique as permissões de acesso ou redefina a senha para {editingAdmin.email}</p>
 
             <div style={{ display: "grid", gap: "1rem", marginBottom: "1.5rem" }}>
@@ -2654,13 +2661,13 @@ function AdminCmsManager() {
                   boxShadow: "0 20px 40px rgba(0,0,0,0.25)",
                   position: "relative",
                   border: "1px solid #e5dfd3"
-                }}>
+                }} className="admin-modal admin-modal--preview">
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", borderBottom: "1px solid #e0dbd0", paddingBottom: "1rem" }}>
                     <div>
                       <span style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#b22222" }}>PRÉ-VISUALIZAÇÃO AO VIVO • {selectedSlug.toUpperCase()}</span>
                       <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "#111", margin: 0 }}>Como os clientes verão a página</h3>
                     </div>
-                    <Button variant="outline" onClick={() => setShowPreview(false)}>Fechar Preview</Button>
+                    <button type="button" className="admin-modal-close" onClick={() => setShowPreview(false)} aria-label="Fechar pré-visualização" title="Fechar"><X size={18} /></button>
                   </div>
 
                   {bannerUrl && (

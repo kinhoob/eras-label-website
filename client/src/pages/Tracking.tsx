@@ -9,6 +9,22 @@ import { trpc } from "@/lib/trpc";
 import OfficialFooter from "@/components/OfficialFooter";
 import { Truck, Package, Search, Copy, Check, ExternalLink, Clock, CheckCircle2, ShieldCheck, ArrowRight } from "lucide-react";
 
+type TrackingEvent = {
+  status?: string;
+  description?: string;
+  location?: { city?: string; state?: string };
+  created_at?: string;
+};
+
+type TrackingRecord = {
+  service?: string;
+  name?: string;
+  status?: string;
+  state?: string;
+  estimated_delivery?: string;
+  events?: TrackingEvent[];
+};
+
 export default function TrackingPage() {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [trackingCodeInput, setTrackingCodeInput] = useState("");
@@ -42,8 +58,11 @@ export default function TrackingPage() {
 
   // Extrair o objeto de rastreio retornado pelo Melhor Envio (pode vir como objeto com chave correspondente ao código ou array)
   const trackingData = data?.tracking;
-  const trackingRecord = trackingData && typeof trackingData === "object" 
-    ? (trackingData[activeCode] || Object.values(trackingData)[0] || trackingData) 
+  const trackingRecord: TrackingRecord | null = trackingData && typeof trackingData === "object"
+    ? (() => {
+        const trackingObject = trackingData as Record<string, TrackingRecord>;
+        return trackingObject[activeCode] || Object.values(trackingObject)[0] || (trackingObject as unknown as TrackingRecord);
+      })()
     : null;
 
   return (
@@ -156,7 +175,7 @@ export default function TrackingPage() {
                   <h3 className="text-xs uppercase tracking-widest font-bold mb-4 text-[#8c8378]">Histórico de Movimentações</h3>
                   {Array.isArray(trackingRecord.events) && trackingRecord.events.length > 0 ? (
                     <div className="space-y-4 border-l-2 border-[#dfd7cc] pl-4 ml-2">
-                      {trackingRecord.events.map((ev: any, idx: number) => (
+                      {trackingRecord.events.map((ev, idx) => (
                         <div key={idx} className="relative">
                           <div className="absolute -left-[21px] top-1.5 h-2.5 w-2.5 rounded-full bg-[#c95139] ring-4 ring-[#f6f3ee]" />
                           <p className="text-xs font-bold uppercase text-[#23221e]">{ev.status || ev.description || "Atualização de status"}</p>

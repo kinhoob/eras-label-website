@@ -1,5 +1,32 @@
 import { ENV } from "./_core/env";
 
+export class MelhorEnvioApiError extends Error {
+  constructor(
+    public readonly operation: string,
+    public readonly status: number,
+    public readonly details: string,
+  ) {
+    super(`${operation}: ${status} - ${details}`);
+    this.name = "MelhorEnvioApiError";
+  }
+
+  get isUnauthorized() {
+    return this.status === 401;
+  }
+}
+
+async function readApiError(response: Response) {
+  const text = await response.text();
+  if (!text.trim()) return "Resposta vazia da API.";
+  try {
+    const parsed = JSON.parse(text) as { message?: unknown; error?: unknown; errors?: unknown };
+    const details = parsed.message ?? parsed.error ?? parsed.errors;
+    return typeof details === "string" ? details : JSON.stringify(details ?? parsed);
+  } catch {
+    return text.slice(0, 500);
+  }
+}
+
 export type MelhorEnvioQuoteItem = {
   id: string;
   width: number;
@@ -28,28 +55,21 @@ export async function calculateMelhorEnvioShipping(payload: MelhorEnvioQuotePayl
     ? "https://sandbox.melhorenvio.com.br/api/v2" 
     : "https://www.melhorenvio.com.br/api/v2";
 
-    // Helper para verificar se a opção de frete é permitida (Correios PAC/SEDEX, Jadlog Econômico/Rápido, Loggi)
+    // A Eras Label utiliza apenas Correios PAC/SEDEX e Jadlog Econômico/Rápido.
     const isAllowedShippingOption = (name: string, companyName?: string) => {
       const text = `${name} ${companyName || ""}`.toLowerCase();
       const isCorreios = text.includes("correios") || text.includes("pac") || text.includes("sedex");
       const isJadlog = text.includes("jadlog");
-      const isLoggi = text.includes("loggi");
-
-      if (isCorreios) {
-        return text.includes("pac") || text.includes("sedex");
-      }
-      if (isJadlog) {
-        // Aceita Jadlog .Com / Econômico e .Package / Rápido
-        return true;
-      }
-      if (isLoggi) {
-        return true;
-      }
-      return false;
+      if (isCorreios) return text.includes("pac") || text.includes("sedex");
+      return isJadlog;
     };
 
     if (!token) {
-      throw new Error("Token do Melhor Envio não configurado. Configure MELHOR_ENVIO_TOKEN para calcular o frete real.");
+      throw new MelhorEnvioApiError(
+        "Token do Melhor Envio não configurado",
+        401,
+        "Configure MELHOR_ENVIO_TOKEN para calcular o frete real.",
+      );
     }
 
     const response = await fetch(`${baseUrl}/me/shipment/calculate`, {
@@ -64,15 +84,14 @@ export async function calculateMelhorEnvioShipping(payload: MelhorEnvioQuotePayl
     });
 
     if (!response.ok) {
-      const errText = await response.text();
-      console.error("[Melhor Envio] Erro na cotação real:", errText);
-      throw new Error(`Melhor Envio API error: ${response.status} - ${errText}`);
+      const details = await readApiError(response);
+      console.error("[Melhor Envio] Falha na cotação:", response.status, details);
+      throw new MelhorEnvioApiError("Falha na cotação do Melhor Envio", response.status, details);
     }
 
     const data = await response.json();
     if (!Array.isArray(data)) return [];
 
-    // Filtra estritamente para manter apenas Correios, Jadlog e Loggi autorizados
     return data.filter((item: any) => {
       if (item.error) return false;
       return isAllowedShippingOption(item.name || "", item.company?.name);
@@ -134,7 +153,7 @@ export async function createMelhorEnvioCartItem(orderData: {
     : "https://www.melhorenvio.com.br/api/v2";
 
   if (!token) {
-    throw new Error("Token do Melhor Envio não configurado.");
+    throw new MelhorEnvioApiError("Token do Melhor Envio não configurado", 401, "Configure o token de produção.");
   }
 
   const response = await fetch(`${baseUrl}/me/cart`, {
@@ -148,9 +167,18 @@ export async function createMelhorEnvioCartItem(orderData: {
     body: JSON.stringify(orderData),
   });
 
-  const data = await response.json();
+  const responseText = await response.text();
+  let data: unknown;
+  try {
+    data = responseText ? JSON.parse(responseText) : {};
+  } catch {
+    data = { raw: responseText };
+  }
   if (!response.ok) {
-    throw new Error(`Erro ao adicionar item ao carrinho do Melhor Envio: ${JSON.stringify(data)}`);
+    const details = typeof data === "object" && data !== null && "message" in data
+      ? String((data as { message?: unknown }).message)
+      : JSON.stringify(data);
+    throw new MelhorEnvioApiError("Falha ao adicionar o envio ao carrinho do Melhor Envio", response.status, details);
   }
   return data;
 }
@@ -166,7 +194,7 @@ export async function getMelhorEnvioTracking(shippingCodeOrId: string) {
     : "https://www.melhorenvio.com.br/api/v2";
 
   if (!token) {
-    throw new Error("Token do Melhor Envio não configurado.");
+    throw new MelhorEnvioApiError("Token do Melhor Envio não configurado", 401, "Configure o token de produção.");
   }
 
   const response = await fetch(`${baseUrl}/me/shipment/tracking`, {
@@ -180,9 +208,15 @@ export async function getMelhorEnvioTracking(shippingCodeOrId: string) {
     body: JSON.stringify({ orders: [shippingCodeOrId] }),
   });
 
-  const data = await response.json();
+  const responseText = await response.text();
+  let data: unknown;
+  try {
+    data = responseText ? JSON.parse(responseText) : {};
+  } catch {
+    data = { raw: responseText };
+  }
   if (!response.ok) {
-    throw new Error(`Erro ao consultar rastreio no Melhor Envio: ${JSON.stringify(data)}`);
+    throw new MelhorEnvioApiError("Falha ao consultar rastreio no Melhor Envio", response.status, JSON.stringify(data));
   }
   return data;
 }
@@ -198,7 +232,7 @@ export async function getMelhorEnvioPrintUrl(orderIds: string[]) {
     : "https://www.melhorenvio.com.br/api/v2";
 
   if (!token) {
-    throw new Error("Token do Melhor Envio não configurado.");
+    throw new MelhorEnvioApiError("Token do Melhor Envio não configurado", 401, "Configure o token de produção.");
   }
 
   const response = await fetch(`${baseUrl}/me/shipment/print`, {
@@ -212,9 +246,15 @@ export async function getMelhorEnvioPrintUrl(orderIds: string[]) {
     body: JSON.stringify({ orders: orderIds }),
   });
 
-  const data = await response.json();
+  const responseText = await response.text();
+  let data: unknown;
+  try {
+    data = responseText ? JSON.parse(responseText) : {};
+  } catch {
+    data = { raw: responseText };
+  }
   if (!response.ok) {
-    throw new Error(`Erro ao gerar PDF da etiqueta no Melhor Envio: ${JSON.stringify(data)}`);
+    throw new MelhorEnvioApiError("Falha ao gerar PDF da etiqueta no Melhor Envio", response.status, JSON.stringify(data));
   }
   return data; // Retorna { url: "https://..." } ou similar
 }
@@ -231,7 +271,7 @@ export async function downloadMelhorEnvioLabelFile(shipmentId: string) {
     : "https://www.melhorenvio.com.br/api/v2";
 
   if (!token) {
-    throw new Error("Token do Melhor Envio não configurado.");
+    throw new MelhorEnvioApiError("Token do Melhor Envio não configurado", 401, "Configure o token de produção.");
   }
 
   const response = await fetch(`${baseUrl}/me/imprimir/pdf/${encodeURIComponent(shipmentId)}`, {
@@ -246,8 +286,8 @@ export async function downloadMelhorEnvioLabelFile(shipmentId: string) {
   const contentType = response.headers.get("content-type") || "";
   const body = new Uint8Array(await response.arrayBuffer());
   if (!response.ok) {
-    const message = new TextDecoder().decode(body);
-    throw new Error(`Erro ao baixar PDF da etiqueta no Melhor Envio: ${response.status} - ${message}`);
+    const message = new TextDecoder().decode(body).slice(0, 500) || "Resposta vazia da API.";
+    throw new MelhorEnvioApiError("Falha ao baixar o PDF da etiqueta no Melhor Envio", response.status, message);
   }
 
   if (contentType.includes("application/pdf") || contentType.includes("application/octet-stream")) {
