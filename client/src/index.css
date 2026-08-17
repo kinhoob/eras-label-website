@@ -3730,6 +3730,138 @@ body {
   .period-btn { transition: none; }
 }
 
+/* Sidebar administrativa organizada por categorias: apenas os títulos ficam
+   visíveis no estado fechado e os itens aparecem no dropdown selecionado. */
+.admin-sidebar nav.admin-nav-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 2px 8px;
+}
+
+.admin-nav-group {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.admin-sidebar nav button.admin-nav-group-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 40px;
+  padding: 10px 11px;
+  border: 1px solid rgba(255, 255, 255, .07);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, .035);
+  color: #b9b1a8;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  transition: background-color .2s var(--eras-ease), border-color .2s var(--eras-ease), color .2s var(--eras-ease), box-shadow .2s var(--eras-ease);
+}
+
+.admin-nav-group-trigger:hover,
+.admin-nav-group-trigger.open,
+.admin-nav-group-trigger.has-active {
+  border-color: rgba(178, 34, 34, .35);
+  background: rgba(178, 34, 34, .13);
+  color: #fffaf5;
+}
+
+.admin-nav-group-trigger.has-active {
+  box-shadow: inset 2px 0 0 var(--eras-red);
+}
+
+.admin-nav-group-trigger-label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.admin-nav-group-trigger-label span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-nav-group-chevron {
+  flex: 0 0 auto;
+  color: #8f877e;
+  transition: transform .24s var(--eras-ease), color .2s ease;
+}
+
+.admin-nav-group-chevron.open {
+  transform: rotate(180deg);
+  color: #f2c0b8;
+}
+
+.admin-nav-group-items {
+  display: grid;
+  grid-template-rows: 0fr;
+  overflow: hidden;
+  opacity: .45;
+  transition: grid-template-rows .26s var(--eras-ease), opacity .22s ease;
+}
+
+.admin-nav-group-items.open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.admin-nav-group-items-inner {
+  min-height: 0;
+  overflow: hidden;
+  padding: 0 0 0 8px;
+}
+
+.admin-sidebar nav button.admin-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  min-height: 35px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: #958d84;
+  font-size: 11px;
+  text-align: left;
+  transition: background-color .2s var(--eras-ease), border-color .2s var(--eras-ease), color .2s var(--eras-ease), transform .2s var(--eras-ease);
+}
+
+.admin-sidebar nav button.admin-nav-item:hover,
+.admin-sidebar nav button.admin-nav-item.active {
+  border-color: rgba(255, 255, 255, .08);
+  background: rgba(178, 34, 34, .16);
+  color: #fffaf5;
+}
+
+.admin-sidebar nav button.admin-nav-item:hover {
+  transform: translateX(2px);
+}
+
+.admin-sidebar nav button.admin-nav-item.active {
+  box-shadow: inset 2px 0 0 var(--eras-red);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-nav-group-items,
+  .admin-nav-group-chevron,
+  .admin-nav-group-trigger,
+  .admin-sidebar nav button.admin-nav-item {
+    transition: none;
+  }
+}
+
 /* Rodapé oficial com informações públicas verificadas */
 .official-footer { background: #f6f3ee; color: #23221e; }
 .official-footer .footer-grid { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(180px, 1fr) minmax(220px, 1.25fr) minmax(220px, 1fr); gap: 44px; }

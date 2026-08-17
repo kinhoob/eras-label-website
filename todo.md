@@ -505,3 +505,5 @@
 - [ ] Centralizar modais na tela (viewport) com posicionamento fixo/flex e scroll interno para evitar rolagem da página
 - [ ] Substituir botões textuais de fechar por um botão X acessível e elegante em todos os modais do painel
 - [ ] Validar com testes Vitest e build de produção
+
+- [x] Reorganizar a sidebar administrativa para mostrar somente categorias em dropdowns colapsáveis, sem itens soltos, mantendo navegação responsiva e acessível.

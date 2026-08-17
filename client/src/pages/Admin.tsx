@@ -46,6 +46,28 @@ import AdminSalesSection from "@/pages/AdminSalesSection";
 import { exportToCSV } from "@/lib/csv-export";
 import type { StorefrontConfig } from "../../../shared/storefront";
 import { optimizeProductImage } from "@/lib/image-optimizer";
+import { buildAdminNavGroups, getAdminNavGroupId, type AdminNavIcon } from "@/lib/admin-navigation";
+
+function getAdminNavIcon(icon: AdminNavIcon) {
+  switch (icon) {
+    case "analytics": return BarChart3;
+    case "sales": return ShoppingCart;
+    case "catalog": return Package;
+    case "history": return History;
+    case "alerts": return BellRing;
+    case "categories": return Tag;
+    case "customers": return Users;
+    case "marketing": return Mail;
+    case "coupon": return Tag;
+    case "appearance": return Palette;
+    case "cms": return Pencil;
+    case "menus": return SlidersHorizontal;
+    case "settings": return Settings2;
+    case "team": return ShieldCheck;
+    case "dashboard":
+    default: return LayoutDashboard;
+  }
+}
 
 function EmailLogsSection() {
   const [search, setSearch] = useState("");
@@ -551,6 +573,7 @@ export default function Admin() {
   const [appearanceSaved, setAppearanceSaved] = useState(false);
   const [couponActive, setCouponActive] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [openNavGroups, setOpenNavGroups] = useState<Record<string, boolean>>({ overview: true });
   const [heroImage, setHeroImage] = useState("https://images.unsplash.com/photo-1554412933-514a83d2f3c8?auto=format&fit=crop&q=80&w=1200");
   const [homeBanners, setHomeBanners] = useState<EditableBanner[]>(defaultEditableBanners);
   const [homeHighlights, setHomeHighlights] = useState<EditableHighlight[]>(defaultEditableHighlights);
@@ -740,30 +763,27 @@ export default function Admin() {
     });
   }, [adminProducts, query, inventoryCategoryFilter]);
   const isSuperAdmin = authUser?.email?.trim().toLowerCase() === "theeraslabel@gmail.com";
-  const navItems = [
-    { label: "Visão geral", icon: LayoutDashboard },
-    { label: "Estatísticas", icon: BarChart3 },
-    { label: "Vendas", icon: ClipboardList },
-    { label: "Pedidos", icon: ClipboardList },
-    { label: "Produtos", icon: Package },
-    { label: "Inventário", icon: Package },
-    { label: "Histórico de Estoque", icon: History },
-    { label: "Alertas de Estoque", icon: BellRing },
-    { label: "Categorias", icon: Tag },
-    { label: "Clientes", icon: Users },
-    { label: "E-mail Marketing", icon: Mail },
-    { label: "Cupons", icon: Tag },
-    { label: "Aparência", icon: Palette },
-    { label: "CMS Institucional", icon: Pencil },
-    { label: "Menus Dinâmicos", icon: SlidersHorizontal },
-    { label: "Newsletter", icon: Mail },
-    { label: "E-mails (Resend)", icon: Mail },
-    ...(isSuperAdmin ? [{ label: "Gestão de Equipe", icon: ShieldCheck }] : []),
-  ];
+  const navGroups = useMemo(() => buildAdminNavGroups(isSuperAdmin), [isSuperAdmin]);
+
+  // Mantém a categoria da página atual aberta quando a navegação ocorre por
+  // atalhos internos, como os cards de "Próximas etapas" da visão geral.
+  useEffect(() => {
+    const activeGroupId = getAdminNavGroupId(navGroups, active);
+    if (!activeGroupId) return;
+    setOpenNavGroups((current) => current[activeGroupId]
+      ? current
+      : { ...current, [activeGroupId]: true });
+  }, [active, navGroups]);
 
   function selectNav(label: string) {
     setActive(label);
     setMenuOpen(false);
+  }
+
+  // Alterna somente o dropdown solicitado, deixando as restantes categorias
+  // fechadas para a sidebar permanecer compacta e fácil de percorrer.
+  function toggleNavGroup(groupId: string) {
+    setOpenNavGroups((current) => ({ ...current, [groupId]: !current[groupId] }));
   }
 
   const { data: myAdminDetails } = trpc.admin.myAdminDetails.useQuery(undefined, {
@@ -815,7 +835,57 @@ export default function Admin() {
     <div className="admin-shell">
       <aside className={`admin-sidebar ${menuOpen ? "open" : ""}`}>
         <div className="admin-brand"><Link href="/">ERAS<span>.</span></Link><small>ADMIN</small></div>
-        <nav>{navItems.map(({ label, icon: Icon }) => <button key={label} className={active === label ? "active" : ""} onClick={() => selectNav(label)}><Icon size={17} />{label}</button>)}</nav>
+        <nav className="admin-nav-groups" aria-label="Navegação administrativa">
+          {navGroups.map((group) => {
+            const isOpen = Boolean(openNavGroups[group.id]);
+            const hasActiveItem = group.items.some((item) => item.label === active);
+            const GroupIcon = getAdminNavIcon(group.icon);
+
+            return (
+              <div className="admin-nav-group" key={group.id}>
+                <button
+                  type="button"
+                  className={`admin-nav-group-trigger ${hasActiveItem ? "has-active" : ""} ${isOpen ? "open" : ""}`}
+                  aria-expanded={isOpen}
+                  aria-controls={`admin-nav-group-${group.id}`}
+                  onClick={() => toggleNavGroup(group.id)}
+                >
+                  <span className="admin-nav-group-trigger-label">
+                    <GroupIcon size={16} aria-hidden="true" />
+                    <span>{group.label}</span>
+                  </span>
+                  <ChevronDown className={`admin-nav-group-chevron ${isOpen ? "open" : ""}`} size={15} aria-hidden="true" />
+                </button>
+                <div
+                  id={`admin-nav-group-${group.id}`}
+                  className={`admin-nav-group-items ${isOpen ? "open" : ""}`}
+                  role="group"
+                  aria-label={group.label}
+                  aria-hidden={!isOpen}
+                >
+                  <div className="admin-nav-group-items-inner">
+                    {group.items.map((item) => {
+                      const ItemIcon = getAdminNavIcon(item.icon);
+                      const isActive = active === item.label;
+                      return (
+                        <button
+                          type="button"
+                          key={item.label}
+                          className={`admin-nav-item ${isActive ? "active" : ""}`}
+                          onClick={() => selectNav(item.label)}
+                          tabIndex={isOpen ? 0 : -1}
+                        >
+                          <ItemIcon size={15} aria-hidden="true" />
+                          <span>{item.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </nav>
         <div className="admin-sidebar-bottom">
           <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", padding: "0.5rem 0.75rem", marginBottom: "0.5rem", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
             {myAdminDetails?.avatarUrl ? (
@@ -827,7 +897,6 @@ export default function Admin() {
             )}
             <span style={{ fontSize: "0.85rem", color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: 500 }}>{myAdminDetails?.name || adminName}</span>
           </div>
-          <button className={active === "Configurações" ? "active" : ""} onClick={() => selectNav("Configurações")}><Settings2 size={17} />Configurações</button>
           <Link href="/" className="back-store"><ArrowLeft size={17} />Voltar à loja</Link>
         </div>
       </aside>
