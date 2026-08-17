@@ -447,9 +447,9 @@
 - [x] Executar TypeScript, 46 ficheiros de teste com 135 testes Vitest aprovados, build de produção e verificação visual desktop/mobile.
 
 ## Credenciais de produção — Mercado Pago e Melhor Envio (2026-08-17)
-- [ ] Solicitar e configurar de forma segura as credenciais de produção do Mercado Pago e do Melhor Envio.
-- [ ] Validar presença e formato das configurações sem expor segredos, mantendo os testes reais sob confirmação do proprietário.
-- [ ] Executar verificação final e guardar checkpoint da configuração de produção.
+- [x] Solicitar e configurar de forma segura as credenciais de produção do Mercado Pago e do Melhor Envio.
+- [x] Validar presença e formato das configurações sem expor segredos, mantendo os testes reais sob confirmação do proprietário.
+- [x] Executar verificação final e guardar checkpoint da configuração de produção.
 
 
 ## Plano de Execução Sequencial P0 e P1
