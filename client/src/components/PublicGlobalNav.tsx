@@ -3,6 +3,8 @@ import { Link, useLocation } from "wouter";
 import { ArrowRight, Menu, ShoppingBag } from "lucide-react";
 import { CART_STORAGE_KEY, loadCart } from "@/lib/cart-storage";
 import { SidebarMenu } from "@/components/SidebarMenu";
+import { trpc } from "@/lib/trpc";
+import { findPublicCategory, getExtraPublicCategories, publicCategoryHref, type PublicNavigationCategory } from "@/lib/public-navigation";
 
 export default function PublicGlobalNav() {
   const [location] = useLocation();
@@ -10,6 +12,12 @@ export default function PublicGlobalNav() {
   const [isVisible, setIsVisible] = useState(true);
   const [cartCount, setCartCount] = useState(() => loadCart<{ quantity: number }>().reduce((sum, item) => sum + item.quantity, 0));
   const isHome = location === "/";
+  const isAdminOrAuthRoute = location.startsWith("/admin") || location.startsWith("/auth");
+  const { data: categories = [] } = trpc.catalog.categories.useQuery(undefined, { enabled: !isAdminOrAuthRoute });
+  const publicCategories = categories as PublicNavigationCategory[];
+  const camisetasCategory = findPublicCategory(publicCategories, "camiseta");
+  const bonesCategory = findPublicCategory(publicCategories, "bone");
+  const extraCategories = getExtraPublicCategories(publicCategories);
 
   useEffect(() => {
     const syncCart = () => setCartCount(loadCart<{ quantity: number }>().reduce((sum, item) => sum + item.quantity, 0));
@@ -45,7 +53,7 @@ export default function PublicGlobalNav() {
     };
   }, [isHome]);
 
-  if (location.startsWith("/admin") || location.startsWith("/auth")) return null;
+  if (isAdminOrAuthRoute) return null;
 
   return (
     <>
@@ -55,6 +63,13 @@ export default function PublicGlobalNav() {
           <span>MENU</span>
         </button>
         <Link href="/" className="public-global-brand" aria-label="Voltar para a loja Eras Label">ERAS<span>.</span></Link>
+        <nav className="public-global-links" aria-label="Navegação da loja">
+          <Link href="/" className={location === "/" ? "is-active" : ""}>Início</Link>
+          <Link href="/catalog" className={location === "/catalog" ? "is-active" : ""}>Produtos</Link>
+          <Link href={publicCategoryHref(camisetasCategory, "/category/camisetas")} className={location.includes("camiseta") ? "is-active" : ""}>Camisetas</Link>
+          <Link href={publicCategoryHref(bonesCategory, "/category/bones")} className={location.includes("bone") ? "is-active" : ""}>Bonés</Link>
+          {extraCategories.map((category) => <Link key={category.id} href={publicCategoryHref(category, "/catalog")} className={location.includes(category.slug) ? "is-active" : ""}>{category.name}</Link>)}
+        </nav>
         <button type="button" className="public-global-bag" aria-label={`Abrir sacola${cartCount ? ` com ${cartCount} itens` : " vazia"}`} onClick={() => window.dispatchEvent(new Event("eras-open-cart"))}>
           <ShoppingBag size={16} strokeWidth={1.7} />
           <span>SACOLA</span>

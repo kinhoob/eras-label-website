@@ -5171,3 +5171,67 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .public-global-nav, .checkout-page--modal, .checkout-modal-shell { animation: none; transition: none; }
 }
+
+/* Navbar de e-commerce: links essenciais ficam sempre acessíveis no desktop, enquanto o menu lateral continua sendo a navegação complementar. */
+.public-global-nav {
+  grid-template-columns: auto minmax(120px, auto) minmax(0, 1fr) auto;
+  column-gap: clamp(1rem, 2.6vw, 2.8rem);
+}
+.public-global-brand { justify-self: start; white-space: nowrap; }
+.public-global-links {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(.8rem, 1.8vw, 1.8rem);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.public-global-links::-webkit-scrollbar { display: none; }
+.public-global-links a {
+  position: relative;
+  flex: 0 0 auto;
+  padding: .55rem 0;
+  color: #5a5149;
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  transition: color .18s ease-out;
+}
+.public-global-links a::after {
+  position: absolute;
+  right: 0;
+  bottom: .18rem;
+  left: 0;
+  height: 1px;
+  background: #b22222;
+  content: "";
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform .2s ease-out;
+}
+.public-global-links a:hover,
+.public-global-links a.is-active { color: #b22222; }
+.public-global-links a:hover::after,
+.public-global-links a.is-active::after { transform: scaleX(1); }
+@media (max-width: 920px) {
+  .public-global-nav { column-gap: 1rem; }
+  .public-global-links { gap: 1rem; }
+  .public-global-links a { font-size: .61rem; letter-spacing: .09em; }
+}
+@media (max-width: 700px) {
+  .public-global-nav { grid-template-columns: auto 1fr auto; column-gap: .8rem; min-height: 60px; }
+  .public-global-brand { justify-self: center; }
+  .public-global-links { display: none; }
+  .public-global-menu-trigger span, .public-global-bag span { display: none; }
+  .public-global-menu-trigger, .public-global-bag { padding: .5rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .public-global-links a, .public-global-links a::after { transition: none; }
+}
+
+/* No mobile, a marca permanece visível como atalho de Início; os links secundários continuam no menu lateral. */
+@media (max-width: 700px) {
+  .public-global-brand { display: inline-block; }
+}

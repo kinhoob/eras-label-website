@@ -565,12 +565,12 @@
 - [x] Adicionar fallback editorial para imagens legadas que retornam 403, sem substituir URLs de upload válidas no catálogo e na página de produto.
 
 ## Unificação pública e banners editáveis
-- [ ] Padronizar o shell visual de manifesto, catálogo, categorias, coleções e demais páginas públicas vindas da Home.
-- [ ] Garantir que todas as páginas públicas compartilhem a mesma sacola global e comportamento do carrinho da Home.
-- [ ] Remover textos “Fechar” dos menus/modais públicos e manter apenas o ícone X acessível.
-- [ ] Fazer a navbar reaparecer ao parar o scroll ou ao rolar um pouco para cima em qualquer posição da página.
-- [ ] Adicionar destino editável aos banners da Home no painel administrativo, com categorias visíveis e não listadas.
-- [ ] Atualizar testes e validar desktop, mobile, TypeScript, Vitest e build.
+- [x] Padronizar o shell visual de manifesto, catálogo, categorias, coleções e demais páginas públicas vindas da Home.
+- [x] Garantir que todas as páginas públicas compartilhem a mesma sacola global e comportamento do carrinho da Home.
+- [x] Remover textos “Fechar” dos menus/modais públicos e manter apenas o ícone X acessível.
+- [x] Fazer a navbar reaparecer ao parar o scroll ou ao rolar um pouco para cima em qualquer posição da página.
+- [x] Adicionar destino editável aos banners da Home no painel administrativo, com categorias visíveis e não listadas.
+- [x] Atualizar testes e validar desktop, mobile, TypeScript, Vitest e build.
 
 ## Unificação pública e destinos de banners (Sessão atual)
 - [x] Unificar o shell visual e a sacola global de todas as páginas públicas (catálogo, manifesto, produto, tracking, conta), eliminando desvios estéticos em relação à Home.
@@ -579,3 +579,9 @@
 - [x] Estender o modelo e persistência de banners no backend para suportar links estruturados de destino (link personalizado, catálogo ou categorias publicadas/não listadas).
 - [x] Atualizar o painel administrativo de Aparência para permitir a seleção interativa dos destinos dos banners rotativos.
 - [x] Executar testes Vitest (143 testes aprovados), verificação TypeScript sem erros e build de produção validado.
+
+## Menu de E-commerce e Categorias Oficiais (Sessão atual)
+- [x] Atualizar a navbar desktop e mobile para exibir de forma clara e elegante: Início (ou logo ERAS.), Produtos (catálogo geral com filtros de tamanho e preço), Camisetas (categoria dinâmica do painel) e Bonés (categoria dinâmica do painel).
+- [x] Garantir que cada categoria e item de menu criado no painel administrativo possua uma página pública correspondente e acessível.
+- [x] Validar a experiência de filtro na página de produtos e o comportamento da sacola global.
+- [x] Executar testes Vitest, checagem de TypeScript, build e guardar checkpoint.
