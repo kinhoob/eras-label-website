@@ -592,6 +592,6 @@
 - [x] Executar testes Vitest e validar estabilidade na Home
 
 ## Refinamento visual da sacola
-- [ ] Aplicar fundo sólido ao drawer global da sacola, com contraste e estética premium.
-- [ ] Garantir botão X visível, acessível e consistente para fechar a sacola.
-- [ ] Validar o drawer em desktop/mobile, executar Vitest e build e salvar checkpoint.
+- [x] Aplicar fundo sólido ao drawer global da sacola, com contraste e estética premium.
+- [x] Garantir botão X visível, acessível e consistente para fechar a sacola.
+- [x] Validar o drawer em desktop/mobile, executar Vitest e build e salvar checkpoint.
