@@ -377,3 +377,9 @@
 - [x] Tornar os toasts flutuantes interativos para abrir diretamente a encomenda ou o produto ao ser clicados.
 - [x] Incluir efeito de destaque e animação suave no ícone do sino na chegada de novos alertas.
 - [x] Garantir compatibilidade com preferências de acessibilidade e movimento reduzido.
+
+
+## Indicadores na Sidebar e Som Configurável (2026-08-16)
+- [x] Adicionar indicadores visuais (pontos vermelhos) nos itens da sidebar correspondentes a novas encomendas e stock crítico.
+- [x] Incluir uma opção nas configurações do painel para ativar ou desativar o aviso sonoro das notificações.
+- [x] Garantir persistência e sincronização em tempo real dos alertas na interface.
