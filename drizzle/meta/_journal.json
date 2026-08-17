@@ -85,6 +85,13 @@
       "when": 1786989768837,
       "tag": "0011_loud_killmonger",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "5",
+      "when": 1787004028565,
+      "tag": "0012_sour_tigra",
+      "breakpoints": true
     }
   ]
 }

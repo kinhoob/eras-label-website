@@ -479,8 +479,9 @@ export const appRouter = router({
       categoryIds: z.array(z.number().int().positive()).max(50).optional(),
       variations: z.array(z.object({
         size: z.string().trim().min(1).max(20),
+        color: z.string().trim().max(50).optional(),
         stock: z.number().int().min(0).max(100000),
-      })).max(20).optional(),
+      })).max(50).optional(),
     })).mutation(async ({ input }) => {
       const saved = await saveProductData(input);
       return {
@@ -493,15 +494,17 @@ export const appRouter = router({
       productId: z.number().int().positive(),
       variations: z.array(z.object({
         size: z.string().trim().min(1).max(20),
+        color: z.string().trim().max(50).optional(),
         stock: z.number().int().min(0).max(100000),
-      })).max(20),
+      })).max(50),
     })).mutation(async ({ input, ctx }) => {
       // Registrar log de auditoria para cada variação atualizada
       try {
         const prod = await getProductWithVariations(input.productId);
         if (prod) {
           for (const newVar of input.variations) {
-            const existingVar = prod.variations.find((v) => v.size === newVar.size);
+            const colorVal = newVar.color?.trim() || "Preto";
+            const existingVar = prod.variations.find((v) => v.size === newVar.size && (v.color || "Preto") === colorVal);
             const prevStock = existingVar ? existingVar.stock : 0;
             if (prevStock !== newVar.stock) {
               await logInventoryAudit({

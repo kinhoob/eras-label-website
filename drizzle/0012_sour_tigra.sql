@@ -1,0 +1,1 @@
+ALTER TABLE `product_variations` ADD `color` varchar(50) DEFAULT 'Preto' NOT NULL;

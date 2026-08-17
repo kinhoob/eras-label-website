@@ -6,6 +6,9 @@ import { PageTransitionHandler } from "@/components/PageTransition";
 import OfficialFooter from "@/components/OfficialFooter";
 import NotFound from "@/pages/NotFound";
 import { trpc } from "@/lib/trpc";
+import { loadCart, saveCart } from "@/lib/cart-storage";
+import { toast } from "sonner";
+import type { PublicCartLine } from "@/components/PublicCartDrawer";
 
 const productImageFallback = "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1200&q=85";
 
@@ -24,6 +27,7 @@ export default function ProductPage() {
   const isError = numericId !== null ? idQuery.isError : slugQuery.isError;
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState("");
+  const [selectedColor, setSelectedColor] = useState("Preto");
   const touchStartX = useRef<number | null>(null);
 
   useEffect(() => {
@@ -36,6 +40,21 @@ export default function ProductPage() {
 
   const images = useMemo(() => Array.isArray(product?.images) ? product.images.filter((image): image is string => typeof image === "string" && image.length > 0) : [], [product?.images]);
   const variations = useMemo(() => Array.isArray(product?.variations) ? product.variations.filter((variation: any) => Number(variation.stock ?? 0) > 0) : [], [product?.variations]);
+  const availableColors = useMemo(() => {
+    const set = new Set<string>();
+    variations.forEach((v: any) => set.add(v.color ? String(v.color) : "Preto"));
+    if (set.size === 0) set.add("Preto");
+    return Array.from(set);
+  }, [variations]);
+
+  useEffect(() => {
+    if (variations.length > 0 && !selectedSize) {
+      setSelectedSize(String(variations[0].size));
+    }
+    if (availableColors.length > 0 && !availableColors.includes(selectedColor)) {
+      setSelectedColor(availableColors[0]);
+    }
+  }, [variations, availableColors]);
 
   if (isLoading) {
     return <main className="min-h-screen bg-[#f6f3ee] flex items-center justify-center"><p className="text-xs font-bold uppercase tracking-[0.24em]">A carregar produto</p></main>;
@@ -106,15 +125,55 @@ export default function ProductPage() {
             <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-[#b22222]">{formatPrice(pixPrice)} no Pix</p>
             {product.description && <p className="mt-8 max-w-xl whitespace-pre-line text-sm leading-7 text-[#5a554d]">{product.description}</p>}
 
-            {variations.length > 0 && <div className="mt-8">
-              <div className="mb-3 flex items-center justify-between"><span className="text-xs font-bold uppercase tracking-[0.18em]">Tamanho</span><span className="text-xs text-[#5a554d]">Selecione uma opção</span></div>
+            {availableColors.length > 0 && <div className="mt-6">
+              <div className="mb-3 flex items-center justify-between"><span className="text-xs font-bold uppercase tracking-[0.18em]">Cor</span><span className="text-xs text-[#5a554d]">{selectedColor}</span></div>
               <div className="flex flex-wrap gap-2">
-                {variations.map((variation: any) => <button key={variation.size} type="button" onClick={() => setSelectedSize(String(variation.size))} className={`min-w-12 border px-4 py-3 text-xs font-bold uppercase tracking-[0.12em] transition-colors ${selectedSize === String(variation.size) ? "border-[#b22222] bg-[#b22222] text-white" : "border-[#23221e]/20 bg-transparent hover:border-[#b22222]"}`}>{variation.size}</button>)}
+                {availableColors.map((color) => <button key={color} type="button" onClick={() => setSelectedColor(color)} className={`border px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] transition-colors ${selectedColor === color ? "border-[#b22222] bg-[#b22222] text-white" : "border-[#23221e]/20 bg-transparent hover:border-[#b22222]"}`}>{color}</button>)}
               </div>
             </div>}
 
-            <Button asChild className="mt-8 h-12 rounded-none bg-[#b22222] text-xs font-bold uppercase tracking-[0.18em] text-white hover:bg-[#8e1b1b]">
-              <Link href="/#shop"><ShoppingBag size={16} /> Ver opções de compra</Link>
+            {variations.length > 0 && <div className="mt-6">
+              <div className="mb-3 flex items-center justify-between"><span className="text-xs font-bold uppercase tracking-[0.18em]">Tamanho</span><span className="text-xs text-[#5a554d]">Selecione o tamanho</span></div>
+              <div className="flex flex-wrap gap-2">
+                {variations.map((variation: any) => <button key={`${variation.size}-${variation.color ?? "Preto"}`} type="button" onClick={() => setSelectedSize(String(variation.size))} className={`min-w-12 border px-4 py-3 text-xs font-bold uppercase tracking-[0.12em] transition-colors ${selectedSize === String(variation.size) ? "border-[#b22222] bg-[#b22222] text-white" : "border-[#23221e]/20 bg-transparent hover:border-[#b22222]"}`}>{variation.size}</button>)}
+              </div>
+            </div>}
+
+            <Button 
+              type="button" 
+              onClick={() => {
+                if (!selectedSize && variations.length > 0) {
+                  toast.error("Por favor, selecione um tamanho.");
+                  return;
+                }
+                const chosenSize = selectedSize || (variations[0]?.size ?? "U");
+                const currentCart = loadCart<PublicCartLine>();
+                const existingIndex = currentCart.findIndex((line) => line.id === product.id && line.size === chosenSize && (line.color ?? "Preto") === selectedColor);
+                let nextCart: PublicCartLine[];
+                if (existingIndex >= 0) {
+                  nextCart = currentCart.map((line, idx) => idx === existingIndex ? { ...line, quantity: line.quantity + 1 } : line);
+                } else {
+                  nextCart = [...currentCart, {
+                    id: product.id,
+                    name: product.name,
+                    size: chosenSize,
+                    color: selectedColor,
+                    quantity: 1,
+                    price: Number(product.price) || 0,
+                    image: images[0] || productImageFallback,
+                    alt: product.name,
+                  }];
+                }
+                saveCart(nextCart);
+                window.dispatchEvent(new Event("eras-cart-updated"));
+                window.dispatchEvent(new Event("eras-open-cart"));
+                toast.success("Adicionado à sacola", {
+                  description: `${product.name} · ${chosenSize} (${selectedColor})`,
+                });
+              }}
+              className="mt-8 h-12 rounded-none bg-[#b22222] text-xs font-bold uppercase tracking-[0.18em] text-white hover:bg-[#8e1b1b]"
+            >
+              <ShoppingBag size={16} /> Adicionar à sacola
             </Button>
             <p className="mt-4 flex items-center gap-2 text-xs text-[#5a554d]"><Check size={14} className="text-[#b22222]" /> Produto oficial Eras Label</p>
             <p className="mt-1 text-xs text-[#5a554d]">Link público: /produto/{product.slug || product.id}</p>

@@ -372,7 +372,7 @@ function EmailMarketingSection() {
   );
 }
 
-type AdminVariation = { id?: number; size: string; stock: number };
+type AdminVariation = { id?: number; size: string; color?: string; stock: number };
 type ProductVisibility = "visible" | "unlisted" | "hidden";
 type AdminProductOption = { id: number; name: string; collection: string; category: string; subcategory?: string | null; sku?: string | null; slug?: string | null; visibility?: ProductVisibility; categoryIds?: number[]; price: string; stock: number; variations: AdminVariation[]; status: string; images: string[] };
 
@@ -738,7 +738,7 @@ export default function Admin() {
 
   const adminProducts = useMemo<AdminProductOption[]>(() => (catalogProducts ?? []).map((product) => {
     const variations = Array.isArray(product.variations)
-      ? product.variations.map((variation) => ({ id: variation.id, size: String(variation.size), stock: Number(variation.stock ?? 0) }))
+      ? product.variations.map((variation) => ({ id: variation.id, size: String(variation.size), color: variation.color ? String(variation.color) : "Preto", stock: Number(variation.stock ?? 0) }))
       : [];
     return {
       id: product.id,
@@ -796,27 +796,28 @@ export default function Admin() {
   const adminName = myAdminDetails?.name?.trim() || authUser?.name?.trim() || "Eras Label Admin";
   const adminInitial = adminName.charAt(0).toUpperCase();
 
-  function toggleEditingSize(size: string, checked: boolean) {
+  function toggleEditingVariation(size: string, color: string, checked: boolean) {
     setEditingProduct((current: any) => {
       if (!current) return current;
       const variations: AdminVariation[] = Array.isArray(current.variations) ? current.variations : [];
-      if (checked && !variations.some((variation) => variation.size === size)) {
-        return { ...current, variations: [...variations, { size, stock: 0 }] };
+      const exists = variations.some((v) => v.size === size && (v.color ?? "Preto") === color);
+      if (checked && !exists) {
+        return { ...current, variations: [...variations, { size, color, stock: 0 }] };
       }
       if (!checked) {
-        return { ...current, variations: variations.filter((variation) => variation.size !== size) };
+        return { ...current, variations: variations.filter((v) => !(v.size === size && (v.color ?? "Preto") === color)) };
       }
       return current;
     });
   }
 
-  function updateEditingStock(size: string, value: string) {
+  function updateEditingVariationStock(size: string, color: string, value: string) {
     const stock = Math.max(0, Math.floor(Number(value) || 0));
     setEditingProduct((current: any) => {
       if (!current) return current;
       return {
         ...current,
-        variations: (current.variations ?? []).map((variation: AdminVariation) => variation.size === size ? { ...variation, stock } : variation),
+        variations: (current.variations ?? []).map((variation: AdminVariation) => (variation.size === size && (variation.color ?? "Preto") === color) ? { ...variation, stock } : variation),
       };
     });
   }
@@ -1045,24 +1046,86 @@ export default function Admin() {
 
               <section className="inventory-variation-editor" aria-labelledby="variation-editor-title">
                 <div className="inventory-section-heading">
-                  <div><span className="section-kicker">INVENTÁRIO</span><h4 id="variation-editor-title">Tamanhos e estoque</h4><p>Selecione os tamanhos disponíveis e informe quantas peças existem em cada variação.</p></div>
+                  <div><span className="section-kicker">INVENTÁRIO</span><h4 id="variation-editor-title">Tamanhos, Cores e Estoque</h4><p>Gerencie as variações por tamanho e cor (ex: Preto, Branco, Vermelho) para camisetas e peças da marca.</p></div>
                   <strong>{(editingProduct.variations ?? []).reduce((total: number, variation: AdminVariation) => total + Number(variation.stock || 0), 0)} un.</strong>
+                </div>
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#333', marginBottom: '0.35rem' }}>Cor principal da variação</label>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    {["Preto", "Branco", "Off-White", "Vermelho (#b22222)", "Cinza Chumbo", "Azul Marinho"].map((colorOption) => {
+                      const cleanColor = colorOption.split(" ")[0];
+                      return (
+                        <button
+                          key={colorOption}
+                          type="button"
+                          onClick={() => {
+                            // Ao clicar, podemos adicionar um tamanho padrão ou focar nas variações da cor
+                          }}
+                          style={{ fontSize: '0.8rem', padding: '0.3rem 0.6rem', borderRadius: '4px', border: '1px solid #d1d5db', background: '#fff', cursor: 'default' }}
+                        >
+                          {colorOption}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
                 <div className="size-checkbox-grid">
                   {getInventorySizeOptions(String(editingProduct.category ?? "")).map((size) => {
-                    const variation = (editingProduct.variations ?? []).find((item: AdminVariation) => item.size === size);
+                    const defaultColor = "Preto";
+                    const variation = (editingProduct.variations ?? []).find((item: AdminVariation) => item.size === size && (item.color ?? "Preto") === defaultColor);
                     return <label className={`size-checkbox ${variation ? "selected" : ""}`} key={size}>
-                      <input type="checkbox" checked={Boolean(variation)} onChange={(event) => toggleEditingSize(size, event.target.checked)} />
-                      <span>{size}</span>
+                      <input type="checkbox" checked={Boolean(variation)} onChange={(event) => toggleEditingVariation(size, defaultColor, event.target.checked)} />
+                      <span>{size} ({defaultColor})</span>
                     </label>;
                   })}
                 </div>
                 <div className="inventory-variation-list">
-                  {(editingProduct.variations ?? []).map((variation: AdminVariation) => <label className="inventory-variation-row" key={variation.size}>
-                    <span className="variation-size-label">{variation.size}</span>
-                    <span className="variation-stock-field"><Input type="number" min="0" step="1" value={variation.stock} aria-label={`Estoque tamanho ${variation.size}`} onChange={(event) => updateEditingStock(variation.size, event.target.value)} /><small>peças</small></span>
-                  </label>)}
-                  {(editingProduct.variations ?? []).length === 0 && <p className="inventory-empty-state">Nenhum tamanho selecionado. Escolha uma opção acima para começar.</p>}
+                  {(editingProduct.variations ?? []).map((variation: AdminVariation, index: number) => {
+                    const varColor = variation.color ?? "Preto";
+                    return (
+                      <div className="inventory-variation-row" key={`${variation.size}-${varColor}-${index}`} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                        <span className="variation-size-label" style={{ minWidth: '90px', fontWeight: 600 }}>{variation.size}</span>
+                        <input
+                          type="text"
+                          value={varColor}
+                          onChange={(event) => {
+                            const newColor = event.target.value;
+                            setEditingProduct((current: any) => {
+                              if (!current) return current;
+                              return {
+                                ...current,
+                                variations: (current.variations ?? []).map((v: AdminVariation, i: number) => i === index ? { ...v, color: newColor } : v),
+                              };
+                            });
+                          }}
+                          placeholder="Cor (ex: Preto)"
+                          style={{ padding: '0.3rem 0.5rem', borderRadius: '4px', border: '1px solid #ccc', fontSize: '0.85rem', width: '130px' }}
+                          aria-label={`Cor para tamanho ${variation.size}`}
+                        />
+                        <span className="variation-stock-field" style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flex: 1 }}>
+                          <Input type="number" min="0" step="1" value={variation.stock} aria-label={`Estoque tamanho ${variation.size} cor ${varColor}`} onChange={(event) => updateEditingVariationStock(variation.size, varColor, event.target.value)} />
+                          <small>peças</small>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingProduct((current: any) => {
+                              if (!current) return current;
+                              return {
+                                ...current,
+                                variations: (current.variations ?? []).filter((_: any, i: number) => i !== index),
+                              };
+                            });
+                          }}
+                          style={{ background: 'transparent', border: 'none', color: '#b22222', cursor: 'pointer', fontSize: '0.9rem', padding: '0.2rem' }}
+                          title="Remover variação"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    );
+                  })}
+                  {(editingProduct.variations ?? []).length === 0 && <p className="inventory-empty-state">Nenhuma variação selecionada. Escolha um tamanho acima para começar.</p>}
                 </div>
               </section>
 

@@ -103,7 +103,7 @@ export async function listProducts(category?: string) {
   // server-side so the UI does not have to guess from a product category.
   return Promise.all(rows.map(async (product) => {
     const variations = await db
-      .select({ size: productVariations.size, stock: productVariations.stock })
+      .select({ id: productVariations.id, size: productVariations.size, color: productVariations.color, stock: productVariations.stock })
       .from(productVariations)
       .where(eq(productVariations.productId, product.id));
     const relationRows = await db
@@ -265,10 +265,10 @@ export async function getAdminProducts() {
   return Promise.all(rows.map(async (product) => {
     const [variations, categoryRelations] = await Promise.all([
       db
-        .select({ id: productVariations.id, size: productVariations.size, stock: productVariations.stock })
+        .select({ id: productVariations.id, size: productVariations.size, color: productVariations.color, stock: productVariations.stock })
         .from(productVariations)
         .where(eq(productVariations.productId, product.id))
-        .orderBy(asc(productVariations.size)),
+        .orderBy(asc(productVariations.size), asc(productVariations.color)),
       db
         .select({ categoryId: productCategories.categoryId })
         .from(productCategories)
@@ -289,7 +289,7 @@ export async function duplicateProductData(productId: number) {
   const [source] = await db.select().from(products).where(eq(products.id, productId)).limit(1);
   if (!source) throw new Error("Produto não encontrado para duplicação.");
   const sourceVariations = await db
-    .select({ size: productVariations.size, stock: productVariations.stock })
+    .select({ size: productVariations.size, color: productVariations.color, stock: productVariations.stock })
     .from(productVariations)
     .where(eq(productVariations.productId, productId))
     .orderBy(asc(productVariations.size));
@@ -313,7 +313,7 @@ export async function duplicateProductData(productId: number) {
     description: source.description ?? "",
     images: Array.isArray(source.images) ? source.images : [],
     status: source.status === "active" ? "Publicado" : source.status === "soldout" ? "Esgotado" : "Rascunho",
-    variations: sourceVariations.map((variation) => ({ size: variation.size, stock: Number(variation.stock ?? 0) })),
+    variations: sourceVariations.map((variation) => ({ size: variation.size, color: variation.color ?? "Preto", stock: Number(variation.stock ?? 0) })),
   });
 }
 
@@ -552,7 +552,7 @@ export async function saveProductData(data: {
   categoryIds?: number[];
   sku?: string | null;
   subcategory?: string | null;
-  variations?: Array<{ size: string; stock: number }>;
+  variations?: Array<{ size: string; color?: string; stock: number }>;
 }) {
   const normalizedVariations = normalizeInventoryVariations(data.variations ?? []);
   const normalizedSlug = slugifyCategory(data.slug?.trim() || data.name);
@@ -625,6 +625,7 @@ export async function saveProductData(data: {
       await db.insert(productVariations).values(normalizedVariations.map((variation) => ({
         productId,
         size: variation.size,
+        color: variation.color || "Preto",
         stock: variation.stock,
       })));
     }
@@ -641,7 +642,7 @@ export async function saveProductData(data: {
   };
 }
 
-export async function updateInventoryStock(data: { productId: number; variations: Array<{ size: string; stock: number }> }) {
+export async function updateInventoryStock(data: { productId: number; variations: Array<{ size: string; color?: string; stock: number }> }) {
   const db = await getDb();
   const normalizedVariations = normalizeInventoryVariations(data.variations);
   if (!db) {
@@ -651,7 +652,12 @@ export async function updateInventoryStock(data: { productId: number; variations
   if (!existing[0]) throw new Error("Produto não encontrado.");
   await db.delete(productVariations).where(eq(productVariations.productId, data.productId));
   if (normalizedVariations.length > 0) {
-    await db.insert(productVariations).values(normalizedVariations.map((variation) => ({ productId: data.productId, size: variation.size, stock: variation.stock })));
+    await db.insert(productVariations).values(normalizedVariations.map((variation) => ({
+      productId: data.productId,
+      size: variation.size,
+      color: variation.color || "Preto",
+      stock: variation.stock,
+    })));
   }
   return { productId: data.productId, variations: normalizedVariations, totalStock: sumInventoryStock(normalizedVariations) };
 }

@@ -595,3 +595,10 @@
 - [x] Aplicar fundo sólido ao drawer global da sacola, com contraste e estética premium.
 - [x] Garantir botão X visível, acessível e consistente para fechar a sacola.
 - [x] Validar o drawer em desktop/mobile, executar Vitest e build e salvar checkpoint.
+
+## Nova Solicitação: Deslizamento do Carrinho e Cores/Tamanhos no Admin
+- [ ] Adicionar animação suave de deslizamento (slide-in/slide-out) no carrinho global
+- [ ] Criar estado vazio amigável e refinado no carrinho global com CTA para o catálogo
+- [ ] Ampliar o painel administrativo (Inventário / Produtos) para gerenciar variações de tamanho e cor para camisetas e vestuário
+- [ ] Atualizar persistência backend e testes unitários Vitest
+- [ ] Executar build de produção e guardar checkpoint final

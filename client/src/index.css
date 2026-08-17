@@ -5330,3 +5330,164 @@ body {
     padding: 20px 17px 18px;
   }
 }
+
+/* Animação suave de deslizamento e estado vazio acolhedor para a sacola global */
+@keyframes cartDrawerSlideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0.85;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes cartOverlayFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.public-cart-overlay {
+  animation: cartOverlayFadeIn 0.25s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+.public-cart-drawer {
+  animation: cartDrawerSlideIn 0.35s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+.empty-cart {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3.5rem 1.75rem;
+  text-align: center;
+  gap: 1rem;
+  color: #555;
+}
+
+.empty-cart svg {
+  color: #c95139;
+  margin-bottom: 0.25k;
+}
+
+.empty-cart h3 {
+  font-family: Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 500;
+  color: #111;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.empty-cart p {
+  font-size: 0.95rem;
+  color: #666;
+  max-width: 280px;
+  line-height: 1.6;
+  margin: 0 0 1.25rem 0;
+}
+
+.empty-cart .primary-button {
+  background: #23221e;
+  color: #f6f3ee;
+  padding: 0.85rem 1.75rem;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  border-radius: 0;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.empty-cart .primary-button:hover {
+  background: #c95139;
+}
+
+/* --- Animação e Refinamento do Carrinho Global --- */
+@keyframes publicCartSlideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes publicCartOverlayFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.public-cart-overlay {
+  animation: publicCartOverlayFade 0.25s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+.public-cart-drawer {
+  animation: publicCartSlideIn 0.3s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+.public-cart-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  gap: 1rem;
+}
+
+.public-cart-empty-icon {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+  opacity: 0.85;
+}
+
+.public-cart-empty h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+  font-family: inherit;
+}
+
+.public-cart-empty p {
+  font-size: 0.925rem;
+  color: #666;
+  max-width: 280px;
+  line-height: 1.5;
+  margin: 0 0 1rem 0;
+}
+
+.public-cart-explore {
+  background: #111;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.public-cart-explore:hover {
+  background: #b22222;
+}
+
+.public-cart-explore:active {
+  transform: scale(0.97);
+}

@@ -58,6 +58,7 @@ export const productVariations = mysqlTable("product_variations", {
   id: int("id").autoincrement().primaryKey(),
   productId: int("productId").notNull(),
   size: varchar("size", { length: 20 }).notNull(),
+  color: varchar("color", { length: 50 }).default("Preto").notNull(),
   stock: int("stock").default(10).notNull(),
 });
 

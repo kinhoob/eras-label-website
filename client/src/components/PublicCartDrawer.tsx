@@ -13,6 +13,7 @@ export type PublicCartLine = {
   id: number;
   name: string;
   size: string;
+  color?: string;
   quantity: number;
   price: number;
   image?: string;
@@ -91,9 +92,9 @@ export default function PublicCartDrawer() {
     };
   }, [isOpen]);
 
-  function changeQuantity(productId: number, size: string, delta: number) {
+  function changeQuantity(productId: number, size: string, delta: number, color?: string) {
     setCart((current) => {
-      const next = updateCartLineQuantity(current, productId, size, delta);
+      const next = updateCartLineQuantity(current, productId, size, delta, color);
       saveCart(next);
       window.dispatchEvent(new Event("eras-cart-updated"));
       return next;
@@ -101,19 +102,20 @@ export default function PublicCartDrawer() {
   }
 
   function removeItem(item: PublicCartLine) {
+    const itemColor = item.color ?? "Preto";
     setCart((current) => {
-      const next = removeCartLine(current, item.id, item.size);
+      const next = removeCartLine(current, item.id, item.size, itemColor);
       saveCart(next);
       window.dispatchEvent(new Event("eras-cart-updated"));
       return next;
     });
     toast.success("Item removido da sacola.", {
-      description: `${item.name} · tamanho ${item.size}`,
+      description: `${item.name} · ${item.size} (${itemColor})`,
       action: {
         label: "Desfazer",
         onClick: () => {
           setCart((current) => {
-            const restored = current.some((line) => line.id === item.id && line.size === item.size) ? current : [...current, item];
+            const restored = current.some((line) => line.id === item.id && line.size === item.size && (line.color ?? "Preto") === itemColor) ? current : [...current, item];
             saveCart(restored);
             window.dispatchEvent(new Event("eras-cart-updated"));
             return restored;
@@ -183,32 +185,36 @@ export default function PublicCartDrawer() {
         </div>
 
         {cart.length === 0 ? (
-          <div className="empty-cart">
-            <ShoppingBag size={48} strokeWidth={1} />
-            <p>Sua sacola está vazia.</p>
-            <button type="button" className="primary-button" onClick={() => { setIsOpen(false); window.location.assign("/catalog"); }}>EXPLORAR PRODUTOS</button>
+          <div className="public-cart-empty">
+            <div className="public-cart-empty-icon">✦</div>
+            <h4>Sua sacola está vazia</h4>
+            <p>Ainda não há peças selecionadas. Explore nossas coleções e manifesto para encontrar itens com a essência Eras.</p>
+            <button type="button" className="public-cart-explore" onClick={() => { setIsOpen(false); window.location.assign("/catalog"); }}>EXPLORAR CATÁLOGO</button>
           </div>
         ) : (
           <>
             <div className="cart-items-list">
-              {cart.map((item) => (
-                <div className="cart-item" key={`${item.id}-${item.size}`}>
-                  <img src={item.image || editorialCartImage} alt={item.alt || item.name} />
-                  <div className="cart-item-details">
-                    <p className="cart-item-name">{item.name}</p>
-                    <p className="cart-item-variant">Tamanho: {item.size}</p>
-                    <div className="cart-item-bottom">
-                      <div className="quantity-stepper">
-                        <button type="button" onClick={() => changeQuantity(item.id, item.size, -1)} aria-label="Diminuir quantidade"><Minus size={13} /></button>
-                        <span>{item.quantity}</span>
-                        <button type="button" onClick={() => changeQuantity(item.id, item.size, 1)} aria-label="Aumentar quantidade"><Plus size={13} /></button>
+              {cart.map((item, idx) => {
+                const itemColor = item.color ?? "Preto";
+                return (
+                  <div className="cart-item" key={`${item.id}-${item.size}-${itemColor}-${idx}`}>
+                    <img src={item.image || editorialCartImage} alt={item.alt || item.name} />
+                    <div className="cart-item-details">
+                      <p className="cart-item-name">{item.name}</p>
+                      <p className="cart-item-variant">Tamanho: {item.size} · Cor: {itemColor}</p>
+                      <div className="cart-item-bottom">
+                        <div className="quantity-stepper">
+                          <button type="button" onClick={() => changeQuantity(item.id, item.size, -1, itemColor)} aria-label="Diminuir quantidade"><Minus size={13} /></button>
+                          <span>{item.quantity}</span>
+                          <button type="button" onClick={() => changeQuantity(item.id, item.size, 1, itemColor)} aria-label="Aumentar quantidade"><Plus size={13} /></button>
+                        </div>
+                        <strong>{formatPrice(Number(item.price || 0) * item.quantity)}</strong>
                       </div>
-                      <strong>{formatPrice(Number(item.price || 0) * item.quantity)}</strong>
                     </div>
+                    <button type="button" className="cart-item-remove" onClick={() => removeItem(item)} aria-label={`Remover ${item.name}`}><X size={15} /></button>
                   </div>
-                  <button type="button" className="cart-item-remove" onClick={() => removeItem(item)} aria-label={`Remover ${item.name}`}><X size={15} /></button>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="cart-footer">

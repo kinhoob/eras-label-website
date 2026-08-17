@@ -17,22 +17,29 @@ export function getInventorySizeOptions(category: string) {
   return APPAREL_SIZE_OPTIONS;
 }
 
-export type InventoryVariationInput = { size: string; stock: number };
-export type NormalizedInventoryVariation = { size: string; stock: number };
+export type InventoryVariationInput = { size: string; color?: string; stock: number };
+export type NormalizedInventoryVariation = { size: string; color: string; stock: number };
 
 /**
  * Normaliza o payload de estoque antes de o servidor persistir os dados.
- * Tamanhos vazios são descartados, os nomes ficam em maiúsculas e o estoque nunca fica negativo ou fracionado.
+ * Tamanhos e cores são validados, maiúsculas aplicadas e o estoque nunca fica negativo ou fracionado.
  */
 export function normalizeInventoryVariations(variations: InventoryVariationInput[] = []): NormalizedInventoryVariation[] {
   const normalized = variations
     .map((variation) => ({
       size: String(variation.size ?? "").trim().toUpperCase(),
+      color: String(variation.color ?? "Preto").trim() || "Preto",
       stock: Math.max(0, Math.floor(Number(variation.stock) || 0)),
     }))
     .filter((variation) => variation.size.length > 0);
 
-  return Array.from(new Map(normalized.map((variation) => [variation.size, variation])).values());
+  // Dedup por par (size, color) para permitir a mesma peça em diferentes cores
+  const map = new Map<string, NormalizedInventoryVariation>();
+  for (const item of normalized) {
+    const key = `${item.size}__${item.color.toLowerCase()}`;
+    map.set(key, item);
+  }
+  return Array.from(map.values());
 }
 
 /**

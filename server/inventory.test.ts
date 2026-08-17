@@ -18,8 +18,8 @@ describe("inventory rules", () => {
       { size: "P", stock: 7 },
       { size: "", stock: 3 },
     ])).toEqual([
-      { size: "P", stock: 7 },
-      { size: "GG", stock: 0 },
+      { size: "P", color: "Preto", stock: 7 },
+      { size: "GG", color: "Preto", stock: 0 },
     ]);
   });
 
