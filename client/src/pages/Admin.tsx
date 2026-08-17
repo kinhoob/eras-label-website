@@ -348,7 +348,12 @@ function EmailMarketingSection() {
 }
 
 type AdminVariation = { id?: number; size: string; stock: number };
-type AdminProductOption = { id: number; name: string; collection: string; category: string; subcategory?: string | null; sku?: string | null; price: string; stock: number; variations: AdminVariation[]; status: string; images: string[] };
+type ProductVisibility = "visible" | "unlisted" | "hidden";
+type AdminProductOption = { id: number; name: string; collection: string; category: string; subcategory?: string | null; sku?: string | null; slug?: string | null; visibility?: ProductVisibility; categoryIds?: number[]; price: string; stock: number; variations: AdminVariation[]; status: string; images: string[] };
+
+function normalizeProductVisibility(value: unknown): ProductVisibility {
+  return value === "unlisted" || value === "hidden" ? value : "visible";
+}
 type EditableBanner = { id: string; eyebrow: string; title: string; subtitle: string; imageUrl: string; href: string; cta: string };
 type EditableHighlight = { id: string; productId: number; label: string };
 type EditableVipBanner = Omit<EditableBanner, "id">;
@@ -715,6 +720,9 @@ export default function Admin() {
       category: product.category,
       subcategory: product.subcategory,
       sku: product.sku,
+      slug: product.slug,
+      visibility: normalizeProductVisibility(product.visibility),
+      categoryIds: Array.isArray(product.categoryIds) ? product.categoryIds.map(Number) : [],
       price: Number(product.price).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }),
       stock: Number(product.totalStock ?? variations.reduce((total, variation) => total + variation.stock, 0)),
       variations,
@@ -785,6 +793,17 @@ export default function Admin() {
     });
   }
 
+  function toggleEditingCategory(categoryId: number, checked: boolean) {
+    setEditingProduct((current: any) => {
+      if (!current) return current;
+      const categoryIds: number[] = Array.isArray(current.categoryIds) ? current.categoryIds.map(Number) : [];
+      const nextIds = checked
+        ? Array.from(new Set([...categoryIds, categoryId]))
+        : categoryIds.filter((id) => id !== categoryId);
+      return { ...current, categoryIds: nextIds };
+    });
+  }
+
   if (authLoading) return <AdminAccessLoading />;
   if (!authUser || authUser.role !== "admin") return <AdminLoginScreen />;
 
@@ -819,7 +838,7 @@ export default function Admin() {
             <div><span className="section-kicker">CATÁLOGO</span><h2 className="content-title">Produtos</h2><p>Cadastre e edite os dados completos das peças, incluindo SKU, categoria, imagens e preços.</p></div>
             <Button onClick={() => {
               setEditorMode("product");
-              setEditingProduct({ name: "", collection: "PARADOX COLLECTION", category: "Camisetas", subcategory: null, sku: "", price: 154.90, pixPrice: 147.15, description: "Peça de vestuário streetwear com acabamento premium.", status: "Publicado", variations: [] });
+              setEditingProduct({ name: "", collection: "PARADOX COLLECTION", category: "Camisetas", subcategory: null, sku: "", slug: "", visibility: "visible", categoryIds: [], price: 154.90, pixPrice: 147.15, description: "Peça de vestuário streetwear com acabamento premium.", status: "Publicado", variations: [] });
               setProductImages([]);
             }}><Plus size={16} /> Novo produto</Button>
           </div>
@@ -832,7 +851,7 @@ export default function Admin() {
               <button className="table-more" aria-label={`Editar produto ${product.name}`} title="Editar produto" onClick={() => {
                 setEditorMode("product");
                 const numericPrice = Number(product.price.replace(/[^0-9,]/g, "").replace(",", ".")) || 0;
-                setEditingProduct({ id: product.id, name: product.name, collection: product.collection, category: product.category, subcategory: product.subcategory ?? null, sku: product.sku ?? "", price: numericPrice, pixPrice: numericPrice, description: "Peça de vestuário streetwear com acabamento premium.", status: product.status, variations: product.variations.map((variation) => ({ ...variation })) });
+                setEditingProduct({ id: product.id, name: product.name, collection: product.collection, category: product.category, subcategory: product.subcategory ?? null, sku: product.sku ?? "", slug: product.slug ?? "", visibility: product.visibility ?? "visible", categoryIds: product.categoryIds ?? [], price: numericPrice, pixPrice: numericPrice, description: "Peça de vestuário streetwear com acabamento premium.", status: product.status, variations: product.variations.map((variation) => ({ ...variation })) });
                 setProductImages(product.images);
               }}><Pencil size={16} /></button>
               <button className="table-more" aria-label={`Duplicar produto ${product.name}`} title="Duplicar produto" disabled={duplicateProductMutation.isPending} onClick={() => {
@@ -859,7 +878,7 @@ export default function Admin() {
             {!catalogProductsLoading && !catalogProductsError && filteredProducts.length === 0 && <tr><td colSpan={6}><div className="inventory-state"><Package size={22} /><strong>{query || inventoryCategoryFilter !== "all" ? "Nenhum item encontrado" : "O inventário está vazio"}</strong><span>{query || inventoryCategoryFilter !== "all" ? "Ajuste a busca ou o filtro de categoria." : "Cadastre um produto em Produtos para começar."}</span>{(query || inventoryCategoryFilter !== "all") && <Button type="button" variant="outline" onClick={() => { setQuery(""); setInventoryCategoryFilter("all"); }}>Limpar filtros</Button>}</div></td></tr>}
             {!catalogProductsLoading && !catalogProductsError && filteredProducts.map((product) => <tr key={product.id}><td><div className="table-product"><AdminProductThumbnail src={product.images[0]} alt={`Imagem de ${product.name}`} /><div><strong>{product.name}</strong><span>{product.collection}</span></div></div></td><td><div className="inventory-stock-cell"><strong className={product.stock === 0 ? "inventory-stock-zero" : product.stock < 5 ? "inventory-stock-low" : "inventory-stock-value"}>{product.stock}</strong><span className="inventory-unit">unidades</span>{product.stock === 0 ? <span className="inventory-low-stock-badge danger">Sem estoque</span> : product.stock < 5 ? <span className="inventory-low-stock-badge">Estoque baixo</span> : null}{stockFeedbackProductId === product.id && <span className="inventory-save-feedback" role="status"><Check size={12} /> Salvo</span>}</div></td><td><div className="inventory-variation-summary">{product.variations.length > 0 ? product.variations.map((variation) => <span key={`${product.id}-${variation.size}`} className={variation.stock === 0 ? "variation-chip zero" : variation.stock < 5 ? "variation-chip low" : "variation-chip"}>{variation.size}: {variation.stock}</span>) : <span className="inventory-empty">Sem tamanhos</span>}</div></td><td><span className="inventory-sku">{product.sku || "Sem SKU"}</span></td><td><span>{product.category}</span>{product.subcategory && <small className="inventory-unit">{product.subcategory}</small>}</td><td><button className="table-more" aria-label={`Editar quantidades de ${product.name}`} onClick={() => {
               setEditorMode("inventory");
-              setEditingProduct({ id: product.id, name: product.name, collection: product.collection, category: product.category, subcategory: product.subcategory ?? null, sku: product.sku ?? "", price: 0, pixPrice: 0, description: "", status: product.status, variations: product.variations.map((variation) => ({ ...variation })) });
+              setEditingProduct({ id: product.id, name: product.name, collection: product.collection, category: product.category, subcategory: product.subcategory ?? null, sku: product.sku ?? "", slug: product.slug ?? "", visibility: product.visibility ?? "visible", categoryIds: product.categoryIds ?? [], price: 0, pixPrice: 0, description: "", status: product.status, variations: product.variations.map((variation) => ({ ...variation })) });
               setProductImages([]);
             }}><Pencil size={16} /></button></td></tr>)}
           </tbody></table></div>
@@ -899,6 +918,33 @@ export default function Admin() {
                   <div className="editor-field">
                     <label>Subcategoria</label>
                     <Input value={editingProduct.subcategory ?? ""} onChange={(e) => setEditingProduct({ ...editingProduct, subcategory: e.target.value || null })} placeholder="Ex.: Oversized" />
+                  </div>
+                  <div className="editor-field">
+                    <label>Link do produto</label>
+                    <Input value={editingProduct.slug ?? ""} onChange={(e) => setEditingProduct({ ...editingProduct, slug: e.target.value })} placeholder="ex.: camiseta-drafts-preta" />
+                    <small className="editor-help">Use letras minúsculas, números e hífens. Este será o endereço público da peça.</small>
+                  </div>
+                  <div className="editor-field">
+                    <label>Visibilidade</label>
+                    <select style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }} value={editingProduct.visibility ?? "visible"} onChange={(e) => setEditingProduct({ ...editingProduct, visibility: e.target.value as ProductVisibility })}>
+                      <option value="visible">Visível — aparece na loja</option>
+                      <option value="unlisted">Não listado — somente por link</option>
+                      <option value="hidden">Oculto — não aparece publicamente</option>
+                    </select>
+                  </div>
+                  <div className="editor-field" style={{ gridColumn: '1 / -1' }}>
+                    <label>Categorias do produto</label>
+                    <small className="editor-help">Selecione todas as categorias em que esta peça deve aparecer.</small>
+                    <div className="product-category-checklist" role="group" aria-label="Categorias do produto">
+                      {adminCategories.length === 0 ? <span className="editor-help">Nenhuma categoria cadastrada. Crie categorias primeiro em Categorias.</span> : adminCategories.map((category) => {
+                        const categoryId = Number(category.id);
+                        const selected = Array.isArray(editingProduct.categoryIds) && editingProduct.categoryIds.includes(categoryId);
+                        return <label className={`product-category-option ${selected ? "selected" : ""}`} key={category.id}>
+                          <input type="checkbox" checked={selected} onChange={(event) => toggleEditingCategory(categoryId, event.target.checked)} />
+                          <span>{category.parentId ? `↳ ${category.name}` : category.name}</span>
+                        </label>;
+                      })}
+                    </div>
                   </div>
                   <div className="editor-field">
                     <label>Preço normal (R$)</label>

@@ -4672,3 +4672,55 @@ body {
     transition: none;
   }
 }
+
+
+/* Cadastro de produto: visibilidade, slug e categorias múltiplas */
+.product-category-checklist {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.55rem;
+  margin-top: 0.65rem;
+  padding: 0.8rem;
+  border: 1px solid rgba(35, 34, 30, 0.12);
+  background: rgba(246, 243, 238, 0.72);
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.product-category-option {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2.45rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid transparent;
+  color: #4b4740;
+  cursor: pointer;
+  font-size: 0.78rem;
+  transition: border-color 180ms ease, background-color 180ms ease, color 180ms ease;
+}
+
+.product-category-option:hover,
+.product-category-option.selected {
+  border-color: rgba(178, 34, 34, 0.35);
+  background: rgba(178, 34, 34, 0.06);
+  color: #8e1b1b;
+}
+
+.product-category-option input {
+  accent-color: #b22222;
+  width: 1rem;
+  height: 1rem;
+}
+
+.product-category-option span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .product-category-checklist {
+    grid-template-columns: 1fr;
+    max-height: 220px;
+  }
+}

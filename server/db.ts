@@ -14,6 +14,7 @@ import {
   InsertNotification,
   resendEmailLogs,
   categories,
+  productCategories,
   inventoryAuditLogs,
   adminUsers,
 } from "../drizzle/schema";
@@ -84,10 +85,18 @@ export async function listProducts(category?: string) {
   const db = await getDb();
   if (!db) return [];
   const resolvedCategory = category && category !== "Todos" ? await resolveCategoryName(category) : undefined;
+  let categoryProductIds: number[] = [];
+  if (resolvedCategory) {
+    const matchingCategory = await db.select({ id: categories.id }).from(categories).where(eq(categories.name, resolvedCategory)).limit(1);
+    if (matchingCategory[0]) {
+      const relationRows = await db.select({ productId: productCategories.productId }).from(productCategories).where(eq(productCategories.categoryId, matchingCategory[0].id));
+      categoryProductIds = relationRows.map((row) => Number(row.productId));
+    }
+  }
+  const baseRows = await db.select().from(products).where(and(eq(products.status, "active"), eq(products.visibility, "visible")));
   const rows = resolvedCategory
-    ? await db.select().from(products).where(and(eq(products.status, "active"), or(eq(products.category, resolvedCategory), eq(products.subcategory, resolvedCategory))))
-    : await db.select().from(products).where(eq(products.status, "active"));
-
+    ? baseRows.filter((product) => product.category === resolvedCategory || product.subcategory === resolvedCategory || categoryProductIds.includes(product.id))
+    : baseRows;
   // The storefront needs available sizes to filter accurately. Keep this enrichment
   // server-side so the UI does not have to guess from a product category.
   return Promise.all(rows.map(async (product) => {
@@ -99,10 +108,37 @@ export async function listProducts(category?: string) {
   }));
 }
 
+async function getProductRecordBySlug(slug: string, includeUnlisted: boolean) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const normalizedSlug = slug.trim().toLowerCase();
+  const product = await db.select().from(products).where(eq(products.slug, normalizedSlug)).limit(1);
+  if (!product[0] || product[0].status !== "active" || product[0].visibility === "hidden" || (!includeUnlisted && product[0].visibility !== "visible")) return undefined;
+  const variations = await db.select().from(productVariations).where(eq(productVariations.productId, product[0].id));
+  return { ...product[0], variations };
+}
+
+export async function getPublicProductBySlug(slug: string) {
+  return getProductRecordBySlug(slug, true);
+}
+
 export async function getProductWithVariations(id: number) {
   const db = await getDb();
   if (!db) return undefined;
   const product = await db.select().from(products).where(eq(products.id, id)).limit(1);
+  if (!product[0]) return undefined;
+  const variations = await db.select().from(productVariations).where(eq(productVariations.productId, id));
+  return { ...product[0], variations };
+}
+
+export async function getPublicProductById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const product = await db.select().from(products).where(and(
+    eq(products.id, id),
+    eq(products.status, "active"),
+    or(eq(products.visibility, "visible"), eq(products.visibility, "unlisted")),
+  )).limit(1);
   if (!product[0]) return undefined;
   const variations = await db.select().from(productVariations).where(eq(productVariations.productId, id));
   return { ...product[0], variations };
@@ -216,13 +252,20 @@ export async function getAdminProducts() {
   if (!db) return [];
   const rows = await db.select().from(products).orderBy(desc(products.id));
   return Promise.all(rows.map(async (product) => {
-    const variations = await db
-      .select({ id: productVariations.id, size: productVariations.size, stock: productVariations.stock })
-      .from(productVariations)
-      .where(eq(productVariations.productId, product.id))
-      .orderBy(asc(productVariations.size));
+    const [variations, categoryRelations] = await Promise.all([
+      db
+        .select({ id: productVariations.id, size: productVariations.size, stock: productVariations.stock })
+        .from(productVariations)
+        .where(eq(productVariations.productId, product.id))
+        .orderBy(asc(productVariations.size)),
+      db
+        .select({ categoryId: productCategories.categoryId })
+        .from(productCategories)
+        .where(eq(productCategories.productId, product.id)),
+    ]);
     return {
       ...product,
+      categoryIds: categoryRelations.map((relation) => relation.categoryId),
       variations,
       totalStock: variations.reduce((total, variation) => total + Number(variation.stock ?? 0), 0),
     };
@@ -239,6 +282,10 @@ export async function duplicateProductData(productId: number) {
     .from(productVariations)
     .where(eq(productVariations.productId, productId))
     .orderBy(asc(productVariations.size));
+  const sourceCategoryRelations = await db
+    .select({ categoryId: productCategories.categoryId })
+    .from(productCategories)
+    .where(eq(productCategories.productId, productId));
   const sourceSku = source.sku?.trim();
   const suffix = Date.now().toString(36).slice(-6).toUpperCase();
   return saveProductData({
@@ -246,6 +293,9 @@ export async function duplicateProductData(productId: number) {
     collection: source.collection,
     category: source.category,
     subcategory: source.subcategory,
+    slug: source.slug ? `${source.slug}-copia-${suffix.toLowerCase()}` : null,
+    visibility: "hidden",
+    categoryIds: sourceCategoryRelations.map((relation) => relation.categoryId),
     sku: sourceSku ? `${sourceSku}-COPY-${suffix}` : null,
     price: Number(source.price),
     pixPrice: Number(source.pixPrice),
@@ -484,19 +534,33 @@ export async function saveProductData(data: {
   description: string;
   images: string[];
   status: string;
+  visibility?: "visible" | "unlisted" | "hidden";
+  slug?: string | null;
+  categoryIds?: number[];
   sku?: string | null;
   subcategory?: string | null;
   variations?: Array<{ size: string; stock: number }>;
 }) {
   const normalizedVariations = normalizeInventoryVariations(data.variations ?? []);
+  const normalizedSlug = slugifyCategory(data.slug?.trim() || data.name);
+  const visibility = data.visibility ?? "visible";
+  const categoryIds = Array.from(new Set((data.categoryIds ?? []).filter((id) => Number.isInteger(id) && id > 0)));
   const db = await getDb();
   if (!db) {
     return {
       id: data.id || Math.floor(Math.random() * 1000 + 10),
       ...data,
+      slug: normalizedSlug,
+      visibility,
+      categoryIds,
       variations: normalizedVariations,
       totalStock: sumInventoryStock(normalizedVariations),
     };
+  }
+
+  const existingSlug = await db.select({ id: products.id }).from(products).where(eq(products.slug, normalizedSlug)).limit(1);
+  if (existingSlug[0] && existingSlug[0].id !== data.id) {
+    throw new Error("Este link já está a ser utilizado por outro produto.");
   }
 
   const statusDb = data.status === "Publicado" ? "active" : data.status === "Esgotado" ? "soldout" : "hidden";
@@ -508,6 +572,8 @@ export async function saveProductData(data: {
       collection: data.collection,
       category: data.category,
       subcategory: data.subcategory?.trim() || null,
+      slug: normalizedSlug,
+      visibility,
       sku: data.sku?.trim() || null,
       price: String(data.price),
       pixPrice: String(data.pixPrice),
@@ -521,6 +587,8 @@ export async function saveProductData(data: {
       collection: data.collection,
       category: data.category,
       subcategory: data.subcategory?.trim() || null,
+      slug: normalizedSlug,
+      visibility,
       sku: data.sku?.trim() || null,
       price: String(data.price),
       pixPrice: String(data.pixPrice),
@@ -532,6 +600,12 @@ export async function saveProductData(data: {
   }
 
   if (!productId) throw new Error("Não foi possível identificar o produto salvo.");
+  if (data.categoryIds !== undefined) {
+    await db.delete(productCategories).where(eq(productCategories.productId, productId));
+    if (categoryIds.length > 0) {
+      await db.insert(productCategories).values(categoryIds.map((categoryId) => ({ productId, categoryId })));
+    }
+  }
   if (data.variations !== undefined) {
     await db.delete(productVariations).where(eq(productVariations.productId, productId));
     if (normalizedVariations.length > 0) {
@@ -546,6 +620,9 @@ export async function saveProductData(data: {
   return {
     id: productId,
     ...data,
+    slug: normalizedSlug,
+    visibility,
+    categoryIds,
     variations: normalizedVariations,
     totalStock: normalizedVariations.reduce((total, variation) => total + variation.stock, 0),
   };

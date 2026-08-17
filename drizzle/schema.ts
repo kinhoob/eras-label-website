@@ -21,6 +21,10 @@ export const products = mysqlTable("products", {
   collection: varchar("collectionName", { length: 100 }).notNull(),
   category: varchar("category", { length: 100 }).notNull(),
   subcategory: varchar("subcategory", { length: 100 }),
+  /** Slug público editável; nullable para preservar produtos legados antes da migração de conteúdo. */
+  slug: varchar("slug", { length: 180 }).unique(),
+  /** Estado de publicação: visible, unlisted ou hidden. */
+  visibility: varchar("visibility", { length: 20 }).default("visible").notNull(),
   sku: varchar("sku", { length: 100 }),
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   pixPrice: decimal("pixPrice", { precision: 10, scale: 2 }).notNull(),
@@ -59,6 +63,17 @@ export const productVariations = mysqlTable("product_variations", {
 
 export type ProductVariation = typeof productVariations.$inferSelect;
 export type InsertProductVariation = typeof productVariations.$inferInsert;
+
+/** Relação N:N para permitir que um produto pertença a várias categorias editáveis. */
+export const productCategories = mysqlTable("product_categories", {
+  id: int("id").autoincrement().primaryKey(),
+  productId: int("productId").notNull(),
+  categoryId: int("categoryId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ProductCategory = typeof productCategories.$inferSelect;
+export type InsertProductCategory = typeof productCategories.$inferInsert;
 
 export const newsletterSubscribers = mysqlTable("newsletter_subscribers", {
   id: int("id").autoincrement().primaryKey(),

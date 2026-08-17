@@ -423,3 +423,11 @@
 - [x] Auditar e estruturar metatags de SEO por página (título, descrição, canonical, Open Graph, Twitter Cards).
 - [x] Implementar rota de sitemap XML dinâmico no servidor (`/sitemap.xml`) e arquivo `robots.txt` otimizado para o Googlebot.
 - [x] Escrever testes unitários Vitest para o sitemap e metatags, executar TypeScript, build e salvar checkpoint.
+
+
+## Cadastro de produtos: visibilidade, links e categorias (2026-08-17)
+- [x] Auditar o modelo de produto, procedures de criação/edição, formulário do admin e rotas públicas para definir o contrato de visibilidade e slug.
+- [x] Implementar os estados Visível, Não listado e Oculto, com regras públicas de acesso e segurança.
+- [x] Permitir editar o slug/link do produto e associar o mesmo produto a várias categorias no cadastro.
+- [x] Atualizar o título principal para `Eras Label - Loja Oficial` via configuração oficial do projeto.
+- [x] Criar/atualizar testes Vitest, executar TypeScript e build, validar o catálogo e salvar checkpoint.

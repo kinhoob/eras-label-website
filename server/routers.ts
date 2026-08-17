@@ -15,6 +15,8 @@ import {
   getAdminProducts,
   duplicateProductData,
   getProductWithVariations,
+  getPublicProductById,
+  getPublicProductBySlug,
   listNewsletterSubscribers,
   getNewsletterSubscriber,
   listProducts,
@@ -150,7 +152,8 @@ export const appRouter = router({
   }),
   catalog: router({
     list: publicProcedure.input(z.object({ category: z.string().optional() }).optional()).query(({ input }) => listProducts(input?.category)),
-    getById: publicProcedure.input(z.object({ id: z.number().int().positive() })).query(({ input }) => getProductWithVariations(input.id)),
+    getById: publicProcedure.input(z.object({ id: z.number().int().positive() })).query(({ input }) => getPublicProductById(input.id)),
+    getBySlug: publicProcedure.input(z.object({ slug: z.string().trim().min(1).max(180) })).query(({ input }) => getPublicProductBySlug(input.slug)),
     getConfig: publicProcedure.query(() => getCommercialConfig()),
     getHomeContent: publicProcedure.query(() => getHomeContent()),
     getStorefrontConfig: publicProcedure.query(() => getStorefrontConfig()),
@@ -418,6 +421,9 @@ export const appRouter = router({
       description: z.string(),
       images: z.array(z.string()),
       status: z.enum(["Publicado", "Rascunho", "Esgotado"]),
+      visibility: z.enum(["visible", "unlisted", "hidden"]).default("visible"),
+      slug: z.string().trim().max(180).nullable().optional(),
+      categoryIds: z.array(z.number().int().positive()).max(50).optional(),
       variations: z.array(z.object({
         size: z.string().trim().min(1).max(20),
         stock: z.number().int().min(0).max(100000),
