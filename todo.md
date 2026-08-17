@@ -454,7 +454,7 @@
 
 ## Plano de Execução Sequencial P0 e P1
 - [x] 1. **Validação Server-Side e Recálculo de Preços no Servidor (Checkout)**
-- [ ] 2. **Webhook e Reconciliação de Pagamento (Mercado Pago)**
+- [x] 2. **Webhook e Reconciliação de Pagamento (Mercado Pago)**
 - [ ] 3. **Remoção de Dados Demonstrativos e Limpeza para Produção**
 - [ ] 4. **Criação da Rota de Catálogo e Correção do Erro 404**
 - [ ] 5. **Correção dos Links dos Cards de Produtos**
