@@ -182,17 +182,14 @@
 - [x] Aprimorar a página de histórico de pedidos (`/orders` e `Account.tsx`) com modal/visualização detalhada dos itens adquiridos e rastreamento da entrega
 - [x] Executar testes Vitest, TypeScript e build de produção para validar as novas funcionalidades
 
-## Teste Sandbox Mercado Pago
-- [ ] Corrigir o fluxo de cartão sandbox que permanece em processamento após tokenização, adicionando timeout explícito, normalização da validade e envio seguro da mutation checkout.create
-- [ ] Reexecutar o teste de cartão e iniciar o teste Pix sandbox
-
-
-## Diagnóstico final do checkout sandbox Mercado Pago
-- [ ] Corrigir e documentar o tratamento de `communication_error` do Pix, incluindo payload de endereço e orientação para chave Pix do vendedor sandbox
-- [ ] Tornar a chave de idempotência do pagamento estável por pedido e melhorar o diagnóstico de respostas não-2xx do Mercado Pago
-- [ ] Revalidar criação de token e mutation `checkout.create` com cartão no navegador, sem deixar o fluxo preso em processamento
-- [ ] Confirmar o webhook `/api/mercadopago/webhook` e a renderização completa do histórico de pedidos após uma mudança de status
-- [ ] Executar TypeScript, suíte Vitest completa e build de produção; guardar checkpoint final
+## Teste Sandbox Mercado Pago e Tratamento de Erros
+- [x] Corrigir o fluxo de cartão sandbox que permanece em processamento após tokenização, adicionando timeout explícito, normalização da validade e envio seguro da mutation checkout.create
+- [x] Reexecutar o teste de cartão e iniciar o teste Pix sandbox com cobertura em Vitest (`server/mercadopago-sandbox.test.ts`)
+- [x] Corrigir e documentar o tratamento de `communication_error` do Pix, incluindo payload de endereço e orientação para chave Pix do vendedor sandbox
+- [x] Tornar a chave de idempotência do pagamento estável por pedido e melhorar o diagnóstico de respostas não-2xx do Mercado Pago
+- [x] Revalidar criação de token e mutation `checkout.create` com cartão no navegador, sem deixar o fluxo preso em processamento
+- [x] Confirmar o webhook `/api/mercadopago/webhook` e a renderização completa do histórico de pedidos após uma mudança de status
+- [x] Executar TypeScript, suíte Vitest completa (129 testes aprovados) e build de produção; guardar checkpoint final
 
 
 ## Gestão de Vendas & Integração Melhor Envio
@@ -296,7 +293,7 @@
 - [x] Refinar a experiência da loja pública (animações de entrada, botões, modais, sacola e cartões de produtos)
 - [x] Elevar a aparência do painel administrativo (hierarquia, superfícies de vidro/sombra suave, transições e feedback visual)
 - [x] Executar testes Vitest (121+ aprovados), verificação TypeScript e build de produção
-- [ ] Salvar checkpoint e entregar o novo visual elegante
+- [x] Salvar checkpoint e entregar o novo visual elegante
 
 
 ## Continuação pós-auditoria e preparação de produção
@@ -323,14 +320,14 @@
 
 
 ## Refinamentos do Painel Administrativo (2026-08-16)
-- [ ] Eliminar o scroll lateral na sidebar do painel administrativo (`.admin-sidebar`).
-- [ ] Implementar opções completas de definições e perfil editável (permitindo ao utilizador definir o próprio nome independentemente da permissão).
-- [ ] Reorganizar a secção de Aparência com blocos limpos, evitando elementos sobrepostos ou amontoados.
-- [ ] Permitir múltiplos anúncios rotativos ou em lista na barra de anúncio editável.
-- [ ] Refinar a experiência visual dos dropdowns do painel.
-- [ ] Reformular a tela inicial (Início) do painel com cartões de status operacionais (Por cobrar, Por embalar, Por enviar, Por retirar) e filtros de estatísticas por 7, 15, 30 dias e personalizado.
-- [ ] Corrigir o erro/quebra na secção de expectativas/estatísticas.
-- [ ] Executar testes Vitest, TypeScript e guardar checkpoint.
+- [x] Eliminar o scroll lateral na sidebar do painel administrativo (`.admin-sidebar`).
+- [x] Implementar opções completas de definições e perfil editável (permitindo ao utilizador definir o próprio nome independentemente da permissão).
+- [x] Reorganizar a secção de Aparência com blocos limpos, evitando elementos sobrepostos ou amontoados.
+- [x] Permitir múltiplos anúncios rotativos ou em lista na barra de anúncio editável.
+- [x] Refinar a experiência visual dos dropdowns do painel.
+- [x] Reformular a tela inicial (Início) do painel com cartões de status operacionais (Por cobrar, Por embalar, Por enviar, Por retirar) e filtros de estatísticas por 7, 15, 30 dias e personalizado.
+- [x] Corrigir o erro/quebra na secção de expectativas/estatísticas.
+- [x] Executar testes Vitest, TypeScript e guardar checkpoint.
 
 
 ## Refinamentos do Painel Administrativo (Concluídos)
@@ -346,10 +343,10 @@
 
 
 ## Novas Solicitações de Melhoria (Gráfico de Linhas, Anúncios com Velocidade/Setas e Avatar de Perfil)
-- [ ] Adicionar gráfico de linhas no painel inicial para evolução de vendas e visitas por período.
-- [ ] Incluir nas configurações de aparência a velocidade de rotação da barra de anúncios e botões de setas de navegação.
-- [ ] Permitir upload e exibição de fotografia de perfil para administradores junto ao nome na sidebar.
-- [ ] Executar testes unitários, TypeScript, build de produção e guardar checkpoint final.
+- [x] Adicionar gráfico de linhas no painel inicial para evolução de vendas e visitas por período.
+- [x] Incluir nas configurações de aparência a velocidade de rotação da barra de anúncios e botões de setas de navegação.
+- [x] Permitir upload e exibição de fotografia de perfil para administradores junto ao nome na sidebar.
+- [x] Executar testes unitários, TypeScript, build de produção e guardar checkpoint final.
 
 
 ## Gráfico de Linhas, Velocidade de Anúncio e Fotografia de Perfil (2026-08-16)
