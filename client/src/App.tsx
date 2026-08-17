@@ -57,6 +57,7 @@ function Router() {
         <Route path="/contact" component={ContactPage} />
         <Route path="/category/:slug" component={CatalogViewPage} />
         <Route path="/collection/:slug" component={CatalogViewPage} />
+        <Route path="/catalog" component={CatalogViewPage} />
         <Route path="/produto/:slug" component={ProductPage} />
         <Route path="/auth" component={Auth} />
         <Route path="/admin" component={Admin} />
