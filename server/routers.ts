@@ -10,7 +10,7 @@ import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_
 import { storageGetSignedUrl, storagePut } from "./storage";
 import { createMercadoPagoPayment } from "./mercadopago";
 import { getDb } from "./db";
-import { products } from "../drizzle/schema";
+import { products, orders } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { createMelhorEnvioCartItem, downloadMelhorEnvioLabelFile, getMelhorEnvioTracking } from "./melhor-envio";
 import {
@@ -688,6 +688,16 @@ Seja objetivo, elegante e direto ao ponto.`;
         console.warn("Failed to send tracking email:", err);
       }
       return { success: true };
+    }),
+    purgeTestData: adminProcedure.mutation(async () => {
+      const db = await getDb();
+      if (!db) return { success: false, message: "Base de dados indisponível." };
+      try {
+        await db.delete(orders);
+        return { success: true, message: "Dados de teste e histórico de pedidos eliminados com sucesso para início da operação real." };
+      } catch (err: any) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: err.message || "Erro ao purgar dados de teste." });
+      }
     }),
     generateShippingLabel: adminProcedure.input(z.object({
       orderId: z.number(),
