@@ -45,12 +45,13 @@ import { filterStorefrontProducts, getStorefrontFilterOptions } from "@/lib/stor
 import { getSearchSuggestionText, searchStorefrontProducts, sortStorefrontProducts, type StorefrontSearchSort } from "@/lib/storefront-search";
 import { clearRecentSearches, loadRecentSearches, removeRecentSearch, saveRecentSearch } from "@/lib/recent-searches";
 import OfficialFooter from "@/components/OfficialFooter";
+import { SidebarMenu } from "@/components/SidebarMenu";
 
 type Category = string;
-type PriceRange = "all" | "under150" | "150to200" | "over200";
-type SearchFilterKey = "query" | "category" | "price" | "size" | "color" | "sort";
+type SearchFilterKey = "query" | "category" | "price" | "size" | "sort";
 type Product = {
   id: number;
+  slug?: string | null;
   name: string;
   category: Category;
   categoryNames?: string[];
@@ -213,7 +214,7 @@ function inferProductColor(name: string) {
   return knownColors.find(([token]) => normalized.includes(token))?.[1] ?? "Neutro";
 }
 
-function mapCatalogProduct(row: { id: number; name: string; collection: string; category: string; categoryNames?: string[]; categoryIds?: number[]; color?: string | null; price: unknown; pixPrice: unknown; description: string | null; images: unknown; status: string; createdAt?: string | Date | null; variations?: Array<{ size: string; stock: number | null }> }): Product {
+function mapCatalogProduct(row: { id: number; slug?: string | null; name: string; collection: string; category: string; categoryNames?: string[]; categoryIds?: number[]; color?: string | null; price: unknown; pixPrice: unknown; description: string | null; images: unknown; status: string; createdAt?: string | Date | null; variations?: Array<{ size: string; stock: number | null }> }): Product {
   const images = Array.isArray(row.images) ? row.images.filter((image): image is string => typeof image === "string") : [];
   const fallbackImage = fallbackProducts.find((product) => product.id === row.id)?.image || editorialImage;
   const category = row.category?.trim() || "Sem categoria";
@@ -224,6 +225,7 @@ function mapCatalogProduct(row: { id: number; name: string; collection: string; 
   const variationStock = (row.variations ?? []).reduce((sum, variation) => sum + Math.max(0, Number(variation.stock ?? 0)), 0);
   return {
     id: row.id,
+    slug: row.slug,
     name: row.name,
     category,
     categoryNames,
@@ -331,8 +333,8 @@ function AnnouncementBar({ config }: { config?: StorefrontConfig }) {
 export default function Home() {
   const [category, setCategory] = useState<Category>("Todos");
   const [sizeFilter, setSizeFilter] = useState("Todos");
-  const [colorFilter, setColorFilter] = useState("Todas");
-  const [priceRange, setPriceRange] = useState<PriceRange>("all");
+  const [priceMin, setPriceMin] = useState("");
+  const [priceMax, setPriceMax] = useState("");
   const [searchSort, setSearchSort] = useState<StorefrontSearchSort>("newest");
   const [cart, setCart] = useState<CartLine[]>(() => loadCart<CartLine>());
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -428,35 +430,35 @@ export default function Home() {
 
   const checkoutMutation = trpc.checkout.create.useMutation();
 
-  const { sizes: availableSizes, colors: availableColors } = useMemo(() => getStorefrontFilterOptions(products), [products]);
+  const { sizes: availableSizes } = useMemo(() => getStorefrontFilterOptions(products), [products]);
+  const normalizedMinPrice = Number.parseFloat(priceMin.replace(",", "."));
+  const normalizedMaxPrice = Number.parseFloat(priceMax.replace(",", "."));
   const filteredProducts = useMemo(() => {
     const filterResults = filterStorefrontProducts(products, {
       category,
       size: sizeFilter,
-      color: colorFilter,
-      priceRange,
+      minPrice: Number.isFinite(normalizedMinPrice) ? normalizedMinPrice : undefined,
+      maxPrice: Number.isFinite(normalizedMaxPrice) ? normalizedMaxPrice : undefined,
     });
     const searchedProducts = searchStorefrontProducts(filterResults, searchQuery);
     return searchQuery.trim() ? sortStorefrontProducts(searchedProducts, searchSort) : searchedProducts;
-  }, [category, colorFilter, priceRange, products, searchQuery, searchSort, sizeFilter]);
+  }, [category, normalizedMaxPrice, normalizedMinPrice, products, searchQuery, searchSort, sizeFilter]);
   const searchSuggestions = useMemo(() => filteredProducts.slice(0, 6), [filteredProducts]);
   const activeSearchFilters = useMemo(() => {
     const filters: Array<{ key: SearchFilterKey; label: string }> = [];
     if (searchQuery.trim()) filters.push({ key: "query", label: `Pesquisa: ${searchQuery.trim()}` });
     if (category !== "Todos") filters.push({ key: "category", label: `Categoria: ${category}` });
-    if (priceRange !== "all") filters.push({ key: "price", label: `Preço: ${priceRange === "under150" ? "Até R$ 150" : priceRange === "150to200" ? "R$ 150–200" : "Acima de R$ 200"}` });
+    if (priceMin.trim() || priceMax.trim()) filters.push({ key: "price", label: `Preço: ${priceMin || "0"}–${priceMax || "∞"}` });
     if (sizeFilter !== "Todos") filters.push({ key: "size", label: `Tamanho: ${sizeFilter}` });
-    if (colorFilter !== "Todas") filters.push({ key: "color", label: `Cor: ${colorFilter}` });
     if (searchQuery.trim() && searchSort !== "newest") filters.push({ key: "sort", label: `Ordenação: ${searchSort === "price-asc" ? "menor preço" : "maior preço"}` });
     return filters;
-  }, [category, colorFilter, priceRange, searchQuery, searchSort, sizeFilter]);
-  const hasAdvancedFilters = sizeFilter !== "Todos" || colorFilter !== "Todas" || priceRange !== "all";
+  }, [category, priceMax, priceMin, searchQuery, searchSort, sizeFilter]);
+  const hasAdvancedFilters = sizeFilter !== "Todos" || Boolean(priceMin.trim() || priceMax.trim());
   function clearSearchCriterion(key: SearchFilterKey) {
     if (key === "query") setSearchQuery("");
     if (key === "category") setCategory("Todos");
-    if (key === "price") setPriceRange("all");
+    if (key === "price") { setPriceMin(""); setPriceMax(""); }
     if (key === "size") setSizeFilter("Todos");
-    if (key === "color") setColorFilter("Todas");
     if (key === "sort") setSearchSort("newest");
     setActiveSearchSuggestion(-1);
     window.setTimeout(() => searchInputRef.current?.focus(), 0);
@@ -465,8 +467,8 @@ export default function Home() {
     setSearchQuery("");
     setCategory("Todos");
     setSizeFilter("Todos");
-    setColorFilter("Todas");
-    setPriceRange("all");
+    setPriceMin("");
+    setPriceMax("");
     setSearchSort("newest");
     setActiveSearchSuggestion(-1);
     window.setTimeout(() => searchInputRef.current?.focus(), 0);
@@ -474,8 +476,8 @@ export default function Home() {
   function clearShopFilters() {
     setCategory("Todos");
     setSizeFilter("Todos");
-    setColorFilter("Todas");
-    setPriceRange("all");
+    setPriceMin("");
+    setPriceMax("");
     setSearchSort("newest");
   }
 
@@ -580,6 +582,12 @@ export default function Home() {
   }, [cart]);
 
   useEffect(() => {
+    const openCart = () => setIsCartOpen(true);
+    window.addEventListener("eras-open-cart", openCart);
+    return () => window.removeEventListener("eras-open-cart", openCart);
+  }, []);
+
+  useEffect(() => {
     return () => {
       if (searchLoadingTimeoutRef.current !== null) window.clearTimeout(searchLoadingTimeoutRef.current);
     };
@@ -596,7 +604,7 @@ export default function Home() {
       setIsSearchLoading(false);
       searchLoadingTimeoutRef.current = null;
     }, 220);
-  }, [isSearchOpen, searchQuery, sizeFilter, colorFilter, priceRange, searchSort]);
+  }, [isSearchOpen, priceMax, priceMin, searchQuery, searchSort, sizeFilter]);
 
   useEffect(() => {
     return () => {
@@ -838,7 +846,7 @@ export default function Home() {
   return (
     <div className="eras-site">
       <AnnouncementBar config={storefrontConfig} />
-      <header className={`site-header ${isHeaderVisible ? "is-visible" : "is-hidden"}`}>
+      {false && <header className={`site-header ${isHeaderVisible ? "is-visible" : "is-hidden"}`}>
         <button className="icon-button" aria-label="Abrir menu lateral" onClick={() => { playClick(soundsOn); setIsMenuOpen(true); }}>
           <Menu size={20} />
         </button>
@@ -892,8 +900,8 @@ export default function Home() {
                 }}
                 onFocus={() => setIsSearchOpen(true)}
                 onKeyDown={handleSearchKeyDown}
-                placeholder="Pesquisar peças, coleções ou cores"
-                aria-label="Pesquisar peças, coleções ou cores"
+                placeholder="Pesquisar peças, coleções ou tamanhos"
+                aria-label="Pesquisar peças, coleções ou tamanhos"
                 aria-autocomplete="list"
                 aria-controls="eras-search-suggestions"
                 aria-activedescendant={activeSearchSuggestion >= 0 ? `eras-search-suggestion-${activeSearchSuggestion}` : undefined}
@@ -921,27 +929,18 @@ export default function Home() {
                     </div>
                   )}
                   <div className="header-search-filter-grid" aria-label="Filtrar resultados da pesquisa">
-                    <label>
+                    <label className="header-search-price-range">
                       <span>Preço</span>
-                      <select value={priceRange} onChange={(event) => { playClick(soundsOn); setPriceRange(event.target.value as PriceRange); }} aria-label="Filtrar pesquisa por preço">
-                        <option value="all">Todas</option>
-                        <option value="under150">Até R$ 150</option>
-                        <option value="150to200">R$ 150–200</option>
-                        <option value="over200">Acima de R$ 200</option>
-                      </select>
+                      <div className="price-inputs">
+                        <input inputMode="decimal" type="text" value={priceMin} onChange={(event) => setPriceMin(event.target.value.replace(/[^0-9,.]/g, ""))} placeholder="Mínimo" aria-label="Preço mínimo da pesquisa" />
+                        <input inputMode="decimal" type="text" value={priceMax} onChange={(event) => setPriceMax(event.target.value.replace(/[^0-9,.]/g, ""))} placeholder="Máximo" aria-label="Preço máximo da pesquisa" />
+                      </div>
                     </label>
                     <label>
                       <span>Tamanho</span>
                       <select value={sizeFilter} onChange={(event) => { playClick(soundsOn); setSizeFilter(event.target.value); }} aria-label="Filtrar pesquisa por tamanho">
                         <option value="Todos">Todos</option>
                         {availableSizes.map((size) => <option key={size} value={size}>{size}</option>)}
-                      </select>
-                    </label>
-                    <label>
-                      <span>Cor</span>
-                      <select value={colorFilter} onChange={(event) => { playClick(soundsOn); setColorFilter(event.target.value); }} aria-label="Filtrar pesquisa por cor">
-                        <option value="Todas">Todas</option>
-                        {availableColors.map((color) => <option key={color} value={color}>{color}</option>)}
                       </select>
                     </label>
                   </div>
@@ -981,7 +980,7 @@ export default function Home() {
                   ) : (
                     <div className="header-search-empty" role="status" aria-live="polite">
                       <strong>Não encontrámos essa era.</strong>
-                      <span>Tente outro nome, coleção, cor ou tamanho.</span>
+                      <span>Tente outro nome, coleção, tamanho ou categoria.</span>
                       {activeSearchFilters.length > 0 && <button type="button" onClick={() => { playClick(soundsOn); clearAllSearchCriteria(); }}>Limpar filtros da pesquisa</button>}
                     </div>
                   )}
@@ -1021,7 +1020,7 @@ export default function Home() {
             SACOLA {cartCount > 0 && <span key={cartCount} className="bag-badge" aria-hidden="true">{cartCount}</span>}
           </button>
         </div>
-      </header>
+      </header>}
 
       <main className="home-main">
         <section className="home-hero" aria-label="Destaque da Eras Label">
@@ -1066,7 +1065,7 @@ export default function Home() {
                   </button>
                   <div className="product-meta">
                     <div>
-                      <a href={`/produto/${product.id}`} className="product-name-link" onClick={(event) => { event.preventDefault(); playClick(soundsOn); window.location.href = `/produto/${product.id}`; }}>{product.name}</a>
+                      <a href={`/produto/${product.slug || product.id}`} className="product-name-link" onClick={(event) => { event.preventDefault(); playClick(soundsOn); window.location.href = `/produto/${product.slug || product.id}`; }}>{product.name}</a>
                       <p className="product-collection">{product.collection}</p>
                     </div>
                     <div className="product-price"><strong>{formatPrice(product.price)}</strong><span>{formatPrice(product.pixPrice)} NO PIX</span></div>
@@ -1095,22 +1094,13 @@ export default function Home() {
                 {availableSizes.map((size) => <option key={size} value={size}>{size}</option>)}
               </select>
             </label>
-            <label className="shop-filter-field">
-              <span className="shop-filter-label-row"><span>Cor</span>{colorFilter !== "Todas" && <button type="button" className="shop-filter-reset" aria-label="Limpar filtro de cor" onClick={(event) => { event.preventDefault(); event.stopPropagation(); setColorFilter("Todas"); }}>×</button>}</span>
-              <select value={colorFilter} onChange={(event) => setColorFilter(event.target.value)} aria-label="Filtrar por cor">
-                <option value="Todas">Todas</option>
-                {availableColors.map((color) => <option key={color} value={color}>{color}</option>)}
-              </select>
-            </label>
-            <label className="shop-filter-field">
-              <span className="shop-filter-label-row"><span>Preço</span>{priceRange !== "all" && <button type="button" className="shop-filter-reset" aria-label="Limpar filtro de preço" onClick={(event) => { event.preventDefault(); event.stopPropagation(); setPriceRange("all"); }}>×</button>}</span>
-              <select value={priceRange} onChange={(event) => setPriceRange(event.target.value as PriceRange)} aria-label="Filtrar por faixa de preço">
-                <option value="all">Todas as faixas</option>
-                <option value="under150">Até R$ 150</option>
-                <option value="150to200">R$ 150 a R$ 200</option>
-                <option value="over200">Acima de R$ 200</option>
-              </select>
-            </label>
+            <div className="shop-filter-field price-inputs-field">
+              <span className="shop-filter-label-row"><span>Preço</span>{(priceMin || priceMax) && <button type="button" className="shop-filter-reset" aria-label="Limpar filtro de preço" onClick={() => { setPriceMin(""); setPriceMax(""); }}>×</button>}</span>
+              <div className="price-inputs">
+                <input inputMode="decimal" type="text" value={priceMin} onChange={(event) => setPriceMin(event.target.value.replace(/[^0-9,.]/g, ""))} placeholder="Mínimo" aria-label="Preço mínimo" />
+                <input inputMode="decimal" type="text" value={priceMax} onChange={(event) => setPriceMax(event.target.value.replace(/[^0-9,.]/g, ""))} placeholder="Máximo" aria-label="Preço máximo" />
+              </div>
+            </div>
             {hasAdvancedFilters && <button className="shop-filter-clear" type="button" onClick={clearShopFilters}>Limpar filtros</button>}
           </div>
           <div className="product-grid">
@@ -1128,7 +1118,7 @@ export default function Home() {
                 </button>
                 <div className="product-meta">
                   <div>
-                    <a href={`/produto/${product.id}`} className="product-name-link" onClick={(event) => { event.preventDefault(); playClick(soundsOn); window.location.href = `/produto/${product.id}`; }}>{product.name}</a>
+                    <a href={`/produto/${product.slug || product.id}`} className="product-name-link" onClick={(event) => { event.preventDefault(); playClick(soundsOn); window.location.href = `/produto/${product.slug || product.id}`; }}>{product.name}</a>
                     <p className="product-collection">{product.collection}</p>
                   </div>
                   <div className="product-price"><strong>{formatPrice(product.price)}</strong><span>{formatPrice(product.pixPrice)} NO PIX</span></div>
@@ -1170,97 +1160,40 @@ export default function Home() {
 
       {showBackToTop && <button className="back-to-top" aria-label="Voltar ao topo" onClick={() => { playClick(soundsOn); window.scrollTo({ top: 0, behavior: "smooth" }); }}><ArrowDown size={17} /></button>}
 
-      <section className="newsletter-banner-section" style={{ backgroundColor: '#111', color: '#fff', padding: '4rem 2rem', textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-          <span style={{ fontSize: '0.75rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#b34125', display: 'block', marginBottom: '0.5rem' }}>NEWSLETTER ERAS</span>
-          <h3 style={{ fontSize: '1.75rem', fontWeight: 600, marginBottom: '0.75rem', fontFamily: 'serif' }}>RECEBA ACESSO ANTECIPADO E 10% OFF</h3>
-          <p style={{ color: '#aaa', fontSize: '0.95rem', marginBottom: '1.5rem', lineHeight: 1.6 }}>Subscreva para receber lançamentos em primeira mão e um cupom exclusivo de boas-vindas na sua caixa de entrada.</p>
-
+      <section className="newsletter-section" aria-labelledby="newsletter-title">
+        <div className="newsletter-inner">
+          <div className="newsletter-copy">
+            <span className="section-kicker">NEWSLETTER ERAS</span>
+            <h2 id="newsletter-title">A próxima era começa na sua caixa de entrada.</h2>
+            <p>Receba lançamentos antecipados, convites e 10% de desconto na primeira compra. Sem ruído, apenas o que importa.</p>
+            <span className="newsletter-note">SEM SPAM · CANCELAMENTO A QUALQUER MOMENTO</span>
+          </div>
           {newsletterSuccess ? (
-            <div style={{ background: 'rgba(179, 65, 37, 0.150)', border: '1px solid #b34125', padding: '1.25rem', borderRadius: '4px', color: '#fff' }}>
-              <p style={{ fontWeight: 600, marginBottom: '0.25rem', color: '#e05a3b' }}>Inscrição confirmada com sucesso!</p>
-              <p style={{ fontSize: '0.9rem', color: '#ddd' }}>{newsletterSuccess}</p>
-              <Button onClick={() => setNewsletterSuccess(null)} variant="outline" style={{ marginTop: '1rem', borderColor: '#444', color: '#fff' }}>Subscrever outro e-mail</Button>
+            <div className="newsletter-success" role="status" aria-live="polite">
+              <span className="newsletter-success-mark">✓</span>
+              <strong>Inscrição confirmada.</strong>
+              <p>{newsletterSuccess}</p>
+              <Button type="button" onClick={() => setNewsletterSuccess(null)} variant="outline">Subscrever outro e-mail</Button>
             </div>
           ) : (
-            <form onSubmit={handleNewsletterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                <Input 
-                  type="text" 
-                  placeholder="Seu nome (opcional)" 
-                  value={newsletterName} 
-                  onChange={(e) => setNewsletterName(e.target.value)} 
-                  style={{ flex: '1 1 180px', background: '#222', borderColor: '#333', color: '#fff' }} 
-                />
-                <Input 
-                  type="email" 
-                  required 
-                  placeholder="Seu melhor e-mail" 
-                  value={newsletterEmail} 
-                  onChange={(e) => setNewsletterEmail(e.target.value)} 
-                  style={{ flex: '2 1 240px', background: '#222', borderColor: '#333', color: '#fff' }} 
-                />
-                <Button type="submit" disabled={newsletterSubmitting} style={{ backgroundColor: '#b34125', color: '#fff', minWidth: '140px' }}>
-                  {newsletterSubmitting ? (
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span className="spinner-mini" style={{ width: 14, height: 14, border: '2px solid #fff', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
-                      A subscrever...
-                    </span>
-                  ) : "SUBSCREVER"}
-                </Button>
-              </div>
-              <small style={{ color: '#777', fontSize: '0.8rem' }}>Sem spam. Pode cancelar a subscrição a qualquer momento.</small>
+            <form className="newsletter-form" onSubmit={handleNewsletterSubmit}>
+              <label>
+                <span>Nome <em>opcional</em></span>
+                <Input type="text" placeholder="O seu nome" value={newsletterName} onChange={(e) => setNewsletterName(e.target.value)} />
+              </label>
+              <label>
+                <span>E-mail</span>
+                <Input type="email" required placeholder="O seu melhor e-mail" value={newsletterEmail} onChange={(e) => setNewsletterEmail(e.target.value)} />
+              </label>
+              <Button type="submit" disabled={newsletterSubmitting}>
+                {newsletterSubmitting ? <><span className="spinner-mini" /> A subscrever...</> : <>ENTRAR NA ERA <ArrowRight size={16} /></>}
+              </Button>
             </form>
           )}
         </div>
       </section>
 
       <OfficialFooter onInteraction={() => playClick(soundsOn)} />
-
-      {/* Side Menu identical to Lovable with direct routing to Manifesto and Events */}
-      {isMenuOpen && (
-        <div className="overlay lovable-menu-overlay" onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }}>
-          <aside className="lovable-side-menu" onClick={(event) => event.stopPropagation()}>
-            <div className="lovable-menu-header">
-              <span className="lovable-menu-kicker">EXPLORAR</span>
-              <button className="close-button" onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }} aria-label="Fechar menu">
-                <X size={20} />
-              </button>
-            </div>
-            
-            <nav className="lovable-menu-links">
-              <Link href="/" onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }}>INÍCIO</Link>
-              <Link href="/archive" onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }}>ARQUIVO DE ERAS</Link>
-              <Link href="/manifesto" onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }}>MANIFESTO COMPLETO</Link>
-              <Link href="/events" onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }}>EVENTOS</Link>
-              <Link href="/contact" onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }}>CONTATO</Link>
-              <a href={ERAS_VIP_WHATSAPP_URL} target="_blank" rel="noreferrer" className="vip-whatsapp" onClick={() => playClick(soundsOn)}>
-                GRUPO VIP NO<br />WHATSAPP
-              </a>
-            </nav>
-
-            <div className="lovable-menu-section">
-              <span className="lovable-menu-kicker">CATEGORIAS</span>
-              <div className="lovable-menu-sublinks">
-                {categoryOptions.map((item) => (
-                  <a key={item} href="#shop" onClick={() => { playClick(soundsOn); setCategory(item); setIsMenuOpen(false); }}>
-                    {item === "Todos" ? "TODOS OS PRODUTOS" : item.toUpperCase()}
-                  </a>
-                ))}
-              </div>
-            </div>
-
-            <div className="lovable-menu-section">
-              <span className="lovable-menu-kicker">COLEÇÕES</span>
-              <div className="lovable-menu-sublinks">
-                {collectionOptions.length > 0 ? collectionOptions.map((collection) => (
-                  <Link key={collection} href={collectionPath(collection)} onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }}>{collection.toUpperCase()}</Link>
-                )) : <span className="collections-empty">Nenhuma coleção publicada</span>}
-              </div>
-            </div>
-          </aside>
-        </div>
-      )}
 
       {/* Persistent Side Cart with recommended items, progress bar, coupons, undo and payment badges */}
       {isCartOpen && (
@@ -1292,7 +1225,7 @@ export default function Home() {
               <div className="empty-cart">
                 <ShoppingBag size={48} strokeWidth={1} />
                 <p>Sua sacola está vazia.</p>
-                <button className="primary-button" onClick={() => setIsCartOpen(false)}>EXPLORAR PRODUTOS</button>
+                <button className="primary-button" onClick={() => { setIsCartOpen(false); window.location.href = "/catalog"; }}>EXPLORAR PRODUTOS</button>
               </div>
             ) : (
               <>
@@ -1404,23 +1337,6 @@ export default function Home() {
               </>
             )}
 
-            {cart.length === 0 && (
-              <div className="side-cart-recommendations">
-                <span className="section-kicker">VOCÊ TAMBÉM PODE GOSTAR</span>
-                <div className="recommendations-list">
-                  {products.slice(0, 2).map((rec) => (
-                    <div className="recommendation-item" key={rec.id}>
-                      <img src={rec.image} alt={rec.alt} />
-                      <div>
-                        <strong>{rec.name}</strong>
-                        <span>{formatPrice(rec.price)}</span>
-                      </div>
-                      <button onClick={() => addToCart(rec, rec.sizes[0])}>ADICIONAR</button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </aside>
         </div>
       )}

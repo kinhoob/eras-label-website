@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { categoryPath, collectionPath, uniqueCatalogLabels } from "@/lib/catalog-routes";
 
@@ -16,10 +17,19 @@ type PublicCatalogProduct = {
 };
 
 export function SidebarMenu({ isOpen, onClose, onPlaySound }: SidebarMenuProps) {
-  const { data: categories = [] } = trpc.catalog.categories.useQuery(undefined, { enabled: isOpen });
-  const { data: catalogRows = [] } = trpc.catalog.list.useQuery(undefined, { enabled: isOpen });
+  const [shouldRender, setShouldRender] = useState(isOpen);
+  useEffect(() => {
+    if (isOpen) {
+      setShouldRender(true);
+      return;
+    }
+    const timer = window.setTimeout(() => setShouldRender(false), 280);
+    return () => window.clearTimeout(timer);
+  }, [isOpen]);
+  const { data: categories = [] } = trpc.catalog.categories.useQuery(undefined, { enabled: shouldRender });
+  const { data: catalogRows = [] } = trpc.catalog.list.useQuery(undefined, { enabled: shouldRender });
 
-  if (!isOpen) return null;
+  if (!shouldRender) return null;
 
   const catalogProducts = catalogRows as PublicCatalogProduct[];
   const categoryLabels = uniqueCatalogLabels([
@@ -33,8 +43,8 @@ export function SidebarMenu({ isOpen, onClose, onPlaySound }: SidebarMenuProps) 
   };
 
   return (
-    <div className="lovable-menu-overlay" onClick={onClose}>
-      <div className="lovable-side-menu" onClick={(e) => e.stopPropagation()}>
+    <div className={`lovable-menu-overlay ${isOpen ? "is-open" : "is-closing"}`} onClick={onClose}>
+      <div className={`lovable-side-menu ${isOpen ? "is-open" : "is-closing"}`} onClick={(e) => e.stopPropagation()}>
         <div className="lovable-menu-header">
           <span className="lovable-menu-kicker">EXPLORAR ERAS</span>
           <button onClick={closeWithSound} className="close-button" aria-label="Fechar menu">

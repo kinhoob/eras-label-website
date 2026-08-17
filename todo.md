@@ -526,3 +526,40 @@
 - [x] Permitir definir no cadastro do produto categorias, coleções e páginas públicas de exibição.
 - [x] Exibir a sacola na navbar em todas as telas públicas, sem aparecer no painel administrativo.
 - [x] Manter o checkout transparente acessível a partir da sacola global em qualquer tela pública.
+
+
+## Unificação visual, catálogo e checkout (2026-08-17)
+- [x] Manter o mesmo menu público em todas as telas, com símbolo X para fechar.
+- [x] Corrigir a estética da newsletter pública para seguir a identidade da Home.
+- [x] Unificar a estética das páginas encaminhadas pelo rodapé com a estética da Home.
+- [x] Ocultar recomendações da sacola quando ela estiver vazia.
+- [x] Redesenhar o checkout transparente dentro de um modal centralizado e claro.
+- [x] Fazer “Explorar produtos” abrir uma tela exclusiva de produtos, não a Home.
+- [x] Garantir telas de produtos para catálogo completo, categorias e coleções.
+- [x] Remover seleção e filtro de cor dos produtos e manter busca por tamanho.
+- [x] Alterar o filtro de preço para aceitar valor digitado pelo cliente.
+- [x] Substituir a animação de frete grátis por barra de progresso de 0% a 100% baseada no carrinho.
+- [x] Adicionar animações suaves de abertura e fechamento da sidebar pública.
+- [x] Retirar a opção “Volte à loja” do painel administrativo.
+- [x] Corrigir o texto “Definições e equipe” para português adequado no painel administrativo.
+- [x] Tornar o scrollbar da sidebar administrativa quase invisível sem perder acessibilidade.
+
+- [x] Remover a declaração duplicada de Link no SidebarMenu e restaurar a compilação do storefront.
+
+## Rodada final de polimento e unificação
+- [x] Unificar a navegação pública, removendo o header duplicado da Home e mantendo PublicGlobalNav como fonte única.
+- [x] Garantir que o menu público use o mesmo SidebarMenu em desktop e mobile, com botão X persistente e animações de abertura/fechamento.
+- [x] Refinar o shell visual das páginas institucionais e do catálogo para a mesma estética editorial da Home.
+- [x] Melhorar a aparência da newsletter e manter o rodapé consistente nas páginas públicas.
+- [x] Substituir a animação de frete grátis por uma barra de progresso suave de 0% a 100% baseada no valor do carrinho.
+- [x] Ocultar recomendações e manter estado vazio limpo quando a sacola não tiver itens.
+- [x] Corrigir o link Explorar produtos para apontar ao catálogo e preservar a navegação real por produtos.
+- [x] Enquadrar o checkout da rota dedicada em modal centralizado, transparente e consistente com a marca.
+- [x] Remover referências remanescentes a cor na busca, filtros e páginas de produto, mantendo apenas tamanho e faixa de preço.
+- [x] Corrigir o rótulo administrativo para “Definições & Equipa” e tornar o scrollbar da sidebar quase invisível.
+- [x] Atualizar e ampliar testes Vitest para os ajustes críticos desta rodada.
+- [x] Validar TypeScript, testes, build e screenshots desktop/mobile antes do checkpoint.
+
+- [x] Corrigir links/rotas de produto que retornavam 404 ao usar IDs numéricos, adicionando fallback público por ID e preferindo slugs quando disponíveis.
+
+- [x] Adicionar fallback editorial para imagens legadas que retornam 403, sem substituir URLs de upload válidas no catálogo e na página de produto.

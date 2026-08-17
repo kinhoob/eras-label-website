@@ -19,17 +19,10 @@ type OfficialInfoPageProps = {
 
 export default function OfficialInfoPage({ eyebrow, title, intro, sections, onInteraction }: OfficialInfoPageProps) {
   return (
-    <div className="min-h-screen bg-[#f6f3ee] text-[#23221e] flex flex-col font-sans">
+    <div className="public-page-shell min-h-screen bg-[#f6f3ee] text-[#23221e] flex flex-col font-sans">
       <PageTransitionHandler />
-      <header className="border-b border-[#dfd7cc] px-6 py-5 flex items-center justify-between sticky top-0 bg-[#f6f3ee]/95 backdrop-blur z-40">
-        <Link href="/" onClick={onInteraction} className="font-serif text-2xl font-black tracking-[0.32em] uppercase" aria-label="Voltar para a página inicial">ERAS<span className="text-[#b22222]">.</span></Link>
-        <div className="flex items-center gap-5 text-xs uppercase tracking-[0.18em]">
-          <Link href="/contact" onClick={onInteraction} className="hover:text-[#b22222] transition-colors">Contato</Link>
-          <Link href="/" onClick={onInteraction} className="hidden sm:inline-flex items-center gap-1 hover:text-[#b22222] transition-colors">Loja <ArrowUpRight size={13} /></Link>
-        </div>
-      </header>
 
-      <main className="flex-1 w-full max-w-4xl mx-auto px-6 py-16 md:py-24">
+      <main className="flex-1 w-full max-w-4xl mx-auto px-6 pt-32 pb-16 md:pt-40 md:pb-24">
         <Link href="/" onClick={onInteraction} className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-[#8c8378] hover:text-[#b22222] transition-colors mb-10">
           <ArrowLeft size={14} /> Voltar para a loja
         </Link>

@@ -110,7 +110,7 @@ export function buildAdminNavGroups(isSuperAdmin: boolean): AdminNavGroup[] {
 
   if (isSuperAdmin) {
     groups[groups.length - 1].items.push({
-      label: "Gestão de Equipe",
+      label: "Gestão de Equipa",
       icon: "team",
     });
   }

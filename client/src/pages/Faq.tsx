@@ -15,7 +15,7 @@ const faqList: FaqItem[] = [
   {
     category: "Envios",
     question: "Como funciona o envio e quais transportadoras são utilizadas?",
-    answer: "A Eras Label opera em parceria oficial com o Melhor Envio para garantir cotações precisas e entregas seguras em todo o território nacional. Disponibilizamos exclusivamente os serviços dos Correios (PAC e SEDEX) e das transportadoras Jadlog (Econômico e Rápido) e Loggi.",
+    answer: "A Eras Label opera em parceria oficial com o Melhor Envio para garantir cotações precisas e entregas seguras em todo o território nacional. Disponibilizamos exclusivamente os serviços dos Correios (PAC e SEDEX) e da Jadlog (Econômico e Rápido).",
   },
   {
     category: "Envios",
@@ -61,26 +61,11 @@ export default function FaqPage() {
     : faqList.filter((item) => item.category === activeTab);
 
   return (
-    <div className="min-h-screen bg-[#f6f3ee] text-[#23221e] flex flex-col font-sans">
+    <div className="public-page-shell min-h-screen bg-[#f6f3ee] text-[#23221e] flex flex-col font-sans">
       <PageTransitionHandler />
 
-      {/* Header */}
-      <header className="border-b border-[#dfd7cc] px-6 py-4 flex items-center justify-between sticky top-0 bg-[#f6f3ee]/95 backdrop-blur z-40">
-        <div className="flex items-center gap-4">
-          <Link href="/" onClick={playClickSound} className="font-serif text-2xl font-black tracking-widest uppercase">
-            ERAS.
-          </Link>
-        </div>
-        <div className="flex items-center gap-6">
-          <button onClick={() => setSoundEnabled(!soundEnabled)} className="text-xs uppercase tracking-widest flex items-center gap-1 hover:text-[#c95139]">
-            {soundEnabled ? "Som Ativo" : "Mudo"}
-          </button>
-          <Link href="/contact" onClick={playClickSound} className="text-xs uppercase tracking-widest hover:text-[#c95139]">Contato</Link>
-        </div>
-      </header>
-
       {/* Main Content */}
-      <main className="flex-1 max-w-4xl mx-auto px-6 py-16 w-full">
+      <main className="public-page-content flex-1 max-w-4xl mx-auto px-6 py-16 md:py-24 w-full">
         <span className="text-xs uppercase tracking-widest text-[#8c8378] block mb-2">SUPORTE & TRANSPARÊNCIA</span>
         <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tight mb-4">Perguntas Frequentes</h1>
         <p className="text-sm text-[#554f46] mb-10 max-w-2xl leading-relaxed">

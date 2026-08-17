@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useRoute } from "wouter";
-import { ArrowLeft, Check, ChevronLeft, ChevronRight, ShoppingBag } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import OfficialFooter from "@/components/OfficialFooter";
 import NotFound from "@/pages/NotFound";
 import { trpc } from "@/lib/trpc";
+
+const productImageFallback = "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1200&q=85";
 
 function formatPrice(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -13,7 +15,12 @@ function formatPrice(value: number) {
 export default function ProductPage() {
   const [, params] = useRoute("/produto/:slug");
   const slug = params?.slug ?? "";
-  const { data: product, isLoading, isError } = trpc.catalog.getBySlug.useQuery({ slug }, { enabled: Boolean(slug) });
+  const numericId = /^\d+$/.test(slug) ? Number(slug) : null;
+  const slugQuery = trpc.catalog.getBySlug.useQuery({ slug: slug || "_" }, { enabled: Boolean(slug) && numericId === null });
+  const idQuery = trpc.catalog.getById.useQuery({ id: numericId ?? 1 }, { enabled: numericId !== null });
+  const product = numericId !== null ? idQuery.data : slugQuery.data;
+  const isLoading = numericId !== null ? idQuery.isLoading : slugQuery.isLoading;
+  const isError = numericId !== null ? idQuery.isError : slugQuery.isError;
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState("");
   const touchStartX = useRef<number | null>(null);
@@ -23,7 +30,7 @@ export default function ProductPage() {
     const title = `${product.name} | Eras Label - Loja Oficial`;
     document.title = title;
     const canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
-    canonical?.setAttribute("href", `${window.location.origin}/produto/${product.slug}`);
+    canonical?.setAttribute("href", `${window.location.origin}/produto/${product.slug || product.id}`);
   }, [product]);
 
   const images = useMemo(() => Array.isArray(product?.images) ? product.images.filter((image): image is string => typeof image === "string" && image.length > 0) : [], [product?.images]);
@@ -65,13 +72,6 @@ export default function ProductPage() {
 
   return (
     <main className="product-page-shell min-h-screen bg-[#f6f3ee] text-[#23221e]">
-      <header className="product-page-header border-b border-[#23221e]/10">
-        <div className="container flex items-center justify-between py-5">
-          <Link href="/" className="text-xs font-bold uppercase tracking-[0.24em]">ERAS<span className="text-[#b22222]">.</span></Link>
-          <Link href="/" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em]"><ArrowLeft size={15} /> Voltar à loja</Link>
-        </div>
-      </header>
-
       <div className="container py-10 md:py-16">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)] lg:gap-16">
           <section className="product-page-gallery" aria-label={`Imagens de ${product.name}`}>
@@ -84,7 +84,7 @@ export default function ProductPage() {
               onTouchStart={handleTouchStart}
               onTouchEnd={handleTouchEnd}
             >
-              {activeImage ? <img src={activeImage} alt={`${product.name} — imagem ${selectedImage + 1} de ${images.length}`} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-xs uppercase tracking-[0.18em]">Imagem em breve</div>}
+              {activeImage ? <img src={activeImage} alt={`${product.name} — imagem ${selectedImage + 1} de ${images.length}`} className="h-full w-full object-cover" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = productImageFallback; }} /> : <div className="flex h-full items-center justify-center text-xs uppercase tracking-[0.18em]">Imagem em breve</div>}
               {images.length > 1 && <>
                 <button type="button" className="product-gallery-control product-gallery-control-prev" onClick={goToPreviousImage} aria-label="Ver imagem anterior"><ChevronLeft size={22} /></button>
                 <button type="button" className="product-gallery-control product-gallery-control-next" onClick={goToNextImage} aria-label="Ver próxima imagem"><ChevronRight size={22} /></button>
@@ -92,7 +92,7 @@ export default function ProductPage() {
               </>}
             </div>
             {images.length > 1 && <div className="product-gallery-thumbnails" role="tablist" aria-label="Selecionar imagem do produto">
-              {images.map((image, index) => <button key={`${image}-${index}`} type="button" role="tab" aria-selected={selectedImage === index} onClick={() => setSelectedImage(index)} className={`aspect-square overflow-hidden border ${selectedImage === index ? "border-[#b22222]" : "border-transparent"}`} aria-label={`Ver imagem ${index + 1}`}><img src={image} alt="" className="h-full w-full object-cover" /></button>)}
+              {images.map((image, index) => <button key={`${image}-${index}`} type="button" role="tab" aria-selected={selectedImage === index} onClick={() => setSelectedImage(index)} className={`aspect-square overflow-hidden border ${selectedImage === index ? "border-[#b22222]" : "border-transparent"}`} aria-label={`Ver imagem ${index + 1}`}><img src={image} alt="" className="h-full w-full object-cover" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = productImageFallback; }} /></button>)}
             </div>}
           </section>
 
@@ -114,7 +114,7 @@ export default function ProductPage() {
               <Link href="/#shop"><ShoppingBag size={16} /> Ver opções de compra</Link>
             </Button>
             <p className="mt-4 flex items-center gap-2 text-xs text-[#5a554d]"><Check size={14} className="text-[#b22222]" /> Produto oficial Eras Label</p>
-            <p className="mt-1 text-xs text-[#5a554d]">Link público: /produto/{product.slug}</p>
+            <p className="mt-1 text-xs text-[#5a554d]">Link público: /produto/{product.slug || product.id}</p>
           </section>
         </div>
       </div>

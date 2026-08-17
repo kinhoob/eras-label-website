@@ -900,7 +900,6 @@ export default function Admin() {
             )}
             <span style={{ fontSize: "0.85rem", color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: 500 }}>{myAdminDetails?.name || adminName}</span>
           </div>
-          <Link href="/" className="back-store"><ArrowLeft size={17} />Voltar à loja</Link>
         </div>
       </aside>
       <button type="button" className="admin-sidebar-scrim" aria-label="Fechar menu administrativo" onClick={() => setMenuOpen(false)} />
@@ -1190,7 +1189,7 @@ export default function Admin() {
         {active === "E-mail Marketing" && <EmailMarketingSection />}
         {active === "E-mails (Resend)" && <EmailLogsSection />}
         {active === "Configurações" && <AdminSettingsSection onNavigate={selectNav} />}
-        {active === "Gestão de Equipe" && <SubAdminsManagementSection />}
+        {active === "Gestão de Equipa" && <SubAdminsManagementSection />}
       </main>
     </div>
   );
@@ -1772,7 +1771,7 @@ function SubAdminsManagementSection() {
     { key: "categories", label: "Categorias" },
     { key: "stats", label: "Estatísticas & IA" },
     { key: "emails", label: "E-mails & Marketing" },
-    { key: "settings", label: "Configurações & Equipe" },
+    { key: "settings", label: "Definições & Equipa" },
   ];
 
   const handleTogglePerm = (modKey: string, currentPermsStr: string, setter: any) => {
@@ -1787,7 +1786,7 @@ function SubAdminsManagementSection() {
       <div className="content-toolbar">
         <div>
           <span className="section-kicker">CONTROLE DE ACESSO RBAC</span>
-          <h2 className="content-title">Gestão de Equipe e Permissões</h2>
+          <h2 className="content-title">Gestão de Equipa e Permissões</h2>
           <p>Crie e gerencie contas de administradores secundários com acesso restrito a módulos específicos do painel.</p>
         </div>
         <Button onClick={() => setShowCreateModal(true)} style={{ background: "#111", color: "#fff" }}>

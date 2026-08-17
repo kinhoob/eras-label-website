@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
-import { ArrowLeft, ArrowRight, Check, Clock3, Loader2, Minus, Plus, ShieldCheck, Trash2 } from "lucide-react";
+import { ArrowRight, Check, Clock3, Loader2, Minus, Plus, ShieldCheck, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { loadCart, saveCart } from "@/lib/cart-storage";
@@ -454,9 +454,10 @@ export default function CheckoutPage() {
   }
 
   return (
-    <main className="checkout-page">
+    <main className="checkout-page checkout-page--modal">
+      <div className="checkout-modal-shell">
       <header className="checkout-page-header">
-        <Link href="/" className="checkout-back-link"><ArrowLeft size={16} /> VOLTAR À LOJA</Link>
+        <Link href="/" className="checkout-modal-close" aria-label="Fechar checkout" title="Fechar checkout"><X size={18} /></Link>
         <Link href="/" className="brand-mark">ERAS<span>.</span></Link>
         <span className="checkout-secure-label"><ShieldCheck size={15} /> CHECKOUT SEGURO</span>
       </header>
@@ -571,6 +572,7 @@ export default function CheckoutPage() {
           <div className="checkout-page-totals"><div><span>Subtotal</span><strong>{formatPrice(subtotal)}</strong></div>{discount > 0 && <div><span>Desconto</span><strong>- {formatPrice(discount)}</strong></div>}<div><span>Frete</span><strong>{shippingQuery.data?.free ? "Grátis" : shippingQuery.data ? formatPrice(shippingCost) : "A calcular"}</strong></div>{pixSavings > 0 && <div><span>Economia no Pix</span><strong>- {formatPrice(pixSavings)}</strong></div>}{selectedPaymentMethod === "credit_card" && selectedInstallments > 1 && <div><span>Juros ({selectedInstallments}x)</span><strong>+ {formatPrice(installmentInterest)}</strong></div>}<div className="final"><span>{selectedPaymentMethod === "credit_card" ? `${selectedInstallments}x no cartão` : "Total"}</span><strong>{formatPrice(total)}</strong></div></div>
           <p className="checkout-free-shipping-note">{subtotal >= freeShippingThreshold ? "Você conquistou frete grátis." : `Frete grátis a partir de ${formatPrice(freeShippingThreshold)}.`}</p>
         </aside>
+      </div>
       </div>
     </main>
   );
