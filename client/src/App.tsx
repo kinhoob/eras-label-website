@@ -25,6 +25,7 @@ const ReturnsPage = lazy(() => import("./pages/Returns"));
 const ShippingPage = lazy(() => import("./pages/Shipping"));
 const AboutPage = lazy(() => import("./pages/About"));
 const ProductPage = lazy(() => import("./pages/ProductPage"));
+import PublicGlobalNav from "./components/PublicGlobalNav";
 
 function RouteLoading() {
   return (
@@ -83,6 +84,7 @@ function App() {
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
           <Toaster />
+          <PublicGlobalNav />
           <Router />
         </TooltipProvider>
       </ThemeProvider>

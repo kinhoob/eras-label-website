@@ -48,6 +48,7 @@ import { exportToCSV } from "@/lib/csv-export";
 import type { StorefrontConfig } from "../../../shared/storefront";
 import { optimizeProductImage } from "@/lib/image-optimizer";
 import { buildAdminNavGroups, getAdminNavGroupId, type AdminNavIcon } from "@/lib/admin-navigation";
+import { parseCmsContent, serializeCmsContent, type CmsEventBlock, type CmsStoryBlock } from "@shared/cms";
 
 function getAdminNavIcon(icon: AdminNavIcon) {
   switch (icon) {
@@ -93,7 +94,7 @@ function EmailLogsSection() {
         <Button onClick={() => void refetch()} variant="outline">Atualizar lista</Button>
       </div>
 
-      <div className="admin-filter-bar" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1.5rem', background: '#fff', padding: '1.25rem', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+      <div className="admin-filter-bar admin-search-panel" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1.5rem', background: '#fff', padding: '1.25rem', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
         <div>
           <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '0.35rem', color: '#374151' }}>Pesquisar</label>
           <input
@@ -101,6 +102,7 @@ function EmailLogsSection() {
             placeholder="Destinatário, assunto..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            className="admin-search-input"
             style={{ width: '100%', padding: '0.5rem 0.75rem', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.875rem' }}
           />
         </div>
@@ -295,8 +297,8 @@ function EmailMarketingSection() {
       </div>
 
       <div className="email-marketing-layout">
-        <div className="admin-panel" style={{ padding: '1.5rem', background: '#fff', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-          <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', color: '#111', fontWeight: 600 }}>Nova Campanha em Massa</h3>
+        <div className="admin-panel marketing-compose-panel" style={{ padding: '1.5rem', background: '#fff', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+          <div className="marketing-panel-heading"><div><span className="section-kicker">CRIAR ENVIO</span><h3>Nova Campanha em Massa</h3></div><Mail size={20} /></div>
           <form onSubmit={handleSendCampaign} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div>
               <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '0.35rem', color: '#374151' }}>Assunto do E-mail</label>
@@ -356,8 +358,8 @@ function EmailMarketingSection() {
           </form>
         </div>
 
-        <div className="admin-panel" style={{ padding: '1.5rem', background: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-          <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', color: '#111', fontWeight: 600 }}>Diretrizes da Marca Eras</h3>
+        <div className="admin-panel marketing-guidelines-panel" style={{ padding: '1.5rem', background: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+          <div className="marketing-panel-heading"><div><span className="section-kicker">IDENTIDADE</span><h3>Diretrizes da Marca Eras</h3></div><span className="marketing-mark">ERAS.</span></div>
           <p style={{ fontSize: '0.9rem', color: '#555', lineHeight: '1.6', marginBottom: '1rem' }}>
             As campanhas enviadas por aqui utilizam o layout institucional da Eras Label, com a cor de destaque <strong>#b22222</strong> e cabeçalho editorial elegante.
           </p>
@@ -2457,12 +2459,18 @@ function AdminCmsManager() {
   const [subtitle, setSubtitle] = useState("");
   const [content, setContent] = useState("");
   const [bannerUrl, setBannerUrl] = useState("");
+  const [storyBlocks, setStoryBlocks] = useState<CmsStoryBlock[]>([]);
+  const [eventBlocks, setEventBlocks] = useState<CmsEventBlock[]>([]);
 
   useEffect(() => {
     if (pageData) {
+      const kind = selectedSlug === "manifesto" ? "manifesto" : selectedSlug === "events" ? "events" : "generic";
+      const structured = parseCmsContent(pageData.content, kind);
       setTitle(pageData.title || "");
       setSubtitle(pageData.subtitle || "");
-      setContent(pageData.content || "");
+      setContent(structured.body || "");
+      setStoryBlocks(structured.storyBlocks || []);
+      setEventBlocks(structured.events || []);
       setBannerUrl(pageData.bannerUrl || "");
     } else {
       // Valores padrão para iniciar se não houver no banco
@@ -2484,6 +2492,8 @@ function AdminCmsManager() {
         setContent("Cada coleção da Eras Label é desenvolvida sob rigorosos padrões de alfaiataria urbana, garantindo durabilidade, caimento perfeito e exclusividade.");
       }
       setBannerUrl("");
+      setStoryBlocks([]);
+      setEventBlocks([]);
     }
   }, [pageData, selectedSlug]);
 
@@ -2506,6 +2516,12 @@ function AdminCmsManager() {
 
   const uploadMutation = trpc.admin.uploadImage.useMutation();
   const [uploading, setUploading] = useState(false);
+  const cmsKind = selectedSlug === "manifesto" ? "manifesto" : selectedSlug === "events" ? "events" : "generic";
+  const updateStoryBlock = (id: string, patch: Partial<CmsStoryBlock>) => setStoryBlocks((current) => current.map((block) => block.id === id ? { ...block, ...patch } : block));
+  const updateEventBlock = (id: string, patch: Partial<CmsEventBlock>) => setEventBlocks((current) => current.map((event) => event.id === id ? { ...event, ...patch } : event));
+  const getSerializedContent = () => cmsKind === "generic"
+    ? content
+    : serializeCmsContent({ version: 1, kind: cmsKind, body: content, storyBlocks, events: eventBlocks });
 
   function handleUploadBanner(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -2561,7 +2577,7 @@ function AdminCmsManager() {
         ))}
       </div>
 
-      <div className="admin-panel" style={{ background: "#fff", padding: "2rem", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
+      <div className="admin-panel cms-editor-shell" style={{ background: "#fff", padding: "2rem", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
         {isLoading ? (
           <div className="inventory-state"><LoaderCircle className="spin" size={22} /><strong>Carregando conteúdo...</strong></div>
         ) : (
@@ -2619,6 +2635,66 @@ function AdminCmsManager() {
               />
             </div>
 
+            {selectedSlug === "manifesto" && (
+              <div className="cms-structured-editor">
+                <div className="cms-structured-heading">
+                  <div><span className="section-kicker">NARRATIVA VISUAL</span><h3>Blocos da história</h3><p>Combine texto e imagem para construir o manifesto em capítulos.</p></div>
+                  <Button type="button" variant="outline" onClick={() => setStoryBlocks((current) => [...current, { id: `story-${Date.now()}`, title: "Novo capítulo", text: "", imagePosition: "right" }])}><Plus size={15} /> Adicionar capítulo</Button>
+                </div>
+                {storyBlocks.length === 0 ? <div className="cms-empty-state">Ainda não há capítulos. Adicione o primeiro bloco narrativo.</div> : storyBlocks.map((block, index) => (
+                  <div className="cms-story-card" key={block.id}>
+                    <div className="cms-card-index">0{index + 1}</div>
+                    <div className="cms-card-fields">
+                      <div className="cms-field-grid">
+                        <label>Chamada<input value={block.eyebrow || ""} onChange={(e) => updateStoryBlock(block.id, { eyebrow: e.target.value })} placeholder="A origem / A matéria / O futuro" /></label>
+                        <label>Título<input value={block.title} onChange={(e) => updateStoryBlock(block.id, { title: e.target.value })} placeholder="Título do capítulo" /></label>
+                      </div>
+                      <label>Texto<textarea rows={4} value={block.text} onChange={(e) => updateStoryBlock(block.id, { text: e.target.value })} placeholder="Conte a história deste capítulo..." /></label>
+                      <div className="cms-field-grid">
+                        <label>URL da imagem<input value={block.imageUrl || ""} onChange={(e) => updateStoryBlock(block.id, { imageUrl: e.target.value })} placeholder="https://..." /></label>
+                        <label>Texto alternativo<input value={block.imageAlt || ""} onChange={(e) => updateStoryBlock(block.id, { imageAlt: e.target.value })} placeholder="Descrição da imagem" /></label>
+                      </div>
+                      <div className="cms-card-actions">
+                        <label>Posição da imagem<select value={block.imagePosition || "right"} onChange={(e) => updateStoryBlock(block.id, { imagePosition: e.target.value as CmsStoryBlock["imagePosition"] })}><option value="left">À esquerda</option><option value="right">À direita</option></select></label>
+                        <Button type="button" variant="ghost" className="text-[#b22222]" onClick={() => setStoryBlocks((current) => current.filter((item) => item.id !== block.id))}><X size={15} /> Remover</Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {selectedSlug === "events" && (
+              <div className="cms-structured-editor">
+                <div className="cms-structured-heading">
+                  <div><span className="section-kicker">AGENDA EDITÁVEL</span><h3>Eventos e encontros</h3><p>Cadastre os eventos e direcione cada botão para uma página, inscrição ou canal externo.</p></div>
+                  <Button type="button" variant="outline" onClick={() => setEventBlocks((current) => [...current, { id: `event-${Date.now()}`, date: "", title: "Novo evento", description: "", ctaLabel: "Saiba mais", ctaUrl: "" }])}><Plus size={15} /> Adicionar evento</Button>
+                </div>
+                {eventBlocks.length === 0 ? <div className="cms-empty-state">Nenhum evento publicado. Adicione o próximo encontro da Eras.</div> : eventBlocks.map((event, index) => (
+                  <div className="cms-event-card" key={event.id}>
+                    <div className="cms-card-index">0{index + 1}</div>
+                    <div className="cms-card-fields">
+                      <div className="cms-field-grid cms-field-grid-3">
+                        <label>Data<input value={event.date} onChange={(e) => updateEventBlock(event.id, { date: e.target.value })} placeholder="24 AGO 2026" /></label>
+                        <label>Título<input value={event.title} onChange={(e) => updateEventBlock(event.id, { title: e.target.value })} placeholder="Nome do encontro" /></label>
+                        <label>Local<input value={event.location || ""} onChange={(e) => updateEventBlock(event.id, { location: e.target.value })} placeholder="Recife, PE" /></label>
+                      </div>
+                      <label>Descrição<textarea rows={3} value={event.description} onChange={(e) => updateEventBlock(event.id, { description: e.target.value })} placeholder="Detalhes do evento..." /></label>
+                      <div className="cms-field-grid">
+                        <label>Texto do botão<input value={event.ctaLabel || ""} onChange={(e) => updateEventBlock(event.id, { ctaLabel: e.target.value })} placeholder="Inscreva-se" /></label>
+                        <label>Link do botão<input value={event.ctaUrl || ""} onChange={(e) => updateEventBlock(event.id, { ctaUrl: e.target.value })} placeholder="/contact ou https://..." /></label>
+                      </div>
+                      <div className="cms-field-grid">
+                        <label>URL da imagem<input value={event.imageUrl || ""} onChange={(e) => updateEventBlock(event.id, { imageUrl: e.target.value })} placeholder="https://..." /></label>
+                        <label>Texto alternativo<input value={event.imageAlt || ""} onChange={(e) => updateEventBlock(event.id, { imageAlt: e.target.value })} placeholder="Descrição da imagem" /></label>
+                      </div>
+                      <div className="cms-card-actions"><Button type="button" variant="ghost" className="text-[#b22222]" onClick={() => setEventBlocks((current) => current.filter((item) => item.id !== event.id))}><X size={15} /> Remover</Button></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "1rem" }}>
               <Button
                 type="button"
@@ -2630,8 +2706,8 @@ function AdminCmsManager() {
               </Button>
 
               <Button
-                onClick={() => saveMutation.mutate({ slug: selectedSlug, title, subtitle, content, bannerUrl })}
-                disabled={saveMutation.isPending || !title.trim() || !content.trim()}
+                onClick={() => saveMutation.mutate({ slug: selectedSlug, title, subtitle, content: getSerializedContent(), bannerUrl })}
+                disabled={saveMutation.isPending || !title.trim() || (!content.trim() && storyBlocks.length === 0 && eventBlocks.length === 0)}
                 style={{ background: "#b22222", color: "#fff", padding: "0.75rem 1.5rem" }}
               >
                 {saveMutation.isPending ? "Salvando..." : "Publicar Alterações"}

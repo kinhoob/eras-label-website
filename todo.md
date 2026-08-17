@@ -511,3 +511,18 @@
 - [x] Corrigir a tipagem de Tracking.tsx para acessar eventos de rastreio sem índice implícito.
 - [x] Tipar o retorno do carrinho do Melhor Envio antes de persistir o ID da remessa.
 - [x] Confirmar que o server/routers.ts permanece compilável após o tratamento de erros da cotação.
+
+
+## Melhorias de navegação, CMS e carrinho global (2026-08-17)
+- [x] Melhorar visualmente a barra de pesquisa no painel administrativo.
+- [x] Melhorar visualmente a seção de e-mail marketing no painel administrativo.
+- [x] Melhorar visualmente a gestão de conteúdo das páginas no painel administrativo.
+- [x] Expandir o manifesto da marca para suportar imagens, textos e narrativa visual editável.
+- [x] Permitir links editáveis nos botões de eventos pelo painel administrativo.
+- [x] Fazer os links do menu público levarem a listagens reais de produtos.
+- [x] Fazer “Todos os produtos” listar o catálogo completo visível.
+- [x] Fazer “Camisetas” e “Bonés” filtrarem produtos pela categoria/tipo marcado no cadastro.
+- [x] Fazer coleções como Paradox listarem produtos associados à coleção.
+- [x] Permitir definir no cadastro do produto categorias, coleções e páginas públicas de exibição.
+- [x] Exibir a sacola na navbar em todas as telas públicas, sem aparecer no painel administrativo.
+- [x] Manter o checkout transparente acessível a partir da sacola global em qualquer tela pública.

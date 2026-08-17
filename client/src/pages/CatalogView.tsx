@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button";
 export default function CatalogViewPage() {
   const [, paramsCategory] = useRoute("/category/:slug");
   const [, paramsCollection] = useRoute("/collection/:slug");
-  
-  const filterType = paramsCategory ? "category" : "collection";
+  const [isCatalogRoute] = useRoute("/catalog");
+
+  const filterType = paramsCategory ? "category" : paramsCollection ? "collection" : isCatalogRoute ? "all" : "all";
   const filterSlug = paramsCategory?.slug || paramsCollection?.slug || "";
 
   const [menuOpen, setMenuOpen] = useState(false);
@@ -19,23 +20,6 @@ export default function CatalogViewPage() {
   const { data: categories = [] } = trpc.catalog.categories.useQuery(undefined, { enabled: menuOpen });
 
   const playClickSound = () => playInteractionSound(soundEnabled);
-
-  const collectionAliases: Record<string, string[]> = {
-    paradox: ["paradox", "paradox collection"],
-    "lost-between-eras": ["lost", "lost between eras"],
-    raizes: ["raizes", "raízes", "recife", "la ursa"],
-  };
-
-  const fallbackCollectionProducts: Record<string, Array<Record<string, unknown>>> = {
-    "lost-between-eras": [
-      { id: "fallback-lost-1", name: "Boné Lost Between Eras Off", collection: "LOST BETWEEN ERAS", category: "Bonés", price: 117.5, images: ["https://images.unsplash.com/photo-1521369909029-2afed882baee?auto=format&fit=crop&w=900&q=85"] },
-      { id: "fallback-lost-2", name: "Boné Lost Between Eras Marinho", collection: "LOST BETWEEN ERAS", category: "Bonés", price: 117.5, images: ["https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=900&q=85"] },
-    ],
-    raizes: [
-      { id: "fallback-raizes-1", name: "T-Shirt Raízes Recife", collection: "RAÍZES — RECIFE & LA URSA", category: "Camisetas", price: 154.9, images: ["https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=85"] },
-      { id: "fallback-raizes-2", name: "T-Shirt Raízes La Ursa", collection: "RAÍZES — RECIFE & LA URSA", category: "Camisetas", price: 154.9, images: ["https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=900&q=85"] },
-    ],
-  };
 
   const normalizeImages = (value: unknown): string[] => {
     const parsed = typeof value === "string" ? (() => { try { return JSON.parse(value); } catch { return [value]; } })() : value;
@@ -47,17 +31,25 @@ export default function CatalogViewPage() {
     });
   };
 
+  const normalizeSlug = (value: unknown) => String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\\u0300-\\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+
   const filteredProducts = products.filter((p: any) => {
+    if (filterType === "all") return true;
     if (filterType === "category") {
-      return p.category?.toLowerCase().includes(filterSlug.toLowerCase());
+      const target = normalizeSlug(filterSlug);
+      const names = [p.category, p.subcategory, ...(Array.isArray(p.categoryNames) ? p.categoryNames : [])];
+      return names.some((name) => normalizeSlug(name) === target || normalizeSlug(name).includes(target));
     }
-    const collectionName = String(p.collection ?? p.collectionName ?? "").toLowerCase();
-    const aliases = collectionAliases[filterSlug.toLowerCase()] || [filterSlug.toLowerCase()];
-    return aliases.some((alias) => collectionName.includes(alias));
+    return normalizeSlug(p.collection ?? p.collectionName) === normalizeSlug(filterSlug)
+      || normalizeSlug(p.collection ?? p.collectionName).includes(normalizeSlug(filterSlug));
   });
-  const displayProducts = filteredProducts.length > 0
-    ? filteredProducts
-    : (filterType === "collection" ? (fallbackCollectionProducts[filterSlug.toLowerCase()] || []) : []);
+  const displayProducts = filteredProducts;
 
   return (
     <div className="min-h-screen bg-[#f6f3ee] text-[#23221e] flex flex-col font-sans">
@@ -93,10 +85,10 @@ export default function CatalogViewPage() {
           return (
             <>
               <span className="text-xs uppercase tracking-widest text-[#8c8378] block mb-2">
-                {filterType === "category" ? "Categoria" : "Coleção"}
+                {filterType === "category" ? "Categoria" : filterType === "collection" ? "Coleção" : "Catálogo"}
               </span>
               <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tight mb-6">
-                {filterSlug.replace(/-/g, " ")}
+                {filterType === "all" ? "Todos os produtos" : filterSlug.replace(/-/g, " ")}
               </h1>
               {matchedCategory?.coverImageUrl && (
                 <div className="w-full h-56 md:h-72 rounded-lg overflow-hidden mb-8 bg-[#ded8cf]">
@@ -144,7 +136,7 @@ export default function CatalogViewPage() {
                       <h3 className="text-lg font-black uppercase mt-1 mb-2">{p.name}</h3>
                       <p className="text-sm font-semibold">R$ {Number(p.price).toFixed(2)}</p>
                     </div>
-                    <Link href="/" onClick={playClickSound} className="mt-4">
+                    <Link href={`/produto/${p.slug || p.id}`} onClick={playClickSound} className="mt-4">
                       <Button variant="outline" className="w-full border-[#23221e] text-[#23221e] hover:bg-[#23221e] hover:text-[#f6f3ee]">
                         Ver na Loja
                       </Button>
@@ -178,7 +170,7 @@ export default function CatalogViewPage() {
             <div className="lovable-menu-section">
               <span className="lovable-menu-kicker">CATEGORIAS</span>
               <div className="lovable-menu-sublinks">
-                <Link href="/" onClick={() => { playClickSound(); setMenuOpen(false); }}>Todos os Produtos</Link>
+                <Link href="/catalog" onClick={() => { playClickSound(); setMenuOpen(false); }}>Todos os Produtos</Link>
                 {categories.length > 0 ? categories.map((category) => (
                   <Link key={category.id} href={`/category/${category.slug}`} onClick={() => { playClickSound(); setMenuOpen(false); }}>{category.name}</Link>
                 )) : <>

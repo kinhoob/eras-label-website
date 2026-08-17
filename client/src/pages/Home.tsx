@@ -34,7 +34,8 @@ import { getCartItemCount } from "@/lib/cart";
 import { updateCartLineQuantity, removeCartLine } from "@/lib/cart-operations";
 import { loadCart, saveCart } from "@/lib/cart-storage";
 import { getCheckoutFeedback } from "@/lib/checkout-feedback";
-import { ERAS_COLLECTION_PATHS, ERAS_VIP_WHATSAPP_URL } from "../../../shared/const";
+import { ERAS_VIP_WHATSAPP_URL } from "../../../shared/const";
+import { categoryPath, collectionPath, uniqueCatalogLabels } from "@/lib/catalog-routes";
 import type { StorefrontConfig } from "../../../shared/storefront";
 import { hasStorefrontAnnouncement } from "../../../shared/storefront-logic";
 import { checkoutFlowReducer, initialCheckoutFlowState } from "@/lib/checkout-flow";
@@ -401,12 +402,13 @@ export default function Home() {
   const { data: homeContent } = trpc.catalog.getHomeContent.useQuery();
   const { data: catalogRows = [] } = trpc.catalog.list.useQuery();
   const { data: publicCategories = [] } = trpc.catalog.categories.useQuery();
-  const products = useMemo<Product[]>(() => catalogRows.length ? catalogRows.map(mapCatalogProduct) : fallbackProducts, [catalogRows]);
+  const products = useMemo<Product[]>(() => catalogRows.map(mapCatalogProduct), [catalogRows]);
   const categoryOptions = useMemo(() => {
     const configured = publicCategories.map((item) => item.name).filter((name): name is string => Boolean(name && name.trim()));
     const derived = products.flatMap((product) => product.categoryNames ?? [product.category]).filter(Boolean);
-    return ["Todos", ...Array.from(new Set([...configured, ...derived]))];
+    return ["Todos", ...uniqueCatalogLabels([...configured, ...derived])];
   }, [products, publicCategories]);
+  const collectionOptions = useMemo(() => uniqueCatalogLabels(products.map((product) => product.collection)), [products]);
   const banners = (homeContent?.banners?.length ? homeContent.banners : fallbackBanners) as HomeBanner[];
   const highlights = useMemo<HomeHighlight[]>(() => {
     const configured = (homeContent?.highlights?.length ? homeContent.highlights : fallbackHighlights) as HomeHighlight[];
@@ -574,6 +576,7 @@ export default function Home() {
 
   useEffect(() => {
     saveCart(cart);
+    window.dispatchEvent(new Event("eras-cart-updated"));
   }, [cart]);
 
   useEffect(() => {
@@ -865,13 +868,13 @@ export default function Home() {
               onClick={() => { playClick(soundsOn); setCollectionsOpen((value) => !value); }}
             >COLEÇÕES <ArrowDown size={13} /></button>
             {collectionsOpen && <div className="collections-dropdown" role="menu" aria-label="Coleções disponíveis">
-              <Link role="menuitem" href={ERAS_COLLECTION_PATHS.paradox} onClick={() => { playClick(soundsOn); setCollectionsOpen(false); }}>PARADOX COLLECTION <span>↗</span></Link>
-              <Link role="menuitem" href={ERAS_COLLECTION_PATHS.lostBetweenEras} onClick={() => { playClick(soundsOn); setCollectionsOpen(false); }}>LOST BETWEEN ERAS <span>↗</span></Link>
-              <Link role="menuitem" href={ERAS_COLLECTION_PATHS.raizes} onClick={() => { playClick(soundsOn); setCollectionsOpen(false); }}>RAÍZES — RECIFE & LA URSA <span>↗</span></Link>
+              {collectionOptions.length > 0 ? collectionOptions.map((collection) => (
+                <Link key={collection} role="menuitem" href={collectionPath(collection)} onClick={() => { playClick(soundsOn); setCollectionsOpen(false); }}>{collection.toUpperCase()} <span>↗</span></Link>
+              )) : <span className="collections-empty">Nenhuma coleção publicada</span>}
             </div>}
           </div>
-          <a href="#shop" onClick={() => { playClick(soundsOn); setCategory("Camisetas"); }}>CAMISETAS</a>
-          <a href="#shop" onClick={() => { playClick(soundsOn); setCategory("Bonés"); }}>BONÉS</a>
+          <Link href={categoryPath("Camisetas")} onClick={() => playClick(soundsOn)}>CAMISETAS</Link>
+          <Link href={categoryPath("Bonés")} onClick={() => playClick(soundsOn)}>BONÉS</Link>
         </nav>
         <div className={`header-search ${isSearchOpen ? "is-open" : ""}`}>
           <button className="icon-button header-search-trigger" type="button" aria-label={isSearchOpen ? "Fechar pesquisa" : "Pesquisar produtos"} aria-expanded={isSearchOpen} onClick={() => isSearchOpen ? setIsSearchOpen(false) : revealSearch()}>
@@ -1250,9 +1253,9 @@ export default function Home() {
             <div className="lovable-menu-section">
               <span className="lovable-menu-kicker">COLEÇÕES</span>
               <div className="lovable-menu-sublinks">
-                <Link href={ERAS_COLLECTION_PATHS.paradox} onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }}>PARADOX COLLECTION</Link>
-                <Link href={ERAS_COLLECTION_PATHS.lostBetweenEras} onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }}>LOST BETWEEN ERAS</Link>
-                <Link href={ERAS_COLLECTION_PATHS.raizes} onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }}>RAÍZES — RECIFE & LA URSA</Link>
+                {collectionOptions.length > 0 ? collectionOptions.map((collection) => (
+                  <Link key={collection} href={collectionPath(collection)} onClick={() => { playClick(soundsOn); setIsMenuOpen(false); }}>{collection.toUpperCase()}</Link>
+                )) : <span className="collections-empty">Nenhuma coleção publicada</span>}
               </div>
             </div>
           </aside>
