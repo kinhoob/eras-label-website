@@ -21,7 +21,11 @@ export function SidebarMenu({ isOpen, onClose, onPlaySound }: SidebarMenuProps) 
   useEffect(() => {
     if (isOpen) {
       setShouldRender(true);
-      return;
+      const previousOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = previousOverflow;
+      };
     }
     const timer = window.setTimeout(() => setShouldRender(false), 280);
     return () => window.clearTimeout(timer);
@@ -43,11 +47,11 @@ export function SidebarMenu({ isOpen, onClose, onPlaySound }: SidebarMenuProps) 
   };
 
   return (
-    <div className={`lovable-menu-overlay ${isOpen ? "is-open" : "is-closing"}`} onClick={onClose}>
-      <div className={`lovable-side-menu ${isOpen ? "is-open" : "is-closing"}`} onClick={(e) => e.stopPropagation()}>
+    <div className={`lovable-menu-overlay ${isOpen ? "is-open" : "is-closing"}`} onClick={onClose} role="presentation">
+      <div className={`lovable-side-menu ${isOpen ? "is-open" : "is-closing"}`} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Menu principal da Eras Label">
         <div className="lovable-menu-header">
           <span className="lovable-menu-kicker">EXPLORAR ERAS</span>
-          <button onClick={closeWithSound} className="close-button" aria-label="Fechar menu">
+          <button type="button" onClick={closeWithSound} className="close-button" aria-label="Fechar menu" title="Fechar menu">
             <X size={19} />
           </button>
         </div>

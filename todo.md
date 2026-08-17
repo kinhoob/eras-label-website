@@ -602,3 +602,13 @@
 - [ ] Ampliar o painel administrativo (Inventário / Produtos) para gerenciar variações de tamanho e cor para camisetas e vestuário
 - [ ] Atualizar persistência backend e testes unitários Vitest
 - [ ] Executar build de produção e guardar checkpoint final
+
+## Correções de UX e design solicitadas — 2026-08-17
+- [x] Corrigir a sobreposição da navbar pública sobre o botão X e ajustar o tamanho/área de toque do X no mobile.
+- [x] Garantir que a página de produto permita selecionar uma combinação válida de cor + tamanho antes de adicionar à sacola, sem bloquear o cliente por seleção inconsistente.
+- [x] Modernizar visualmente a ação de adicionar produto à sacola, incluindo estados de carregamento, sucesso e abertura do drawer.
+- [x] Modernizar o drawer da sacola no mobile, respeitando safe areas, hierarquia visual e controles de quantidade/remover.
+- [x] Modernizar o checkout transparente para seguir a estética editorial premium da Eras Label em desktop e mobile.
+- [x] Validar end-to-end o fluxo produto → sacola → checkout e corrigir regressões visuais ou funcionais.
+- [x] Executar testes Vitest, TypeScript, build e screenshots responsivos antes do checkpoint final.
+- [x] Salvar checkpoint final das correções de UX e design.

@@ -27,7 +27,8 @@ export default function ProductPage() {
   const isError = numericId !== null ? idQuery.isError : slugQuery.isError;
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState("");
-  const [selectedColor, setSelectedColor] = useState("Preto");
+  const [selectedColor, setSelectedColor] = useState("");
+  const [isAdding, setIsAdding] = useState(false);
   const touchStartX = useRef<number | null>(null);
 
   useEffect(() => {
@@ -40,21 +41,33 @@ export default function ProductPage() {
 
   const images = useMemo(() => Array.isArray(product?.images) ? product.images.filter((image): image is string => typeof image === "string" && image.length > 0) : [], [product?.images]);
   const variations = useMemo(() => Array.isArray(product?.variations) ? product.variations.filter((variation: any) => Number(variation.stock ?? 0) > 0) : [], [product?.variations]);
+  // Normaliza a cor legada para que produtos antigos, sem cor cadastrada, continuem compráveis.
+  const normalizeColor = (variation: any) => String(variation?.color ?? "Preto").trim() || "Preto";
   const availableColors = useMemo(() => {
-    const set = new Set<string>();
-    variations.forEach((v: any) => set.add(v.color ? String(v.color) : "Preto"));
-    if (set.size === 0) set.add("Preto");
-    return Array.from(set);
+    const uniqueColors = new Set<string>();
+    variations.forEach((variation: any) => uniqueColors.add(normalizeColor(variation)));
+    return Array.from(uniqueColors);
   }, [variations]);
+  const selectedColorVariations = useMemo(
+    () => variations.filter((variation: any) => normalizeColor(variation) === selectedColor),
+    [variations, selectedColor],
+  );
+  const availableSizes = useMemo(
+    () => Array.from(new Set(selectedColorVariations.map((variation: any) => String(variation.size)))),
+    [selectedColorVariations],
+  );
+  const selectedVariation = selectedColorVariations.find((variation: any) => String(variation.size) === selectedSize);
+  const selectedStock = Number(selectedVariation?.stock ?? 0);
 
   useEffect(() => {
-    if (variations.length > 0 && !selectedSize) {
-      setSelectedSize(String(variations[0].size));
-    }
     if (availableColors.length > 0 && !availableColors.includes(selectedColor)) {
       setSelectedColor(availableColors[0]);
+      return;
     }
-  }, [variations, availableColors]);
+    if (availableSizes.length > 0 && !availableSizes.includes(selectedSize)) {
+      setSelectedSize(availableSizes[0]);
+    }
+  }, [availableColors, availableSizes, selectedColor, selectedSize]);
 
   if (isLoading) {
     return <main className="min-h-screen bg-[#f6f3ee] flex items-center justify-center"><p className="text-xs font-bold uppercase tracking-[0.24em]">A carregar produto</p></main>;
@@ -90,6 +103,40 @@ export default function ProductPage() {
     else goToNextImage();
   };
 
+  const handleAddToCart = () => {
+    if (isAdding) return;
+    if (variations.length > 0 && !selectedVariation) {
+      toast.error("Escolha uma cor e um tamanho disponíveis para continuar.");
+      return;
+    }
+
+    const chosenSize = selectedVariation ? String(selectedVariation.size) : (selectedSize || "U");
+    const chosenColor = selectedVariation ? normalizeColor(selectedVariation) : (selectedColor || "Preto");
+    const currentCart = loadCart<PublicCartLine>();
+    const existingIndex = currentCart.findIndex((line) => line.id === product.id && line.size === chosenSize && (line.color ?? "Preto") === chosenColor);
+    const nextCart: PublicCartLine[] = existingIndex >= 0
+      ? currentCart.map((line, idx) => idx === existingIndex ? { ...line, quantity: line.quantity + 1 } : line)
+      : [...currentCart, {
+        id: product.id,
+        name: product.name,
+        size: chosenSize,
+        color: chosenColor,
+        quantity: 1,
+        price: Number(product.price) || 0,
+        image: images[0] || productImageFallback,
+        alt: product.name,
+      }];
+
+    setIsAdding(true);
+    saveCart(nextCart);
+    window.dispatchEvent(new Event("eras-cart-updated"));
+    window.dispatchEvent(new Event("eras-open-cart"));
+    toast.success("Peça adicionada à sacola", {
+      description: `${product.name} · ${chosenSize}${chosenColor ? ` · ${chosenColor}` : ""}`,
+    });
+    window.setTimeout(() => setIsAdding(false), 850);
+  };
+
   return (
     <div className="public-page-shell product-page-shell min-h-screen bg-[#f6f3ee] text-[#23221e] flex flex-col font-sans">
       <PageTransitionHandler />
@@ -118,64 +165,48 @@ export default function ProductPage() {
             </div>}
           </section>
 
-          <section className="flex flex-col justify-center">
-            <p className="mb-3 text-[0.68rem] font-bold uppercase tracking-[0.28em] text-[#b22222]">{product.collection}</p>
+          <section className="product-purchase-panel flex flex-col justify-center">
+            <p className="mb-3 text-[0.68rem] font-bold uppercase tracking-[0.28em] text-[#b22222]">{product.collection || "ERAS LABEL"}</p>
             <h1 className="font-display text-4xl uppercase leading-[0.95] md:text-6xl">{product.name}</h1>
-            <p className="mt-5 text-2xl font-semibold">{formatPrice(price)}</p>
-            <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-[#b22222]">{formatPrice(pixPrice)} no Pix</p>
+            <div className="product-price-row">
+              <p className="mt-5 text-2xl font-semibold">{formatPrice(price)}</p>
+              <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-[#b22222]">{formatPrice(pixPrice)} no Pix</p>
+            </div>
             {product.description && <p className="mt-8 max-w-xl whitespace-pre-line text-sm leading-7 text-[#5a554d]">{product.description}</p>}
 
-            {availableColors.length > 0 && <div className="mt-6">
-              <div className="mb-3 flex items-center justify-between"><span className="text-xs font-bold uppercase tracking-[0.18em]">Cor</span><span className="text-xs text-[#5a554d]">{selectedColor}</span></div>
-              <div className="flex flex-wrap gap-2">
-                {availableColors.map((color) => <button key={color} type="button" onClick={() => setSelectedColor(color)} className={`border px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] transition-colors ${selectedColor === color ? "border-[#b22222] bg-[#b22222] text-white" : "border-[#23221e]/20 bg-transparent hover:border-[#b22222]"}`}>{color}</button>)}
-              </div>
-            </div>}
+            {(availableColors.length > 0 || variations.length > 0) && (
+              <div className="product-options-card" aria-label="Opções do produto">
+                {availableColors.length > 0 ? (
+                  <div className="product-option-group">
+                    <div className="product-option-heading"><span>Cor</span><strong>{selectedColor || "Escolha uma opção"}</strong></div>
+                    <div className="product-option-list">
+                      {availableColors.map((color) => <button key={color} type="button" onClick={() => { setSelectedColor(color); setSelectedSize(""); }} aria-pressed={selectedColor === color} className={`product-option-button ${selectedColor === color ? "is-selected" : ""}`}>{color}</button>)}
+                    </div>
+                  </div>
+                ) : null}
 
-            {variations.length > 0 && <div className="mt-6">
-              <div className="mb-3 flex items-center justify-between"><span className="text-xs font-bold uppercase tracking-[0.18em]">Tamanho</span><span className="text-xs text-[#5a554d]">Selecione o tamanho</span></div>
-              <div className="flex flex-wrap gap-2">
-                {variations.map((variation: any) => <button key={`${variation.size}-${variation.color ?? "Preto"}`} type="button" onClick={() => setSelectedSize(String(variation.size))} className={`min-w-12 border px-4 py-3 text-xs font-bold uppercase tracking-[0.12em] transition-colors ${selectedSize === String(variation.size) ? "border-[#b22222] bg-[#b22222] text-white" : "border-[#23221e]/20 bg-transparent hover:border-[#b22222]"}`}>{variation.size}</button>)}
+                {variations.length > 0 ? (
+                  <div className="product-option-group">
+                    <div className="product-option-heading"><span>Tamanho</span><strong>{selectedSize ? `Selecionado: ${selectedSize}` : "Escolha uma opção"}</strong></div>
+                    <div className="product-option-list">
+                      {availableSizes.map((size) => <button key={`${selectedColor}-${size}`} type="button" onClick={() => setSelectedSize(size)} aria-pressed={selectedSize === size} className={`product-option-button product-option-button--size ${selectedSize === size ? "is-selected" : ""}`}>{size}</button>)}
+                    </div>
+                    <p className={`product-option-hint ${selectedVariation ? "is-ready" : ""}`}>{selectedVariation ? `${selectedStock} ${selectedStock === 1 ? "unidade disponível" : "unidades disponíveis"}` : "Selecione o tamanho para continuar"}</p>
+                  </div>
+                ) : null}
               </div>
-            </div>}
+            )}
 
-            <Button 
-              type="button" 
-              onClick={() => {
-                if (!selectedSize && variations.length > 0) {
-                  toast.error("Por favor, selecione um tamanho.");
-                  return;
-                }
-                const chosenSize = selectedSize || (variations[0]?.size ?? "U");
-                const currentCart = loadCart<PublicCartLine>();
-                const existingIndex = currentCart.findIndex((line) => line.id === product.id && line.size === chosenSize && (line.color ?? "Preto") === selectedColor);
-                let nextCart: PublicCartLine[];
-                if (existingIndex >= 0) {
-                  nextCart = currentCart.map((line, idx) => idx === existingIndex ? { ...line, quantity: line.quantity + 1 } : line);
-                } else {
-                  nextCart = [...currentCart, {
-                    id: product.id,
-                    name: product.name,
-                    size: chosenSize,
-                    color: selectedColor,
-                    quantity: 1,
-                    price: Number(product.price) || 0,
-                    image: images[0] || productImageFallback,
-                    alt: product.name,
-                  }];
-                }
-                saveCart(nextCart);
-                window.dispatchEvent(new Event("eras-cart-updated"));
-                window.dispatchEvent(new Event("eras-open-cart"));
-                toast.success("Adicionado à sacola", {
-                  description: `${product.name} · ${chosenSize} (${selectedColor})`,
-                });
-              }}
-              className="mt-8 h-12 rounded-none bg-[#b22222] text-xs font-bold uppercase tracking-[0.18em] text-white hover:bg-[#8e1b1b]"
+            <Button
+              type="button"
+              onClick={handleAddToCart}
+              disabled={isAdding}
+              aria-live="polite"
+              className={`product-add-to-cart mt-8 h-14 w-full rounded-none text-xs font-bold uppercase tracking-[0.18em] text-white ${isAdding ? "is-added bg-[#23221e]" : "bg-[#b22222] hover:bg-[#8e1b1b]"}`}
             >
-              <ShoppingBag size={16} /> Adicionar à sacola
+              {isAdding ? <><Check size={17} /> Adicionado à sacola</> : <><ShoppingBag size={16} /> Adicionar à sacola</>}
             </Button>
-            <p className="mt-4 flex items-center gap-2 text-xs text-[#5a554d]"><Check size={14} className="text-[#b22222]" /> Produto oficial Eras Label</p>
+            <p className="product-purchase-note mt-4 flex items-center gap-2 text-xs text-[#5a554d]"><Check size={14} className="text-[#b22222]" /> Compra segura · Produto oficial Eras Label</p>
             <p className="mt-1 text-xs text-[#5a554d]">Link público: /produto/{product.slug || product.id}</p>
           </section>
         </div>
