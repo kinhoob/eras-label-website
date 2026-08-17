@@ -5235,3 +5235,98 @@ body {
 @media (max-width: 700px) {
   .public-global-brand { display: inline-block; }
 }
+
+
+/* Sacola global: superfície opaca e editorial para impedir que o conteúdo da página
+   apareça através do drawer e manter legibilidade em todos os fundos da loja. */
+.public-cart-overlay {
+  place-items: stretch end;
+  background: rgba(25, 19, 16, .58);
+  backdrop-filter: blur(9px) saturate(.9);
+}
+
+/* O drawer global não usa o antigo seletor .cart-drawer; esta regra torna o
+   componente compartilhado uma superfície sólida, com profundidade e rolagem interna. */
+.public-cart-drawer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(470px, 94vw);
+  height: 100%;
+  min-height: 100dvh;
+  padding: clamp(22px, 3vw, 32px);
+  overflow: hidden;
+  border-left: 1px solid rgba(255, 255, 255, .75);
+  border-radius: 22px 0 0 22px;
+  background: #f6f3ee;
+  color: #25241f;
+  box-shadow: -24px 0 70px rgba(24, 22, 19, .22), 0 2px 0 rgba(255, 255, 255, .82) inset;
+  animation: public-cart-drawer-in .28s cubic-bezier(.23, 1, .32, 1) both;
+}
+
+/* O cabeçalho recebe uma divisória discreta para separar o título dos itens. */
+.public-cart-drawer .drawer-head {
+  flex: 0 0 auto;
+  align-items: center;
+  margin: 0 -4px 22px;
+  padding: 0 4px 18px;
+  border-bottom: 1px solid rgba(119, 112, 103, .18);
+}
+
+.public-cart-drawer .drawer-head h2 {
+  margin-top: 7px;
+  color: #25241f;
+  font-family: Georgia, serif;
+  font-size: clamp(26px, 4vw, 32px);
+  font-weight: 400;
+  letter-spacing: -.055em;
+}
+
+/* Botão X explícito, circular e sempre visível para fechar a sacola. */
+.public-cart-drawer .drawer-head .close-button {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(119, 112, 103, .25);
+  border-radius: 999px;
+  background: #fffdfa;
+  color: #25241f;
+  box-shadow: 0 5px 14px rgba(65, 55, 45, .08);
+  transition: transform .18s cubic-bezier(.23, 1, .32, 1), background-color .18s ease, color .18s ease, border-color .18s ease;
+}
+
+.public-cart-drawer .drawer-head .close-button:hover,
+.public-cart-drawer .drawer-head .close-button:focus-visible {
+  border-color: #b22222;
+  background: #b22222;
+  color: #fffaf5;
+  outline: none;
+  transform: rotate(7deg) scale(1.04);
+}
+
+.public-cart-drawer .drawer-head .close-button:focus-visible {
+  box-shadow: 0 0 0 4px rgba(178, 34, 34, .16), 0 5px 14px rgba(65, 55, 45, .08);
+}
+
+.public-cart-drawer .cart-items-list {
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(119, 112, 103, .3) transparent;
+}
+
+@keyframes public-cart-drawer-in {
+  from { transform: translateX(28px); opacity: .35; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@media (max-width: 560px) {
+  /* No mobile, a sacola quase integral mantém o X e os controles confortáveis. */
+  .public-cart-drawer {
+    width: min(100vw, 470px);
+    border-radius: 18px 0 0 18px;
+    padding: 20px 17px 18px;
+  }
+}
