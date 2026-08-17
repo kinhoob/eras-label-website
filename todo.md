@@ -364,3 +364,10 @@
 - [x] Criar componente flutuante de centro de notificações no cabeçalho do painel com contador, estado de leitura e listagem.
 - [x] Ligar os itens da notificação aos respetivos módulos (Vendas e Inventário) com navegação contextual.
 - [x] Executar testes unitários Vitest, TypeScript e build de produção.
+
+
+## Marcar Todas, Limiar Configurável e Toast de Notificações (2026-08-16)
+- [x] Adicionar botão "marcar todas como lidas" no menu flutuante de notificações para zerar o contador.
+- [x] Criar opção nas configurações do painel para definir o limite mínimo de stock crítico.
+- [x] Implementar alerta visual flutuante (toast) para novas notificações recebidas no painel.
+- [x] Validar build e integridade sem dados fictícios.
