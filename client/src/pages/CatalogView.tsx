@@ -64,7 +64,7 @@ export default function CatalogViewPage() {
       <PageTransitionHandler />
 
       {/* Top Header */}
-      <header className="border-b border-[#dfd7cc] px-6 py-4 flex items-center justify-between sticky top-0 bg-[#f6f3ee]/95 backdrop-blur z-40">
+      <header className="catalog-page-header border-b border-[#dfd7cc] px-6 py-4 flex items-center justify-between sticky top-0 bg-[#f6f3ee]/95 backdrop-blur z-40">
         <div className="flex items-center gap-4">
           <button
             onClick={() => { playClickSound(); setMenuOpen(true); }}
@@ -77,7 +77,7 @@ export default function CatalogViewPage() {
             ERAS.
           </Link>
         </div>
-        <div className="flex items-center gap-6">
+        <div className="catalog-page-actions flex items-center gap-6">
           <button onClick={() => setSoundEnabled(!soundEnabled)} className="text-xs uppercase tracking-widest flex items-center gap-1 hover:text-[#c95139]">
             {soundEnabled ? "Som Ativo" : "Mudo"}
           </button>
@@ -86,7 +86,7 @@ export default function CatalogViewPage() {
       </header>
 
       {/* Content */}
-      <main className="flex-1 max-w-6xl mx-auto px-6 py-16 w-full">
+      <main className="catalog-page-main flex-1 max-w-6xl mx-auto px-6 py-16 w-full">
         {(() => {
           const matchedCategory = filterType === "category" ? categories.find((c: any) => c.slug.toLowerCase() === filterSlug.toLowerCase()) : null;
           const subcategories = matchedCategory ? categories.filter((c: any) => c.parentId === matchedCategory.id && c.active) : [];
@@ -128,17 +128,17 @@ export default function CatalogViewPage() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+          <div className="catalog-product-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
             {displayProducts.map((p: any) => {
               const fallbackImage = "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=85";
               const images = normalizeImages(p.images);
               const imageSrc = images[0] || p.image || fallbackImage;
               return (
-                <div key={p.id} className="group bg-[#ede8df] rounded-lg overflow-hidden flex flex-col">
+                <div key={p.id} className="catalog-product-card group bg-[#ede8df] rounded-lg overflow-hidden flex flex-col">
                   <div className="aspect-[3/4] overflow-hidden bg-[#dfd7cc] relative">
                     <img src={imageSrc} alt={p.name} onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = fallbackImage; }} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   </div>
-                  <div className="p-6 flex flex-col flex-1 justify-between">
+                  <div className="catalog-product-copy p-6 flex flex-col flex-1 justify-between">
                     <div>
                       <span className="text-xs uppercase tracking-wider text-[#c95139]">{p.collection ?? p.collectionName ?? "Era Geral"}</span>
                       <h3 className="text-lg font-black uppercase mt-1 mb-2">{p.name}</h3>

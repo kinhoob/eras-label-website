@@ -410,3 +410,10 @@
 - [x] Implementar camadas de background animadas com gradientes, textura e profundidade usando CSS/React performáticos.
 - [x] Garantir contraste, responsividade e suporte a `prefers-reduced-motion`, com fallback estático acessível.
 - [x] Validar a experiência em desktop/mobile, executar Vitest (131 testes aprovados), TypeScript e build, e salvar checkpoint.
+
+
+## Auditoria mobile completa (2026-08-17)
+- [x] Auditar Home, navegação, hero, destaques, catálogo, busca, filtros e backgrounds em larguras móveis reais.
+- [x] Corrigir responsividade do carrinho lateral, checkout, modais, páginas legais, FAQ, contato, rastreio e rodapé.
+- [x] Corrigir o painel administrativo em telas pequenas sem overflow horizontal e preservar ações essenciais.
+- [x] Validar acessibilidade, fluxos móveis, Vitest (131 testes aprovados), TypeScript e build; salvar checkpoint atualizado.

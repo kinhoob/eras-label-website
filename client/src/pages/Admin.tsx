@@ -271,7 +271,7 @@ function EmailMarketingSection() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', alignItems: 'start' }}>
+      <div className="email-marketing-layout">
         <div className="admin-panel" style={{ padding: '1.5rem', background: '#fff', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
           <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', color: '#111', fontWeight: 600 }}>Nova Campanha em Massa</h3>
           <form onSubmit={handleSendCampaign} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -879,7 +879,7 @@ export default function Admin() {
               </div>
 
               {editorMode === "product" && <>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
+                <div className="product-editor-grid" style={{ marginTop: '1rem' }}>
                   <div className="editor-field">
                     <label>Nome do produto</label>
                     <Input value={editingProduct.name} onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })} />
@@ -956,7 +956,7 @@ export default function Admin() {
                     <Upload size={14} /> {productUploading ? `A otimizar ${productUploadProgress.completed}/${productUploadProgress.total}...` : "Adicionar fotos"}
                   </Button>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '0.75rem', marginTop: '0.5rem' }}>
+                <div className="product-image-gallery" style={{ marginTop: '0.5rem' }}>
                   {productImages.map((url, idx) => (
                     <div key={idx} style={{ position: 'relative', borderRadius: '6px', overflow: 'hidden', border: idx === 0 ? '2px solid #b34125' : '1px solid #ddd', height: '110px', background: '#f5f5f5', display: 'flex', flexDirection: 'column' }}>
                       <div style={{ height: '75px', overflow: 'hidden', position: 'relative' }}>
@@ -1011,7 +1011,7 @@ export default function Admin() {
 
               </>}
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
+              <div className="admin-modal-actions" style={{ marginTop: '2rem' }}>
                 <Button variant="outline" onClick={() => setEditingProduct(null)}>Cancelar</Button>
                 <Button disabled={saveProductMutation.isPending || updateInventoryStockMutation.isPending} onClick={() => {
                   const variations = (editingProduct.variations ?? []).map((variation: AdminVariation) => ({ size: variation.size, stock: Math.max(0, Math.floor(Number(variation.stock) || 0)) }));

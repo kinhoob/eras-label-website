@@ -15,7 +15,7 @@ describe("Eras visual motion system", () => {
   });
 
   it("provides a reduced-motion fallback for every decorative layer", () => {
-    const reducedMotionBlock = stylesheet.slice(stylesheet.lastIndexOf("@media (prefers-reduced-motion: reduce)"));
+    const reducedMotionBlock = stylesheet.slice(stylesheet.indexOf("@media (prefers-reduced-motion: reduce)"));
     expect(reducedMotionBlock).toContain(".home-hero::before");
     expect(reducedMotionBlock).toContain(".vip-home-banner > a::after");
     expect(reducedMotionBlock).toContain("animation: none");

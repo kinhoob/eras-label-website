@@ -274,8 +274,8 @@ export default function AdminSalesSection() {
       </div>
 
       {selectedOrder && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
-          <div className="admin-panel" style={{ background: "var(--background)", width: "100%", maxWidth: "720px", maxHeight: "90vh", overflowY: "auto", padding: "2rem" }}>
+        <div className="admin-sales-modal-overlay" style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+          <div className="admin-panel admin-sales-modal" style={{ background: "var(--background)", width: "100%", maxWidth: "720px", maxHeight: "90vh", overflowY: "auto", padding: "2rem" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
               <div>
                 <span className="section-kicker">DETALHES DO PEDIDO</span>
@@ -284,7 +284,7 @@ export default function AdminSalesSection() {
               <Button variant="outline" onClick={() => { setSelectedOrder(null); setShippingQuotes([]); setLabelPdfUrl(null); }}>Fechar</Button>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", marginBottom: "1.5rem" }}>
+            <div className="admin-sales-summary-grid" style={{ marginBottom: "1.5rem" }}>
               <div style={{ background: "var(--card)", padding: "1rem", borderRadius: "8px", border: "1px solid var(--border)" }}>
                 <h4 style={{ fontSize: "0.9rem", fontWeight: 600, marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "6px" }}>
                   <Users size={15} /> Cliente e Morada
@@ -313,7 +313,7 @@ export default function AdminSalesSection() {
               <h4 style={{ fontSize: "0.95rem", fontWeight: 600, marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "6px" }}>
                 <Package size={16} /> Itens do Pedido ({selectedOrder.items?.length || 0})
               </h4>
-              <div style={{ border: "1px solid var(--border)", borderRadius: "8px", overflow: "hidden" }}>
+              <div className="admin-sales-items-scroll" style={{ border: "1px solid var(--border)", borderRadius: "8px", overflow: "hidden" }}>
                 <table style={{ width: "100%", fontSize: "0.85rem" }}>
                   <thead>
                     <tr style={{ background: "var(--muted)" }}>
@@ -338,7 +338,7 @@ export default function AdminSalesSection() {
             </div>
 
             <div style={{ background: "var(--muted)", padding: "1rem", borderRadius: "8px", display: "flex", flexDirection: "column", gap: "10px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div className="admin-sales-shipping-heading" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
                   <h4 style={{ fontSize: "0.9rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
                     <Truck size={15} /> Integração Melhor Envio (Frete & Etiquetas)
@@ -354,12 +354,12 @@ export default function AdminSalesSection() {
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "8px" }}>
                   <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>Opções Disponíveis:</span>
                   {shippingQuotes.map((q: any) => (
-                    <div key={q.id} style={{ background: "var(--card)", padding: "8px 12px", borderRadius: "6px", display: "flex", justifyContent: "space-between", alignItems: "center", border: "1px solid var(--border)" }}>
+                    <div key={q.id} className="admin-sales-quote-row" style={{ background: "var(--card)", padding: "8px 12px", borderRadius: "6px", display: "flex", justifyContent: "space-between", alignItems: "center", border: "1px solid var(--border)" }}>
                       <div>
                         <strong>{q.company?.name} — {q.name}</strong>
                         <div style={{ fontSize: "0.75rem", color: "var(--muted-foreground)" }}>Prazo estimado: {q.delivery_time} dias úteis</div>
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <div className="admin-sales-quote-actions" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                         <strong>R$ {Number(q.custom_price || q.price).toFixed(2)}</strong>
                         <Button size="sm" onClick={() => handleEmitirEtiqueta(selectedOrder.id, q.id)} disabled={generateLabelMutation.isPending}>
                           {generateLabelMutation.isPending ? "A gerar..." : "Gerar Etiqueta"}
