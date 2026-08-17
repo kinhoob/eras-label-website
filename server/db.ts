@@ -104,7 +104,16 @@ export async function listProducts(category?: string) {
       .select({ size: productVariations.size, stock: productVariations.stock })
       .from(productVariations)
       .where(eq(productVariations.productId, product.id));
-    return { ...product, variations };
+    const relationRows = await db
+      .select({ categoryId: productCategories.categoryId })
+      .from(productCategories)
+      .where(eq(productCategories.productId, product.id));
+    const categoryIds = relationRows.map((row) => Number(row.categoryId));
+    const categoryNames = (await Promise.all(categoryIds.map(async (categoryId) => {
+      const categoryRow = await db.select({ name: categories.name }).from(categories).where(eq(categories.id, categoryId)).limit(1);
+      return categoryRow[0]?.name;
+    }))).filter((name): name is string => Boolean(name));
+    return { ...product, variations, categoryIds, categoryNames };
   }));
 }
 

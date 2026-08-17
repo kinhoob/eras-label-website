@@ -7,6 +7,8 @@ import {
   CheckCircle2,
   AlertCircle,
   CircleUserRound,
+  ChevronLeft,
+  ChevronRight,
   Clock3,
   Menu,
   Minus,
@@ -43,13 +45,15 @@ import { getSearchSuggestionText, searchStorefrontProducts, sortStorefrontProduc
 import { clearRecentSearches, loadRecentSearches, removeRecentSearch, saveRecentSearch } from "@/lib/recent-searches";
 import OfficialFooter from "@/components/OfficialFooter";
 
-type Category = "Todos" | "Camisetas" | "Bonés";
+type Category = string;
 type PriceRange = "all" | "under150" | "150to200" | "over200";
 type SearchFilterKey = "query" | "category" | "price" | "size" | "color" | "sort";
 type Product = {
   id: number;
   name: string;
-  category: Exclude<Category, "Todos">;
+  category: Category;
+  categoryNames?: string[];
+  images?: string[];
   collection: string;
   color: string;
   price: number;
@@ -208,10 +212,11 @@ function inferProductColor(name: string) {
   return knownColors.find(([token]) => normalized.includes(token))?.[1] ?? "Neutro";
 }
 
-function mapCatalogProduct(row: { id: number; name: string; collection: string; category: string; color?: string | null; price: unknown; pixPrice: unknown; description: string | null; images: unknown; status: string; createdAt?: string | Date | null; variations?: Array<{ size: string; stock: number | null }> }): Product {
+function mapCatalogProduct(row: { id: number; name: string; collection: string; category: string; categoryNames?: string[]; categoryIds?: number[]; color?: string | null; price: unknown; pixPrice: unknown; description: string | null; images: unknown; status: string; createdAt?: string | Date | null; variations?: Array<{ size: string; stock: number | null }> }): Product {
   const images = Array.isArray(row.images) ? row.images.filter((image): image is string => typeof image === "string") : [];
   const fallbackImage = fallbackProducts.find((product) => product.id === row.id)?.image || editorialImage;
-  const category: Exclude<Category, "Todos"> = row.category === "Bonés" ? "Bonés" : "Camisetas";
+  const category = row.category?.trim() || "Sem categoria";
+  const categoryNames = Array.from(new Set([category, ...(row.categoryNames ?? [])].filter(Boolean)));
   const availableVariations = (row.variations ?? []).filter((variation) => Number(variation.stock ?? 0) > 0);
   const variationSizes = Array.from(new Set(availableVariations.map((variation) => variation.size).filter(Boolean)));
   const sizes = variationSizes.length > 0 ? variationSizes : category === "Bonés" ? ["Único"] : ["P", "M", "G", "GG"];
@@ -220,6 +225,8 @@ function mapCatalogProduct(row: { id: number; name: string; collection: string; 
     id: row.id,
     name: row.name,
     category,
+    categoryNames,
+    images,
     collection: row.collection,
     color: row.color?.trim() || inferProductColor(row.name),
     price: Number(row.price),
@@ -317,6 +324,7 @@ export default function Home() {
   const [searchSort, setSearchSort] = useState<StorefrontSearchSort>("newest");
   const [cart, setCart] = useState<CartLine[]>(() => loadCart<CartLine>());
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedProductImage, setSelectedProductImage] = useState(0);
   // Controla a abertura do guia de tamanhos sem retirar o cliente do contexto da peça.
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const [addedProductId, setAddedProductId] = useState<number | null>(null);
@@ -381,7 +389,13 @@ export default function Home() {
   const { data: storefrontConfig } = trpc.catalog.getStorefrontConfig.useQuery();
   const { data: homeContent } = trpc.catalog.getHomeContent.useQuery();
   const { data: catalogRows = [] } = trpc.catalog.list.useQuery();
+  const { data: publicCategories = [] } = trpc.catalog.categories.useQuery();
   const products = useMemo<Product[]>(() => catalogRows.length ? catalogRows.map(mapCatalogProduct) : fallbackProducts, [catalogRows]);
+  const categoryOptions = useMemo(() => {
+    const configured = publicCategories.map((item) => item.name).filter((name): name is string => Boolean(name && name.trim()));
+    const derived = products.flatMap((product) => product.categoryNames ?? [product.category]).filter(Boolean);
+    return ["Todos", ...Array.from(new Set([...configured, ...derived]))];
+  }, [products, publicCategories]);
   const banners = (homeContent?.banners?.length ? homeContent.banners : fallbackBanners) as HomeBanner[];
   const highlights = useMemo<HomeHighlight[]>(() => {
     const configured = (homeContent?.highlights?.length ? homeContent.highlights : fallbackHighlights) as HomeHighlight[];
@@ -530,6 +544,10 @@ export default function Home() {
       });
     return candidates.slice(0, 3);
   }, [products, selectedProduct]);
+  const quickViewImages = selectedProduct
+    ? (selectedProduct.images?.length ? selectedProduct.images : [selectedProduct.image])
+    : [];
+  const activeQuickViewImage = quickViewImages[selectedProductImage] ?? selectedProduct?.image ?? "";
   const cartCount = getCartItemCount(cart);
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const discount = couponApplied ? subtotal * 0.1 : 0;
@@ -632,6 +650,7 @@ export default function Home() {
   function openProduct(product: Product) {
     playClick(soundsOn);
     setSelectedProduct(product);
+    setSelectedProductImage(0);
     setSelectedSize(product.sizes[0] ?? "");
     setSizeGuideOpen(false);
   }
@@ -1048,8 +1067,8 @@ export default function Home() {
           </div>
           <div className="shop-filter-bar" aria-label="Filtros avançados da loja">
             <div className="filter-tabs" role="tablist" aria-label="Filtrar por categoria">
-              {(["Todos", "Camisetas", "Bonés"] as Category[]).map((item) => (
-                <button key={item} className={category === item ? "active" : ""} onClick={() => { playClick(soundsOn); setCategory(item); }}>{item}</button>
+              {categoryOptions.map((item) => (
+                <button key={item} type="button" className={category === item ? "active" : ""} onClick={() => { playClick(soundsOn); setCategory(item); }}>{item}</button>
               ))}
             </div>
             <label className="shop-filter-field">
@@ -1203,9 +1222,11 @@ export default function Home() {
             <div className="lovable-menu-section">
               <span className="lovable-menu-kicker">CATEGORIAS</span>
               <div className="lovable-menu-sublinks">
-                <a href="#shop" onClick={() => { playClick(soundsOn); setCategory("Todos"); setIsMenuOpen(false); }}>TODOS OS PRODUTOS</a>
-                <a href="#shop" onClick={() => { playClick(soundsOn); setCategory("Camisetas"); setIsMenuOpen(false); }}>CAMISETAS</a>
-                <a href="#shop" onClick={() => { playClick(soundsOn); setCategory("Bonés"); setIsMenuOpen(false); }}>BONÉS</a>
+                {categoryOptions.map((item) => (
+                  <a key={item} href="#shop" onClick={() => { playClick(soundsOn); setCategory(item); setIsMenuOpen(false); }}>
+                    {item === "Todos" ? "TODOS OS PRODUTOS" : item.toUpperCase()}
+                  </a>
+                ))}
               </div>
             </div>
 
@@ -1493,11 +1514,23 @@ export default function Home() {
         <div className="overlay" onClick={() => setSelectedProduct(null)}>
           <div className="product-modal" role="dialog" aria-modal="true" aria-labelledby="quick-view-title" onClick={(event) => event.stopPropagation()}>
             <button type="button" className="close-button" onClick={() => setSelectedProduct(null)} aria-label="Fechar visualização rápida"><X /></button>
-            <div className="modal-image"><img src={selectedProduct.image} alt={selectedProduct.alt} onError={(event) => {
-            if (!selectedProduct.fallbackImage || event.currentTarget.dataset.fallbackApplied) return;
-            event.currentTarget.dataset.fallbackApplied = "true";
-            event.currentTarget.src = selectedProduct.fallbackImage;
-          }} /></div>
+            <div className="quick-view-gallery">
+              <div className="modal-image">
+                <img src={activeQuickViewImage} alt={`${selectedProduct.alt} — imagem ${selectedProductImage + 1} de ${quickViewImages.length}`} onError={(event) => {
+                  if (!selectedProduct.fallbackImage || event.currentTarget.dataset.fallbackApplied) return;
+                  event.currentTarget.dataset.fallbackApplied = "true";
+                  event.currentTarget.src = selectedProduct.fallbackImage;
+                }} />
+                {quickViewImages.length > 1 && <>
+                  <button type="button" className="quick-view-gallery-control quick-view-gallery-control-prev" onClick={() => setSelectedProductImage((current) => (current - 1 + quickViewImages.length) % quickViewImages.length)} aria-label="Ver imagem anterior"><ChevronLeft size={20} /></button>
+                  <button type="button" className="quick-view-gallery-control quick-view-gallery-control-next" onClick={() => setSelectedProductImage((current) => (current + 1) % quickViewImages.length)} aria-label="Ver próxima imagem"><ChevronRight size={20} /></button>
+                  <span className="quick-view-gallery-counter" aria-live="polite">{String(selectedProductImage + 1).padStart(2, "0")} / {String(quickViewImages.length).padStart(2, "0")}</span>
+                </>}
+              </div>
+              {quickViewImages.length > 1 && <div className="quick-view-gallery-thumbnails" role="tablist" aria-label="Selecionar imagem do produto">
+                {quickViewImages.map((image, index) => <button key={`${image}-${index}`} type="button" role="tab" aria-selected={selectedProductImage === index} onClick={() => setSelectedProductImage(index)} className={selectedProductImage === index ? "active" : ""} aria-label={`Ver imagem ${index + 1}`}><img src={image} alt="" /></button>)}
+              </div>}
+            </div>
             <div className="modal-copy">
               <span className="eyebrow">{selectedProduct.collection}</span>
               <h2 id="quick-view-title">{selectedProduct.name}</h2>
@@ -1550,6 +1583,7 @@ export default function Home() {
                         key={product.id}
                         onClick={() => {
                           setSelectedProduct(product);
+                          setSelectedProductImage(0);
                           setSelectedSize(product.sizes[0] ?? "");
                         }}
                         aria-label={`Ver ${product.name}`}

@@ -431,3 +431,17 @@
 - [x] Permitir editar o slug/link do produto e associar o mesmo produto a várias categorias no cadastro.
 - [x] Atualizar o título principal para `Eras Label - Loja Oficial` via configuração oficial do projeto.
 - [x] Criar/atualizar testes Vitest, executar TypeScript e build, validar o catálogo e salvar checkpoint.
+
+
+## Filtros de categoria e galeria de produto (2026-08-17)
+- [x] Auditar a origem das categorias na Home, o contrato de catálogo e o armazenamento atual das imagens dos produtos.
+- [x] Adicionar filtros por categoria na página principal, com estado ativo, limpeza e fallback para catálogo completo.
+- [x] Permitir upload de múltiplas imagens no cadastro/edição de produto, preservando otimização e armazenamento S3.
+- [x] Criar carrossel público de imagens na página do produto, com navegação por toque, teclado e indicador de imagem.
+- [x] Validar desktop/mobile, testes Vitest, TypeScript e build; salvar checkpoint.
+
+## Auditoria final de catálogo e navegação — 2026-08-17
+- [x] Atualizar a visualização rápida da Home para suportar galeria completa de imagens, setas, contador e miniaturas.
+- [x] Substituir categorias hard-coded do menu móvel por categorias dinâmicas vindas do catálogo público.
+- [x] Condicionar a consulta `admin.myAdminDetails` à sessão de administrador para evitar pedidos protegidos na área pública.
+- [x] Executar TypeScript, 46 ficheiros de teste com 135 testes Vitest aprovados, build de produção e verificação visual desktop/mobile.

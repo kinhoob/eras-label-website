@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useRoute } from "wouter";
-import { ArrowLeft, Check, ShoppingBag } from "lucide-react";
+import { ArrowLeft, Check, ChevronLeft, ChevronRight, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import OfficialFooter from "@/components/OfficialFooter";
 import NotFound from "@/pages/NotFound";
@@ -16,6 +16,7 @@ export default function ProductPage() {
   const { data: product, isLoading, isError } = trpc.catalog.getBySlug.useQuery({ slug }, { enabled: Boolean(slug) });
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState("");
+  const touchStartX = useRef<number | null>(null);
 
   useEffect(() => {
     if (!product) return;
@@ -36,6 +37,31 @@ export default function ProductPage() {
   const price = Number(product.price) || 0;
   const pixPrice = Number(product.pixPrice ?? price) || price;
   const activeImage = images[selectedImage] ?? images[0];
+  const goToPreviousImage = () => setSelectedImage((index) => images.length ? (index - 1 + images.length) % images.length : 0);
+  const goToNextImage = () => setSelectedImage((index) => images.length ? (index + 1) % images.length : 0);
+  const handleGalleryKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      goToPreviousImage();
+    }
+    if (event.key === "ArrowRight") {
+      event.preventDefault();
+      goToNextImage();
+    }
+  };
+  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    touchStartX.current = event.changedTouches[0]?.clientX ?? null;
+  };
+  const handleTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
+    const startX = touchStartX.current;
+    const endX = event.changedTouches[0]?.clientX;
+    touchStartX.current = null;
+    if (startX === null || endX === undefined || images.length < 2) return;
+    const delta = endX - startX;
+    if (Math.abs(delta) < 42) return;
+    if (delta > 0) goToPreviousImage();
+    else goToNextImage();
+  };
 
   return (
     <main className="product-page-shell min-h-screen bg-[#f6f3ee] text-[#23221e]">
@@ -49,11 +75,24 @@ export default function ProductPage() {
       <div className="container py-10 md:py-16">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)] lg:gap-16">
           <section className="product-page-gallery" aria-label={`Imagens de ${product.name}`}>
-            <div className="aspect-[4/5] overflow-hidden bg-[#ede8df]">
-              {activeImage ? <img src={activeImage} alt={product.name} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-xs uppercase tracking-[0.18em]">Imagem em breve</div>}
+            <div
+              className="product-gallery-stage aspect-[4/5] overflow-hidden bg-[#ede8df]"
+              tabIndex={images.length > 1 ? 0 : -1}
+              role={images.length > 1 ? "region" : undefined}
+              aria-label={images.length > 1 ? `Carrossel com ${images.length} imagens` : undefined}
+              onKeyDown={handleGalleryKeyDown}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+            >
+              {activeImage ? <img src={activeImage} alt={`${product.name} — imagem ${selectedImage + 1} de ${images.length}`} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-xs uppercase tracking-[0.18em]">Imagem em breve</div>}
+              {images.length > 1 && <>
+                <button type="button" className="product-gallery-control product-gallery-control-prev" onClick={goToPreviousImage} aria-label="Ver imagem anterior"><ChevronLeft size={22} /></button>
+                <button type="button" className="product-gallery-control product-gallery-control-next" onClick={goToNextImage} aria-label="Ver próxima imagem"><ChevronRight size={22} /></button>
+                <span className="product-gallery-counter" aria-live="polite">{String(selectedImage + 1).padStart(2, "0")} / {String(images.length).padStart(2, "0")}</span>
+              </>}
             </div>
-            {images.length > 1 && <div className="mt-3 grid grid-cols-4 gap-2">
-              {images.map((image, index) => <button key={image} type="button" onClick={() => setSelectedImage(index)} className={`aspect-square overflow-hidden border ${selectedImage === index ? "border-[#b22222]" : "border-transparent"}`} aria-label={`Ver imagem ${index + 1}`}><img src={image} alt="" className="h-full w-full object-cover" /></button>)}
+            {images.length > 1 && <div className="product-gallery-thumbnails" role="tablist" aria-label="Selecionar imagem do produto">
+              {images.map((image, index) => <button key={`${image}-${index}`} type="button" role="tab" aria-selected={selectedImage === index} onClick={() => setSelectedImage(index)} className={`aspect-square overflow-hidden border ${selectedImage === index ? "border-[#b22222]" : "border-transparent"}`} aria-label={`Ver imagem ${index + 1}`}><img src={image} alt="" className="h-full w-full object-cover" /></button>)}
             </div>}
           </section>
 

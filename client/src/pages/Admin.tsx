@@ -764,7 +764,9 @@ export default function Admin() {
     setMenuOpen(false);
   }
 
-  const { data: myAdminDetails } = trpc.admin.myAdminDetails.useQuery();
+  const { data: myAdminDetails } = trpc.admin.myAdminDetails.useQuery(undefined, {
+    enabled: Boolean(authUser && authUser.role === "admin"),
+  });
   const adminName = myAdminDetails?.name?.trim() || authUser?.name?.trim() || "Eras Label Admin";
   const adminInitial = adminName.charAt(0).toUpperCase();
 

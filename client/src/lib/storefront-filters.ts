@@ -1,5 +1,6 @@
 export type StorefrontFilterProduct = {
   category: string;
+  categoryNames?: string[];
   sizes: string[];
   color: string;
   price: number;
@@ -14,7 +15,7 @@ export type StorefrontFilters = {
 
 export function filterStorefrontProducts<T extends StorefrontFilterProduct>(products: T[], filters: StorefrontFilters) {
   return products.filter((product) => {
-    const matchesCategory = filters.category === "Todos" || product.category === filters.category;
+    const matchesCategory = filters.category === "Todos" || product.category === filters.category || Boolean(product.categoryNames?.includes(filters.category));
     const matchesSize = filters.size === "Todos" || product.sizes.includes(filters.size);
     const matchesColor = filters.color === "Todas" || product.color === filters.color;
     const matchesPrice = filters.priceRange === "all"
