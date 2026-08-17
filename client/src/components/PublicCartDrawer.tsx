@@ -73,10 +73,9 @@ export default function PublicCartDrawer() {
     };
   }, [location]);
 
-  useEffect(() => {
-    saveCart(cart);
-    window.dispatchEvent(new Event("eras-cart-updated"));
-  }, [cart]);
+  // Removido o useEffect que disparava saveCart e dispatchEvent em loop a cada mudança de cart.
+  // A persistência agora ocorre diretamente nas funções de mutação (changeQuantity, remove, etc.)
+  // para evitar o erro de Maximum update depth exceeded.
 
   useEffect(() => {
     if (!isOpen) return;
@@ -93,16 +92,33 @@ export default function PublicCartDrawer() {
   }, [isOpen]);
 
   function changeQuantity(productId: number, size: string, delta: number) {
-    setCart((current) => updateCartLineQuantity(current, productId, size, delta));
+    setCart((current) => {
+      const next = updateCartLineQuantity(current, productId, size, delta);
+      saveCart(next);
+      window.dispatchEvent(new Event("eras-cart-updated"));
+      return next;
+    });
   }
 
   function removeItem(item: PublicCartLine) {
-    setCart((current) => removeCartLine(current, item.id, item.size));
+    setCart((current) => {
+      const next = removeCartLine(current, item.id, item.size);
+      saveCart(next);
+      window.dispatchEvent(new Event("eras-cart-updated"));
+      return next;
+    });
     toast.success("Item removido da sacola.", {
       description: `${item.name} · tamanho ${item.size}`,
       action: {
         label: "Desfazer",
-        onClick: () => setCart((current) => current.some((line) => line.id === item.id && line.size === item.size) ? current : [...current, item]),
+        onClick: () => {
+          setCart((current) => {
+            const restored = current.some((line) => line.id === item.id && line.size === item.size) ? current : [...current, item];
+            saveCart(restored);
+            window.dispatchEvent(new Event("eras-cart-updated"));
+            return restored;
+          });
+        },
       },
     });
   }

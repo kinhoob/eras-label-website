@@ -585,3 +585,8 @@
 - [x] Garantir que cada categoria e item de menu criado no painel administrativo possua uma página pública correspondente e acessível.
 - [x] Validar a experiência de filtro na página de produtos e o comportamento da sacola global.
 - [x] Executar testes Vitest, checagem de TypeScript, build e guardar checkpoint.
+
+## Correção de Bug: Maximum update depth exceeded na Home
+- [x] Rastrear o ciclo de sincronização da sacola na Home e no PublicCartDrawer
+- [x] Aplicar correção de estabilização de referência e dependências de useEffect
+- [x] Executar testes Vitest e validar estabilidade na Home
