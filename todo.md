@@ -495,3 +495,7 @@
 - [x] Implementar verificação de dados insuficientes no aiSummary do server/routers.ts para exibir mensagem clara caso não existam vendas ou dados suficientes no período
 - [x] Atualizar o painel administrativo para exibir claramente o aviso de dados insuficientes quando a amostra for nula
 - [x] Executar testes Vitest, TypeScript, build e checkpoint final
+
+## Funcionalidade de Limpar Notificações
+- [ ] Adicionar botão de limpar histórico de notificações no painel administrativo
+- [ ] Validar comportamento de confirmação, estado vazio e persistência local/servidor

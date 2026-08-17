@@ -2123,10 +2123,29 @@ function AdminNotificationsDropdown({ onNavigate }: { onNavigate: (tab: string) 
           overflow: "hidden"
         }}>
           <div style={{ padding: "0.85rem 1rem", borderBottom: "1px solid #eee", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#faf9f6" }}>
-            <strong style={{ fontSize: "0.9rem", color: "#111" }}>Notificações do Sistema</strong>
-            <span style={{ fontSize: "0.75rem", background: "#111", color: "#fff", padding: "0.15rem 0.45rem", borderRadius: "4px", fontWeight: 600 }}>
-              {totalCount} pendentes
-            </span>
+            <div>
+              <strong style={{ fontSize: "0.9rem", color: "#111" }}>Notificações do Sistema</strong>
+              {totalCount > 0 && (
+                <span style={{ marginLeft: "0.5rem", fontSize: "0.75rem", background: "#111", color: "#fff", padding: "0.15rem 0.45rem", borderRadius: "4px", fontWeight: 600 }}>
+                  {totalCount}
+                </span>
+              )}
+            </div>
+            {totalCount > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  // Marca todos os pedidos recentes e alertas de estoque como lidos de uma só vez
+                  const allOrderIds = recentOrders.map((o: any) => `order-${o.id}`);
+                  const allStockIds = stockAlerts.map((s: any) => `stock-${s.id}`);
+                  setReadIds(Array.from(new Set([...readIds, ...allOrderIds, ...allStockIds])));
+                  toast.success("Todas as notificações foram limpas.");
+                }}
+                style={{ background: "transparent", border: "none", color: "#b22222", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer", textDecoration: "underline" }}
+              >
+                Limpar tudo
+              </button>
+            )}
           </div>
 
           <div style={{ maxHeight: "320px", overflowY: "auto", padding: "0.5rem 0" }}>
