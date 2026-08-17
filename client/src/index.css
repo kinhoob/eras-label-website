@@ -4746,3 +4746,8 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .quick-view-gallery-control, .quick-view-gallery-thumbnails button { transition: none; }
 }
+
+@keyframes fadeInAnnouncement {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}

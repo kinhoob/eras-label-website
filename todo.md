@@ -473,3 +473,12 @@
 - [x] Criar aba de Gestão de Conteúdo e Menus no Painel Administrativo.
 - [x] Conectar o site público (Manifesto, História, Encontros, Menus e Rodapé) aos dados dinâmicos com fallback seguro.
 - [x] Executar testes unitários (Vitest), TypeScript check e build de produção.
+
+
+## Refinamento do Painel Administrativo e Anúncios (2026-08-17)
+- [ ] Reorganizar a sidebar do painel administrativo em grupos expansíveis por função (Catálogo, Vendas & Clientes, Marketing & E-mails, Aparência & CMS, Configurações).
+- [ ] Corrigir o erro de datas personalizadas no gráfico de receita e estatísticas.
+- [ ] Redesenhar o componente de CMS Institucional com campos limpos por URL de imagem e pré-visualização.
+- [ ] Suavizar a animação de transição da barra de anúncio na Home.
+- [ ] Tornar as notificações flutuantes e do menu interativas para marcar como lidas ao clicar e redirecionar corretamente.
+- [ ] Executar testes Vitest, TypeScript, build e checkpoint.

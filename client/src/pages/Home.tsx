@@ -277,7 +277,18 @@ function AnnouncementBar({ config }: { config?: StorefrontConfig }) {
 
   const message = messages[activeIndex % messages.length];
   const style = { backgroundColor: config.announcement.backgroundColor, color: config.announcement.textColor };
-  const content = <span className="pix-strip-content" key={`${activeIndex}-${message.id || message.text}`}>{message.text}</span>;
+  const content = (
+    <span 
+      className="pix-strip-content" 
+      key={`${activeIndex}-${message.id || message.text}`}
+      style={{
+        display: "inline-block",
+        animation: "fadeInAnnouncement 0.5s cubic-bezier(0.23, 1, 0.32, 1) forwards",
+      }}
+    >
+      {message.text}
+    </span>
+  );
 
   return (
     <div className="pix-strip-wrapper" style={{ ...style, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
