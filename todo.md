@@ -357,3 +357,10 @@
 - [x] Incluir opções na secção de aparência para definir a velocidade de rotação das mensagens da barra de anúncios e adicionar setas de navegação.
 - [x] Permitir que os utilizadores do painel administrativo façam o upload de uma fotografia de perfil para ser exibida junto ao seu nome na sidebar.
 - [x] Executar testes unitários Vitest, TypeScript e build de produção para confirmar todas as melhorias.
+
+
+## Centro de Notificações no Cabeçalho Admin (2026-08-16)
+- [x] Auditar as queries de encomendas recentes e produtos com stock crítico.
+- [x] Criar componente flutuante de centro de notificações no cabeçalho do painel com contador, estado de leitura e listagem.
+- [x] Ligar os itens da notificação aos respetivos módulos (Vendas e Inventário) com navegação contextual.
+- [x] Executar testes unitários Vitest, TypeScript e build de produção.

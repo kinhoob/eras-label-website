@@ -810,7 +810,7 @@ export default function Admin() {
       </aside>
       <button type="button" className="admin-sidebar-scrim" aria-label="Fechar menu administrativo" onClick={() => setMenuOpen(false)} />
       <main className="admin-main">
-        <AdminHeaderBar authUser={authUser} active={active} setMenuOpen={setMenuOpen} adminInitial={adminInitial} adminName={adminName} />
+        <AdminHeaderBar authUser={authUser} active={active} setMenuOpen={setMenuOpen} adminInitial={adminInitial} adminName={adminName} onNavigate={selectNav} />
         {active === "Estatísticas" && <AdminAnalyticsSection />}
         {active === "Histórico de Estoque" && <InventoryAuditSection />}
         {active === "Visão geral" && <AdminDashboardHome adminName={adminName} adminOrders={adminOrders} adminOrdersLoading={adminOrdersLoading} catalogCount={adminProducts.length} onNavigate={selectNav} />}
@@ -2002,8 +2002,171 @@ function AdminSettingsSection({ onNavigate }: { onNavigate: (label: string) => v
   );
 }
 
+// Componente do Centro de Notificações Flutuante no Cabeçalho Admin
+function AdminNotificationsDropdown({ onNavigate }: { onNavigate: (tab: string) => void }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const { data: stockAlerts = [] } = trpc.admin.lowStockAlerts.useQuery();
+  const { data: orders = [] } = trpc.admin.listOrders.useQuery();
+
+  // Filtrar encomendas recentes (últimas 24h ou pendentes de processamento)
+  const recentOrders = orders.filter((o: any) => o.status === "pending" || o.status === "paid" || o.status === "processing").slice(0, 5);
+  const totalCount = stockAlerts.length + recentOrders.length;
+
+  return (
+    <div style={{ position: "relative" }}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        style={{
+          background: totalCount > 0 ? "#fdf2f2" : "transparent",
+          border: totalCount > 0 ? "1px solid #e4a6a6" : "1px solid #ddd",
+          borderRadius: "50%",
+          width: "36px",
+          height: "36px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          position: "relative",
+          color: totalCount > 0 ? "#b22222" : "#333",
+          transition: "all 0.2s ease"
+        }}
+        title="Centro de Notificações"
+      >
+        <Megaphone size={18} />
+        {totalCount > 0 && (
+          <span style={{
+            position: "absolute",
+            top: "-4px",
+            right: "-4px",
+            background: "#b22222",
+            color: "#fff",
+            fontSize: "0.65rem",
+            fontWeight: 700,
+            borderRadius: "10px",
+            padding: "0.1rem 0.35rem",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.2)"
+          }}>
+            {totalCount}
+          </span>
+        )}
+      </button>
+
+      {isOpen && (
+        <div style={{
+          position: "absolute",
+          right: 0,
+          top: "44px",
+          width: "340px",
+          background: "#fff",
+          borderRadius: "10px",
+          boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+          border: "1px solid #e5e5e5",
+          zIndex: 100,
+          overflow: "hidden"
+        }}>
+          <div style={{ padding: "0.85rem 1rem", borderBottom: "1px solid #eee", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#faf9f6" }}>
+            <strong style={{ fontSize: "0.9rem", color: "#111" }}>Notificações do Sistema</strong>
+            <span style={{ fontSize: "0.75rem", background: "#111", color: "#fff", padding: "0.15rem 0.45rem", borderRadius: "4px", fontWeight: 600 }}>
+              {totalCount} pendentes
+            </span>
+          </div>
+
+          <div style={{ maxHeight: "320px", overflowY: "auto", padding: "0.5rem 0" }}>
+            {totalCount === 0 ? (
+              <div style={{ padding: "2rem 1rem", textAlign: "center", color: "#666", fontSize: "0.85rem" }}>
+                <Check size={24} style={{ color: "#2e7d32", margin: "0 auto 0.5rem" }} />
+                <strong>Tudo em ordem!</strong>
+                <p style={{ margin: "0.2rem 0 0" }}>Não há novos alertas de stock ou encomendas pendentes.</p>
+              </div>
+            ) : (
+              <>
+                {recentOrders.length > 0 && (
+                  <div style={{ padding: "0.25rem 0.75rem", fontSize: "0.75rem", fontWeight: 700, color: "#666", letterSpacing: "0.05em" }}>
+                    ENCOMENDAS RECENTES ({recentOrders.length})
+                  </div>
+                )}
+                {recentOrders.map((order: any) => (
+                  <button
+                    key={order.id}
+                    onClick={() => { setIsOpen(false); onNavigate("Vendas"); }}
+                    style={{
+                      display: "block",
+                      width: "100%",
+                      textAlign: "left",
+                      padding: "0.6rem 1rem",
+                      background: "transparent",
+                      border: "none",
+                      borderBottom: "1px solid #f5f5f5",
+                      cursor: "pointer",
+                      transition: "background 0.15s"
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = "#fdfbf7"}
+                    onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", fontWeight: 600, color: "#111" }}>
+                      <span>Pedido #{order.id}</span>
+                      <span style={{ color: "#b22222" }}>R$ {Number(order.total || 0).toFixed(2)}</span>
+                    </div>
+                    <div style={{ fontSize: "0.75rem", color: "#666", marginTop: "0.1rem" }}>
+                      Cliente: {order.customerName || "Consumidor"} • Status: {order.status}
+                    </div>
+                  </button>
+                ))}
+
+                {stockAlerts.length > 0 && (
+                  <div style={{ padding: "0.5rem 0.75rem 0.25rem", fontSize: "0.75rem", fontWeight: 700, color: "#b22222", marginTop: "0.5rem", borderTop: "1px solid #eee" }}>
+                    ALERTAS DE STOCK ({stockAlerts.length})
+                  </div>
+                )}
+                {stockAlerts.map((item: any) => (
+                  <button
+                    key={item.id}
+                    onClick={() => { setIsOpen(false); onNavigate("Inventário"); }}
+                    style={{
+                      display: "block",
+                      width: "100%",
+                      textAlign: "left",
+                      padding: "0.6rem 1rem",
+                      background: "transparent",
+                      border: "none",
+                      borderBottom: "1px solid #f5f5f5",
+                      cursor: "pointer",
+                      transition: "background 0.15s"
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = "#fff8f8"}
+                    onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", fontWeight: 600, color: "#b22222" }}>
+                      <span>{item.name}</span>
+                      <span>{item.stock} un.</span>
+                    </div>
+                    <div style={{ fontSize: "0.75rem", color: "#666", marginTop: "0.1rem" }}>
+                      Categoria: {item.category} • Requer reposição urgente
+                    </div>
+                  </button>
+                ))}
+              </>
+            )}
+          </div>
+
+          <div style={{ padding: "0.6rem 1rem", borderTop: "1px solid #eee", background: "#faf9f6", textAlign: "center" }}>
+            <button
+              type="button"
+              onClick={() => { setIsOpen(false); onNavigate("Estatísticas"); }}
+              style={{ background: "transparent", border: "none", color: "#111", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer" }}
+            >
+              Ver relatório de desempenho completo →
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Componente do Cabeçalho Superior com Indicador Visual de Cargo e Permissões Efetivas
-function AdminHeaderBar({ authUser, active, setMenuOpen, adminInitial, adminName }: any) {
+function AdminHeaderBar({ authUser, active, setMenuOpen, adminInitial, adminName, onNavigate }: any) {
   const { data: myDetails } = trpc.admin.myAdminDetails.useQuery();
 
   const roleTitle = myDetails?.roleTitle || (authUser?.email === "theeraslabel@gmail.com" ? "Superadministrador" : "Administrador");
@@ -2039,7 +2202,8 @@ function AdminHeaderBar({ authUser, active, setMenuOpen, adminInitial, adminName
             {isSuper ? "Acesso total a todos os módulos" : `Acessos: ${permissions.length > 0 ? permissions.map(p => permissionLabels[p] || p).join(", ") : "Nenhum módulo"}`}
           </span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", borderLeft: "1px solid #ddd", paddingLeft: "0.75rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", borderLeft: "1px solid #ddd", paddingLeft: "0.75rem", position: "relative" }}>
+          <AdminNotificationsDropdown onNavigate={onNavigate} />
           {myDetails?.avatarUrl ? (
             <div style={{ width: "32px", height: "32px", borderRadius: "50%", overflow: "hidden", border: "1px solid #ccc", flexShrink: 0 }}>
               <img src={myDetails.avatarUrl} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
