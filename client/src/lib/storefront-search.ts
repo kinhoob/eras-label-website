@@ -6,7 +6,7 @@ export type SearchableStorefrontProduct = {
   detail: string;
 };
 
-export type StorefrontSearchSort = "newest" | "price-asc" | "price-desc";
+export type StorefrontSearchSort = "newest" | "price-asc" | "price-desc" | "bestselling";
 
 type SortableStorefrontProduct = SearchableStorefrontProduct & {
   price: number;
@@ -82,6 +82,11 @@ export function sortStorefrontProducts<T extends SortableStorefrontProduct>(prod
     .sort((left, right) => {
       if (sort === "price-asc") return left.product.price - right.product.price || left.index - right.index;
       if (sort === "price-desc") return right.product.price - left.product.price || left.index - right.index;
+      if (sort === "bestselling") {
+        const leftSales = Number((left.product as any).salesCount ?? (left.product as any).ordersCount ?? (left.product as any).sales ?? 0);
+        const rightSales = Number((right.product as any).salesCount ?? (right.product as any).ordersCount ?? (right.product as any).sales ?? 0);
+        if (leftSales !== rightSales) return rightSales - leftSales;
+      }
       const leftDate = left.product.createdAt ? new Date(left.product.createdAt).getTime() : 0;
       const rightDate = right.product.createdAt ? new Date(right.product.createdAt).getTime() : 0;
       return rightDate - leftDate || left.index - right.index;

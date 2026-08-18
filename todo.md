@@ -867,3 +867,5 @@
 - [x] Expandir o CMS de Menus do painel administrativo para suportar a criação de novos menus, adição e edição de itens de navegação, exclusão de links e associação a páginas personalizadas da marca, mantendo a estética editorial e o padrão Nuvemshop.
 
 - [x] Corrigir o layout desktop da tela de Aparência no painel administrativo para preencher adequadamente a largura da tela sem comprimir colunas ou sobrepor blocos, garantindo uma hierarquia visual limpa e responsiva.
+
+- [x] Adicionar no filtro da página de catálogo a ordenação por "mais vendidos" e a opção de escolher por tamanho, mantendo a identidade visual editorial e a responsividade.

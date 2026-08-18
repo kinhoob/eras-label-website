@@ -227,6 +227,7 @@ export default function CatalogViewPage() {
             <div className="catalog-filter-group">
               <label className="catalog-filter-label" htmlFor="catalog-sort">Ordenar por</label>
               <select id="catalog-sort" value={sortOrder} onChange={(event) => setSortOrder(event.target.value as StorefrontSearchSort)}>
+                <option value="bestselling">Mais vendidos</option>
                 <option value="price-asc">Menor preço</option>
                 <option value="price-desc">Maior preço</option>
                 <option value="newest">Mais recentes</option>
