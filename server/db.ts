@@ -126,7 +126,36 @@ async function getProductRecordBySlug(slug: string, includeUnlisted: boolean) {
   const db = await getDb();
   if (!db) return undefined;
   const normalizedSlug = slug.trim().toLowerCase();
-  const product = await db.select().from(products).where(eq(products.slug, normalizedSlug)).limit(1);
+  
+  // Se o slug for numérico, procurar por ID diretamente
+  if (/^\d+$/.test(normalizedSlug)) {
+    const idNum = Number(normalizedSlug);
+    const productById = await db.select().from(products).where(eq(products.id, idNum)).limit(1);
+    if (productById[0]) {
+      const p = productById[0];
+      if (p.status === "active" && p.visibility !== "hidden" && (includeUnlisted || p.visibility === "visible")) {
+        const variations = await db.select().from(productVariations).where(eq(productVariations.productId, p.id));
+        return { ...p, variations };
+      }
+    }
+  }
+
+  // Tentar busca exata por slug
+  let product = await db.select().from(products).where(eq(products.slug, normalizedSlug)).limit(1);
+  
+  // Se não encontrar, tentar procurar por ID no final ou slugify do nome
+  if (!product[0]) {
+    const allProducts = await db.select().from(products);
+    const matched = allProducts.find(p => {
+      const pSlug = (p.slug ?? "").toLowerCase();
+      const pNameSlug = p.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      return pSlug === normalizedSlug || pNameSlug === normalizedSlug || String(p.id) === normalizedSlug;
+    });
+    if (matched) {
+      product = [matched];
+    }
+  }
+
   if (!product[0] || product[0].status !== "active" || product[0].visibility === "hidden" || (!includeUnlisted && product[0].visibility !== "visible")) return undefined;
   const variations = await db.select().from(productVariations).where(eq(productVariations.productId, product[0].id));
   return { ...product[0], variations };

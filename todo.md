@@ -68,6 +68,7 @@
 - [x] Adicionar testes Vitest para credenciais válidas, inválidas, sessão e controle de acesso
 - [x] Executar TypeScript, Vitest, build, verificação visual e guardar checkpoint
 
+- [x] Corrigir erro de importação na página de detalhe de produto (ProductPage.tsx) e eliminação definitiva de slugs e registos automáticos de teste.
 ## Pendências adicionais do painel (concluídas)
 - [x] Implementar histórico de buscas recentes no armazenamento local (`client/src/lib/recent-searches.ts` com testes em `server/recent-searches.test.ts`)
 - [x] Implementar segmentação de campanhas de e-mail por coleção (`server/marketing-audience.ts` com testes em `server/marketing-audience.test.ts` e UI integrada na aba E-mail Marketing)
@@ -845,3 +846,5 @@
 - [x] Consultar o site oficial da Eras Label e cadastrar os produtos reais, coleções e categorias extraídos da página oficial.
 
 - [x] O teste unitário online de credenciais do Melhor Envio apresentou timeout de rede por restrição de saída do sandbox (comum em testes externos), enquanto o build de produção foi totalmente aprovado.
+
+- [ ] Diagnosticar e corrigir o erro de importação dinâmica em ProductPage.tsx e remover o fallback que recria o produto automático "Camiseta Paradox Oversized msyvg".
