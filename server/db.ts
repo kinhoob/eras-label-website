@@ -9,6 +9,7 @@ import {
   newsletterSubscribers,
   coupons,
   orders,
+  abandonedCarts,
   siteAppearance,
   notifications,
   InsertNotification,
@@ -714,6 +715,25 @@ export async function listOrders() {
   if (!db) return [];
   const rows = await db.select().from(orders).orderBy(desc(orders.id));
   return rows.map(normalizeOrderForClient);
+}
+
+export async function listAbandonedCarts() {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db.select().from(abandonedCarts).orderBy(desc(abandonedCarts.createdAt));
+  return rows.map((cart) => ({
+    ...cart,
+    total: Number(cart.total),
+    recovered: Boolean(cart.recovered),
+    items: Array.isArray(cart.items) ? cart.items as Array<Record<string, unknown>> : [],
+  }));
+}
+
+export async function createManualOrder(data: typeof orders.$inferInsert) {
+  return createOrder({
+    ...data,
+    notes: ["Pedido criado manualmente pelo painel administrativo.", data.notes].filter(Boolean).join(" "),
+  });
 }
 
 export async function getOrderById(orderId: number) {

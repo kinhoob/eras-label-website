@@ -63,6 +63,8 @@ import {
   archiveCollection,
   updateInventoryStock,
   listOrders,
+  listAbandonedCarts,
+  createManualOrder,
   listOrdersByUser,
   getOrderById,
   getOrderItems,
@@ -730,6 +732,64 @@ export const appRouter = router({
     }),
     listOrders: adminProcedure.query(async () => {
       return listOrders();
+    }),
+    listAbandonedCarts: adminProcedure.query(async () => {
+      return listAbandonedCarts();
+    }),
+    createManualOrder: adminProcedure.input(z.object({
+      customerName: z.string().trim().min(2).max(255),
+      customerEmail: z.string().trim().email(),
+      customerCpf: z.string().trim().min(5).max(20),
+      phone: z.string().trim().max(30).optional(),
+      shippingAddress: z.object({
+        street: z.string().trim().min(2).max(255),
+        number: z.string().trim().min(1).max(30),
+        complement: z.string().trim().max(100).optional(),
+        neighborhood: z.string().trim().min(2).max(100),
+        city: z.string().trim().min(2).max(100),
+        state: z.string().trim().min(2).max(30),
+        postalCode: z.string().trim().min(5).max(15),
+      }),
+      items: z.array(z.object({
+        productId: z.number().int().positive(),
+        name: z.string().trim().min(1).max(255),
+        size: z.string().trim().min(1).max(20),
+        quantity: z.number().int().positive().max(99),
+        price: z.number().nonnegative(),
+        image: z.string().max(1000).optional(),
+      })).min(1),
+      shippingMethod: z.string().trim().min(1).max(100),
+      paymentMethod: z.string().trim().min(1).max(50),
+      shippingCost: z.number().nonnegative(),
+      discount: z.number().nonnegative(),
+      notes: z.string().trim().max(1000).optional(),
+      status: z.string().trim().min(1).max(50),
+      paymentStatus: z.string().trim().min(1).max(50),
+    })).mutation(async ({ input }) => {
+      const subtotal = input.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      const total = Math.max(0, subtotal + input.shippingCost - input.discount);
+      const orderNumber = `ERAS-M${new Date().getTime().toString().slice(-8)}${Math.floor(Math.random() * 90 + 10)}`;
+      const created = await createManualOrder({
+        orderNumber,
+        userId: null,
+        customerName: input.customerName,
+        customerEmail: input.customerEmail,
+        customerCpf: input.customerCpf,
+        phone: input.phone || null,
+        shippingAddress: input.shippingAddress,
+        items: input.items,
+        shippingMethod: input.shippingMethod,
+        paymentMethod: input.paymentMethod,
+        shippingCost: input.shippingCost.toFixed(2),
+        subtotal: subtotal.toFixed(2),
+        discount: input.discount.toFixed(2),
+        total: total.toFixed(2),
+        status: input.status,
+        paymentStatus: input.paymentStatus,
+        notes: input.notes || null,
+      });
+      if (!created) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Não foi possível criar o pedido manual." });
+      return { success: true, order: created, orderNumber };
     }),
     calculateShippingQuote: adminProcedure.input(z.object({
       cepDestination: z.string().min(8),

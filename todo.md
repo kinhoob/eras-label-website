@@ -740,3 +740,10 @@
 - [x] Reestruturar a tela de Vendas (`AdminOrdersSection.tsx`) com cartões de métricas consolidadas, filtros rápidos por status/envio/pagamento e tabela de pedidos otimizada com ações de cotação, etiqueta e detalhe.
 - [x] Validar a integração dos componentes administrativos com o backend tRPC e as permissões de sub-administradores.
 - [x] Executar testes Vitest, TypeScript, build de produção e guardar checkpoint final desta entrega.
+
+## Refinamento do CMS, Pedido Manual e Carrinhos Abandonados (2026-08-18)
+- [ ] Elevar a aparência visual de todo o CMS (Aparência & CMS) para a estética editorial da Eras Label (#b22222, cartões refinados, superfícies elevadas e transições suaves).
+- [ ] Redesenhar o seletor de "Criar nova seção" num componente moderno, limpo e intuitivo.
+- [ ] Criar a página/secção de **Pedido Manual** dentro de **Aparência & CMS** para registar encomendas externas ou manuais com itens, cliente e pagamento.
+- [ ] Criar a secção de **Carrinhos Abandonados** dentro de **Vendas & Clientes** para monitorar carrinhos preenchidos por clientes não finalizados.
+- [ ] Executar testes Vitest, TypeScript, build e guardar checkpoint.
