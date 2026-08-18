@@ -10476,3 +10476,94 @@ h1, h2, h3, .heading-editorial {
     padding: 1.5rem 0;
   }
 }
+
+/* ==========================================================================
+   REFINAMENTO TIPOGRÁFICO DEFINITIVO DO CHECKOUT - ERAS LABEL
+   ========================================================================== */
+.checkout-page--modal h1,
+.checkout-page-intro h1 {
+  font-family: var(--font-serif, "Cormorant Garamond", Georgia, serif) !important;
+  font-weight: 400 !important;
+  font-size: clamp(2rem, 3.2vw, 2.7rem) !important;
+  letter-spacing: -0.01em !important;
+  color: #1a1a1a !important;
+  line-height: 1.15 !important;
+}
+
+.checkout-page--modal .section-kicker,
+.checkout-page--modal .checkout-form-step,
+.checkout-page--modal .checkout-summary-kicker {
+  font-family: var(--font-sans, system-ui, sans-serif) !important;
+  font-weight: 600 !important;
+  font-size: 0.72rem !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+  color: #b22222 !important;
+}
+
+.checkout-page--modal p,
+.checkout-page--modal label,
+.checkout-page--modal input,
+.checkout-page--modal select,
+.checkout-page--modal button {
+  font-family: var(--font-sans, system-ui, sans-serif) !important;
+}
+
+.checkout-page--modal label {
+  font-weight: 500 !important;
+  font-size: 0.8rem !important;
+  color: #555555 !important;
+  letter-spacing: 0.01em !important;
+}
+
+.checkout-page--modal input,
+.checkout-page--modal select {
+  font-weight: 400 !important;
+  font-size: 0.92rem !important;
+  color: #1a1a1a !important;
+  border-radius: 4px !important;
+  border: 1px solid #dcd6cb !important;
+  background-color: #faf8f5 !important;
+  padding: 10px 12px !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.checkout-page--modal input:focus,
+.checkout-page--modal select:focus {
+  border-color: #b22222 !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(178, 34, 34, 0.12) !important;
+}
+
+.checkout-page-summary h2 {
+  font-family: var(--font-serif, "Cormorant Garamond", Georgia, serif) !important;
+  font-weight: 400 !important;
+  font-size: 1.6rem !important;
+  color: #f5f2eb !important;
+  margin: 4px 0 16px 0 !important;
+}
+
+.checkout-summary-line strong,
+.checkout-summary-line span,
+.checkout-summary-line b {
+  font-family: var(--font-sans, system-ui, sans-serif) !important;
+}
+
+.checkout-page-totals span {
+  font-weight: 400 !important;
+  color: #c7beaf !important;
+  font-size: 0.85rem !important;
+}
+
+.checkout-page-totals strong {
+  font-weight: 600 !important;
+  color: #f5f2eb !important;
+  font-size: 0.9rem !important;
+}
+
+.checkout-page-totals .final strong {
+  font-family: var(--font-serif, "Cormorant Garamond", Georgia, serif) !important;
+  font-size: 1.6rem !important;
+  font-weight: 600 !important;
+  color: #ffffff !important;
+}

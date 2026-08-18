@@ -96,6 +96,10 @@ export const coupons = mysqlTable("coupons", {
   minPurchase: decimal("minPurchase", { precision: 10, scale: 2 }).default("0.00"),
   validUntil: timestamp("validUntil"),
   active: int("active").default(1).notNull(),
+  /** Tipo de promoção: 'standard' (padrão), 'progressive' (desconto progressivo), 'free_shipping' (frete grátis), 'bogo' (leve 2 pague 1) */
+  promoType: varchar("promoType", { length: 30 }).default("standard").notNull(),
+  /** JSON com regras adicionais (ex: faixas de desconto progressivo, IDs de produtos elegíveis) */
+  promoRules: json("promoRules"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

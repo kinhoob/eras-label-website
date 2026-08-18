@@ -896,3 +896,8 @@
 - [x] Reestruturar AdminCollectionsSection.tsx em grid de cards editoriais com preview de imagem
 - [x] Aplicar identidade visual #b22222 e tipografia limpa da Eras Label aos botões e modais
 - [x] Validar testes automatizados Vitest e build de produção
+
+## Refinamento Tipográfico do Checkout
+- [x] Ajustar as fontes pesadas do checkout transparente para uma estética editorial mais leve e elegante
+- [x] Atualizar títulos, subtítulos, labels de formulário, resumo da sacola e botões
+- [x] Validar testes, build e salvar checkpoint
