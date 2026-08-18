@@ -863,3 +863,5 @@
 - [x] Remover a lista intrusiva de alertas de estoque do menu flutuante de notificações, mantendo o alerta de estoque baixo de forma discreta na própria linha do produto na tabela de inventário/catálogo.
 
 - [x] Redesenhar a tela de Cupons no painel administrativo com uma estética limpa, moderna e organizada inspirada na Nuvemshop, mantendo a identidade visual editorial da Eras Label (#b22222), barra de pesquisa, filtros de estado, tabela de gestão e modal de criação/edição.
+
+- [x] Expandir o CMS de Menus do painel administrativo para suportar a criação de novos menus, adição e edição de itens de navegação, exclusão de links e associação a páginas personalizadas da marca, mantendo a estética editorial e o padrão Nuvemshop.
