@@ -582,7 +582,14 @@ export const appRouter = router({
         id: z.string().min(1),
         productId: z.number().int().positive(),
         label: z.string().min(1).max(40),
-      })).min(1).max(6),
+      })).min(0).max(6),
+      productSections: z.array(z.object({
+        id: z.string().min(1).max(80),
+        eyebrow: z.string().max(80).optional(),
+        title: z.string().trim().min(1).max(80),
+        description: z.string().max(240).optional(),
+        productIds: z.array(z.number().int().positive()).max(16),
+      })).max(8).optional(),
       sectionTitles: z.object({
         highlights: z.string().trim().min(1).max(60).optional(),
         shop: z.string().trim().min(1).max(60).optional(),

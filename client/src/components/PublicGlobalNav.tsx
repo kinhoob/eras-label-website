@@ -1,10 +1,45 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { ArrowRight, Menu, Search, ShoppingBag, UserRound } from "lucide-react";
+import { ArrowRight, ChevronDown, Menu, Search, ShoppingBag, UserRound } from "lucide-react";
 import { CART_STORAGE_KEY, loadCart } from "@/lib/cart-storage";
 import { SidebarMenu } from "@/components/SidebarMenu";
 import { trpc } from "@/lib/trpc";
 import { findPublicCategory, getExtraPublicCategories, publicCategoryHref, type PublicNavigationCategory } from "@/lib/public-navigation";
+import type { StorefrontConfig } from "../../../shared/storefront";
+import { hasStorefrontAnnouncement } from "../../../shared/storefront-logic";
+
+function GlobalAnnouncementBar({ config }: { config?: StorefrontConfig }) {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const messages = config?.announcement.messages ?? [];
+  const rotationSeconds = config?.announcement.rotationSpeedSeconds ?? 5;
+  const showArrows = config?.announcement.showArrows ?? true;
+
+  useEffect(() => {
+    if (messages.length <= 1) return;
+    const timer = window.setInterval(() => setActiveIndex((current) => (current + 1) % messages.length), Math.max(2000, rotationSeconds * 1000));
+    return () => window.clearInterval(timer);
+  }, [messages.length, rotationSeconds]);
+
+  useEffect(() => {
+    if (activeIndex >= messages.length && messages.length > 0) setActiveIndex(0);
+  }, [activeIndex, messages.length]);
+
+  if (!config || !hasStorefrontAnnouncement(config) || messages.length === 0) return null;
+
+  const message = messages[activeIndex % messages.length];
+  const style = { backgroundColor: config.announcement.backgroundColor, color: config.announcement.textColor };
+  const changeMessage = (direction: number) => setActiveIndex((current) => (current + direction + messages.length) % messages.length);
+
+  return (
+    <div className="public-global-announcement" style={style} role="status" aria-live="polite">
+      {showArrows && messages.length > 1 && <button type="button" onClick={() => changeMessage(-1)} aria-label="Anúncio anterior">‹</button>}
+      {message.href?.trim() ? (
+        message.href.startsWith("/") ? <Link href={message.href} className="public-global-announcement-message" key={`${activeIndex}-${message.text}`}>{message.text}</Link> : <a href={message.href} className="public-global-announcement-message" target="_blank" rel="noreferrer">{message.text}</a>
+      ) : <span className="public-global-announcement-message" key={`${activeIndex}-${message.text}`}>{message.text}</span>}
+      {showArrows && messages.length > 1 && <button type="button" onClick={() => changeMessage(1)} aria-label="Próximo anúncio">›</button>}
+    </div>
+  );
+}
 
 /**
  * Barra de navegação pública única da loja.
@@ -16,12 +51,15 @@ export default function PublicGlobalNav() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [cartCount, setCartCount] = useState(() => loadCart<{ quantity: number }>().reduce((sum, item) => sum + item.quantity, 0));
   const isHome = location === "/";
   const isAdminOrAuthRoute = location.startsWith("/admin") || location.startsWith("/auth");
   const { data: categories = [] } = trpc.catalog.categories.useQuery(undefined, { enabled: !isAdminOrAuthRoute });
   const { data: navProducts = [], isLoading: isProductsLoading } = trpc.catalog.list.useQuery(undefined, { enabled: !isAdminOrAuthRoute });
+  const { data: storefrontConfig } = trpc.catalog.getStorefrontConfig.useQuery(undefined, { enabled: !isAdminOrAuthRoute });
+  const { data: collections = [] } = trpc.collections.list.useQuery(undefined, { enabled: !isAdminOrAuthRoute });
   const publicCategories = categories as PublicNavigationCategory[];
 
   // Normaliza acentos e espaços para que “bonés” e “bones” encontrem o mesmo produto.
@@ -72,6 +110,9 @@ export default function PublicGlobalNav() {
   const camisetasCategory = findPublicCategory(publicCategories, "camiseta");
   const bonesCategory = findPublicCategory(publicCategories, "bone");
   const extraCategories = getExtraPublicCategories(publicCategories);
+  const publicCollections = useMemo(() => (collections as any[])
+    .filter((collection) => collection?.active !== 0)
+    .sort((a, b) => Number(a.sortOrder ?? 0) - Number(b.sortOrder ?? 0) || String(b.year ?? "").localeCompare(String(a.year ?? ""))), [collections]);
 
   useEffect(() => {
     const syncCart = () => {
@@ -92,6 +133,7 @@ export default function PublicGlobalNav() {
     setSearchQuery(queryFromUrl);
     setIsMenuOpen(false);
     setIsSearchOpen(false);
+    setIsCollectionsOpen(false);
     setIsVisible(true);
   }, [location]);
 
@@ -134,7 +176,7 @@ export default function PublicGlobalNav() {
 
   return (
     <>
-      <div className="public-global-announcement" role="status">5% OFF PARA PAGAMENTOS NO PIX</div>
+      <GlobalAnnouncementBar config={storefrontConfig} />
       <div className={`public-global-nav ${isHome ? "public-global-nav--home" : ""} ${isVisible ? "is-visible" : "is-hidden"}`} role="banner">
         <div className="public-global-left-tools">
           <button className="public-global-menu-trigger" type="button" onClick={() => setIsMenuOpen(true)} aria-label="Abrir menu público">
@@ -162,10 +204,8 @@ export default function PublicGlobalNav() {
 
             {isSearchOpen && (
               <div id="public-global-search-results" className="public-global-search-results" role="listbox" aria-label="Resultados da pesquisa">
-                {!normalizedSearch ? (
-                  <p className="public-global-search-hint">Digite o nome de uma peça, coleção ou categoria.</p>
-                ) : isProductsLoading ? (
-                  <p className="public-global-search-hint">A procurar peças para si…</p>
+                {isProductsLoading && normalizedSearch ? (
+                  <p className="public-global-search-hint" role="status" aria-live="polite">A procurar peças para si…</p>
                 ) : searchResults.length > 0 ? (
                   <>
                     <div className="public-global-search-heading"><span>RESULTADOS DA PESQUISA</span><small>{searchResults.length} sugestões</small></div>
@@ -205,6 +245,16 @@ export default function PublicGlobalNav() {
         <nav className="public-global-links" aria-label="Navegação da loja">
           <Link href="/" className={location === "/" ? "is-active" : ""}>Início</Link>
           <Link href="/catalog" className={location === "/catalog" ? "is-active" : ""}>Produtos</Link>
+          <div className={`public-global-collections ${isCollectionsOpen ? "is-open" : ""}`} onMouseEnter={() => setIsCollectionsOpen(true)} onMouseLeave={() => setIsCollectionsOpen(false)}>
+            <button type="button" className={isCollectionsOpen || location.startsWith("/archive") || location.startsWith("/collection/") ? "is-active" : ""} aria-expanded={isCollectionsOpen} aria-haspopup="menu" onClick={() => setIsCollectionsOpen((value) => !value)}>
+              Coleções <ChevronDown size={12} aria-hidden="true" />
+            </button>
+            <div className="public-global-collections-menu" role="menu">
+              <span className="public-global-collections-eyebrow">ERAS</span>
+              <Link href="/archive" role="menuitem" onClick={() => setIsCollectionsOpen(false)}>Todas as coleções <ArrowRight size={13} /></Link>
+              {publicCollections.map((collection: any) => <Link key={collection.id} href={collection.ctaUrl || `/collection/${collection.slug || collection.id}`} role="menuitem" onClick={() => setIsCollectionsOpen(false)}><span>{collection.name}</span><small>{collection.year}</small></Link>)}
+            </div>
+          </div>
           <Link href={publicCategoryHref(camisetasCategory, "/category/camisetas")} className={location.includes("camiseta") ? "is-active" : ""}>Camisetas</Link>
           <Link href={publicCategoryHref(bonesCategory, "/category/bones")} className={location.includes("bone") ? "is-active" : ""}>Bonés</Link>
           {extraCategories.map((category) => <Link key={category.id} href={publicCategoryHref(category, "/catalog")} className={location.includes(category.slug) ? "is-active" : ""}>{category.name}</Link>)}

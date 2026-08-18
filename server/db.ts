@@ -477,9 +477,18 @@ export async function saveCommercialConfig(config: CommercialConfig) {
 
 export type HomeBannerTargetType = "custom" | "catalog" | "category" | "collection";
 
+export type HomeProductSection = {
+  id: string;
+  eyebrow?: string;
+  title: string;
+  description?: string;
+  productIds: number[];
+};
+
 export type HomeContent = {
   banners: Array<{ id: string; eyebrow: string; title: string; subtitle: string; imageUrl: string; href: string; cta: string; targetType?: HomeBannerTargetType; targetValue?: string }>;
   highlights: Array<{ id: string; productId: number; label: string }>;
+  productSections?: HomeProductSection[];
   sectionTitles?: { highlights?: string; shop?: string; community?: string };
   vipBanner: { eyebrow: string; title: string; subtitle: string; imageUrl: string; href: string; cta: string; targetType?: HomeBannerTargetType; targetValue?: string };
 };
@@ -510,6 +519,7 @@ export const defaultHomeContent: HomeContent = {
     { id: "highlight-2", productId: 2, label: "MAIS VISTO" },
     { id: "highlight-3", productId: 5, label: "ARQUIVO" },
   ],
+  productSections: [],
   sectionTitles: {
     highlights: "Destaques",
     shop: "Produtos da Era",

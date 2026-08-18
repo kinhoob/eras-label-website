@@ -709,3 +709,16 @@
 - [x] Remover o texto preto indesejado abaixo da barra de pesquisa da navbar sem quebrar os resultados interativos
 - [x] Validar responsividade, pesquisa, coleções, catálogo, sacola e painel administrativo com testes e build
 - [x] Guardar checkpoint final desta rodada
+
+
+## Nova rodada — Shop editorial na Home, coleções em dropdown e anúncio animado
+- [ ] Transformar a página inicial (Home) num shop editorial limpo, exibindo apenas as secções e produtos configurados pelo admin no painel
+- [ ] Integrar o dropdown de coleções na navbar pública de forma fluida e acessível
+- [ ] Corrigir e aprimorar a barra de anúncio (AnnouncementBar) para garantir centralização, rotação animada e exibição correta tanto em desktop quanto em mobile
+- [ ] Executar testes Vitest, TypeScript, build e validação visual desktop/mobile
+- [ ] Guardar checkpoint final desta rodada
+
+- [x] Corrigir dropdown de Coleções da navbar para iniciar fechado e abrir apenas por interação, sem sobrepor o conteúdo.
+- [x] Corrigir a faixa de anúncio global para permanecer centrada, animada e visível em desktop e mobile.
+- [x] Fazer auditoria visual final da Home, navbar, drawer e navegação responsiva após os ajustes.
+- [x] Reexecutar Vitest, TypeScript e build de produção após o refinamento visual.

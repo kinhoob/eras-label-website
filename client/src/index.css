@@ -7235,3 +7235,433 @@ body {
   font-weight: 400;
   line-height: 1.4;
 }
+
+
+/* Anúncio global — faixa única, centrada e sempre visível no mobile. */
+.public-global-announcement {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 160;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 34px;
+  height: 34px;
+  padding: 0 12px;
+  overflow: hidden;
+  background: #b22222;
+  color: #fffaf4;
+  font-size: clamp(.57rem, .62vw, .68rem);
+  font-weight: 700;
+  letter-spacing: .18em;
+  line-height: 1;
+  text-align: center;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.public-global-announcement-message {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  max-width: min(80vw, 900px);
+  overflow: hidden;
+  color: inherit;
+  text-align: center;
+  text-overflow: ellipsis;
+  animation: public-announcement-message-in .5s cubic-bezier(.23, 1, .32, 1) both;
+}
+
+.public-global-announcement > button {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  opacity: .78;
+  transition: opacity .18s ease, transform .18s ease;
+}
+
+.public-global-announcement > button:hover,
+.public-global-announcement > button:focus-visible {
+  opacity: 1;
+  outline: 0;
+  transform: scale(1.15);
+}
+
+.public-global-nav {
+  top: 34px;
+}
+
+@keyframes public-announcement-message-in {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 700px) {
+  .public-global-announcement {
+    min-height: 32px;
+    height: 32px;
+    padding: 0 6px;
+    font-size: .5rem;
+    letter-spacing: .12em;
+  }
+
+  .public-global-announcement-message {
+    max-width: 82vw;
+  }
+
+  .public-global-announcement > button {
+    width: 22px;
+    height: 22px;
+    flex-basis: 22px;
+    font-size: .9rem;
+  }
+
+  .public-global-nav {
+    top: 32px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .public-global-announcement-message,
+  .public-global-announcement > button {
+    animation: none;
+    transition: none;
+  }
+}
+
+
+/* Shop editorial — composição limpa, próxima da referência, com curadoria exclusiva do CMS. */
+.home-curated-shop {
+  max-width: none;
+  margin: 0;
+  padding: clamp(76px, 9vw, 128px) clamp(20px, 4vw, 72px) clamp(92px, 10vw, 142px);
+  background: #f6f3ee;
+  border-top: 1px solid rgba(35, 34, 30, .14);
+}
+.home-curated-shop::before,
+.home-curated-shop::after {
+  display: none;
+}
+.home-shop-intro {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 0 auto clamp(48px, 6vw, 78px);
+  max-width: 1440px;
+  border-bottom: 1px solid rgba(35, 34, 30, .16);
+  padding-bottom: clamp(30px, 4vw, 54px);
+}
+.home-shop-intro .section-kicker {
+  color: #b22222;
+  font-size: 10px;
+  letter-spacing: .28em;
+}
+.home-shop-intro h2 {
+  margin: 0;
+  color: #23221e;
+  font-size: clamp(4.5rem, 12vw, 11.5rem);
+  font-weight: 600;
+  letter-spacing: -.09em;
+  line-height: .78;
+}
+.home-shop-intro p {
+  margin: 4px 0 0;
+  color: #72695f;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(1rem, 1.4vw, 1.3rem);
+  line-height: 1.35;
+}
+.home-curated-shop .home-curated-empty {
+  min-height: 260px;
+  max-width: 1440px;
+  margin: 0 auto;
+  border: 1px solid rgba(35, 34, 30, .14);
+  background: rgba(255, 253, 250, .65);
+}
+.home-curated-shop .editorial-product-grid {
+  max-width: 1440px;
+  margin-inline: auto;
+  gap: clamp(16px, 2vw, 32px);
+}
+.home-curated-shop .editorial-product-grid .product-card {
+  background: transparent;
+}
+.home-curated-shop .editorial-product-grid .product-card-image,
+.home-curated-shop .editorial-product-grid .product-card figure {
+  background: #ebe6de;
+}
+
+/* Faixa de anúncio global — texto realmente centrado, troca animada e visível em mobile. */
+.public-global-announcement {
+  display: grid !important;
+  grid-template-columns: 34px minmax(0, 1fr) 34px;
+  align-items: center;
+  justify-items: center;
+  text-align: center;
+  isolation: isolate;
+}
+.public-global-announcement-message {
+  grid-column: 2;
+  width: 100%;
+  max-width: min(82vw, 980px);
+  min-height: 34px;
+  padding-inline: 4px;
+  white-space: nowrap;
+}
+.public-global-announcement > button:first-child { grid-column: 1; grid-row: 1; }
+.public-global-announcement > button:last-child { grid-column: 3; grid-row: 1; }
+@media (max-width: 700px) {
+  .public-global-announcement {
+    display: grid !important;
+    grid-template-columns: 24px minmax(0, 1fr) 24px;
+    min-height: 32px;
+    height: 32px;
+    padding-inline: 2px;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  .public-global-announcement-message {
+    width: 100%;
+    max-width: none;
+    min-height: 32px;
+    padding-inline: 2px;
+    font-size: .5rem;
+    letter-spacing: .1em;
+  }
+  .public-global-announcement > button {
+    width: 22px;
+    height: 22px;
+    flex-basis: 22px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .public-global-announcement-message { animation: none; }
+}
+
+/* Refinamento final da navegação pública: dropdown e anúncio ficam alinhados com as classes atuais. */
+.public-global-links { position: relative; z-index: 80; }
+
+/* O item de coleções é a âncora do popover e não cria uma segunda linha própria. */
+.public-global-collections {
+  position: relative;
+  display: inline-flex;
+  align-items: stretch;
+  height: 100%;
+}
+
+.public-global-collections > button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 58px;
+  padding: 19px 0 15px;
+  border: 0;
+  background: transparent;
+  color: #a0423f;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  transition: color 180ms ease, transform 180ms ease;
+}
+
+.public-global-collections > button::after {
+  position: absolute;
+  right: 0;
+  bottom: 8px;
+  left: 0;
+  height: 1px;
+  background: #b22222;
+  content: '';
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 180ms ease;
+}
+
+.public-global-collections > button:hover,
+.public-global-collections > button:focus-visible,
+.public-global-collections.is-open > button,
+.public-global-collections > button.is-active { color: #7f1818; }
+
+.public-global-collections > button:hover::after,
+.public-global-collections > button:focus-visible::after,
+.public-global-collections.is-open > button::after,
+.public-global-collections > button.is-active::after { transform: scaleX(1); }
+
+.public-global-collections > button:focus-visible {
+  outline: 2px solid rgba(178, 34, 34, 0.42);
+  outline-offset: 4px;
+}
+
+/* Estado fechado: sem espaço no fluxo, sem interação e sem sobreposição acidental. */
+.public-global-collections-menu {
+  position: absolute;
+  z-index: 120;
+  top: calc(100% - 1px);
+  left: 50%;
+  display: grid;
+  width: min(300px, calc(100vw - 32px));
+  gap: 3px;
+  padding: 10px;
+  border: 1px solid rgba(35, 34, 30, 0.12);
+  background: #fbfaf7;
+  box-shadow: 0 18px 42px rgba(35, 34, 30, 0.15);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -7px) scale(0.98);
+  transform-origin: top center;
+  transition: opacity 180ms cubic-bezier(0.23, 1, 0.32, 1), transform 180ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* O React controla .is-open por clique/hover; :focus-within mantém teclado acessível. */
+.public-global-collections.is-open > .public-global-collections-menu,
+.public-global-collections:focus-within > .public-global-collections-menu {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, 0) scale(1);
+}
+
+.public-global-collections-menu::before {
+  position: absolute;
+  top: -8px;
+  right: 0;
+  left: 0;
+  height: 8px;
+  content: '';
+}
+
+.public-global-collections-eyebrow {
+  padding: 4px 10px 8px;
+  color: #9c8c84;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+}
+
+.public-global-collections-menu a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 38px;
+  padding: 10px;
+  color: #3e3933;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: background-color 160ms ease, color 160ms ease, padding-left 160ms ease;
+}
+
+.public-global-collections-menu a:hover,
+.public-global-collections-menu a:focus-visible {
+  padding-left: 14px;
+  background: rgba(178, 34, 34, 0.07);
+  color: #a0211f;
+  outline: 0;
+}
+
+.public-global-collections-menu a span { min-width: 0; }
+.public-global-collections-menu a small { color: #a07770; font-size: 0.58rem; font-weight: 600; letter-spacing: 0.08em; }
+
+/* A faixa de anúncio permanece centrada e visível, inclusive quando a navbar muda no mobile. */
+.public-global-announcement {
+  position: relative;
+  z-index: 90;
+  display: grid !important;
+  visibility: visible !important;
+  width: 100%;
+  min-height: 34px;
+  grid-template-columns: 34px minmax(0, 1fr) 34px;
+  align-items: center;
+  justify-items: center;
+  overflow: hidden;
+  background: #b22222;
+  color: #fffaf4;
+  opacity: 1 !important;
+  text-align: center;
+}
+
+.public-global-announcement-message {
+  grid-column: 2;
+  width: 100%;
+  max-width: min(82vw, 980px);
+  min-width: 0;
+  min-height: 34px;
+  padding: 0 6px;
+  overflow: hidden;
+  color: inherit;
+  font-size: clamp(0.54rem, 0.7vw, 0.64rem);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  line-height: 34px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.public-global-announcement > button {
+  display: inline-grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.86;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.public-global-announcement > button:first-child { grid-column: 1; grid-row: 1; }
+.public-global-announcement > button:last-child { grid-column: 3; grid-row: 1; }
+.public-global-announcement > button:hover,
+.public-global-announcement > button:focus-visible { opacity: 1; transform: scale(1.08); outline: 0; }
+
+@media (max-width: 820px) {
+  /* A mensagem compacta ganha uma linha fixa e dois controlos de toque simétricos. */
+  .public-global-announcement {
+    min-height: 32px;
+    height: 32px;
+    grid-template-columns: 28px minmax(0, 1fr) 28px;
+    padding-inline: 2px;
+  }
+
+  .public-global-announcement-message {
+    max-width: none;
+    min-height: 32px;
+    padding-inline: 3px;
+    font-size: 0.5rem;
+    letter-spacing: 0.1em;
+    line-height: 32px;
+  }
+
+  .public-global-announcement > button { width: 24px; height: 24px; }
+  .public-global-links { display: none; }
+}
+
+@media (max-width: 420px) {
+  .public-global-announcement-message { font-size: 0.46rem; letter-spacing: 0.07em; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .public-global-collections-menu,
+  .public-global-collections > button,
+  .public-global-collections-menu a,
+  .public-global-announcement > button { transition: none; }
+}

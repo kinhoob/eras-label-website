@@ -73,6 +73,7 @@ type Product = {
 type CartLine = Product & { size: string; quantity: number };
 type HomeBanner = { id: string; eyebrow: string; title: string; subtitle: string; imageUrl: string; href: string; cta: string };
 type HomeHighlight = { id: string; productId: number; label: string };
+type HomeProductSection = { id: string; eyebrow?: string; title: string; description?: string; productIds: number[] };
 type VipBanner = { eyebrow: string; title: string; subtitle: string; imageUrl: string; href: string; cta: string };
 type HomeSectionTitles = { highlights?: string; shop?: string; community?: string };
 
@@ -415,18 +416,13 @@ export default function Home() {
   }, [products, publicCategories]);
   const collectionOptions = useMemo(() => uniqueCatalogLabels(products.map((product) => product.collection)), [products]);
   const banners = (homeContent?.banners?.length ? homeContent.banners : fallbackBanners) as HomeBanner[];
-  const highlights = useMemo<HomeHighlight[]>(() => {
-    const configured = (homeContent?.highlights?.length ? homeContent.highlights : fallbackHighlights) as HomeHighlight[];
-    const available = configured.filter((highlight) => products.some((product) => product.id === highlight.productId));
-    const usedIds = new Set(available.map((highlight) => highlight.productId));
-    const supplement = products.filter((product) => !usedIds.has(product.id)).slice(0, Math.max(0, 4 - available.length)).map((product, index) => ({
-      id: `fallback-highlight-${product.id}`,
-      productId: product.id,
-      label: index === 0 && available.length === 0 ? "PEÇA-CHAVE" : "EM DESTAQUE",
-    }));
-    // A composição editorial reserva quatro posições no desktop e adapta-se ao mobile via CSS.
-    return [...available, ...supplement].slice(0, 4);
-  }, [homeContent?.highlights, products]);
+  const homeProductSections = useMemo<HomeProductSection[]>(() => {
+    const configured = Array.isArray(homeContent?.productSections) ? homeContent.productSections as HomeProductSection[] : [];
+    return configured.map((section) => ({
+      ...section,
+      productIds: Array.isArray(section.productIds) ? section.productIds.filter((productId) => products.some((product) => product.id === productId)) : [],
+    })).filter((section) => section.title.trim() && section.productIds.length > 0);
+  }, [homeContent?.productSections, products]);
   const vipBanner = (homeContent?.vipBanner ?? fallbackVipBanner) as VipBanner;
   // O CMS pode renomear cada bloco; os valores abaixo preservam uma apresentação segura durante o carregamento.
   const sectionTitles = {
@@ -850,7 +846,6 @@ export default function Home() {
 
   return (
     <div className="eras-site">
-      <AnnouncementBar config={storefrontConfig} />
       {false && <header className={`site-header ${isHeaderVisible ? "is-visible" : "is-hidden"}`}>
         <button className="icon-button" aria-label="Abrir menu lateral" onClick={() => { playClick(soundsOn); setIsMenuOpen(true); }}>
           <Menu size={20} />
@@ -1046,97 +1041,53 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="highlights-section" id="highlights">
-          <div className="section-heading">
-            <div><span className="section-kicker">01 / CURADORIA</span><h2>{sectionTitles.highlights}</h2></div>
-            <a className="text-link" href="#shop" onClick={() => playClick(soundsOn)}>VER TUDO <ArrowRight size={14} /></a>
+        <section className="shop-section home-curated-shop" id="shop" aria-label="Shop curado pela Eras Label">
+          <div className="home-shop-intro">
+            <span className="section-kicker">ERAS LABEL</span>
+            <h2>SHOP</h2>
+            <p>Peças selecionadas para a próxima era.</p>
           </div>
-          <div className="product-grid editorial-product-grid highlights-grid">
-            {highlights.map((highlight) => {
-              const product = products.find((item) => item.id === highlight.productId);
-              if (!product) return null;
-              return (
-                <article className="product-card" key={highlight.id}>
-                  <button className="product-image-button" onClick={() => openProduct(product)} aria-label={`Ver ${product.name}`}>
-                    <img src={product.image} alt={product.alt} onError={(event) => {
-                      if (!product.fallbackImage || event.currentTarget.dataset.fallbackApplied) return;
-                      event.currentTarget.dataset.fallbackApplied = "true";
-                      event.currentTarget.src = product.fallbackImage;
-                    }} />
-                    <span className="highlight-label">{highlight.label}</span>
-                    {product.stock === 0 && <span className="soldout-tag">ESGOTADO</span>}
-                    <span className="quick-view-label">VISUALIZAÇÃO RÁPIDA</span>
-                    <span className="product-arrow"><ArrowRight size={15} /></span>
-                  </button>
-                  <div className="product-meta">
-                    <div>
-                      <a href={`/produto/${product.slug || product.id}`} className="product-name-link" onClick={(event) => { event.preventDefault(); playClick(soundsOn); window.location.href = `/produto/${product.slug || product.id}`; }}>{product.name}</a>
-                      <p className="product-collection">{product.collection}</p>
-                    </div>
-                    <div className="product-price"><strong>{formatPrice(product.price)}</strong><span>{formatPrice(product.pixPrice)} NO PIX</span></div>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        </section>
-
-        <section className="shop-section" id="shop">
-          <div className="section-heading">
-            <div><span className="section-kicker">02 / SHOP</span><h2>{sectionTitles.shop}</h2></div>
-            <span className="shop-result-count" aria-live="polite">{filteredProducts.length} {filteredProducts.length === 1 ? "produto" : "produtos"}</span>
-          </div>
-          <div className="shop-filter-bar" aria-label="Filtros avançados da loja">
-            <div className="filter-tabs" role="tablist" aria-label="Filtrar por categoria">
-              {categoryOptions.map((item) => (
-                <button key={item} type="button" className={category === item ? "active" : ""} onClick={() => { playClick(soundsOn); setCategory(item); }}>{item}</button>
-              ))}
+          {homeProductSections.length === 0 ? (
+            <div className="shop-empty-state home-curated-empty" role="status">
+              <span className="section-kicker">SHOP</span>
+              <h2>A próxima era começa aqui.</h2>
+              <p>As secções da Home serão publicadas pelo administrador assim que a curadoria estiver pronta.</p>
             </div>
-            <label className="shop-filter-field">
-              <span className="shop-filter-label-row"><span>Tamanho</span>{sizeFilter !== "Todos" && <button type="button" className="shop-filter-reset" aria-label="Limpar filtro de tamanho" onClick={(event) => { event.preventDefault(); event.stopPropagation(); setSizeFilter("Todos"); }}>×</button>}</span>
-              <select value={sizeFilter} onChange={(event) => setSizeFilter(event.target.value)} aria-label="Filtrar por tamanho">
-                <option value="Todos">Todos</option>
-                {availableSizes.map((size) => <option key={size} value={size}>{size}</option>)}
-              </select>
-            </label>
-            <div className="shop-filter-field price-inputs-field">
-              <span className="shop-filter-label-row"><span>Preço</span>{(priceMin || priceMax) && <button type="button" className="shop-filter-reset" aria-label="Limpar filtro de preço" onClick={() => { setPriceMin(""); setPriceMax(""); }}>×</button>}</span>
-              <div className="price-inputs">
-                <input inputMode="decimal" type="text" value={priceMin} onChange={(event) => setPriceMin(event.target.value.replace(/[^0-9,.]/g, ""))} placeholder="Mínimo" aria-label="Preço mínimo" />
-                <input inputMode="decimal" type="text" value={priceMax} onChange={(event) => setPriceMax(event.target.value.replace(/[^0-9,.]/g, ""))} placeholder="Máximo" aria-label="Preço máximo" />
+          ) : homeProductSections.map((section, sectionIndex) => (
+            <div className="home-product-section" key={section.id}>
+              <div className="section-heading">
+                <div><span className="section-kicker">{section.eyebrow?.trim() || `${String(sectionIndex + 1).padStart(2, "0")} / SHOP`}</span><h2>{section.title}</h2>{section.description && <p className="home-product-section-description">{section.description}</p>}</div>
+                <a className="text-link" href="/catalog" onClick={() => playClick(soundsOn)}>VER SHOP <ArrowRight size={14} /></a>
+              </div>
+              <div className="product-grid editorial-product-grid home-curated-grid">
+                {section.productIds.slice(0, 8).map((productId) => {
+                  const product = products.find((item) => item.id === productId);
+                  if (!product) return null;
+                  return (
+                    <article className="product-card" key={`${section.id}-${product.id}`}>
+                      <button className="product-image-button" onClick={() => openProduct(product)} aria-label={`Ver ${product.name}`}>
+                        <img src={product.image} alt={product.alt} onError={(event) => {
+                          if (!product.fallbackImage || event.currentTarget.dataset.fallbackApplied) return;
+                          event.currentTarget.dataset.fallbackApplied = "true";
+                          event.currentTarget.src = product.fallbackImage;
+                        }} />
+                        {product.stock === 0 && <span className="soldout-tag">ESGOTADO</span>}
+                        <span className="quick-view-label">VISUALIZAÇÃO RÁPIDA</span>
+                        <span className="product-arrow"><ArrowRight size={15} /></span>
+                      </button>
+                      <div className="product-meta">
+                        <div>
+                          <a href={`/produto/${product.slug || product.id}`} className="product-name-link" onClick={(event) => { event.preventDefault(); playClick(soundsOn); window.location.href = `/produto/${product.slug || product.id}`; }}>{product.name}</a>
+                          <p className="product-collection">{product.collection}</p>
+                        </div>
+                        <div className="product-price"><strong>{formatPrice(product.price)}</strong><span>{formatPrice(product.pixPrice)} NO PIX</span></div>
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             </div>
-            {hasAdvancedFilters && <button className="shop-filter-clear" type="button" onClick={clearShopFilters}>Limpar filtros</button>}
-          </div>
-          <div className="product-grid editorial-product-grid">
-            {filteredProducts.map((product) => (
-              <article className="product-card" key={product.id}>
-                <button className="product-image-button" onClick={() => openProduct(product)} aria-label={`Ver ${product.name}`}>
-                  <img src={product.image} alt={product.alt} onError={(event) => {
-                    if (!product.fallbackImage || event.currentTarget.dataset.fallbackApplied) return;
-                    event.currentTarget.dataset.fallbackApplied = "true";
-                    event.currentTarget.src = product.fallbackImage;
-                  }} />
-                  {product.stock === 0 && <span className="soldout-tag">ESGOTADO</span>}
-                  <span className="quick-view-label">VISUALIZAÇÃO RÁPIDA</span>
-                  <span className="product-arrow"><ArrowRight size={15} /></span>
-                </button>
-                <div className="product-meta">
-                  <div>
-                    <a href={`/produto/${product.slug || product.id}`} className="product-name-link" onClick={(event) => { event.preventDefault(); playClick(soundsOn); window.location.href = `/produto/${product.slug || product.id}`; }}>{product.name}</a>
-                    <p className="product-collection">{product.collection}</p>
-                  </div>
-                  <div className="product-price"><strong>{formatPrice(product.price)}</strong><span>{formatPrice(product.pixPrice)} NO PIX</span></div>
-                </div>
-              </article>
-            ))}
-          </div>
-          {filteredProducts.length === 0 && (
-            <div className="shop-empty-state" role="status">
-              <p>Nenhum produto corresponde aos filtros selecionados.</p>
-              <button type="button" onClick={clearShopFilters}>Limpar filtros</button>
-            </div>
-          )}
+          ))}
         </section>
 
         {/* Prova social ética: encaminha para publicações reais da conta oficial, sem inventar avaliações ou testemunhos. */}
