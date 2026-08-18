@@ -81,6 +81,11 @@ import {
   updateOrderLabelData,
   upsertUser,
   updateUserName,
+  listShipments,
+  createShipment,
+  updateShipmentStatus,
+  getExtraShippingDays,
+  saveExtraShippingDays,
 } from "./db";
 import { adminOrderEmail, newsletterWelcomeEmail, orderConfirmationEmail, paymentConfirmationEmail } from "./email-templates";
 import { ENV } from "./_core/env";
@@ -1287,9 +1292,39 @@ export const appRouter = router({
       };
     }),
 
-    /**
-     * Procedimentos de CMS Institucional e Menus Dinâmicos
-     */
+    shipmentsList: adminProcedure.query(async () => {
+      return listShipments();
+    }),
+    shipmentsCreate: adminProcedure.input(z.object({
+      type: z.string().default("Avulso"),
+      recipientName: z.string().min(2),
+      recipientAddress: z.string().min(5),
+      carrier: z.string().default("Jadlog Econômico"),
+      trackingCode: z.string().optional(),
+      shippingCost: z.number().nonnegative().optional(),
+      estimatedDays: z.number().int().min(1).max(60).optional(),
+      notes: z.string().optional(),
+    })).mutation(async ({ input }) => {
+      const created = await createShipment(input);
+      return { success: true, shipment: created };
+    }),
+    shipmentsUpdateStatus: adminProcedure.input(z.object({
+      id: z.number().int().positive(),
+      status: z.string().min(2),
+      trackingCode: z.string().optional(),
+    })).mutation(async ({ input }) => {
+      await updateShipmentStatus(input.id, input.status, input.trackingCode);
+      return { success: true };
+    }),
+    extraShippingDaysGet: publicProcedure.query(async () => {
+      return getExtraShippingDays();
+    }),
+    extraShippingDaysSave: adminProcedure.input(z.object({
+      extraDays: z.number().int().min(0).max(60),
+    })).mutation(async ({ input }) => {
+      const saved = await saveExtraShippingDays(input.extraDays);
+      return { success: true, extraDays: saved };
+    }),
 
   }),
 });

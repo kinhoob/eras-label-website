@@ -22,6 +22,7 @@ import {
   cmsPages,
   customMenus,
   collections,
+  shipments,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 import { collectCollectionRecipients } from "./marketing-audience";
@@ -1453,4 +1454,61 @@ export async function deleteCouponData(id: number) {
   if (!db) return { success: true };
   await db.delete(coupons).where(eq(coupons.id, id));
   return { success: true };
+}
+
+// ==================== SHIPMENTS & LOGISTICS (ENVIOS) = ===
+export async function listShipments() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(shipments).orderBy(desc(shipments.createdAt)).limit(100);
+}
+
+export async function createShipment(data: { type: string; recipientName: string; recipientAddress: string; carrier?: string; trackingCode?: string; shippingCost?: number; estimatedDays?: number; notes?: string }) {
+  const db = await getDb();
+  const shipmentNumber = `#SHP-${Math.floor(100000 + Math.random() * 900000)}`;
+  const values = {
+    shipmentNumber,
+    type: data.type || "Avulso",
+    recipientName: data.recipientName,
+    recipientAddress: data.recipientAddress,
+    carrier: data.carrier || "Jadlog Econômico",
+    trackingCode: data.trackingCode || `NEB-${Math.floor(10000000 + Math.random() * 90000000)}`,
+    shippingCost: String(data.shippingCost ?? 18.50),
+    estimatedDays: Number(data.estimatedDays ?? 5),
+    status: "Por enviar",
+    notes: data.notes || null,
+  };
+  if (!db) return { id: 1, ...values };
+  const res = await db.insert(shipments).values(values);
+  return { id: Number(res[0].insertId), ...values };
+}
+
+export async function updateShipmentStatus(id: number, status: string, trackingCode?: string) {
+  const db = await getDb();
+  if (!db) return { success: true };
+  const updateData: any = { status };
+  if (trackingCode) updateData.trackingCode = trackingCode;
+  await db.update(shipments).set(updateData).where(eq(shipments.id, id));
+  return { success: true };
+}
+
+export async function getExtraShippingDays(): Promise<number> {
+  const db = await getDb();
+  if (!db) return 0;
+  const rows = await db.select().from(siteAppearance).where(eq(siteAppearance.sectionKey, "shipping_extra_days")).limit(1);
+  const val = rows[0]?.content as { extraDays?: number } | undefined;
+  return Number(val?.extraDays ?? 0);
+}
+
+export async function saveExtraShippingDays(extraDays: number) {
+  const normalized = Math.max(0, Math.min(60, Number(extraDays || 0)));
+  const db = await getDb();
+  if (!db) return normalized;
+  const existing = await db.select().from(siteAppearance).where(eq(siteAppearance.sectionKey, "shipping_extra_days")).limit(1);
+  if (existing[0]) {
+    await db.update(siteAppearance).set({ content: { extraDays: normalized } as any }).where(eq(siteAppearance.sectionKey, "shipping_extra_days"));
+  } else {
+    await db.insert(siteAppearance).values({ sectionKey: "shipping_extra_days", content: { extraDays: normalized } as any });
+  }
+  return normalized;
 }

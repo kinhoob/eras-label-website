@@ -267,3 +267,22 @@ export const customMenus = mysqlTable("custom_menus", {
 
 export type CustomMenu = typeof customMenus.$inferSelect;
 export type InsertCustomMenu = typeof customMenus.$inferInsert;
+
+export const shipments = mysqlTable("shipments", {
+  id: int("id").autoincrement().primaryKey(),
+  shipmentNumber: varchar("shipmentNumber", { length: 50 }).notNull().unique(),
+  type: varchar("type", { length: 30 }).default("Avulso").notNull(), // "Avulso", "Reverso", "Loja online"
+  recipientName: varchar("recipientName", { length: 255 }).notNull(),
+  recipientAddress: text("recipientAddress").notNull(),
+  carrier: varchar("carrier", { length: 100 }).default("Jadlog Econômico").notNull(),
+  trackingCode: varchar("trackingCode", { length: 100 }),
+  shippingCost: decimal("shippingCost", { precision: 10, scale: 2 }).default("0.00").notNull(),
+  estimatedDays: int("estimatedDays").default(5).notNull(),
+  status: varchar("status", { length: 50 }).default("Por enviar").notNull(), // "Por enviar", "Enviado", "Entregue", "Reverso solicitado"
+  labelPdfUrl: text("labelPdfUrl"),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Shipment = typeof shipments.$inferSelect;
+export type InsertShipment = typeof shipments.$inferInsert;

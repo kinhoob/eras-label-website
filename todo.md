@@ -869,3 +869,7 @@
 - [x] Corrigir o layout desktop da tela de Aparência no painel administrativo para preencher adequadamente a largura da tela sem comprimir colunas ou sobrepor blocos, garantindo uma hierarquia visual limpa e responsiva.
 
 - [x] Adicionar no filtro da página de catálogo a ordenação por "mais vendidos" e a opção de escolher por tamanho, mantendo a identidade visual editorial e a responsividade.
+
+- [x] Otimizar o layout do checkout transparente para abrir instantaneamente em tamanho ideal, tanto em desktop quanto em mobile, com barra de rolagem interna controlada e sem cortes.
+- [x] Adicionar a previsão estimada do dia de entrega no checkout, integrando o cálculo de frete com margem configurável de dias extras administrativos para encomendas.
+- [x] Criar a aba e a tela de Gestão de Envios no painel administrativo (inspirada no Nuvemshop Nuvem Envio), permitindo listar envios, criar envios avulsos e reversos (trocas/devoluções) e gerenciar a configuração de dias extras de segurança no frete.
