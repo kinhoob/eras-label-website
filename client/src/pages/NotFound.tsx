@@ -37,14 +37,14 @@ export default function NotFound() {
           <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
               onClick={() => setLocation("/")}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-3.5 bg-[#23221e] text-[#f6f3ee] hover:bg-[#b22222] text-xs uppercase tracking-[0.24em] font-bold transition-all duration-300 shadow-sm"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-3.5 bg-[#23221e] text-[#f6f3ee] hover:bg-[#b22222] text-xs uppercase tracking-[0.24em] font-bold transition-all duration-300 shadow-sm cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
               Voltar ao Início
             </button>
             <button
               onClick={() => setLocation("/catalog")}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-3.5 bg-transparent border border-[#23221e]/30 text-[#23221e] hover:border-[#23221e] text-xs uppercase tracking-[0.24em] font-bold transition-all duration-300"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-3.5 bg-transparent border border-[#23221e]/30 text-[#23221e] hover:border-[#23221e] text-xs uppercase tracking-[0.24em] font-bold transition-all duration-300 cursor-pointer"
             >
               Ver Catálogo
             </button>
