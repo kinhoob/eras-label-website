@@ -1,16 +1,37 @@
 import { useState, useMemo } from "react";
-import { Check, Copy, Edit3, Eye, EyeOff, Filter, Percent, Plus, Save, Search, SlidersHorizontal, Tag, Trash2, X } from "lucide-react";
+import { Check, Copy, Edit3, Eye, EyeOff, Plus, Search, Tag, Trash2, X, Save } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { trpc } from "@/lib/trpc";
 
-type CouponForm = { id?: number; code: string; discountPercent: number; usageLimit: number | null; minPurchase: number; validUntil: string; active: number };
-const emptyCoupon: CouponForm = { code: "", discountPercent: 10, usageLimit: null, minPurchase: 0, validUntil: "", active: 1 };
+type CouponForm = {
+  id?: number;
+  code: string;
+  discountPercent: number;
+  usageLimit: number | null;
+  minPurchase: number;
+  validUntil: string;
+  active: number;
+};
 
+const emptyCoupon: CouponForm = {
+  code: "",
+  discountPercent: 10,
+  usageLimit: null,
+  minPurchase: 0,
+  validUntil: "",
+  active: 1,
+};
+
+/**
+ * Componente AdminCouponsSection: Gerenciamento simplificado e moderno de cupons de desconto
+ * da Eras Label, com barra de pesquisa unificada ao botão de criação e listagem em cards.
+ */
 export function AdminCouponsSection() {
   const utils = trpc.useUtils();
   const couponsQuery = trpc.coupons.adminList.useQuery();
+  
   const saveMutation = trpc.coupons.save.useMutation({
     onSuccess: async () => {
       toast.success("Cupom guardado com sucesso.");
@@ -19,6 +40,7 @@ export function AdminCouponsSection() {
     },
     onError: (error) => toast.error(error.message || "Não foi possível guardar o cupom."),
   });
+
   const toggleMutation = trpc.coupons.toggle.useMutation({
     onSuccess: async () => {
       await utils.coupons.adminList.invalidate();
@@ -26,6 +48,7 @@ export function AdminCouponsSection() {
     },
     onError: (error) => toast.error(error.message || "Não foi possível atualizar o cupom."),
   });
+
   const removeMutation = trpc.coupons.remove.useMutation({
     onSuccess: async () => {
       await utils.coupons.adminList.invalidate();
@@ -40,6 +63,7 @@ export function AdminCouponsSection() {
 
   const coupons = couponsQuery.data ?? [];
 
+  // Filtra cupons com base na pesquisa por código e estado
   const filtered = useMemo(() => {
     return coupons.filter((coupon) => {
       const matchesQuery = coupon.code.toLowerCase().includes(query.trim().toLowerCase());
@@ -48,9 +72,6 @@ export function AdminCouponsSection() {
       return matchesQuery;
     });
   }, [coupons, query, statusFilter]);
-
-  const activeCount = coupons.filter((coupon) => coupon.active === 1).length;
-  const totalUses = coupons.reduce((sum, coupon) => sum + Number(coupon.timesUsed ?? 0), 0);
 
   const startEdit = (coupon?: typeof coupons[number]) =>
     setEditing(
@@ -81,175 +102,171 @@ export function AdminCouponsSection() {
 
   return (
     <section className="admin-content admin-editorial-page admin-coupons-page">
-      {/* Cabeçalho */}
-      <div className="admin-editorial-hero">
+      {/* Cabeçalho minimalista */}
+      <div className="admin-editorial-hero" style={{ marginBottom: "1.25rem" }}>
         <div>
-          <span className="section-kicker">CRESCIMENTO · OFERTAS</span>
-          <h2 className="content-title">Cupons</h2>
-          <p className="content-subtitle">Crie incentivos com regras claras, acompanhe utilizações e mantenha cada oferta sob controlo.</p>
-        </div>
-        <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-          <Button variant="outline" onClick={() => toast.success("Mais sobre promoções e descontos na Eras Label.")}>
-            <Percent size={15} /> Conhecer mais descontos
-          </Button>
+          <span className="section-kicker">GESTÃO DE VENDAS · CUPONS</span>
+          <h2 className="content-title">Cupons de Desconto</h2>
+          <p className="content-subtitle">Crie códigos promocionais, defina regras e acompanhe a utilização em tempo real.</p>
         </div>
       </div>
 
-      {/* Métricas e Filtros rápidos */}
-      <div className="admin-editorial-metrics">
-        <div className="admin-editorial-metric">
-          <Tag size={18} />
-          <span>Cupons ativos</span>
-          <strong>{activeCount}</strong>
-        </div>
-        <div className="admin-editorial-metric">
-          <Percent size={18} />
-          <span>Utilizações totais</span>
-          <strong>{totalUses}</strong>
-        </div>
-        <div className="admin-editorial-metric">
-          <Check size={18} />
-          <span>Taxa monitorizada</span>
-          <strong>{coupons.length ? "100%" : "—"}</strong>
-        </div>
-      </div>
-
-      {/* Barra de Ferramentas / Busca / Filtro Nuvemshop */}
-      <div className="content-toolbar admin-editorial-toolbar" style={{ display: "flex", flexWrap: "wrap", gap: "1rem", alignItems: "center", justifyContent: "space-between", background: "#fff", padding: "1rem 1.25rem", borderRadius: "10px", border: "1px solid #eae5de", marginBottom: "1.25rem" }}>
-        <div className="search-box" style={{ flex: "1 1 280px", maxWidth: "420px" }}>
-          <Search size={15} />
-          <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Pesquisar por código..." />
-        </div>
-        <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+      {/* Barra superior unificada: Pesquisa, Filtro de Estado e Botão Criar Cupom */}
+      <div 
+        className="content-toolbar admin-editorial-toolbar" 
+        style={{ 
+          display: "flex", 
+          flexWrap: "wrap", 
+          gap: "1rem", 
+          alignItems: "center", 
+          justifyContent: "space-between", 
+          background: "#fff", 
+          padding: "1.1rem 1.25rem", 
+          borderRadius: "10px", 
+          border: "1px solid #eae5de", 
+          marginBottom: "1.5rem",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.02)"
+        }}
+      >
+        <div style={{ display: "flex", flex: "1 1 300px", gap: "0.75rem", alignItems: "center" }}>
+          <div className="search-box" style={{ flex: 1, position: "relative", display: "flex", alignItems: "center" }}>
+            <Search size={16} style={{ position: "absolute", left: "12px", color: "#888" }} />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Pesquisar cupom por código..."
+              style={{ paddingLeft: "2.25rem", height: "40px", borderColor: "#dcd6ce", borderRadius: "8px" }}
+            />
+          </div>
           <select
             className="inventory-category-filter"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as any)}
-            style={{ padding: "0.5rem 0.75rem", borderRadius: "6px", border: "1px solid #dcd6ce", background: "#fff", fontSize: "0.85rem", color: "#333" }}
+            style={{ padding: "0.5rem 0.75rem", height: "40px", borderRadius: "8px", border: "1px solid #dcd6ce", background: "#fff", fontSize: "0.85rem", color: "#333" }}
           >
             <option value="all">Todos os estados</option>
             <option value="active">Apenas ativos</option>
             <option value="inactive">Apenas inativos</option>
           </select>
-          <span className="inventory-count" style={{ fontSize: "0.85rem", color: "#666", fontWeight: 500 }}>
-            {filtered.length} {filtered.length === 1 ? "cupom" : "cupons"}
-          </span>
+        </div>
+
+        <div>
+          <Button 
+            onClick={() => startEdit()} 
+            style={{ background: "#b22222", color: "#fff", height: "40px", padding: "0 1.25rem", borderRadius: "8px", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: "0.5rem" }}
+          >
+            <Plus size={16} /> Novo Cupom
+          </Button>
         </div>
       </div>
 
-      {/* Tabela Nuvemshop-like */}
+      {/* Listagem de cupons em Cards */}
       {couponsQuery.isLoading ? (
-        <div className="admin-panel admin-empty-state">
-          <span className="admin-loading-mark" /> A carregar cupons persistidos...
+        <div className="admin-panel admin-empty-state" style={{ padding: "3rem", textAlign: "center", background: "#fff", borderRadius: "10px", border: "1px solid #eae5de" }}>
+          <span className="admin-loading-mark" /> A carregar cupons...
         </div>
       ) : filtered.length === 0 ? (
-        <div className="admin-panel admin-empty-state" style={{ padding: "3rem 1.5rem", textAlign: "center", background: "#fff", borderRadius: "10px", border: "1px solid #eae5de" }}>
+        <div className="admin-panel admin-empty-state" style={{ padding: "3.5rem 1.5rem", textAlign: "center", background: "#fff", borderRadius: "10px", border: "1px solid #eae5de" }}>
           <Tag size={32} style={{ color: "#b22222", margin: "0 auto 1rem" }} />
           <strong style={{ fontSize: "1rem", color: "#111", display: "block", marginBottom: "0.25rem" }}>
             {query || statusFilter !== "all" ? "Nenhum cupom corresponde à pesquisa" : "Ainda não existem cupons cadastrados"}
           </strong>
           <span style={{ fontSize: "0.85rem", color: "#666", display: "block", marginBottom: "1.25rem" }}>
-            {query || statusFilter !== "all" ? "Tente alterar os termos da busca ou os filtros de estado." : "Crie o primeiro cupom de desconto para os seus clientes."}
+            {query || statusFilter !== "all" ? "Tente alterar os termos da busca ou os filtros de estado." : "Crie o primeiro cupom de desconto para impulsionar suas vendas."}
           </span>
           {query || statusFilter !== "all" ? (
             <Button variant="outline" onClick={() => { setQuery(""); setStatusFilter("all"); }}>Limpar filtros</Button>
           ) : (
-            <Button variant="outline" onClick={() => startEdit()}>Criar primeiro cupom</Button>
+            <Button onClick={() => startEdit()} style={{ background: "#b22222", color: "#fff" }}>Criar primeiro cupom</Button>
           )}
         </div>
       ) : (
-        <div className="admin-panel table-panel inventory-table-panel" style={{ background: "#fff", borderRadius: "10px", border: "1px solid #eae5de", overflow: "hidden" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "0.875rem" }}>
-            <thead>
-              <tr style={{ borderBottom: "1px solid #eae5de", background: "#faf9f6", color: "#555", fontSize: "0.8rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                <th style={{ padding: "0.85rem 1rem" }}>Código</th>
-                <th style={{ padding: "0.85rem 1rem" }}>Desconto</th>
-                <th style={{ padding: "0.85rem 1rem" }}>Compra Mínima</th>
-                <th style={{ padding: "0.85rem 1rem" }}>Vigência</th>
-                <th style={{ padding: "0.85rem 1rem" }}>Usos</th>
-                <th style={{ padding: "0.85rem 1rem" }}>Status</th>
-                <th style={{ padding: "0.85rem 1rem", textAlign: "right" }}>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((coupon) => (
-                <tr key={coupon.id} style={{ borderBottom: "1px solid #f2eee9", transition: "background 0.15s" }}>
-                  <td style={{ padding: "0.85rem 1rem" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                      <strong style={{ fontFamily: "monospace", fontSize: "0.95rem", color: "#111" }}>{coupon.code}</strong>
-                      <button
-                        type="button"
-                        aria-label="Copiar código"
-                        title="Copiar código"
-                        onClick={() => {
-                          void navigator.clipboard?.writeText(coupon.code);
-                          toast.success(`Código ${coupon.code} copiado!`);
-                        }}
-                        style={{ background: "transparent", border: "none", cursor: "pointer", color: "#666", padding: "0.15rem" }}
-                      >
-                        <Copy size={13} />
-                      </button>
-                    </div>
-                  </td>
-                  <td style={{ padding: "0.85rem 1rem", fontWeight: 600, color: "#b22222" }}>
-                    {Number(coupon.discountPercent).toLocaleString("pt-BR")}% OFF
-                  </td>
-                  <td style={{ padding: "0.85rem 1rem", color: "#444" }}>
-                    {Number(coupon.minPurchase ?? 0) > 0 ? Number(coupon.minPurchase).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "Sem mínimo"}
-                  </td>
-                  <td style={{ padding: "0.85rem 1rem", color: "#666", fontSize: "0.825rem" }}>
-                    {coupon.validUntil ? new Date(coupon.validUntil).toLocaleDateString("pt-BR") : "Indeterminada"}
-                  </td>
-                  <td style={{ padding: "0.85rem 1rem", color: "#444" }}>
-                    {coupon.timesUsed ?? 0} {coupon.usageLimit ? `/ ${coupon.usageLimit} usos` : "usos"}
-                  </td>
-                  <td style={{ padding: "0.85rem 1rem" }}>
-                    <span className={`status-pill ${coupon.active ? "success" : "warning"}`} style={{ display: "inline-block", padding: "0.2rem 0.6rem", borderRadius: "12px", fontSize: "0.75rem", fontWeight: 600 }}>
-                      {coupon.active ? "Ativo" : "Desativado"}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "1.25rem" }}>
+          {filtered.map((coupon) => (
+            <div 
+              key={coupon.id} 
+              style={{ 
+                background: "#fff", 
+                borderRadius: "12px", 
+                border: "1px solid #eae5de", 
+                padding: "1.25rem", 
+                boxShadow: "0 2px 6px rgba(0,0,0,0.02)",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                transition: "all 0.2s ease"
+              }}
+            >
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    <span style={{ fontFamily: "monospace", fontSize: "1.1rem", fontWeight: 700, color: "#111", background: "#faf5f5", padding: "0.2rem 0.5rem", borderRadius: "6px", border: "1px solid #f2d6d6" }}>
+                      {coupon.code}
                     </span>
-                  </td>
-                  <td style={{ padding: "0.85rem 1rem", textAlign: "right" }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "0.4rem" }}>
-                      <button
-                        type="button"
-                        className="table-more"
-                        title={coupon.active ? "Desativar cupom" : "Ativar cupom"}
-                        onClick={() => toggleMutation.mutate({ id: coupon.id, active: coupon.active ? 0 : 1 })}
-                        style={{ background: "transparent", border: "1px solid #dcd6ce", borderRadius: "6px", width: "30px", height: "30px", display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#444" }}
-                      >
-                        {coupon.active ? <EyeOff size={14} /> : <Eye size={14} />}
-                      </button>
-                      <button
-                        type="button"
-                        className="table-more"
-                        title="Editar cupom"
-                        onClick={() => startEdit(coupon)}
-                        style={{ background: "transparent", border: "1px solid #dcd6ce", borderRadius: "6px", width: "30px", height: "30px", display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#444" }}
-                      >
-                        <Edit3 size={14} />
-                      </button>
-                      <button
-                        type="button"
-                        className="table-more"
-                        title="Excluir cupom"
-                        onClick={() => {
-                          if (window.confirm(`Tem certeza que deseja excluir o cupom "${coupon.code}"?`)) {
-                            removeMutation.mutate({ id: coupon.id });
-                          }
-                        }}
-                        style={{ background: "transparent", border: "1px solid #f5c6c6", borderRadius: "6px", width: "30px", height: "30px", display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#b22222" }}
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <div style={{ padding: "0.85rem 1rem", background: "#faf9f6", borderTop: "1px solid #eae5de", fontSize: "0.825rem", color: "#666" }}>
-            Mostrando 1-{filtered.length} de {coupons.length} cupons guardados
-          </div>
+                    <button
+                      type="button"
+                      aria-label="Copiar código"
+                      title="Copiar código"
+                      onClick={() => {
+                        void navigator.clipboard?.writeText(coupon.code);
+                        toast.success(`Código ${coupon.code} copiado!`);
+                      }}
+                      style={{ background: "transparent", border: "none", cursor: "pointer", color: "#666", padding: "0.2rem" }}
+                    >
+                      <Copy size={14} />
+                    </button>
+                  </div>
+                  <span className={`status-pill ${coupon.active ? "success" : "warning"}`} style={{ display: "inline-block", padding: "0.2rem 0.6rem", borderRadius: "12px", fontSize: "0.725rem", fontWeight: 600 }}>
+                    {coupon.active ? "Ativo" : "Desativado"}
+                  </span>
+                </div>
+
+                <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#b22222", marginBottom: "0.75rem" }}>
+                  {Number(coupon.discountPercent).toLocaleString("pt-BR")}% OFF
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem", fontSize: "0.85rem", color: "#555", marginBottom: "1.25rem" }}>
+                  <div>Compra mínima: <strong>{Number(coupon.minPurchase ?? 0) > 0 ? Number(coupon.minPurchase).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "Sem mínimo"}</strong></div>
+                  <div>Utilizações: <strong>{coupon.timesUsed ?? 0} {coupon.usageLimit ? `/ ${coupon.usageLimit}` : "(ilimitado)"}</strong></div>
+                  <div>Validade: <strong>{coupon.validUntil ? new Date(coupon.validUntil).toLocaleDateString("pt-BR") : "Indeterminada"}</strong></div>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "0.5rem", borderTop: "1px solid #f2eee9", paddingTop: "0.75rem", marginTop: "0.5rem" }}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  title={coupon.active ? "Desativar cupom" : "Ativar cupom"}
+                  onClick={() => toggleMutation.mutate({ id: coupon.id, active: coupon.active ? 0 : 1 })}
+                  style={{ height: "32px", fontSize: "0.8rem", display: "inline-flex", alignItems: "center", gap: "0.3rem" }}
+                >
+                  {coupon.active ? <EyeOff size={13} /> : <Eye size={13} />} {coupon.active ? "Desativar" : "Ativar"}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  title="Editar cupom"
+                  onClick={() => startEdit(coupon)}
+                  style={{ height: "32px", fontSize: "0.8rem", display: "inline-flex", alignItems: "center", gap: "0.3rem" }}
+                >
+                  <Edit3 size={13} /> Editar
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  title="Excluir cupom"
+                  onClick={() => {
+                    if (window.confirm(`Tem certeza que deseja excluir o cupom "${coupon.code}"?`)) {
+                      removeMutation.mutate({ id: coupon.id });
+                    }
+                  }}
+                  style={{ height: "32px", fontSize: "0.8rem", color: "#b22222", borderColor: "#f5c6c6", display: "inline-flex", alignItems: "center", gap: "0.3rem" }}
+                >
+                  <Trash2 size={13} /> Excluir
+                </Button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 

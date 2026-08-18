@@ -885,3 +885,9 @@
 - [ ] Garantir persistência completa dessas configurações no backend/banco de dados
 - [ ] Atualizar a Experiência Pública e a página trancada pública para lerem das novas configurações centralizadas
 - [ ] Validar responsividade em desktop e mobile, testar build e salvar checkpoint
+
+## Simplificação da Tela de Cupons
+- [ ] Remover o bloco introdutório e métricas do topo da página de Cupons
+- [ ] Posicionar o formulário de cadastro/criação de cupons junto à barra de pesquisa e filtros no topo
+- [ ] Exibir os cupons criados logo abaixo em formato de cards limpos e responsivos
+- [ ] Validar testes, build e salvar checkpoint
