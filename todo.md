@@ -816,3 +816,10 @@
 - [x] Reestruturar cabeçalho, cliente, catálogo de produtos, variações, carrinho do pedido e resumo financeiro com a estética geral da Eras.
 - [x] Preservar criação do pedido, seleção de tamanhos/variações, quantidades, descontos, frete, pagamento e submissão.
 - [x] Validar desktop/mobile, executar TypeScript, 152 testes Vitest e build de produção.
+
+## Refinamento da newsletter desktop (2026-08-18)
+- [ ] Corrigir a composição desktop da newsletter para evitar texto estreito, quebras excessivas e desalinhamento do formulário.
+- [ ] Preservar a versão mobile, o formulário, feedbacks e a estética editorial escura da Eras.
+- [ ] Validar desktop/mobile, executar TypeScript, Vitest e build, e guardar checkpoint.
+
+- [x] Corrigir a composição desktop da newsletter: garantir distribuição equilibrada em duas colunas, impedir quebra vertical do título e preservar a composição mobile.
