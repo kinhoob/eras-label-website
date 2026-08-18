@@ -10035,3 +10035,142 @@ body {
     gap-inline: 10px;
   }
 }
+
+
+/* Dropdown de Produtos alimentado pelas categorias públicas ativas do CMS. */
+.public-global-products {
+  position: relative;
+  display: inline-flex;
+  align-items: stretch;
+  height: 100%;
+  z-index: 121;
+}
+
+.public-global-products > button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 58px;
+  padding: 19px 0 15px;
+  border: 0;
+  background: transparent;
+  color: #a0423f;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  transition: color 180ms ease, transform 180ms ease;
+}
+
+.public-global-products > button::after {
+  position: absolute;
+  right: 0;
+  bottom: 8px;
+  left: 0;
+  height: 1px;
+  background: #b22222;
+  content: '';
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 180ms ease;
+}
+
+.public-global-products > button:hover,
+.public-global-products > button:focus-visible,
+.public-global-products.is-open > button,
+.public-global-products > button.is-active { color: #7f1818; }
+
+.public-global-products > button:hover::after,
+.public-global-products > button:focus-visible::after,
+.public-global-products.is-open > button::after,
+.public-global-products > button.is-active::after { transform: scaleX(1); }
+
+.public-global-products > button:focus-visible {
+  outline: 2px solid rgba(178, 34, 34, 0.42);
+  outline-offset: 4px;
+}
+
+.public-global-products-menu {
+  position: absolute;
+  z-index: 120;
+  top: calc(100% - 1px);
+  left: 50%;
+  display: grid;
+  width: min(300px, calc(100vw - 32px));
+  gap: 3px;
+  padding: 10px;
+  border: 1px solid rgba(35, 34, 30, 0.12);
+  background: #fbfaf7;
+  box-shadow: 0 18px 42px rgba(35, 34, 30, 0.15);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -7px) scale(0.98);
+  transform-origin: top center;
+  transition: opacity 180ms cubic-bezier(0.23, 1, 0.32, 1), transform 180ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.public-global-products.is-open > .public-global-products-menu,
+.public-global-products:focus-within > .public-global-products-menu {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, 0) scale(1);
+}
+
+.public-global-products-menu::before {
+  position: absolute;
+  top: -8px;
+  right: 0;
+  left: 0;
+  height: 8px;
+  content: '';
+}
+
+.public-global-products-eyebrow {
+  padding: 4px 10px 8px;
+  color: #9c8c84;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+}
+
+.public-global-products-menu a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 38px;
+  padding: 10px;
+  color: #3e3933;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: background-color 160ms ease, color 160ms ease, padding-left 160ms ease;
+}
+
+.public-global-products-menu a:hover,
+.public-global-products-menu a:focus-visible {
+  padding-left: 14px;
+  background: rgba(178, 34, 34, 0.07);
+  color: #a0211f;
+  outline: 0;
+}
+
+.public-global-products-menu a span { min-width: 0; }
+.public-global-products-empty {
+  padding: 12px 10px;
+  color: #9c8c84;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .public-global-products > button,
+  .public-global-products > button::after,
+  .public-global-products-menu,
+  .public-global-products-menu a { transition: none; }
+}

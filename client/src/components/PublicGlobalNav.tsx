@@ -4,7 +4,7 @@ import { ArrowRight, ChevronDown, Menu, Search, ShoppingBag, UserRound } from "l
 import { CART_STORAGE_KEY, loadCart } from "@/lib/cart-storage";
 import { SidebarMenu } from "@/components/SidebarMenu";
 import { trpc } from "@/lib/trpc";
-import { findPublicCategory, getExtraPublicCategories, publicCategoryHref, type PublicNavigationCategory } from "@/lib/public-navigation";
+import { publicCategoryHref, type PublicNavigationCategory } from "@/lib/public-navigation";
 import type { StorefrontConfig } from "../../../shared/storefront";
 import { hasStorefrontAnnouncement } from "../../../shared/storefront-logic";
 
@@ -52,6 +52,7 @@ export default function PublicGlobalNav() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
+  const [isProductsOpen, setIsProductsOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [cartCount, setCartCount] = useState(() => loadCart<{ quantity: number }>().reduce((sum, item) => sum + item.quantity, 0));
   const isHome = location === "/";
@@ -107,9 +108,6 @@ export default function PublicGlobalNav() {
     return "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=320&q=80";
   };
 
-  const camisetasCategory = findPublicCategory(publicCategories, "camiseta");
-  const bonesCategory = findPublicCategory(publicCategories, "bone");
-  const extraCategories = getExtraPublicCategories(publicCategories);
   const publicCollections = useMemo(() => (collections as any[])
     .filter((collection) => collection?.active !== 0)
     .sort((a, b) => Number(a.sortOrder ?? 0) - Number(b.sortOrder ?? 0) || String(b.year ?? "").localeCompare(String(a.year ?? ""))), [collections]);
@@ -134,6 +132,7 @@ export default function PublicGlobalNav() {
     setIsMenuOpen(false);
     setIsSearchOpen(false);
     setIsCollectionsOpen(false);
+    setIsProductsOpen(false);
     setIsVisible(true);
   }, [location]);
 
@@ -244,9 +243,38 @@ export default function PublicGlobalNav() {
 
         <nav className="public-global-links" aria-label="Navegação da loja">
           <Link href="/" className={location === "/" ? "is-active" : ""}>Início</Link>
-          <Link href="/catalog" className={location === "/catalog" ? "is-active" : ""}>Produtos</Link>
+          <div className={`public-global-products ${isProductsOpen ? "is-open" : ""}`} onMouseEnter={() => setIsProductsOpen(true)} onMouseLeave={() => setIsProductsOpen(false)}>
+            <button
+              type="button"
+              className={isProductsOpen || location === "/catalog" || location.startsWith("/category/") ? "is-active" : ""}
+              aria-expanded={isProductsOpen}
+              aria-haspopup="menu"
+              onFocus={() => setIsProductsOpen(true)}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  setIsProductsOpen(false);
+                  event.currentTarget.blur();
+                }
+              }}
+              onClick={() => {
+                setIsProductsOpen((value) => !value);
+                setIsCollectionsOpen(false);
+              }}
+            >
+              Produtos <ChevronDown size={12} aria-hidden="true" />
+            </button>
+            <div className="public-global-products-menu" role="menu" aria-label="Produtos por categoria">
+              <span className="public-global-products-eyebrow">CATÁLOGO</span>
+              <Link href="/catalog" role="menuitem" onClick={() => setIsProductsOpen(false)}>Todos os produtos <ArrowRight size={13} /></Link>
+              {publicCategories.length > 0 ? publicCategories.map((category) => (
+                <Link key={category.id} href={publicCategoryHref(category, "/catalog")} role="menuitem" onClick={() => setIsProductsOpen(false)}>
+                  <span>{category.name}</span><ArrowRight size={13} aria-hidden="true" />
+                </Link>
+              )) : <span className="public-global-products-empty">Nenhuma categoria publicada</span>}
+            </div>
+          </div>
           <div className={`public-global-collections ${isCollectionsOpen ? "is-open" : ""}`} onMouseEnter={() => setIsCollectionsOpen(true)} onMouseLeave={() => setIsCollectionsOpen(false)}>
-            <button type="button" className={isCollectionsOpen || location.startsWith("/archive") || location.startsWith("/collection/") ? "is-active" : ""} aria-expanded={isCollectionsOpen} aria-haspopup="menu" onClick={() => setIsCollectionsOpen((value) => !value)}>
+            <button type="button" className={isCollectionsOpen || location.startsWith("/archive") || location.startsWith("/collection/") ? "is-active" : ""} aria-expanded={isCollectionsOpen} aria-haspopup="menu" onClick={() => { setIsCollectionsOpen((value) => !value); setIsProductsOpen(false); }}>
               Coleções <ChevronDown size={12} aria-hidden="true" />
             </button>
             <div className="public-global-collections-menu" role="menu">
@@ -255,9 +283,6 @@ export default function PublicGlobalNav() {
               {publicCollections.map((collection: any) => <Link key={collection.id} href={collection.ctaUrl || `/collection/${collection.slug || collection.id}`} role="menuitem" onClick={() => setIsCollectionsOpen(false)}><span>{collection.name}</span><small>{collection.year}</small></Link>)}
             </div>
           </div>
-          <Link href={publicCategoryHref(camisetasCategory, "/category/camisetas")} className={location.includes("camiseta") ? "is-active" : ""}>Camisetas</Link>
-          <Link href={publicCategoryHref(bonesCategory, "/category/bones")} className={location.includes("bone") ? "is-active" : ""}>Bonés</Link>
-          {extraCategories.map((category) => <Link key={category.id} href={publicCategoryHref(category, "/catalog")} className={location.includes(category.slug) ? "is-active" : ""}>{category.name}</Link>)}
         </nav>
       </div>
       <SidebarMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} onPlaySound={() => undefined} />

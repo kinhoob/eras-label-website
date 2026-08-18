@@ -831,3 +831,5 @@
 - [x] Concluir auditoria integral do site e do painel administrativo, gerando o relatório técnico e estratégico completo.
 
 - [x] Substituir “DESENVOLVIDO COM INTENÇÃO” por “DESENVOLVIDO POR KINHOOB” no rodapé, preservando o link do portfólio.
+
+- [x] Criar dropdown dinâmico de Produtos na página inicial, com categorias vindas do painel administrativo e links para as respectivas páginas de catálogo.
