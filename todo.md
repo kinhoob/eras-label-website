@@ -747,3 +747,11 @@
 - [x] Criar a página/secção de **Pedido Manual** dentro de **Aparência & CMS** para registar encomendas externas ou manuais com itens, cliente e pagamento.
 - [x] Criar a secção de **Carrinhos Abandonados** dentro de **Vendas & Clientes** para monitorar carrinhos preenchidos por clientes não finalizados.
 - [x] Executar testes Vitest, TypeScript, build e guardar checkpoint.
+
+## Auditoria Integral e Prontidão para Lançamento (2026-08-18)
+- [ ] Conduzir auditoria de arquitetura, rotas tRPC e esquema Drizzle
+- [ ] Verificar fluxos públicos (Home, catálogo, coleções, produto, sacola, checkout e tracking)
+- [ ] Verificar painel administrativo (Produtos, inventário, estatísticas, vendas, pedidos manuais, carrinhos abandonados, CMS, coleções, eventos, cupons e equipa)
+- [ ] Auditar identidade visual (#b22222, tipografia editorial, animações suaves e ausência de elementos fictícios)
+- [ ] Executar suíte completa de testes Vitest, TypeScript e build de produção
+- [ ] Gerar relatório de auditoria final com o que está pronto e recomendações de lançamento
