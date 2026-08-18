@@ -1109,7 +1109,11 @@ export default function Admin() {
               setEditorMode("inventory");
               setEditingProduct({ id: product.id, name: product.name, collection: product.collection, category: product.category, subcategory: product.subcategory ?? null, sku: product.sku ?? "", slug: product.slug ?? "", visibility: product.visibility ?? "visible", categoryIds: product.categoryIds ?? [], price: 0, pixPrice: 0, description: "", status: product.status, variations: product.variations.map((variation) => ({ ...variation })) });
               setProductImages([]);
-            }}><Pencil size={16} /></button></td></tr>)}
+            }}><Pencil size={16} /></button><button type="button" className="table-more" style={{ color: '#b22222', borderColor: '#b22222', marginLeft: '0.4rem', padding: '0.2rem 0.5rem', fontSize: '11px' }} title="Excluir produto" onClick={() => {
+              if (window.confirm(`Tem certeza que deseja excluir o produto "${product.name}"?`)) {
+                deleteProductMutation.mutate({ id: product.id });
+              }
+            }}>Excluir</button></td></tr>)}
           </tbody></table></div>
         </section>}
 

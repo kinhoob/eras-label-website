@@ -26,6 +26,8 @@
 - [x] 12. **Pesquisa Inteligente e Filtros Avançados**
 - [x] 13. **Auditoria Técnica, Correções de Áudio e Code-Splitting**
 
+- [x] Adicionar funcionalidade de exclusão de produtos no painel administrativo e restringir as variações de estoque exclusivamente a tamanhos e números, removendo a lógica de cores.
+
 ## Estado atual
 - Plataforma de e-commerce da Eras Label totalmente implementada, com Estatísticas Analíticas por período, Histórico de Estoque com filtros por administrador/datas, utilitário de exportação CSV compartilhado e 86 testes unitários aprovados em Vitest.
 
@@ -848,3 +850,6 @@
 - [x] O teste unitário online de credenciais do Melhor Envio apresentou timeout de rede por restrição de saída do sandbox (comum em testes externos), enquanto o build de produção foi totalmente aprovado.
 
 - [ ] Diagnosticar e corrigir o erro de importação dinâmica em ProductPage.tsx e remover o fallback que recria o produto automático "Camiseta Paradox Oversized msyvg".
+
+- [ ] Adicionar funcionalidade de exclusão de produtos no painel administrativo com confirmação segura.
+- [ ] Remover a lógica de cores das variações de produtos, permitindo apenas tamanhos e números de peças definidos pelo administrador.
