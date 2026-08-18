@@ -853,3 +853,5 @@
 
 - [ ] Adicionar funcionalidade de exclusão de produtos no painel administrativo com confirmação segura.
 - [ ] Remover a lógica de cores das variações de produtos, permitindo apenas tamanhos e números de peças definidos pelo administrador.
+
+- [x] Rastrear e eliminar toda a origem de criação automática de produtos no backend/frontend, limpando todos os registos indesejados da base de dados.
