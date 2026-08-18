@@ -116,3 +116,15 @@ export async function sendTrackingEmail(recipientEmail: string, orderNumber: str
     text: tpl.text,
   }, "order_tracking");
 }
+
+import { abandonedCartEmail } from "./email-templates";
+
+export async function sendAbandonedCartReminderEmail(recipientEmail: string, customerName: string, items: Array<{ productId: number; name: string; size: string; quantity: number; price: number }>, total: number, recoveryUrl: string) {
+  const tpl = abandonedCartEmail(customerName, items, total, recoveryUrl);
+  return sendResendEmail({
+    to: recipientEmail,
+    subject: tpl.subject,
+    html: tpl.html,
+    text: tpl.text,
+  }, "abandoned_cart_reminder");
+}

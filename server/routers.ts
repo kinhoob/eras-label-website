@@ -13,6 +13,7 @@ import { getDb } from "./db";
 import { products, orders } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { MelhorEnvioApiError, createMelhorEnvioCartItem, downloadMelhorEnvioLabelFile, getMelhorEnvioTracking } from "./melhor-envio";
+import { sendAbandonedCartReminderEmail } from "./resend";
 import {
   getAdminSummary,
   getAdminProducts,
@@ -751,6 +752,38 @@ export const appRouter = router({
     }),
     listAbandonedCarts: adminProcedure.query(async () => {
       return listAbandonedCarts();
+    }),
+    sendAbandonedCartEmail: adminProcedure.input(z.object({
+      cartId: z.number().int().positive(),
+      recipientEmail: z.string().trim().email(),
+      customerName: z.string().trim().optional(),
+    })).mutation(async ({ input }) => {
+      const carts = await listAbandonedCarts();
+      const cart = carts.find((c) => c.id === input.cartId);
+      if (!cart) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Carrinho abandonado não encontrado." });
+      }
+      const recoveryUrl = `${process.env.VITE_APP_URL || "https://eraslabel.com"}/?recoverCart=${cart.id}`;
+      const items = (cart.items as Array<any>).map((item) => ({
+        productId: Number(item.productId ?? 1),
+        name: String(item.name ?? "Peça Exclusiva Eras Label"),
+        size: String(item.size ?? "U"),
+        quantity: Number(item.quantity ?? 1),
+        price: Number(item.price ?? 0),
+      }));
+
+      const res = await sendAbandonedCartReminderEmail(
+        input.recipientEmail,
+        input.customerName || cart.customerName || "Cliente",
+        items,
+        Number(cart.total),
+        recoveryUrl
+      );
+
+      return {
+        success: res.sent,
+        message: res.sent ? "E-mail de recuperação de carrinho enviado com sucesso!" : `Não foi possível enviar o e-mail: ${res.reason || "Erro desconhecido"}`,
+      };
     }),
     createManualOrder: adminProcedure.input(z.object({
       customerName: z.string().trim().min(2).max(255),

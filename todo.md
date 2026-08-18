@@ -833,3 +833,7 @@
 - [x] Substituir “DESENVOLVIDO COM INTENÇÃO” por “DESENVOLVIDO POR KINHOOB” no rodapé, preservando o link do portfólio.
 
 - [x] Criar dropdown dinâmico de Produtos na página inicial, com categorias vindas do painel administrativo e links para as respectivas páginas de catálogo.
+
+- [x] Ligar o backend de carrinhos abandonados aos dados reais e criar o template de e-mail com identidade visual em #b22222.
+
+- [x] Ligar o backend de carrinhos abandonados aos dados reais e criar o template de e-mail de carrinho abandonado com a cor #b22222.

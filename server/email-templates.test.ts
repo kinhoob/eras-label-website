@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { newsletterWelcomeEmail, orderConfirmationEmail } from "./email-templates";
+import { abandonedCartEmail, newsletterWelcomeEmail, orderConfirmationEmail } from "./email-templates";
 
 const order = {
   orderNumber: "ER-2026-1234",
@@ -32,5 +32,14 @@ describe("Eras Label email templates", () => {
     expect(email.html).toContain("ERAS10-ABCDE");
     expect(email.text).toContain("ERAS10-ABCDE");
     expect(email.subject).toContain("Eras Label");
+  });
+
+  it("renders abandoned cart email with #b22222 branding and recovery link", () => {
+    const email = abandonedCartEmail("Kinho", [{ productId: 1, name: "T-Shirt Paradox", size: "G", quantity: 1, price: 154 }], 154, "https://eraslabel.com/?recoverCart=1");
+
+    expect(email.html).toContain("#b22222");
+    expect(email.html).toContain("T-Shirt Paradox");
+    expect(email.html).toContain("https://eraslabel.com/?recoverCart=1");
+    expect(email.text).toContain("T-Shirt Paradox");
   });
 });

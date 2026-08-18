@@ -103,3 +103,26 @@ export function orderTrackingEmail(orderNumber: string, customerName: string, tr
   const text = `Olá, ${customerName}.\n\nO seu pedido ${orderNumber} foi despachado.\nTransportadora: ${carrier || "Correios"}\nCódigo de rastreio: ${trackingCode}\n\nAcompanhe a entrega utilizando o código acima.`;
   return { subject: `Eras Label — Código de Rastreio do Pedido ${orderNumber}`, html, text };
 }
+
+/**
+ * Template de E-mail para Carrinhos Abandonados — Eras Label
+ * Utiliza a identidade editorial da marca com destaque em #b22222.
+ */
+export function abandonedCartEmail(customerName: string, items: EmailOrderItem[], total: number, recoveryUrl: string) {
+  const safeName = escapeHtml(customerName || "Cliente");
+  const html = layout(
+    "A sua seleção ficou guardada",
+    "Notámos que deixou itens na sua sacola na Eras Label.",
+    `<p style="margin:0 0 16px;font-size:16px">Olá, ${safeName}.</p>` +
+    `<p style="margin:0 0 24px;color:#555;line-height:1.6">Notámos que deixou peças selecionadas na sua sacola. O stock é limitado e reservado por tempo reduzido. Conclua o seu pedido com tranquilidade:</p>` +
+    `<table style="width:100%;border-collapse:collapse;margin-bottom:24px"><tbody>${orderItemsHtml(items)}</tbody>` +
+    `<tfoot><tr><td style="padding:16px 0 0;font-weight:700;border-top:1px solid #ddd">Total</td>` +
+    `<td style="padding:16px 0 0;text-align:right;font-weight:700;border-top:1px solid #ddd">${currency.format(total)}</td></tr></tfoot></table>` +
+    `<div style="text-align:center;margin:32px 0">` +
+    `<a href="${escapeHtml(recoveryUrl)}" style="background:#b22222;color:#ffffff;padding:14px 28px;text-decoration:none;font-size:14px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;display:inline-block;border-radius:4px">Retomar a Sacola</a>` +
+    `</div>` +
+    `<p style="margin:0;color:#777;font-size:13px;line-height:1.6;text-align:center">Se tiver alguma dúvida, responda a este e-mail ou fale connosco pelo WhatsApp.</p>`
+  );
+  const text = `Olá, ${customerName || "Cliente"}.\n\nNotámos que deixou peças selecionadas na sua sacola na Eras Label:\n${orderItemsText(items)}\n\nTotal: ${currency.format(total)}\n\nRetome o seu carrinho em: ${recoveryUrl}`;
+  return { subject: "Eras Label — As suas peças ainda estão reservadas na sacola", html, text };
+}
