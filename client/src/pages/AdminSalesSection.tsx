@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,10 +15,28 @@ export default function AdminSalesSection() {
   const [selectedOrderIds, setSelectedOrderIds] = useState<number[]>([]);
   const [bulkLabelPdfUrl, setBulkLabelPdfUrl] = useState<string | null>(null);
   const [labelFilter, setLabelFilter] = useState<"all" | "ready">("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [paymentFilter, setPaymentFilter] = useState("all");
+  const [periodFilter, setPeriodFilter] = useState<"all" | "7" | "30" | "90">("all");
 
   // Um pedido está pronto para download quando já tem um PDF persistido ou
   // um ID de envio que permite obtê-lo no Melhor Envio sob demanda.
-  const visibleOrders = labelFilter === "ready" ? filterOrdersWithReadyLabels(orders) : orders;
+  const visibleOrders = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+    const periodStart = periodFilter === "all" ? null : Date.now() - Number(periodFilter) * 24 * 60 * 60 * 1000;
+    const sourceOrders = labelFilter === "ready" ? filterOrdersWithReadyLabels(orders) : orders;
+
+    return sourceOrders.filter((order: any) => {
+      const matchesSearch = !normalizedSearch || [order.orderNumber, order.customerName, order.customerEmail]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(normalizedSearch));
+      const matchesStatus = statusFilter === "all" || String(order.status ?? "").toLowerCase() === statusFilter.toLowerCase();
+      const matchesPayment = paymentFilter === "all" || String(order.paymentStatus ?? "").toLowerCase() === paymentFilter.toLowerCase();
+      const matchesPeriod = !periodStart || new Date(order.createdAt).getTime() >= periodStart;
+      return matchesSearch && matchesStatus && matchesPayment && matchesPeriod;
+    });
+  }, [labelFilter, orders, paymentFilter, periodFilter, searchTerm, statusFilter]);
   const visibleOrderIds = visibleOrders.map((order: any) => order.id);
   const visibleSelectedOrderIds = selectedOrderIds.filter((orderId) => visibleOrderIds.includes(orderId));
 
@@ -164,6 +182,20 @@ export default function AdminSalesSection() {
         </div>
       </div>
 
+      <div className="sales-filter-panel admin-panel" aria-label="Filtros de vendas">
+        <div className="sales-search-field">
+          <label htmlFor="sales-search">Pesquisar pedidos</label>
+          <div className="sales-search-input-wrap">
+            <Input id="sales-search" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Número, cliente ou e-mail" />
+            {searchTerm && <button type="button" className="sales-clear-search" onClick={() => setSearchTerm("")} aria-label="Limpar pesquisa"><X size={15} /></button>}
+          </div>
+        </div>
+        <label className="sales-filter-control"><span>Status do pedido</span><select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}><option value="all">Todos os status</option><option value="Processando">Processando</option><option value="Em preparação">Em preparação</option><option value="Enviado">Enviado</option><option value="Entregue">Entregue</option><option value="Cancelado">Cancelado</option></select></label>
+        <label className="sales-filter-control"><span>Pagamento</span><select value={paymentFilter} onChange={(event) => setPaymentFilter(event.target.value)}><option value="all">Todos</option><option value="approved">Aprovado</option><option value="pending">Pendente</option><option value="rejected">Recusado</option></select></label>
+        <label className="sales-filter-control"><span>Período</span><select value={periodFilter} onChange={(event) => setPeriodFilter(event.target.value as "all" | "7" | "30" | "90")}><option value="all">Todo o histórico</option><option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option><option value="90">Últimos 90 dias</option></select></label>
+        <Button type="button" variant="outline" className="sales-reset-filters" onClick={() => { setSearchTerm(""); setStatusFilter("all"); setPaymentFilter("all"); setPeriodFilter("all"); setLabelFilter("all"); }}>Limpar filtros</Button>
+      </div>
+
       {bulkLabelPdfUrl && (
         <div className="admin-panel" style={{ marginBottom: "1rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
           <div>
@@ -195,6 +227,11 @@ export default function AdminSalesSection() {
         <div className="metric-card">
           <span>Aguardando Pagamento</span>
           <strong className="warning">{orders.filter((o: any) => o.paymentStatus === "pending").length}</strong>
+        </div>
+        <div className="metric-card">
+          <span>Volume filtrado</span>
+          <strong>R$ {visibleOrders.reduce((total: number, order: any) => total + Number(order.total || 0), 0).toFixed(2)}</strong>
+          <small>{visibleOrders.length} pedido(s) no recorte atual</small>
         </div>
       </div>
 

@@ -734,3 +734,9 @@
 - [x] Manter o banner totalmente visível no início da página e impedir que a navbar o sobreponha antes de algum scroll.
 - [x] Fazer a navbar passar para sobreposição apenas após o utilizador descer um pouco, em desktop e mobile.
 - [x] Validar Home e categorias, executar Vitest/TypeScript/build e guardar checkpoint da correção.
+
+## Refinamento do CMS de Aparência e Tela de Vendas (Referência Lovable)
+- [x] Reestruturar o CMS de Aparência (`AdminAppearanceSection.tsx`) com divisões editoriais claras (banners, secções da Home, textos institucionais e navegação), pré-visualização em tempo real e feedback visual refinado.
+- [x] Reestruturar a tela de Vendas (`AdminOrdersSection.tsx`) com cartões de métricas consolidadas, filtros rápidos por status/envio/pagamento e tabela de pedidos otimizada com ações de cotação, etiqueta e detalhe.
+- [x] Validar a integração dos componentes administrativos com o backend tRPC e as permissões de sub-administradores.
+- [x] Executar testes Vitest, TypeScript, build de produção e guardar checkpoint final desta entrega.
