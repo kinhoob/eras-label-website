@@ -10215,3 +10215,30 @@ body {
   .public-global-products-menu,
   .public-global-products-menu a { transition: none; }
 }
+
+/* Custom Catalog Size Options (PP to GG grid) */
+.catalog-size-grid-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+.catalog-size-grid-options button {
+  padding: 0.45rem 0.25rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  border: 1px solid rgba(178, 34, 34, 0.2);
+  background: transparent;
+  color: #23221e;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+.catalog-size-grid-options button:hover {
+  border-color: #b22222;
+  color: #b22222;
+}
+.catalog-size-grid-options button.is-active {
+  background: #b22222;
+  color: #fff;
+  border-color: #b22222;
+}

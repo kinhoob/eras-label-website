@@ -63,15 +63,20 @@ export default function CatalogViewPage() {
   const { data: products = [], isLoading } = trpc.catalog.list.useQuery();
   const { data: categories = [] } = trpc.catalog.categories.useQuery();
 
-  const searchableProducts = useMemo(() => products.map((product: any) => ({
-    ...product,
-    collection: product.collection ?? product.collectionName ?? "",
-    category: product.category ?? "",
-    categoryNames: Array.isArray(product.categoryNames) ? product.categoryNames : [],
-    sizes: Array.isArray(product.sizes) ? product.sizes : [],
-    detail: product.detail ?? product.description ?? "",
-    price: Number(product.price ?? 0),
-  })), [products]);
+  const searchableProducts = useMemo(() => products.map((product: any) => {
+    const variationSizes = Array.isArray(product.variations) ? product.variations.map((v: any) => v.size).filter(Boolean) : [];
+    const directSizes = Array.isArray(product.sizes) ? product.sizes : [];
+    const combinedSizes = Array.from(new Set([...variationSizes, ...directSizes]));
+    return {
+      ...product,
+      collection: product.collection ?? product.collectionName ?? "",
+      category: product.category ?? "",
+      categoryNames: Array.isArray(product.categoryNames) ? product.categoryNames : [],
+      sizes: combinedSizes.length > 0 ? combinedSizes : ["PP", "P", "M", "G", "GG"],
+      detail: product.detail ?? product.description ?? "",
+      price: Number(product.price ?? 0),
+    };
+  }), [products]);
 
   const routeFilteredProducts = useMemo(() => searchableProducts.filter((product: any) => {
     if (filterType === "category") {
@@ -202,9 +207,9 @@ export default function CatalogViewPage() {
 
             <div className="catalog-filter-group">
               <span className="catalog-filter-label">Tamanho</span>
-              <div className="catalog-size-options">
+              <div className="catalog-size-options catalog-size-grid-options">
                 <button type="button" className={selectedSize === "Todos" ? "is-active" : ""} onClick={() => setSelectedSize("Todos")}>Todos</button>
-                {sizeOptions.map((size) => (
+                {["PP", "P", "M", "G", "GG"].map((size) => (
                   <button key={size} type="button" className={selectedSize === size ? "is-active" : ""} onClick={() => setSelectedSize(size)}>{size}</button>
                 ))}
               </div>
