@@ -722,3 +722,10 @@
 - [x] Corrigir a faixa de anúncio global para permanecer centrada, animada e visível em desktop e mobile.
 - [x] Fazer auditoria visual final da Home, navbar, drawer e navegação responsiva após os ajustes.
 - [x] Reexecutar Vitest, TypeScript e build de produção após o refinamento visual.
+
+- [ ] Redesenhar a página de produto com galeria swiper, miniaturas e painel de compra editorial inspirado na referência fornecida.
+- [ ] Implementar produtos similares dinâmicos usando a mesma categoria ou coleção, excluindo o produto atual.
+- [ ] Validar a página de produto em desktop/mobile, incluindo seleção de variação, adicionar à sacola e navegação global.
+- [ ] Reexecutar Vitest, TypeScript e build de produção após a atualização da página de produto.
+
+- [x] Redesenhar a página de produto com galeria swiper, painel editorial de compra e recomendações da mesma categoria/coleção.

@@ -40,3 +40,13 @@ O dropdown de Coleções passou a ter regras explícitas de estado fechado (`opa
 ## Verificação interativa do dropdown
 
 A pré-visualização inicial mostrou a navbar com o conteúdo do menu de Coleções no DOM, mas sem presença visual no screenshot, confirmando o estado fechado por CSS. Após clicar no botão Coleções, o menu tornou-se visível com ERAS, Todas as coleções, Paradox Collection, Lost Between Eras e Raízes — Recife & La Ursa; a captura mostrou o popover posicionado abaixo da segunda linha da navbar, sem empurrar o hero. A barra de anúncio continuou visível e alternou de mensagem durante a navegação.
+
+## Página de produto — 2026-08-18
+
+A rota `/produto/30001` carregou com sucesso após a nova implementação. Em desktop, a composição apresenta miniaturas verticais à esquerda, galeria principal ampla com contador `01 / 03`, painel editorial claro à direita, breadcrumb, preço regular/Pix, parcelamento, frete grátis, botão Comprar, pontos de confiança e três accordions de informação. A secção `Talvez também goste` mostra quatro produtos públicos do mesmo grupo de catálogo, excluindo o produto atual.
+
+A barra global, o menu público e a sacola continuam presentes no shell público. A primeira verificação ainda deve confirmar a troca de miniaturas, o gesto/controle do carousel e o breakpoint mobile.
+
+A interação com a segunda miniatura atualizou corretamente o indicador da galeria para `02 / 03`, confirmando a sincronização entre miniaturas e o carousel Embla. A captura mobile automática apanhou o estado transitório `A CARREGAR PRODUTO` por ocorrer imediatamente após a navegação; será feita uma verificação após o carregamento para distinguir o skeleton de um problema de layout.
+
+A segunda captura mobile em 390×844 carregou a página completa sem overflow horizontal. A ordem ficou galeria principal com controlos laterais, miniaturas horizontais, breadcrumb e painel de compra; o CTA Comprar manteve boa área de toque; os accordions e a secção `Talvez também goste` renderizaram em duas colunas; o rodapé permaneceu dentro da estética clara comum do storefront.

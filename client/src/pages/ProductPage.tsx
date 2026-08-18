@@ -1,7 +1,23 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useRoute } from "wouter";
-import { Check, ChevronLeft, ChevronRight, ShoppingBag } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  CreditCard,
+  Ruler,
+  ShieldCheck,
+  ShoppingBag,
+  Truck,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  type CarouselApi,
+} from "@/components/ui/carousel";
 import { PageTransitionHandler } from "@/components/PageTransition";
 import OfficialFooter from "@/components/OfficialFooter";
 import NotFound from "@/pages/NotFound";
@@ -10,18 +26,40 @@ import { loadCart, saveCart } from "@/lib/cart-storage";
 import { toast } from "sonner";
 import type { PublicCartLine } from "@/components/PublicCartDrawer";
 
-const productImageFallback = "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1200&q=85";
+const productImageFallback =
+  "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1200&q=85";
 
 function formatPrice(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+function getProductHref(product: { id: number; slug?: string | null }) {
+  return `/produto/${product.slug || product.id}`;
+}
+
+function getProductImage(product: { images?: unknown }, fallback = productImageFallback) {
+  const images = Array.isArray(product.images)
+    ? product.images.filter((image): image is string => typeof image === "string" && image.length > 0)
+    : [];
+  return images[0] || fallback;
 }
 
 export default function ProductPage() {
   const [, params] = useRoute("/produto/:slug");
   const slug = params?.slug ?? "";
   const numericId = /^\d+$/.test(slug) ? Number(slug) : null;
-  const slugQuery = trpc.catalog.getBySlug.useQuery({ slug: slug || "_" }, { enabled: Boolean(slug) && numericId === null });
-  const idQuery = trpc.catalog.getById.useQuery({ id: numericId ?? 1 }, { enabled: numericId !== null });
+  const slugQuery = trpc.catalog.getBySlug.useQuery(
+    { slug: slug || "_" },
+    { enabled: Boolean(slug) && numericId === null },
+  );
+  const idQuery = trpc.catalog.getById.useQuery(
+    { id: numericId ?? 1 },
+    { enabled: numericId !== null },
+  );
+  const relatedQuery = trpc.catalog.list.useQuery(undefined, {
+    enabled: Boolean(slug),
+    staleTime: 60_000,
+  });
   const product = numericId !== null ? idQuery.data : slugQuery.data;
   const isLoading = numericId !== null ? idQuery.isLoading : slugQuery.isLoading;
   const isError = numericId !== null ? idQuery.isError : slugQuery.isError;
@@ -29,19 +67,33 @@ export default function ProductPage() {
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
   const [isAdding, setIsAdding] = useState(false);
-  const touchStartX = useRef<number | null>(null);
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
 
   useEffect(() => {
     if (!product) return;
     const title = `${product.name} | Eras Label - Loja Oficial`;
     document.title = title;
     const canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
-    canonical?.setAttribute("href", `${window.location.origin}/produto/${product.slug || product.id}`);
+    canonical?.setAttribute("href", `${window.location.origin}${getProductHref(product)}`);
   }, [product]);
 
-  const images = useMemo(() => Array.isArray(product?.images) ? product.images.filter((image): image is string => typeof image === "string" && image.length > 0) : [], [product?.images]);
-  const variations = useMemo(() => Array.isArray(product?.variations) ? product.variations.filter((variation: any) => Number(variation.stock ?? 0) > 0) : [], [product?.variations]);
-  // Normaliza a cor legada para que produtos antigos, sem cor cadastrada, continuem compráveis.
+  const images = useMemo(
+    () =>
+      Array.isArray(product?.images)
+        ? product.images.filter(
+            (image): image is string => typeof image === "string" && image.length > 0,
+          )
+        : [],
+    [product?.images],
+  );
+  const variations = useMemo(
+    () =>
+      Array.isArray(product?.variations)
+        ? product.variations.filter((variation: any) => Number(variation.stock ?? 0) > 0)
+        : [],
+    [product?.variations],
+  );
+  // Produtos legados sem cor explícita continuam compráveis com a cor editorial padrão.
   const normalizeColor = (variation: any) => String(variation?.color ?? "Preto").trim() || "Preto";
   const availableColors = useMemo(() => {
     const uniqueColors = new Set<string>();
@@ -56,7 +108,9 @@ export default function ProductPage() {
     () => Array.from(new Set(selectedColorVariations.map((variation: any) => String(variation.size)))),
     [selectedColorVariations],
   );
-  const selectedVariation = selectedColorVariations.find((variation: any) => String(variation.size) === selectedSize);
+  const selectedVariation = selectedColorVariations.find(
+    (variation: any) => String(variation.size) === selectedSize,
+  );
   const selectedStock = Number(selectedVariation?.stock ?? 0);
 
   useEffect(() => {
@@ -69,16 +123,43 @@ export default function ProductPage() {
     }
   }, [availableColors, availableSizes, selectedColor, selectedSize]);
 
-  if (isLoading) {
-    return <main className="min-h-screen bg-[#f6f3ee] flex items-center justify-center"><p className="text-xs font-bold uppercase tracking-[0.24em]">A carregar produto</p></main>;
-  }
-  if (isError || !product) return <NotFound />;
+  useEffect(() => {
+    if (!carouselApi) return;
+    const onSelect = () => setSelectedImage(carouselApi.selectedScrollSnap());
+    onSelect();
+    carouselApi.on("select", onSelect);
+    carouselApi.on("reInit", onSelect);
+    return () => {
+      carouselApi.off("select", onSelect);
+      carouselApi.off("reInit", onSelect);
+    };
+  }, [carouselApi]);
 
-  const price = Number(product.price) || 0;
-  const pixPrice = Number(product.pixPrice ?? price) || price;
-  const activeImage = images[selectedImage] ?? images[0];
-  const goToPreviousImage = () => setSelectedImage((index) => images.length ? (index - 1 + images.length) % images.length : 0);
-  const goToNextImage = () => setSelectedImage((index) => images.length ? (index + 1) % images.length : 0);
+  const relatedProducts = useMemo(() => {
+    if (!product || !relatedQuery.data) return [];
+    const candidates = relatedQuery.data.filter((candidate) => candidate.id !== product.id);
+    const sameCollection = candidates.filter(
+      (candidate) => Boolean(product.collection) && candidate.collection === product.collection,
+    );
+    const sameCategory = candidates.filter(
+      (candidate) =>
+        candidate.category === product.category ||
+        candidate.subcategory === product.category ||
+        candidate.categoryNames?.includes(product.category),
+    );
+    const ordered = [...sameCollection, ...sameCategory];
+    return ordered.filter(
+      (candidate, index) => ordered.findIndex((item) => item.id === candidate.id) === index,
+    ).slice(0, 4);
+  }, [product, relatedQuery.data]);
+
+  const goToPreviousImage = useCallback(() => {
+    carouselApi?.scrollPrev();
+  }, [carouselApi]);
+  const goToNextImage = useCallback(() => {
+    carouselApi?.scrollNext();
+  }, [carouselApi]);
+
   const handleGalleryKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === "ArrowLeft") {
       event.preventDefault();
@@ -89,19 +170,20 @@ export default function ProductPage() {
       goToNextImage();
     }
   };
-  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
-    touchStartX.current = event.changedTouches[0]?.clientX ?? null;
-  };
-  const handleTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
-    const startX = touchStartX.current;
-    const endX = event.changedTouches[0]?.clientX;
-    touchStartX.current = null;
-    if (startX === null || endX === undefined || images.length < 2) return;
-    const delta = endX - startX;
-    if (Math.abs(delta) < 42) return;
-    if (delta > 0) goToPreviousImage();
-    else goToNextImage();
-  };
+
+  if (isLoading) {
+    return (
+      <main className="min-h-screen bg-[#f6f3ee] flex items-center justify-center">
+        <p className="text-xs font-bold uppercase tracking-[0.24em]">A carregar produto</p>
+      </main>
+    );
+  }
+  if (isError || !product) return <NotFound />;
+
+  const price = Number(product.price) || 0;
+  const pixPrice = Number(product.pixPrice ?? price) || price;
+  const pixSavings = Math.max(0, price - pixPrice);
+  const installments = price / 2;
 
   const handleAddToCart = () => {
     if (isAdding) return;
@@ -110,22 +192,30 @@ export default function ProductPage() {
       return;
     }
 
-    const chosenSize = selectedVariation ? String(selectedVariation.size) : (selectedSize || "U");
-    const chosenColor = selectedVariation ? normalizeColor(selectedVariation) : (selectedColor || "Preto");
+    const chosenSize = selectedVariation ? String(selectedVariation.size) : selectedSize || "U";
+    const chosenColor = selectedVariation ? normalizeColor(selectedVariation) : selectedColor || "Preto";
     const currentCart = loadCart<PublicCartLine>();
-    const existingIndex = currentCart.findIndex((line) => line.id === product.id && line.size === chosenSize && (line.color ?? "Preto") === chosenColor);
-    const nextCart: PublicCartLine[] = existingIndex >= 0
-      ? currentCart.map((line, idx) => idx === existingIndex ? { ...line, quantity: line.quantity + 1 } : line)
-      : [...currentCart, {
-        id: product.id,
-        name: product.name,
-        size: chosenSize,
-        color: chosenColor,
-        quantity: 1,
-        price: Number(product.price) || 0,
-        image: images[0] || productImageFallback,
-        alt: product.name,
-      }];
+    const existingIndex = currentCart.findIndex(
+      (line) => line.id === product.id && line.size === chosenSize && (line.color ?? "Preto") === chosenColor,
+    );
+    const nextCart: PublicCartLine[] =
+      existingIndex >= 0
+        ? currentCart.map((line, index) =>
+            index === existingIndex ? { ...line, quantity: line.quantity + 1 } : line,
+          )
+        : [
+            ...currentCart,
+            {
+              id: product.id,
+              name: product.name,
+              size: chosenSize,
+              color: chosenColor,
+              quantity: 1,
+              price,
+              image: images[0] || productImageFallback,
+              alt: product.name,
+            },
+          ];
 
     setIsAdding(true);
     saveCart(nextCart);
@@ -141,76 +231,260 @@ export default function ProductPage() {
     <div className="public-page-shell product-page-shell min-h-screen bg-[#f6f3ee] text-[#23221e] flex flex-col font-sans">
       <PageTransitionHandler />
       <main className="public-page-content flex-1">
-      <div className="container pt-32 pb-16 md:pt-40 md:pb-24">
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)] lg:gap-16">
-          <section className="product-page-gallery" aria-label={`Imagens de ${product.name}`}>
-            <div
-              className="product-gallery-stage aspect-[4/5] overflow-hidden bg-[#ede8df]"
-              tabIndex={images.length > 1 ? 0 : -1}
-              role={images.length > 1 ? "region" : undefined}
-              aria-label={images.length > 1 ? `Carrossel com ${images.length} imagens` : undefined}
-              onKeyDown={handleGalleryKeyDown}
-              onTouchStart={handleTouchStart}
-              onTouchEnd={handleTouchEnd}
-            >
-              {activeImage ? <img src={activeImage} alt={`${product.name} — imagem ${selectedImage + 1} de ${images.length}`} className="h-full w-full object-cover" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = productImageFallback; }} /> : <div className="flex h-full items-center justify-center text-xs uppercase tracking-[0.18em]">Imagem em breve</div>}
-              {images.length > 1 && <>
-                <button type="button" className="product-gallery-control product-gallery-control-prev" onClick={goToPreviousImage} aria-label="Ver imagem anterior"><ChevronLeft size={22} /></button>
-                <button type="button" className="product-gallery-control product-gallery-control-next" onClick={goToNextImage} aria-label="Ver próxima imagem"><ChevronRight size={22} /></button>
-                <span className="product-gallery-counter" aria-live="polite">{String(selectedImage + 1).padStart(2, "0")} / {String(images.length).padStart(2, "0")}</span>
-              </>}
-            </div>
-            {images.length > 1 && <div className="product-gallery-thumbnails" role="tablist" aria-label="Selecionar imagem do produto">
-              {images.map((image, index) => <button key={`${image}-${index}`} type="button" role="tab" aria-selected={selectedImage === index} onClick={() => setSelectedImage(index)} className={`aspect-square overflow-hidden border ${selectedImage === index ? "border-[#b22222]" : "border-transparent"}`} aria-label={`Ver imagem ${index + 1}`}><img src={image} alt="" className="h-full w-full object-cover" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = productImageFallback; }} /></button>)}
-            </div>}
-          </section>
-
-          <section className="product-purchase-panel flex flex-col justify-center">
-            <p className="mb-3 text-[0.68rem] font-bold uppercase tracking-[0.28em] text-[#b22222]">{product.collection || "ERAS LABEL"}</p>
-            <h1 className="font-display text-4xl uppercase leading-[0.95] md:text-6xl">{product.name}</h1>
-            <div className="product-price-row">
-              <p className="mt-5 text-2xl font-semibold">{formatPrice(price)}</p>
-              <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-[#b22222]">{formatPrice(pixPrice)} no Pix</p>
-            </div>
-            {product.description && <p className="mt-8 max-w-xl whitespace-pre-line text-sm leading-7 text-[#5a554d]">{product.description}</p>}
-
-            {(availableColors.length > 0 || variations.length > 0) && (
-              <div className="product-options-card" aria-label="Opções do produto">
-                {availableColors.length > 0 ? (
-                  <div className="product-option-group">
-                    <div className="product-option-heading"><span>Cor</span><strong>{selectedColor || "Escolha uma opção"}</strong></div>
-                    <div className="product-option-list">
-                      {availableColors.map((color) => <button key={color} type="button" onClick={() => { setSelectedColor(color); setSelectedSize(""); }} aria-pressed={selectedColor === color} className={`product-option-button ${selectedColor === color ? "is-selected" : ""}`}>{color}</button>)}
-                    </div>
+        <div className="product-detail-container container">
+          <div className="product-detail-layout">
+            <section className="product-page-gallery" aria-label={`Imagens de ${product.name}`}>
+              <div className="product-gallery-layout">
+                {images.length > 1 && (
+                  <div className="product-gallery-thumbnails" role="tablist" aria-label="Selecionar imagem do produto">
+                    {images.map((image, index) => (
+                      <button
+                        key={`${image}-${index}`}
+                        type="button"
+                        role="tab"
+                        aria-selected={selectedImage === index}
+                        aria-label={`Ver imagem ${index + 1}`}
+                        className={`product-gallery-thumbnail ${selectedImage === index ? "is-selected" : ""}`}
+                        onClick={() => {
+                          carouselApi?.scrollTo(index);
+                          setSelectedImage(index);
+                        }}
+                      >
+                        <img
+                          src={image}
+                          alt=""
+                          onError={(event) => {
+                            event.currentTarget.onerror = null;
+                            event.currentTarget.src = productImageFallback;
+                          }}
+                        />
+                      </button>
+                    ))}
                   </div>
-                ) : null}
+                )}
 
-                {variations.length > 0 ? (
-                  <div className="product-option-group">
-                    <div className="product-option-heading"><span>Tamanho</span><strong>{selectedSize ? `Selecionado: ${selectedSize}` : "Escolha uma opção"}</strong></div>
-                    <div className="product-option-list">
-                      {availableSizes.map((size) => <button key={`${selectedColor}-${size}`} type="button" onClick={() => setSelectedSize(size)} aria-pressed={selectedSize === size} className={`product-option-button product-option-button--size ${selectedSize === size ? "is-selected" : ""}`}>{size}</button>)}
-                    </div>
-                    <p className={`product-option-hint ${selectedVariation ? "is-ready" : ""}`}>{selectedVariation ? `${selectedStock} ${selectedStock === 1 ? "unidade disponível" : "unidades disponíveis"}` : "Selecione o tamanho para continuar"}</p>
-                  </div>
-                ) : null}
+                <Carousel
+                  className="product-main-carousel"
+                  opts={{ loop: images.length > 1, duration: 28 }}
+                  setApi={setCarouselApi}
+                  onKeyDown={handleGalleryKeyDown}
+                >
+                  <CarouselContent className="product-carousel-content">
+                    {(images.length > 0 ? images : [productImageFallback]).map((image, index) => (
+                      <CarouselItem key={`${image}-${index}`} className="product-carousel-slide">
+                        <div className="product-gallery-stage">
+                          <img
+                            src={image}
+                            alt={`${product.name} — imagem ${index + 1} de ${Math.max(images.length, 1)}`}
+                            className="product-gallery-image"
+                            onError={(event) => {
+                              event.currentTarget.onerror = null;
+                              event.currentTarget.src = productImageFallback;
+                            }}
+                          />
+                        </div>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  {images.length > 1 && (
+                    <>
+                      <button
+                        type="button"
+                        className="product-gallery-control product-gallery-control-prev"
+                        onClick={goToPreviousImage}
+                        aria-label="Ver imagem anterior"
+                      >
+                        <ChevronLeft size={20} />
+                      </button>
+                      <button
+                        type="button"
+                        className="product-gallery-control product-gallery-control-next"
+                        onClick={goToNextImage}
+                        aria-label="Ver próxima imagem"
+                      >
+                        <ChevronRight size={20} />
+                      </button>
+                      <span className="product-gallery-counter" aria-live="polite">
+                        {String(selectedImage + 1).padStart(2, "0")} / {String(images.length).padStart(2, "0")}
+                      </span>
+                    </>
+                  )}
+                </Carousel>
               </div>
-            )}
+            </section>
 
-            <Button
-              type="button"
-              onClick={handleAddToCart}
-              disabled={isAdding}
-              aria-live="polite"
-              className={`product-add-to-cart mt-8 h-14 w-full rounded-none text-xs font-bold uppercase tracking-[0.18em] text-white ${isAdding ? "is-added bg-[#23221e]" : "bg-[#b22222] hover:bg-[#8e1b1b]"}`}
-            >
-              {isAdding ? <><Check size={17} /> Adicionado à sacola</> : <><ShoppingBag size={16} /> Adicionar à sacola</>}
-            </Button>
-            <p className="product-purchase-note mt-4 flex items-center gap-2 text-xs text-[#5a554d]"><Check size={14} className="text-[#b22222]" /> Compra segura · Produto oficial Eras Label</p>
-            <p className="mt-1 text-xs text-[#5a554d]">Link público: /produto/{product.slug || product.id}</p>
-          </section>
+            <section className="product-purchase-panel" aria-labelledby="product-title">
+              <nav className="product-breadcrumb" aria-label="Percurso da página">
+                <Link href="/">Início</Link>
+                <span aria-hidden="true">·</span>
+                <Link href="/collection/paradox">Coleções</Link>
+                <span aria-hidden="true">·</span>
+                <span>{product.name}</span>
+              </nav>
+              <p className="product-collection-label">{product.collection || "ERAS LABEL"}</p>
+              <h1 id="product-title" className="product-title font-display">
+                {product.name}
+              </h1>
+              <div className="product-price-block">
+                <div>
+                  <p className="product-price">{formatPrice(price)}</p>
+                  <p className="product-pix-price">{formatPrice(pixPrice)} com Pix</p>
+                </div>
+                <p className="product-installments">2× de {formatPrice(installments)} sem juros</p>
+              </div>
+              {pixSavings > 0 && (
+                <p className="product-pix-saving">Poupe {formatPrice(pixSavings)} pagando com Pix</p>
+              )}
+
+              <div className="product-shipping-highlight">
+                <Truck size={17} aria-hidden="true" />
+                <span>Frete grátis a partir de R$ 350,00</span>
+              </div>
+
+              {(availableColors.length > 0 || variations.length > 0) && (
+                <div className="product-options-card" aria-label="Opções do produto">
+                  {availableColors.length > 0 && (
+                    <div className="product-option-group">
+                      <div className="product-option-heading">
+                        <span>Cor</span>
+                        <strong>{selectedColor || "Escolha uma opção"}</strong>
+                      </div>
+                      <div className="product-option-list">
+                        {availableColors.map((color) => (
+                          <button
+                            key={color}
+                            type="button"
+                            onClick={() => {
+                              setSelectedColor(color);
+                              setSelectedSize("");
+                            }}
+                            aria-pressed={selectedColor === color}
+                            className={`product-option-button ${selectedColor === color ? "is-selected" : ""}`}
+                          >
+                            {color}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {variations.length > 0 && (
+                    <div className="product-option-group">
+                      <div className="product-option-heading">
+                        <span>Tamanho</span>
+                        <strong>{selectedSize ? `Selecionado: ${selectedSize}` : "Escolha uma opção"}</strong>
+                      </div>
+                      <div className="product-option-list">
+                        {availableSizes.map((size) => (
+                          <button
+                            key={`${selectedColor}-${size}`}
+                            type="button"
+                            onClick={() => setSelectedSize(size)}
+                            aria-pressed={selectedSize === size}
+                            className={`product-option-button product-option-button--size ${selectedSize === size ? "is-selected" : ""}`}
+                          >
+                            {size}
+                          </button>
+                        ))}
+                      </div>
+                      <p className={`product-option-hint ${selectedVariation ? "is-ready" : ""}`}>
+                        {selectedVariation
+                          ? `${selectedStock} ${selectedStock === 1 ? "unidade disponível" : "unidades disponíveis"}`
+                          : "Selecione o tamanho para continuar"}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <Button
+                type="button"
+                onClick={handleAddToCart}
+                disabled={isAdding}
+                aria-live="polite"
+                className={`product-add-to-cart ${isAdding ? "is-added" : ""}`}
+              >
+                {isAdding ? <Check size={17} /> : <ShoppingBag size={16} />}
+                {isAdding ? "Adicionado à sacola" : "Comprar"}
+              </Button>
+
+              <div className="product-service-points">
+                <div>
+                  <ShieldCheck size={16} aria-hidden="true" />
+                  <span>Compra segura e produto oficial Eras Label</span>
+                </div>
+                <div>
+                  <Truck size={16} aria-hidden="true" />
+                  <span>Envio acompanhado para todo o Brasil</span>
+                </div>
+              </div>
+
+              <div className="product-info-accordions">
+                <details open>
+                  <summary>
+                    <span><CreditCard size={15} aria-hidden="true" /> Meios de pagamento</span>
+                    <ChevronDown size={16} aria-hidden="true" />
+                  </summary>
+                  <p>Pix com desconto ou cartão de crédito em até 2× sem juros pelo Mercado Pago.</p>
+                </details>
+                <details>
+                  <summary>
+                    <span><Truck size={15} aria-hidden="true" /> Meios de envio</span>
+                    <ChevronDown size={16} aria-hidden="true" />
+                  </summary>
+                  <p>Escolha o serviço disponível para o seu CEP no carrinho. Enviamos por PAC, SEDEX e Jadlog.</p>
+                </details>
+                <details>
+                  <summary>
+                    <span><Ruler size={15} aria-hidden="true" /> Detalhes da peça</span>
+                    <ChevronDown size={16} aria-hidden="true" />
+                  </summary>
+                  <p className="whitespace-pre-line">{product.description || "Uma peça Eras Label pensada para atravessar o tempo presente."}</p>
+                </details>
+              </div>
+            </section>
+          </div>
+
+          {relatedProducts.length > 0 && (
+            <section className="related-products-section" aria-labelledby="related-products-title">
+              <div className="related-products-heading">
+                <div>
+                  <p className="product-collection-label">A mesma era</p>
+                  <h2 id="related-products-title" className="font-display">Talvez também goste</h2>
+                </div>
+                <Link href="/catalog">
+                  Ver coleção <ChevronRight size={15} aria-hidden="true" />
+                </Link>
+              </div>
+              <div className="related-products-grid">
+                {relatedProducts.map((relatedProduct) => (
+                  <Link
+                    key={relatedProduct.id}
+                    href={getProductHref(relatedProduct)}
+                    className="related-product-card"
+                  >
+                    <div className="related-product-image-wrap">
+                      <img
+                        src={getProductImage(relatedProduct)}
+                        alt={relatedProduct.name}
+                        className="related-product-image"
+                        onError={(event) => {
+                          event.currentTarget.onerror = null;
+                          event.currentTarget.src = productImageFallback;
+                        }}
+                      />
+                    </div>
+                    <div className="related-product-meta">
+                      <span>{relatedProduct.category || relatedProduct.collection || "ERAS LABEL"}</span>
+                      <h3>{relatedProduct.name}</h3>
+                      <strong>{formatPrice(Number(relatedProduct.price) || 0)}</strong>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
         </div>
-      </div>
       </main>
       <OfficialFooter />
     </div>
