@@ -818,8 +818,10 @@
 - [x] Validar desktop/mobile, executar TypeScript, 152 testes Vitest e build de produção.
 
 ## Refinamento da newsletter desktop (2026-08-18)
-- [ ] Corrigir a composição desktop da newsletter para evitar texto estreito, quebras excessivas e desalinhamento do formulário.
-- [ ] Preservar a versão mobile, o formulário, feedbacks e a estética editorial escura da Eras.
-- [ ] Validar desktop/mobile, executar TypeScript, Vitest e build, e guardar checkpoint.
+- [x] Corrigir a composição desktop da newsletter para evitar texto estreito, quebras excessivas e desalinhamento do formulário.
+- [x] Preservar a versão mobile, o formulário, feedbacks e a estética editorial escura da Eras.
+- [x] Validar desktop/mobile, executar TypeScript, Vitest e build, e guardar checkpoint.
 
 - [x] Corrigir a composição desktop da newsletter: garantir distribuição equilibrada em duas colunas, impedir quebra vertical do título e preservar a composição mobile.
+
+- [x] Adicionar ícone acessível do WhatsApp junto ao contacto correspondente no rodapé público, mantendo a estética editorial e a responsividade.

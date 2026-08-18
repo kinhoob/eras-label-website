@@ -1,4 +1,4 @@
-import { Instagram, Mail, MessageCircle, Phone, ArrowUpRight } from "lucide-react";
+import { Instagram, Mail, Phone, ArrowUpRight } from "lucide-react";
 import { Link } from "wouter";
 import { officialBrand } from "@/lib/official-brand";
 import { trpc } from "@/lib/trpc";
@@ -11,6 +11,16 @@ function TikTokMark({ size = 20 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
       <path d="M15.7 3c.4 2.1 1.6 3.4 3.7 3.7v3.1c-1.5-.1-2.8-.6-3.8-1.4v6.1c0 3.5-2.4 5.8-5.8 5.8-3 0-5.3-2.1-5.3-5s2.2-4.9 5-4.9c.3 0 .7 0 1 .1v3.1a3 3 0 0 0-1-.2c-1.2 0-2 .7-2 1.8s.8 1.9 2 1.9c1.4 0 2.1-.9 2.1-2.5V3h4.1Z" />
+    </svg>
+  );
+}
+
+/** Ícone compacto do WhatsApp, desenhado localmente para manter a marca sem dependências externas. */
+function WhatsAppMark({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20.5 11.7a8.5 8.5 0 0 1-12.6 7.5L4 20l.9-3.7A8.5 8.5 0 1 1 20.5 11.7Z" />
+      <path d="M8.6 7.8c.2-.4.5-.4.8-.4h.5c.2 0 .4.1.5.4l.7 1.6c.1.2.1.4-.1.6l-.5.6c-.1.1-.1.3 0 .5.5.9 1.2 1.6 2.1 2.1.2.1.4.1.5-.1l.6-.7c.1-.2.4-.2.6-.1l1.6.7c.2.1.3.3.3.5v.5c0 .3-.1.6-.4.8-.4.3-.9.5-1.4.5-1.1 0-2.5-.7-3.8-1.9-1.3-1.2-2.1-2.5-2.1-3.7 0-.5.2-1 .5-1.4Z" />
     </svg>
   );
 }
@@ -71,8 +81,8 @@ export default function OfficialFooter({ onInteraction }: OfficialFooterProps) {
 
         <div className="footer-column footer-contact">
           <strong>ENTRE EM CONTATO</strong>
-          <a className={linkClass} href={officialBrand.whatsappUrl} target="_blank" rel="noreferrer" onClick={interact}>
-            <MessageCircle size={14} aria-hidden="true" /> WhatsApp
+          <a className={`footer-whatsapp-link ${linkClass}`} href={officialBrand.whatsappUrl} target="_blank" rel="noreferrer" aria-label="WhatsApp da Eras Label" title="WhatsApp" onClick={interact}>
+            <WhatsAppMark size={15} /> <span>WhatsApp</span>
           </a>
           <a className={linkClass} href={officialBrand.phoneHref} onClick={interact}>
             <Phone size={14} aria-hidden="true" /> {officialBrand.phoneLabel}
