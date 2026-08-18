@@ -17,4 +17,12 @@ describe("home content defaults", () => {
     expect(defaultHomeContent.highlights.length).toBeGreaterThanOrEqual(3);
     expect(defaultHomeContent.highlights.every((highlight) => highlight.id && highlight.productId > 0 && highlight.label)).toBe(true);
   });
+
+  it("provides editable titles for each public Home section", () => {
+    expect(defaultHomeContent.sectionTitles).toEqual({
+      highlights: "Destaques",
+      shop: "Produtos da Era",
+      community: "Visto fora do estúdio.",
+    });
+  });
 });

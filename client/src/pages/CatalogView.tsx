@@ -1,4 +1,5 @@
-import { Link, useRoute } from "wouter";
+import { Link, useLocation, useRoute } from "wouter";
+import { searchStorefrontProducts } from "@/lib/storefront-search";
 import { PageTransitionHandler } from "@/components/PageTransition";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import OfficialFooter from "@/components/OfficialFooter";
 const catalogImageFallback = "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1200&q=85";
 
 export default function CatalogViewPage() {
+  const [location] = useLocation();
   const [, paramsCategory] = useRoute("/category/:slug");
   const [, paramsCollection] = useRoute("/collection/:slug");
   const [isCatalogRoute] = useRoute("/catalog");
@@ -46,7 +48,16 @@ export default function CatalogViewPage() {
     return collection === normalizeSlug(filterSlug) || collection.includes(normalizeSlug(filterSlug));
   });
 
-  const displayProducts = filteredProducts;
+  const searchQuery = new URLSearchParams(location.split("?")[1] ?? "").get("q") ?? "";
+  const searchableProducts = filteredProducts.map((product: any) => ({
+    ...product,
+    collection: product.collection ?? product.collectionName ?? "",
+    category: product.category ?? "",
+    sizes: Array.isArray(product.sizes) ? product.sizes : [],
+    detail: product.detail ?? product.description ?? "",
+  }));
+  const displayProducts = searchQuery ? searchStorefrontProducts(searchableProducts, searchQuery) : searchableProducts;
+
 
   return (
     <div className="public-page-shell catalog-page-shell min-h-screen bg-[#f6f3ee] text-[#23221e] flex flex-col font-sans">
@@ -59,10 +70,10 @@ export default function CatalogViewPage() {
           return (
             <>
               <span className="text-xs uppercase tracking-widest text-[#8c8378] block mb-2">
-                {filterType === "category" ? "Categoria" : filterType === "collection" ? "Coleção" : "Catálogo"}
+                {searchQuery ? "Resultados da pesquisa" : filterType === "category" ? "Categoria" : filterType === "collection" ? "Coleção" : "Catálogo"}
               </span>
               <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tight mb-6">
-                {filterType === "all" ? "Todos os produtos" : filterSlug.replace(/-/g, " ")}
+                {searchQuery ? `Pesquisa: ${searchQuery}` : filterType === "all" ? "Todos os produtos" : filterSlug.replace(/-/g, " ")}
               </h1>
               {matchedCategory?.coverImageUrl && (
                 <div className="w-full h-56 md:h-72 rounded-lg overflow-hidden mb-8 bg-[#ded8cc]">
@@ -88,7 +99,7 @@ export default function CatalogViewPage() {
         ) : displayProducts.length === 0 ? (
           <div className="bg-[#ede8df] p-12 rounded-lg text-center">
             <h3 className="text-xl font-bold uppercase mb-2">Nenhum produto encontrado nesta seleção</h3>
-            <p className="text-sm text-[#554f46] mb-6">Quando houver peças publicadas nesta seleção, elas aparecerão aqui.</p>
+            <p className="text-sm text-[#554f46] mb-6">{searchQuery ? "Tente outro termo ou explore o catálogo completo." : "Quando houver peças publicadas nesta seleção, elas aparecerão aqui."}</p>
             <Link href="/catalog">
               <Button className="bg-[#23221e] text-[#f6f3ee] hover:bg-[#c95139]">EXPLORAR PRODUTOS</Button>
             </Link>

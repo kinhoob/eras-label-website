@@ -563,6 +563,11 @@ export const appRouter = router({
         productId: z.number().int().positive(),
         label: z.string().min(1).max(40),
       })).min(1).max(6),
+      sectionTitles: z.object({
+        highlights: z.string().trim().min(1).max(60).optional(),
+        shop: z.string().trim().min(1).max(60).optional(),
+        community: z.string().trim().min(1).max(60).optional(),
+      }).optional(),
       vipBanner: z.object({
         eyebrow: z.string(),
         title: z.string(),

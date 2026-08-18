@@ -73,6 +73,7 @@ type CartLine = Product & { size: string; quantity: number };
 type HomeBanner = { id: string; eyebrow: string; title: string; subtitle: string; imageUrl: string; href: string; cta: string };
 type HomeHighlight = { id: string; productId: number; label: string };
 type VipBanner = { eyebrow: string; title: string; subtitle: string; imageUrl: string; href: string; cta: string };
+type HomeSectionTitles = { highlights?: string; shop?: string; community?: string };
 
 const fallbackBanners: HomeBanner[] = [
   {
@@ -416,14 +417,21 @@ export default function Home() {
     const configured = (homeContent?.highlights?.length ? homeContent.highlights : fallbackHighlights) as HomeHighlight[];
     const available = configured.filter((highlight) => products.some((product) => product.id === highlight.productId));
     const usedIds = new Set(available.map((highlight) => highlight.productId));
-    const supplement = products.filter((product) => !usedIds.has(product.id)).slice(0, Math.max(0, 3 - available.length)).map((product, index) => ({
+    const supplement = products.filter((product) => !usedIds.has(product.id)).slice(0, Math.max(0, 4 - available.length)).map((product, index) => ({
       id: `fallback-highlight-${product.id}`,
       productId: product.id,
       label: index === 0 && available.length === 0 ? "PEÇA-CHAVE" : "EM DESTAQUE",
     }));
-    return [...available, ...supplement].slice(0, 3);
+    // A composição editorial reserva quatro posições no desktop e adapta-se ao mobile via CSS.
+    return [...available, ...supplement].slice(0, 4);
   }, [homeContent?.highlights, products]);
   const vipBanner = (homeContent?.vipBanner ?? fallbackVipBanner) as VipBanner;
+  // O CMS pode renomear cada bloco; os valores abaixo preservam uma apresentação segura durante o carregamento.
+  const sectionTitles = {
+    highlights: homeContent?.sectionTitles?.highlights?.trim() || "Destaques",
+    shop: homeContent?.sectionTitles?.shop?.trim() || "Produtos da Era",
+    community: homeContent?.sectionTitles?.community?.trim() || "Visto fora do estúdio.",
+  } satisfies Required<HomeSectionTitles>;
   const currentBanner = banners[activeBanner % banners.length] ?? fallbackBanners[0];
   const pixDiscountPercent = commercialConfig?.pixDiscountPercent ?? 5;
   const freeShippingThreshold = commercialConfig?.freeShippingThreshold ?? 350;
@@ -1037,10 +1045,10 @@ export default function Home() {
 
         <section className="highlights-section" id="highlights">
           <div className="section-heading">
-            <div><span className="section-kicker">01 / CURADORIA</span><h2>DESTAQUES</h2></div>
+            <div><span className="section-kicker">01 / CURADORIA</span><h2>{sectionTitles.highlights}</h2></div>
             <a className="text-link" href="#shop" onClick={() => playClick(soundsOn)}>VER TUDO <ArrowRight size={14} /></a>
           </div>
-          <div className="product-grid highlights-grid">
+          <div className="product-grid editorial-product-grid highlights-grid">
             {highlights.map((highlight) => {
               const product = products.find((item) => item.id === highlight.productId);
               if (!product) return null;
@@ -1072,7 +1080,7 @@ export default function Home() {
 
         <section className="shop-section" id="shop">
           <div className="section-heading">
-            <div><span className="section-kicker">02 / SHOP</span><h2>PRODUTOS DA ERA</h2></div>
+            <div><span className="section-kicker">02 / SHOP</span><h2>{sectionTitles.shop}</h2></div>
             <span className="shop-result-count" aria-live="polite">{filteredProducts.length} {filteredProducts.length === 1 ? "produto" : "produtos"}</span>
           </div>
           <div className="shop-filter-bar" aria-label="Filtros avançados da loja">
@@ -1097,7 +1105,7 @@ export default function Home() {
             </div>
             {hasAdvancedFilters && <button className="shop-filter-clear" type="button" onClick={clearShopFilters}>Limpar filtros</button>}
           </div>
-          <div className="product-grid">
+          <div className="product-grid editorial-product-grid">
             {filteredProducts.map((product) => (
               <article className="product-card" key={product.id}>
                 <button className="product-image-button" onClick={() => openProduct(product)} aria-label={`Ver ${product.name}`}>
@@ -1132,7 +1140,7 @@ export default function Home() {
         <section className="community-proof-section" aria-labelledby="community-proof-title">
           <div className="community-proof-copy">
             <span className="section-kicker">03 / ERAS NA RUA</span>
-            <h2 id="community-proof-title">VISTO FORA DO ESTÚDIO.</h2>
+            <h2 id="community-proof-title">{sectionTitles.community}</h2>
             <p>Descubra como a comunidade está a usar as peças Eras Label. As publicações e marcações são sempre reais e podem ser vistas no perfil oficial.</p>
             <a className="text-link" href="https://www.instagram.com/eraslabel/" target="_blank" rel="noreferrer" onClick={() => playClick(soundsOn)}>VER NO INSTAGRAM <ArrowRight size={14} /></a>
           </div>

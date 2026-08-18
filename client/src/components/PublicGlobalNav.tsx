@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { ArrowRight, Menu, Search, ShoppingBag, UserRound } from "lucide-react";
 import { CART_STORAGE_KEY, loadCart } from "@/lib/cart-storage";
@@ -6,15 +6,69 @@ import { SidebarMenu } from "@/components/SidebarMenu";
 import { trpc } from "@/lib/trpc";
 import { findPublicCategory, getExtraPublicCategories, publicCategoryHref, type PublicNavigationCategory } from "@/lib/public-navigation";
 
+/**
+ * Barra de navegação pública única da loja.
+ * Mantém pesquisa, rotas de categoria, carrinho e menu lateral consistentes
+ * em todas as páginas públicas, sem aparecer no painel administrativo.
+ */
 export default function PublicGlobalNav() {
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [cartCount, setCartCount] = useState(() => loadCart<{ quantity: number }>().reduce((sum, item) => sum + item.quantity, 0));
   const isHome = location === "/";
   const isAdminOrAuthRoute = location.startsWith("/admin") || location.startsWith("/auth");
   const { data: categories = [] } = trpc.catalog.categories.useQuery(undefined, { enabled: !isAdminOrAuthRoute });
+  const { data: navProducts = [], isLoading: isProductsLoading } = trpc.catalog.list.useQuery(undefined, { enabled: !isAdminOrAuthRoute });
   const publicCategories = categories as PublicNavigationCategory[];
+
+  // Normaliza acentos e espaços para que “bonés” e “bones” encontrem o mesmo produto.
+  const normalizeSearchText = (value: unknown) => String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("pt-BR")
+    .trim();
+  const normalizedSearch = normalizeSearchText(searchQuery);
+
+  // Filtra os produtos publicados usando os mesmos campos que o catálogo público conhece.
+  const searchResults = useMemo(() => {
+    if (!normalizedSearch) return [];
+    return (navProducts as any[]).filter((product) => {
+      const searchable = [
+        product.name,
+        product.collection,
+        product.collectionName,
+        product.category,
+        product.subcategory,
+        ...(Array.isArray(product.categoryNames) ? product.categoryNames : []),
+        product.detail,
+        product.description,
+      ]
+        .filter(Boolean)
+        .map(normalizeSearchText)
+        .join(" ");
+      return searchable.includes(normalizedSearch);
+    }).slice(0, 5);
+  }, [navProducts, normalizedSearch]);
+
+  const getSearchImage = (product: any) => {
+    if (typeof product.image === "string" && product.image) return product.image;
+    if (typeof product.images === "string") {
+      try {
+        const parsed = JSON.parse(product.images);
+        return Array.isArray(parsed) ? parsed[0] : product.images;
+      } catch {
+        return product.images;
+      }
+    }
+    if (Array.isArray(product.images) && product.images[0]) {
+      return typeof product.images[0] === "string" ? product.images[0] : product.images[0].url;
+    }
+    return "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=320&q=80";
+  };
+
   const camisetasCategory = findPublicCategory(publicCategories, "camiseta");
   const bonesCategory = findPublicCategory(publicCategories, "bone");
   const extraCategories = getExtraPublicCategories(publicCategories);
@@ -33,7 +87,11 @@ export default function PublicGlobalNav() {
   }, [location]);
 
   useEffect(() => {
+    // Reidrata o termo quando o utilizador chega ao catálogo através da navbar.
+    const queryFromUrl = new URLSearchParams(location.split("?")[1] ?? "").get("q") ?? "";
+    setSearchQuery(queryFromUrl);
     setIsMenuOpen(false);
+    setIsSearchOpen(false);
     setIsVisible(true);
   }, [location]);
 
@@ -57,6 +115,23 @@ export default function PublicGlobalNav() {
 
   if (isAdminOrAuthRoute) return null;
 
+  const submitSearch = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const query = searchQuery.trim();
+    if (!query) {
+      setIsSearchOpen(true);
+      return;
+    }
+    // A query completa fica na URL para que CatalogView aplique exatamente o mesmo filtro.
+    setIsSearchOpen(false);
+    navigate(`/catalog?q=${encodeURIComponent(query)}`);
+  };
+
+  const openProduct = (product: any) => {
+    setIsSearchOpen(false);
+    navigate(`/produto/${product.slug || product.id}`);
+  };
+
   return (
     <>
       <div className="public-global-announcement" role="status">5% OFF PARA PAGAMENTOS NO PIX</div>
@@ -66,16 +141,59 @@ export default function PublicGlobalNav() {
             <Menu size={18} strokeWidth={1.7} />
             <span>MENU</span>
           </button>
-          <Link href="/catalog" className="public-global-search" aria-label="Pesquisar produtos no catálogo">
-            <Search size={16} strokeWidth={1.7} />
-            <span>O que você está buscando?</span>
-          </Link>
+
+          <form className={`public-global-search-wrap ${isSearchOpen ? "is-open" : ""}`} onSubmit={submitSearch} role="search">
+            <div className="public-global-search">
+              <Search size={16} strokeWidth={1.7} aria-hidden="true" />
+              <input
+                type="search"
+                value={searchQuery}
+                onFocus={() => setIsSearchOpen(true)}
+                onChange={(event) => { setSearchQuery(event.target.value); setIsSearchOpen(true); }}
+                onKeyDown={(event) => { if (event.key === "Escape") { setIsSearchOpen(false); event.currentTarget.blur(); } }}
+                placeholder="O que você está buscando?"
+                aria-label="Pesquisar produtos"
+                aria-controls="public-global-search-results"
+                autoComplete="off"
+              />
+              {searchQuery && <button type="button" className="public-global-search-clear" onClick={() => setSearchQuery("")} aria-label="Limpar busca">×</button>}
+              <button type="submit" aria-label="Pesquisar"><ArrowRight size={14} /></button>
+            </div>
+
+            {isSearchOpen && (
+              <div id="public-global-search-results" className="public-global-search-results" role="listbox" aria-label="Resultados da pesquisa">
+                {!normalizedSearch ? (
+                  <p className="public-global-search-hint">Digite o nome de uma peça, coleção ou categoria.</p>
+                ) : isProductsLoading ? (
+                  <p className="public-global-search-hint">A procurar peças para si…</p>
+                ) : searchResults.length > 0 ? (
+                  <>
+                    <div className="public-global-search-heading"><span>RESULTADOS DA PESQUISA</span><small>{searchResults.length} sugestões</small></div>
+                    {searchResults.map((product: any) => (
+                      <button key={product.id} type="button" role="option" className="public-global-search-result" onMouseDown={(event) => event.preventDefault()} onClick={() => openProduct(product)}>
+                        <img src={getSearchImage(product)} alt="" />
+                        <span><strong>{product.name}</strong><small>{product.collection || product.category || "Eras Label"}</small></span>
+                        <b>R$ {Number(product.price || 0).toFixed(2).replace(".", ",")}</b>
+                      </button>
+                    ))}
+                    <button type="submit" className="public-global-search-see-all">VER TODOS OS RESULTADOS <ArrowRight size={13} /></button>
+                  </>
+                ) : (
+                  <div className="public-global-search-empty">
+                    <strong>Nenhum produto encontrado.</strong>
+                    <span>Tente outro termo ou veja todo o catálogo.</span>
+                    <button type="submit">VER CATÁLOGO <ArrowRight size={13} /></button>
+                  </div>
+                )}
+              </div>
+            )}
+          </form>
         </div>
+
         <Link href="/" className="public-global-brand" aria-label="Voltar para a loja Eras Label">ERAS<span>.</span></Link>
+
         <div className="public-global-right-tools">
-          <Link href="/account" className="public-global-account" aria-label="Abrir minha conta">
-            <UserRound size={17} strokeWidth={1.7} />
-          </Link>
+          <Link href="/account" className="public-global-account" aria-label="Abrir minha conta"><UserRound size={17} strokeWidth={1.7} /></Link>
           <button type="button" className="public-global-bag" aria-label={`Abrir sacola${cartCount ? ` com ${cartCount} itens` : " vazia"}`} onClick={() => window.dispatchEvent(new Event("eras-open-cart"))}>
             <ShoppingBag size={16} strokeWidth={1.7} />
             <span>SACOLA</span>
@@ -83,6 +201,7 @@ export default function PublicGlobalNav() {
             <ArrowRight size={14} aria-hidden="true" />
           </button>
         </div>
+
         <nav className="public-global-links" aria-label="Navegação da loja">
           <Link href="/" className={location === "/" ? "is-active" : ""}>Início</Link>
           <Link href="/catalog" className={location === "/catalog" ? "is-active" : ""}>Produtos</Link>

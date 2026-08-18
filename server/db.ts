@@ -479,6 +479,7 @@ export type HomeBannerTargetType = "custom" | "catalog" | "category" | "collecti
 export type HomeContent = {
   banners: Array<{ id: string; eyebrow: string; title: string; subtitle: string; imageUrl: string; href: string; cta: string; targetType?: HomeBannerTargetType; targetValue?: string }>;
   highlights: Array<{ id: string; productId: number; label: string }>;
+  sectionTitles?: { highlights?: string; shop?: string; community?: string };
   vipBanner: { eyebrow: string; title: string; subtitle: string; imageUrl: string; href: string; cta: string; targetType?: HomeBannerTargetType; targetValue?: string };
 };
 
@@ -508,6 +509,11 @@ export const defaultHomeContent: HomeContent = {
     { id: "highlight-2", productId: 2, label: "MAIS VISTO" },
     { id: "highlight-3", productId: 5, label: "ARQUIVO" },
   ],
+  sectionTitles: {
+    highlights: "Destaques",
+    shop: "Produtos da Era",
+    community: "Visto fora do estúdio.",
+  },
   vipBanner: {
     eyebrow: "ACESSO ANTECIPADO",
     title: "ENTRE PARA O GRUPO VIP",
