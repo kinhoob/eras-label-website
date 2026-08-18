@@ -825,3 +825,5 @@
 - [x] Corrigir a composição desktop da newsletter: garantir distribuição equilibrada em duas colunas, impedir quebra vertical do título e preservar a composição mobile.
 
 - [x] Adicionar ícone acessível do WhatsApp junto ao contacto correspondente no rodapé público, mantendo a estética editorial e a responsividade.
+
+- [x] Reestruturar a página pública de Produtos com grelha compacta de três produtos por fila no desktop e filtros laterais de preço, ordenação, tamanho e categorias, preservando a responsividade mobile.
