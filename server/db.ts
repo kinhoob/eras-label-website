@@ -3,6 +3,7 @@ import { drizzle } from "drizzle-orm/mysql2";
 import { nanoid } from "nanoid";
 import {
   InsertUser,
+  InsertCoupon,
   users,
   products,
   productVariations,
@@ -1344,5 +1345,57 @@ export async function archiveCollection(id: number) {
   const db = await getDb();
   if (!db) return { success: true };
   await db.update(collections).set({ active: 0 }).where(eq(collections.id, id));
+  return { success: true };
+}
+
+
+export async function listAdminCoupons() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(coupons).orderBy(desc(coupons.createdAt));
+}
+
+export async function saveCouponData(data: {
+  id?: number;
+  code: string;
+  discountPercent: number;
+  usageLimit?: number | null;
+  minPurchase?: number;
+  validUntil?: string | null;
+  active?: number;
+}) {
+  const db = await getDb();
+  const code = data.code.trim().toUpperCase();
+  if (!code) throw new Error("Código do cupom é obrigatório.");
+  const values: InsertCoupon = {
+    code,
+    discountPercent: data.discountPercent.toFixed(2),
+    usageLimit: data.usageLimit ?? null,
+    minPurchase: (data.minPurchase ?? 0).toFixed(2),
+    validUntil: data.validUntil ? new Date(data.validUntil) : null,
+    active: data.active ?? 1,
+  };
+  if (!db) return { ...values, id: data.id ?? 0, timesUsed: 0, createdAt: new Date() };
+  if (data.id) {
+    await db.update(coupons).set(values).where(eq(coupons.id, data.id));
+    const updated = await db.select().from(coupons).where(eq(coupons.id, data.id)).limit(1);
+    return updated[0];
+  }
+  await db.insert(coupons).values(values);
+  const created = await db.select().from(coupons).where(eq(coupons.code, code)).limit(1);
+  return created[0];
+}
+
+export async function toggleCouponActive(id: number, active: number) {
+  const db = await getDb();
+  if (!db) return { success: true };
+  await db.update(coupons).set({ active }).where(eq(coupons.id, id));
+  return { success: true };
+}
+
+export async function deleteCouponData(id: number) {
+  const db = await getDb();
+  if (!db) return { success: true };
+  await db.delete(coupons).where(eq(coupons.id, id));
   return { success: true };
 }

@@ -46,6 +46,9 @@ import AdminCategoriesSection from "@/pages/AdminCategoriesSection";
 import AdminSalesSection from "@/pages/AdminSalesSection";
 import AdminManualOrderSection from "@/pages/AdminManualOrderSection";
 import AdminAbandonedCartsSection from "@/pages/AdminAbandonedCartsSection";
+import { AdminCollectionsSection } from "@/pages/AdminCollectionsSection";
+import { AdminEventsSection } from "@/pages/AdminEventsSection";
+import { AdminCouponsSection } from "@/pages/AdminCouponsSection";
 import { exportToCSV } from "@/lib/csv-export";
 import type { StorefrontConfig } from "../../../shared/storefront";
 import { optimizeProductImage } from "@/lib/image-optimizer";
@@ -956,6 +959,9 @@ export default function Admin() {
           </tbody></table></div>
         </section>}
 
+        {active === "Coleções" && <AdminCollectionsSection />}
+        {active === "Eventos" && <AdminEventsSection />}
+        {active === "Cupons" && <AdminCouponsSection />}
         {active === "Inventário" && <section className="admin-content">
           <div className="inventory-heading">
             <div><span className="section-kicker">OPERAÇÃO · ATALHO RÁPIDO</span><h2 className="content-title">Inventário</h2><p>Altere somente a quantidade de peças por tamanho ou variação. Para editar o produto completo, use Produtos.</p></div>

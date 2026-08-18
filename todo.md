@@ -742,8 +742,8 @@
 - [x] Executar testes Vitest, TypeScript, build de produção e guardar checkpoint final desta entrega.
 
 ## Refinamento do CMS, Pedido Manual e Carrinhos Abandonados (2026-08-18)
-- [ ] Elevar a aparência visual de todo o CMS (Aparência & CMS) para a estética editorial da Eras Label (#b22222, cartões refinados, superfícies elevadas e transições suaves).
-- [ ] Redesenhar o seletor de "Criar nova seção" num componente moderno, limpo e intuitivo.
-- [ ] Criar a página/secção de **Pedido Manual** dentro de **Aparência & CMS** para registar encomendas externas ou manuais com itens, cliente e pagamento.
-- [ ] Criar a secção de **Carrinhos Abandonados** dentro de **Vendas & Clientes** para monitorar carrinhos preenchidos por clientes não finalizados.
-- [ ] Executar testes Vitest, TypeScript, build e guardar checkpoint.
+- [x] Elevar a aparência visual de todo o CMS (Aparência & CMS) para a estética editorial da Eras Label (#b22222, cartões refinados, superfícies elevadas e transições suaves).
+- [x] Redesenhar o seletor de "Criar nova seção" num componente moderno, limpo e intuitivo.
+- [x] Criar a página/secção de **Pedido Manual** dentro de **Aparência & CMS** para registar encomendas externas ou manuais com itens, cliente e pagamento.
+- [x] Criar a secção de **Carrinhos Abandonados** dentro de **Vendas & Clientes** para monitorar carrinhos preenchidos por clientes não finalizados.
+- [x] Executar testes Vitest, TypeScript, build e guardar checkpoint.
