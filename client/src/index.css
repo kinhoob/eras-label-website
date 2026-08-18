@@ -10255,3 +10255,35 @@ body {
   color: #fff;
   border-color: #b22222;
 }
+
+/* ==========================================================================
+   REFINAMENTO TIPOGRÁFICO GLOBAL — ERAS LABEL
+   Reduz o peso e o tamanho de títulos e menus para uma estética editorial sutil
+   ========================================================================== */
+
+/* Ajuste global para títulos h1, h2, h3 e menus */
+h1, h2, h3, .heading-editorial {
+  font-weight: 500 !important;
+  letter-spacing: -0.01em !important;
+}
+
+/* Redução sutil do tamanho de grandes títulos de páginas e seções */
+.public-page-title, h1.text-3xl, h1.text-4xl, h1.text-5xl {
+  font-size: clamp(1.8rem, 3.2vw, 2.75rem) !important;
+  font-weight: 500 !important;
+  line-height: 1.15 !important;
+  letter-spacing: -0.02em !important;
+}
+
+/* Suavização dos itens de navegação do menu desktop e mobile */
+.desktop-nav a, .menu-link-item, nav a {
+  font-weight: 500 !important;
+  letter-spacing: 0.12em !important;
+  font-size: 11px !important;
+}
+
+/* Ajuste nos subtítulos e descrições */
+.section-subtitle, p.text-muted-foreground {
+  font-weight: 400 !important;
+  letter-spacing: 0.01em !important;
+}
