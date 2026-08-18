@@ -806,3 +806,8 @@
 - [x] Reestruturar cabeçalho, métricas, apresentação pública, formulário e lista de eventos com hierarquia editorial premium.
 - [x] Preservar CRUD, publicação, banner, data, local, descrição, links/CTA e estados vazios.
 - [x] Validar desktop/mobile, executar TypeScript, 152 testes Vitest e build de produção.
+
+## Redesign de Próximo Drop e Trancar site (2026-08-18)
+- [x] Reestruturar os cartões de Próximo Drop e Trancar site com a mesma estética editorial do painel.
+- [x] Preservar cronómetro, mensagens, ativação/desativação, campos de imagem/link e pré-visualização.
+- [x] Validar desktop/mobile, executar TypeScript, 152 testes Vitest e build de produção.
