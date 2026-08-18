@@ -8744,29 +8744,6 @@ body {
 }
 
 
-/* Crédito de autoria no rodapé público */
-.official-footer .footer-credit {
-  color: #b22222;
-  text-decoration: none;
-  transition: color .2s var(--eras-ease), transform .2s var(--eras-ease);
-}
-
-.official-footer .footer-credit:hover {
-  color: #7f1717;
-  transform: translateY(-1px);
-}
-
-.official-footer .footer-credit:focus-visible {
-  outline: 2px solid #b22222;
-  outline-offset: 4px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .official-footer .footer-credit { transition: none; }
-  .official-footer .footer-credit:hover { transform: none; }
-}
-
-
 /* Subnavegação editorial de categorias dentro de Produtos */
 .admin-nav-item-wrap {
   min-width: 0;

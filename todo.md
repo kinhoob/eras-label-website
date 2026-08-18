@@ -792,3 +792,7 @@
 - [x] Adicionar “Desenvolvido por Kinhoob” no rodapé público com link para https://kinhoob.github.io/portfolio.
 - [x] Garantir abertura acessível em nova aba, estilo editorial e responsividade; validar TypeScript, 152 testes Vitest e build de produção.
 - [x] Corrigir o erro de TypeScript no filtro de categorias do dropdown de Produtos identificado durante a validação.
+
+## Reversão da assinatura de rodapé — 2026-08-18
+- [x] Restaurar o texto anterior do rodapé e remover o link “Desenvolvido por Kinhoob”.
+- [x] Preservar o dropdown administrativo de Produtos e validar TypeScript, 152 testes Vitest e build de produção.
