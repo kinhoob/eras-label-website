@@ -861,3 +861,5 @@
 - [x] Atualizar testes de inventário e identidade das linhas do carrinho para o modelo somente por tamanho; validar TypeScript, Vitest e build.
 
 - [x] Remover a lista intrusiva de alertas de estoque do menu flutuante de notificações, mantendo o alerta de estoque baixo de forma discreta na própria linha do produto na tabela de inventário/catálogo.
+
+- [x] Redesenhar a tela de Cupons no painel administrativo com uma estética limpa, moderna e organizada inspirada na Nuvemshop, mantendo a identidade visual editorial da Eras Label (#b22222), barra de pesquisa, filtros de estado, tabela de gestão e modal de criação/edição.
