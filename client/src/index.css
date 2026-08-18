@@ -9128,8 +9128,8 @@ body {
 .storefront-settings-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-  margin-top: 1rem;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
 }
 
 .storefront-control-card,
@@ -9140,7 +9140,7 @@ body {
   transition: border-color .22s ease, box-shadow .22s ease, transform .22s ease;
 }
 
-.storefront-control-card { padding: clamp(1rem, 2vw, 1.35rem); }
+.storefront-control-card { padding: clamp(1.25rem, 2.2vw, 1.75rem); border-radius: 12px; }
 .storefront-control-card:hover,
 .storefront-announcement-card:hover {
   border-color: rgba(178, 34, 34, .28);
@@ -9220,12 +9220,14 @@ body {
 
 .storefront-lock-preview {
   display: grid;
-  gap: .5rem;
-  min-height: 158px;
-  margin: 1rem 0;
-  padding: 1.1rem;
+  gap: .65rem;
+  min-height: 172px;
+  margin: 1.25rem 0;
+  padding: 1.35rem;
+  border-radius: 8px;
   color: #f5eee7;
-  background: linear-gradient(135deg, #201e1c 0%, #332a26 100%);
+  background: linear-gradient(135deg, #1b1917 0%, #2c2420 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .storefront-lock-preview-brand {
@@ -9245,7 +9247,7 @@ body {
 
 .storefront-field-stack,
 .storefront-field-grid { display: grid; gap: .75rem; }
-.storefront-field-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 1rem; }
+.storefront-field-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 1.25rem; gap: 1rem; }
 .storefront-field { display: grid; gap: .36rem; min-width: 0; }
 .storefront-field > span,
 .storefront-color-field > span {
@@ -9261,11 +9263,14 @@ body {
 .storefront-field select,
 .storefront-color-field input {
   width: 100%;
-  border: 1px solid #ded6ce;
-  border-radius: 0;
+  min-height: 2.6rem;
+  border: 1px solid #d8cec4;
+  border-radius: 6px;
+  padding: 0.45rem 0.8rem;
   background: #fffdfa;
-  color: #292522;
-  font-size: .78rem;
+  color: #211e1c;
+  font-size: 0.84rem;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
 .storefront-field textarea {
@@ -9282,11 +9287,13 @@ body {
 
 .storefront-drop-preview {
   display: grid;
-  gap: .55rem;
-  margin: 1rem 0 0;
-  padding: 1.1rem;
-  border: 1px solid #eadbd2;
-  background: #f7eee8;
+  gap: .65rem;
+  margin: 1.25rem 0 0;
+  padding: 1.35rem;
+  border: 1px solid #e2cec4;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #fbf4f0 0%, #f6eae3 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 .storefront-drop-preview-label { color: #b22222; font-size: .62rem; font-weight: 700; letter-spacing: .14em; }
@@ -9307,8 +9314,8 @@ body {
 .storefront-inline-check { display: flex; align-items: center; gap: .45rem; min-height: 2.35rem; color: #6f665e; font-size: .72rem; }
 .storefront-inline-check input { accent-color: #b22222; }
 
-@media (max-width: 900px) {
-  .storefront-settings-grid { grid-template-columns: 1fr; }
+@media (max-width: 960px) {
+  .storefront-settings-grid { grid-template-columns: 1fr; gap: 1.25rem; }
   .storefront-announcement-options { grid-template-columns: 1fr 1fr; }
   .storefront-announcement-options .storefront-field,
   .storefront-inline-check { grid-column: 1 / -1; }
