@@ -8871,3 +8871,28 @@ body {
   .admin-sidebar nav button.admin-nav-product-category { animation: none; transition: none; }
   .admin-sidebar nav button.admin-nav-product-category:hover { transform: none; }
 }
+
+/* Miniaturas do seletor de produtos: tornam a escolha da curadoria visual e mantêm o cartão compacto. */
+.category-product-option {
+  align-items: center;
+  gap: .7rem;
+  min-height: 4.1rem;
+}
+
+/* A miniatura reutiliza o componente resiliente do inventário com uma moldura editorial discreta. */
+.category-product-option .table-thumb {
+  flex: 0 0 32px;
+  border: 1px solid rgba(178, 34, 34, .12);
+  box-shadow: 0 3px 10px rgba(59, 38, 28, .08);
+}
+
+/* O bloco textual permanece elíptico para nomes longos não quebrarem a grelha. */
+.category-product-option-copy {
+  flex: 1 1 auto;
+}
+
+@media (max-width: 560px) {
+  .category-product-option {
+    min-height: 3.8rem;
+  }
+}

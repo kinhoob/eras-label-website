@@ -1387,6 +1387,7 @@ export default function Admin() {
       ) : adminProducts.map((product) => (
         <label className={`home-shop-product-option category-product-option ${section.productIds.includes(product.id) ? "selected" : ""}`} key={`${section.id}-${product.id}`}>
           <input type="checkbox" checked={section.productIds.includes(product.id)} onChange={(event) => setHomeProductSections((current) => current.map((item, itemIndex) => { if (itemIndex !== index) return item; const productIds = event.target.checked ? Array.from(new Set([...item.productIds, product.id])) : item.productIds.filter((id) => id !== product.id); return { ...item, productIds }; }))} />
+          <AdminProductThumbnail src={product.images?.[0]} alt={`Miniatura de ${product.name}`} />
           <span className="category-product-option-copy"><strong>{product.name}</strong><small>{product.collection || "Sem coleção"}</small></span>
         </label>
       ))}

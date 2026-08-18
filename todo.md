@@ -796,3 +796,8 @@
 ## Reversão da assinatura de rodapé — 2026-08-18
 - [x] Restaurar o texto anterior do rodapé e remover o link “Desenvolvido por Kinhoob”.
 - [x] Preservar o dropdown administrativo de Produtos e validar TypeScript, 152 testes Vitest e build de produção.
+
+## Miniaturas no seletor de produtos das secções da Home (2026-08-18)
+- [x] Mostrar a imagem principal ou miniatura de cada produto no seletor de secções da Home.
+- [x] Preservar checkbox, seleção, ordenação, nome, coleção e fallback para produtos sem imagem.
+- [x] Validar a grelha em desktop/mobile, executar TypeScript, 152 testes Vitest e build de produção.
