@@ -837,3 +837,5 @@
 - [x] Ligar o backend de carrinhos abandonados aos dados reais e criar o template de e-mail com identidade visual em #b22222.
 
 - [x] Ligar o backend de carrinhos abandonados aos dados reais e criar o template de e-mail de carrinho abandonado com a cor #b22222.
+
+- [x] Executar limpeza total da base de dados para produtos, categorias, pedidos, itens de pedidos e histórico de e-mails, preservando administradores, aparências, clientes e configurações.
