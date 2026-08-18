@@ -855,3 +855,6 @@
 - [ ] Remover a lógica de cores das variações de produtos, permitindo apenas tamanhos e números de peças definidos pelo administrador.
 
 - [x] Rastrear e eliminar toda a origem de criação automática de produtos no backend/frontend, limpando todos os registos indesejados da base de dados.
+
+- [ ] Remover cores do painel e editor de variações de produtos, deixando apenas tamanhos e números.
+- [ ] Implementar seleção múltipla com checkboxes na tabela de produtos para ações em lote (duplicar, apagar e associar a categoria).
