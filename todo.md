@@ -712,21 +712,21 @@
 
 
 ## Nova rodada — Shop editorial na Home, coleções em dropdown e anúncio animado
-- [ ] Transformar a página inicial (Home) num shop editorial limpo, exibindo apenas as secções e produtos configurados pelo admin no painel
-- [ ] Integrar o dropdown de coleções na navbar pública de forma fluida e acessível
-- [ ] Corrigir e aprimorar a barra de anúncio (AnnouncementBar) para garantir centralização, rotação animada e exibição correta tanto em desktop quanto em mobile
-- [ ] Executar testes Vitest, TypeScript, build e validação visual desktop/mobile
-- [ ] Guardar checkpoint final desta rodada
+- [x] Transformar a página inicial (Home) num shop editorial limpo, exibindo apenas as secções e produtos configurados pelo admin no painel
+- [x] Integrar o dropdown de coleções na navbar pública de forma fluida e acessível
+- [x] Corrigir e aprimorar a barra de anúncio (AnnouncementBar) para garantir centralização, rotação animada e exibição correta tanto em desktop quanto em mobile
+- [x] Executar testes Vitest, TypeScript, build e validação visual desktop/mobile
+- [x] Guardar checkpoint final desta rodada
 
 - [x] Corrigir dropdown de Coleções da navbar para iniciar fechado e abrir apenas por interação, sem sobrepor o conteúdo.
 - [x] Corrigir a faixa de anúncio global para permanecer centrada, animada e visível em desktop e mobile.
 - [x] Fazer auditoria visual final da Home, navbar, drawer e navegação responsiva após os ajustes.
 - [x] Reexecutar Vitest, TypeScript e build de produção após o refinamento visual.
 
-- [ ] Redesenhar a página de produto com galeria swiper, miniaturas e painel de compra editorial inspirado na referência fornecida.
-- [ ] Implementar produtos similares dinâmicos usando a mesma categoria ou coleção, excluindo o produto atual.
-- [ ] Validar a página de produto em desktop/mobile, incluindo seleção de variação, adicionar à sacola e navegação global.
-- [ ] Reexecutar Vitest, TypeScript e build de produção após a atualização da página de produto.
+- [x] Redesenhar a página de produto com galeria swiper, miniaturas e painel de compra editorial inspirado na referência fornecida.
+- [x] Implementar produtos similares dinâmicos usando a mesma categoria ou coleção, excluindo o produto atual.
+- [x] Validar a página de produto em desktop/mobile, incluindo seleção de variação, adicionar à sacola e navegação global.
+- [x] Reexecutar Vitest, TypeScript e build de produção após a atualização da página de produto.
 
 - [x] Redesenhar a página de produto com galeria swiper, painel editorial de compra e recomendações da mesma categoria/coleção.
 
