@@ -585,6 +585,8 @@ export default function Admin() {
 
   const [active, setActive] = useState("Visão geral");
   const [query, setQuery] = useState("");
+  const [productCategoryFilter, setProductCategoryFilter] = useState<number | null>(null);
+  const [productsDropdownOpen, setProductsDropdownOpen] = useState(false);
   const [appearanceSaved, setAppearanceSaved] = useState(false);
   const [couponActive, setCouponActive] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -782,6 +784,24 @@ export default function Admin() {
       return matchesQuery && matchesCategory;
     });
   }, [adminProducts, query, inventoryCategoryFilter]);
+  const filteredProductCatalog = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    const selectedCategory = productCategoryFilter === null
+      ? null
+      : adminCategories.find((category) => Number(category.id) === productCategoryFilter);
+    const selectedCategoryName = selectedCategory?.name?.trim().toLowerCase();
+
+    return adminProducts.filter((product) => {
+      const matchesQuery = !normalizedQuery || [product.name, product.collection, product.category, product.subcategory ?? "", product.sku ?? ""].some((value) => value.toLowerCase().includes(normalizedQuery));
+      if (productCategoryFilter === null) return matchesQuery;
+      const matchesCategoryId = (product.categoryIds ?? []).includes(productCategoryFilter);
+      const matchesLegacyCategory = Boolean(selectedCategoryName) && [product.category, product.subcategory ?? ""].some((value) => value.trim().toLowerCase() === selectedCategoryName);
+      return matchesQuery && (matchesCategoryId || matchesLegacyCategory);
+    });
+  }, [adminCategories, adminProducts, productCategoryFilter, query]);
+  const selectedProductCategory = productCategoryFilter === null
+    ? null
+    : adminCategories.find((category) => Number(category.id) === productCategoryFilter) ?? null;
   const isSuperAdmin = authUser?.email?.trim().toLowerCase() === "theeraslabel@gmail.com";
   const navGroups = useMemo(() => buildAdminNavGroups(isSuperAdmin), [isSuperAdmin]);
 
@@ -795,8 +815,21 @@ export default function Admin() {
       : { ...current, [activeGroupId]: true });
   }, [active, navGroups]);
 
+  useEffect(() => {
+    if (active === "Produtos") setProductsDropdownOpen(true);
+  }, [active]);
+
   function selectNav(label: string) {
+    if (label !== "Produtos") setProductCategoryFilter(null);
+    if (label === "Produtos") setProductCategoryFilter(null);
     setActive(label);
+    setMenuOpen(false);
+  }
+
+  function selectProductCategory(categoryId: number) {
+    setActive("Produtos");
+    setProductCategoryFilter(categoryId);
+    setProductsDropdownOpen(true);
     setMenuOpen(false);
   }
 
@@ -888,17 +921,59 @@ export default function Admin() {
                     {group.items.map((item) => {
                       const ItemIcon = getAdminNavIcon(item.icon);
                       const isActive = active === item.label;
+                      const isProductsItem = group.id === "catalog" && item.label === "Produtos";
                       return (
-                        <button
-                          type="button"
-                          key={item.label}
-                          className={`admin-nav-item ${isActive ? "active" : ""}`}
-                          onClick={() => selectNav(item.label)}
-                          tabIndex={isOpen ? 0 : -1}
-                        >
-                          <ItemIcon size={15} aria-hidden="true" />
-                          <span>{item.label}</span>
-                        </button>
+                        <div className={`admin-nav-item-wrap ${isProductsItem ? "has-product-categories" : ""}`} key={item.label}>
+                          <button
+                            type="button"
+                            className={`admin-nav-item ${isActive ? "active" : ""}`}
+                            onClick={() => {
+                              if (isProductsItem) {
+                                selectNav("Produtos");
+                                setProductsDropdownOpen((current) => !current);
+                              } else {
+                                selectNav(item.label);
+                              }
+                            }}
+                            aria-expanded={isProductsItem ? productsDropdownOpen : undefined}
+                            tabIndex={isOpen ? 0 : -1}
+                          >
+                            <ItemIcon size={15} aria-hidden="true" />
+                            <span>{item.label}</span>
+                            {isProductsItem && <ChevronDown className={`admin-nav-product-chevron ${productsDropdownOpen ? "open" : ""}`} size={13} aria-hidden="true" />}
+                          </button>
+                          {isProductsItem && productsDropdownOpen && (
+                            <div className="admin-nav-product-categories" role="group" aria-label="Categorias de produtos">
+                              <button
+                                type="button"
+                                className={`admin-nav-product-category ${isActive && productCategoryFilter === null ? "active" : ""}`}
+                                onClick={() => selectNav("Produtos")}
+                                tabIndex={isOpen ? 0 : -1}
+                              >
+                                <Package size={13} aria-hidden="true" />
+                                <span>Todos os produtos</span>
+                              </button>
+                              {adminCategories.length === 0 ? (
+                                <span className="admin-nav-product-category-empty">Ainda não há categorias.</span>
+                              ) : adminCategories.map((category) => {
+                                const categoryId = Number(category.id);
+                                const categoryIsActive = isActive && productCategoryFilter === categoryId;
+                                return (
+                                  <button
+                                    type="button"
+                                    key={category.id}
+                                    className={`admin-nav-product-category ${categoryIsActive ? "active" : ""}`}
+                                    onClick={() => selectProductCategory(categoryId)}
+                                    tabIndex={isOpen ? 0 : -1}
+                                  >
+                                    <Tag size={13} aria-hidden="true" />
+                                    <span>{category.parentId ? `↳ ${category.name}` : category.name}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
                       );
                     })}
                   </div>
@@ -930,19 +1005,19 @@ export default function Admin() {
         {active === "Visão geral" && <AdminDashboardHome adminName={adminName} adminOrders={adminOrders} adminOrdersLoading={adminOrdersLoading} catalogCount={adminProducts.length} onNavigate={selectNav} />}
         {active === "Produtos" && <section className="admin-content">
           <div className="inventory-heading">
-            <div><span className="section-kicker">CATÁLOGO</span><h2 className="content-title">Produtos</h2><p>Cadastre e edite os dados completos das peças, incluindo SKU, categoria, imagens e preços.</p></div>
+            <div><span className="section-kicker">CATÁLOGO</span><h2 className="content-title">Produtos</h2><p>Cadastre e edite os dados completos das peças, incluindo SKU, categoria, imagens e preços.</p>{selectedProductCategory && <div className="product-category-filter-chip"><Tag size={13} /><span>Categoria: <strong>{selectedProductCategory.name}</strong></span><button type="button" onClick={() => setProductCategoryFilter(null)} aria-label="Remover filtro de categoria">×</button></div>}</div>
             <Button onClick={() => {
               setEditorMode("product");
               setEditingProduct({ name: "", collection: "PARADOX COLLECTION", category: "Camisetas", subcategory: null, sku: "", slug: "", visibility: "visible", categoryIds: [], price: 154.90, pixPrice: 147.15, description: "Peça de vestuário streetwear com acabamento premium.", status: "Publicado", variations: [] });
               setProductImages([]);
             }}><Plus size={16} /> Novo produto</Button>
           </div>
-          <div className="content-toolbar inventory-toolbar"><div className="search-box"><Search size={15} /><Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por nome, SKU ou coleção" /></div><span className="inventory-count">{filteredProducts.length} {filteredProducts.length === 1 ? "produto" : "produtos"}</span></div>
+          <div className="content-toolbar inventory-toolbar"><div className="search-box"><Search size={15} /><Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por nome, SKU ou coleção" /></div><span className="inventory-count">{filteredProductCatalog.length} {filteredProductCatalog.length === 1 ? "produto" : "produtos"}</span></div>
           <div className="admin-panel table-panel inventory-table-panel"><table><thead><tr><th>Produto</th><th>SKU</th><th>Categoria</th><th>Estoque</th><th>Status</th><th /></tr></thead><tbody>
             {catalogProductsLoading && <tr><td colSpan={6}><div className="inventory-state"><LoaderCircle className="spin" size={20} /><strong>Carregando produtos</strong><span>Estamos consultando o catálogo persistido.</span></div></td></tr>}
             {catalogProductsError && !catalogProductsLoading && <tr><td colSpan={6}><div className="inventory-state error"><strong>Não foi possível carregar os produtos</strong><span>Verifique a conexão e tente novamente.</span><Button type="button" variant="outline" onClick={() => void refetchCatalogProducts()}>Tentar novamente</Button></div></td></tr>}
-            {!catalogProductsLoading && !catalogProductsError && filteredProducts.length === 0 && <tr><td colSpan={6}><div className="inventory-state"><Package size={22} /><strong>{query ? "Nenhum produto encontrado" : "O catálogo está vazio"}</strong><span>{query ? "Tente buscar por outro nome, SKU ou coleção." : "Cadastre o primeiro produto para começar."}</span>{query && <Button type="button" variant="outline" onClick={() => setQuery("")}>Limpar busca</Button>}</div></td></tr>}
-            {!catalogProductsLoading && !catalogProductsError && filteredProducts.map((product) => <tr key={product.id}><td><div className="table-product"><AdminProductThumbnail src={product.images[0]} alt={`Imagem de ${product.name}`} /><div><strong>{product.name}</strong><span>{product.collection}</span></div></div></td><td><span className="inventory-sku">{product.sku || "Sem SKU"}</span></td><td><span>{product.category}</span>{product.subcategory && <small className="inventory-unit">{product.subcategory}</small>}</td><td><strong className={product.stock === 0 ? "inventory-stock-zero" : "inventory-stock-value"}>{product.stock}</strong><span className="inventory-unit">unidades</span></td><td><span className={`status-pill ${product.status === "Publicado" ? "success" : product.status === "Esgotado" ? "danger" : "warning"}`}>{product.status}</span></td><td><div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "0.35rem" }}>
+            {!catalogProductsLoading && !catalogProductsError && filteredProductCatalog.length === 0 && <tr><td colSpan={6}><div className="inventory-state"><Package size={22} /><strong>{query || selectedProductCategory ? "Nenhum produto encontrado" : "O catálogo está vazio"}</strong><span>{query || selectedProductCategory ? "Tente outra pesquisa ou escolha uma categoria diferente." : "Cadastre o primeiro produto para começar."}</span>{(query || selectedProductCategory) && <Button type="button" variant="outline" onClick={() => { setQuery(""); setProductCategoryFilter(null); }}>Limpar filtros</Button>}</div></td></tr>}
+            {!catalogProductsLoading && !catalogProductsError && filteredProductCatalog.map((product) => <tr key={product.id}><td><div className="table-product"><AdminProductThumbnail src={product.images[0]} alt={`Imagem de ${product.name}`} /><div><strong>{product.name}</strong><span>{product.collection}</span></div></div></td><td><span className="inventory-sku">{product.sku || "Sem SKU"}</span></td><td><span>{product.category}</span>{product.subcategory && <small className="inventory-unit">{product.subcategory}</small>}</td><td><strong className={product.stock === 0 ? "inventory-stock-zero" : "inventory-stock-value"}>{product.stock}</strong><span className="inventory-unit">unidades</span></td><td><span className={`status-pill ${product.status === "Publicado" ? "success" : product.status === "Esgotado" ? "danger" : "warning"}`}>{product.status}</span></td><td><div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "0.35rem" }}>
               <button className="table-more" aria-label={`Editar produto ${product.name}`} title="Editar produto" onClick={() => {
                 setEditorMode("product");
                 const numericPrice = Number(product.price.replace(/[^0-9,]/g, "").replace(",", ".")) || 0;

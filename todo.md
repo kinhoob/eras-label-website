@@ -782,3 +782,13 @@
 - [x] Corrigir o modal de detalhes do pedido para abrir centrado no viewport sem exigir scroll da página.
 - [x] Manter o scroll limitado ao conteúdo interno, preservar o botão X e garantir comportamento responsivo.
 - [x] Validar desktop/mobile, executar TypeScript, Vitest (152 testes) e build de produção.
+
+## Dropdown de Produtos com categorias (2026-08-18)
+- [x] Transformar Produtos na sidebar administrativa num grupo dropdown expansível.
+- [x] Listar dinamicamente as categorias cadastradas dentro do dropdown e manter o acesso à visão geral de Produtos.
+- [x] Ligar cada categoria a uma listagem filtrada, preservar permissões e validar desktop/mobile, TypeScript, 152 testes e build.
+
+## Assinatura do rodapé — Kinhoob (2026-08-18)
+- [x] Adicionar “Desenvolvido por Kinhoob” no rodapé público com link para https://kinhoob.github.io/portfolio.
+- [x] Garantir abertura acessível em nova aba, estilo editorial e responsividade; validar TypeScript, 152 testes Vitest e build de produção.
+- [x] Corrigir o erro de TypeScript no filtro de categorias do dropdown de Produtos identificado durante a validação.
