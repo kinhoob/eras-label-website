@@ -10333,3 +10333,121 @@ h1, h2, h3, .heading-editorial {
 .lovable-side-menu.is-closing {
   transform: translateX(-100%);
 }
+
+/* ==========================================================================
+   CHECKOUT TRANSPARENTE DEFINITIVO — ERAS LABEL
+   Elimina qualquer corte ou conflito de altura em desktop e mobile, garantindo
+   que todo o formulário, opções e resumo fiquem visíveis e roláveis com suavidade.
+   ========================================================================== */
+
+.checkout-page--modal {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 200 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 100dvh !important;
+  padding: 16px !important;
+  overflow-y: auto !important;
+  background: rgba(24, 22, 19, 0.72) !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+.checkout-modal-shell {
+  width: min(1200px, 100%) !important;
+  max-height: calc(100dvh - 32px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(178, 34, 34, 0.22) !important;
+  border-radius: 24px !important;
+  background: #fbf9f4 !important;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.35) !important;
+}
+
+.checkout-modal-shell .checkout-page-header {
+  flex: 0 0 auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  min-height: 64px !important;
+  padding: 0 28px !important;
+  border-bottom: 1px solid rgba(31, 29, 26, 0.1) !important;
+  background: #fffaf5 !important;
+  z-index: 2 !important;
+}
+
+.checkout-modal-shell .checkout-page-layout {
+  flex: 1 1 auto !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.25fr) minmax(360px, 0.75fr) !important;
+  gap: 36px !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 28px 32px 36px !important;
+  overflow-y: auto !important;
+  align-items: start !important;
+}
+
+.checkout-page-main {
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 22px !important;
+}
+
+.checkout-page-form {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 22px !important;
+}
+
+.checkout-page-summary {
+  position: sticky !important;
+  top: 0 !important;
+  max-height: calc(100dvh - 140px) !important;
+  overflow-y: auto !important;
+  padding: 24px !important;
+  border-radius: 18px !important;
+  background: #24211e !important;
+  color: #fbf9f4 !important;
+}
+
+.checkout-summary-lines {
+  max-height: 260px !important;
+  overflow-y: auto !important;
+}
+
+@media (max-width: 980px) {
+  .checkout-page--modal {
+    padding: 0 !important;
+    align-items: stretch !important;
+  }
+  .checkout-modal-shell {
+    width: 100% !important;
+    max-height: 100dvh !important;
+    height: 100dvh !important;
+    border-radius: 0 !important;
+    border: 0 !important;
+  }
+  .checkout-modal-shell .checkout-page-header {
+    min-height: 56px !important;
+    padding: 0 16px !important;
+  }
+  .checkout-modal-shell .checkout-page-layout {
+    display: flex !important;
+    flex-direction: column-reverse !important;
+    gap: 24px !important;
+    padding: 18px 16px 40px !important;
+    overflow-y: auto !important;
+  }
+  .checkout-page-summary {
+    position: static !important;
+    max-height: none !important;
+    padding: 18px !important;
+  }
+  .checkout-summary-lines {
+    max-height: 210px !important;
+  }
+}
