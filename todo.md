@@ -891,3 +891,8 @@
 - [ ] Posicionar o formulário de cadastro/criação de cupons junto à barra de pesquisa e filtros no topo
 - [ ] Exibir os cupons criados logo abaixo em formato de cards limpos e responsivos
 - [ ] Validar testes, build e salvar checkpoint
+
+## Redesenho da Tela de Coleções
+- [ ] Reestruturar AdminCollectionsSection.tsx em grid de cards editoriais com preview de imagem
+- [ ] Aplicar identidade visual #b22222 e tipografia limpa da Eras Label aos botões e modais
+- [ ] Validar testes automatizados Vitest e build de produção
