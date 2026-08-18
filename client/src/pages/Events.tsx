@@ -2,7 +2,7 @@ import { ArrowUpRight } from "lucide-react";
 import { PageTransitionHandler } from "@/components/PageTransition";
 import OfficialFooter from "@/components/OfficialFooter";
 import { trpc } from "@/lib/trpc";
-import { parseCmsContent } from "@shared/cms";
+import { getUpcomingPublishedEvents, parseCmsContent } from "@shared/cms";
 
 function EventLink({ url, label }: { url?: string | null; label: string }) {
   if (!url) {
@@ -21,7 +21,8 @@ function EventLink({ url, label }: { url?: string | null; label: string }) {
 export default function EventsPage() {
   const { data: cms } = trpc.catalog.getCmsPage.useQuery({ slug: "events" });
   const structured = parseCmsContent(cms?.content, "events");
-  const events = structured.events ?? [];
+  // Apenas eventos publicados e com data de hoje em diante chegam à página pública.
+  const events = getUpcomingPublishedEvents(structured.events ?? []);
 
   return (
     <div className="public-page-shell min-h-screen bg-[#f6f3ee] text-[#23221e] flex flex-col font-sans">
@@ -37,7 +38,7 @@ export default function EventsPage() {
           <div className="rounded-2xl border border-dashed border-[#cfc5b8] bg-[#eee7dd] p-10 md:p-16 text-center">
             <span className="text-xs uppercase tracking-[0.2em] text-[#8c8378]">Agenda em preparação</span>
             <h2 className="mt-3 text-2xl font-black uppercase">Nenhum evento publicado ainda</h2>
-            <p className="mt-2 text-[#554f46]">Os próximos encontros da Eras Label aparecerão aqui assim que forem cadastrados no painel.</p>
+              <p className="mt-2 text-[#554f46]">Os próximos encontros da Eras Label aparecerão aqui assim que forem cadastrados e publicados no painel.</p>
           </div>
         ) : (
           <div className="space-y-6">

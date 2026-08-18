@@ -6926,3 +6926,312 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .public-cart-overlay, .public-cart-drawer { transition: none; }
 }
+
+
+/* Referência Lovable: menu lateral claro, editorial e com X simples sem círculo. */
+.lovable-menu-overlay {
+  background: rgba(30, 28, 25, .42);
+  backdrop-filter: blur(5px);
+  justify-content: flex-start;
+  align-items: stretch;
+  transition: opacity .28s ease;
+}
+
+.lovable-side-menu {
+  width: min(380px, 88vw);
+  max-width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(35, 34, 30, .22) transparent;
+  padding: 28px 24px 42px;
+  background: #f8f7f3;
+  color: #171614;
+  box-shadow: 18px 0 55px rgba(35, 34, 30, .12);
+  animation: lovable-menu-enter .42s cubic-bezier(.23, 1, .32, 1) both;
+}
+
+.lovable-side-menu::-webkit-scrollbar { width: 4px; }
+.lovable-side-menu::-webkit-scrollbar-track { background: transparent; }
+.lovable-side-menu::-webkit-scrollbar-thumb { border-radius: 999px; background: rgba(35, 34, 30, .22); }
+
+.lovable-menu-header {
+  min-height: 31px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid rgba(35, 34, 30, .08);
+}
+
+.lovable-menu-brand {
+  color: #23221e;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: .34em;
+  line-height: 1;
+}
+
+.lovable-menu-brand span { color: #b22222; }
+
+/* O X não tem círculo nem fundo; a área de toque continua confortável. */
+.lovable-menu-header .close-button {
+  position: static;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #23221e;
+}
+
+.lovable-menu-header .close-button:hover {
+  background: transparent;
+  color: #b22222;
+  transform: rotate(8deg);
+}
+
+.lovable-menu-links {
+  gap: 15px;
+  margin-top: 35px;
+}
+
+.lovable-menu-links a {
+  font-size: clamp(19px, 2.8vw, 23px);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -.045em;
+}
+
+.lovable-menu-links .vip-whatsapp {
+  max-width: 260px;
+  margin-top: 1px;
+  color: #b22222;
+  font-size: clamp(18px, 2.7vw, 22px);
+}
+
+.lovable-menu-section {
+  gap: 13px;
+  margin-top: 35px;
+  border-top-color: rgba(35, 34, 30, .10);
+  padding-top: 21px;
+}
+
+.lovable-menu-kicker {
+  color: #81786e;
+  font-size: 9px;
+  letter-spacing: .27em;
+}
+
+.lovable-menu-sublinks { gap: 12px; }
+.lovable-menu-sublinks a {
+  color: #403b35;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .18em;
+}
+
+@keyframes lovable-menu-enter {
+  from { opacity: .45; transform: translateX(-24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* Teaser de próximos encontros: só é renderizado quando existem eventos publicados e futuros. */
+.home-events-preview {
+  max-width: 1180px;
+  margin: 0 auto 112px;
+  padding: 0 clamp(20px, 4vw, 66px);
+}
+
+.home-events-list { border-top: 1px solid #d9d0c5; }
+
+.home-event-row {
+  display: grid;
+  grid-template-columns: minmax(130px, .42fr) minmax(0, 1.35fr) auto;
+  align-items: center;
+  gap: 28px;
+  padding: 25px 0;
+  border-bottom: 1px solid #d9d0c5;
+  transition: background-color .25s ease, padding .25s cubic-bezier(.23, 1, .32, 1);
+}
+
+.home-event-row:hover {
+  padding-left: 12px;
+  padding-right: 12px;
+  background: rgba(255, 255, 255, .42);
+}
+
+.home-event-date { display: grid; gap: 6px; }
+.home-event-date span {
+  color: #b22222;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+.home-event-date small { color: #81786e; font-size: 12px; }
+.home-event-copy h3 {
+  margin: 0;
+  color: #23221e;
+  font-size: clamp(20px, 2.4vw, 30px);
+  font-weight: 800;
+  letter-spacing: -.045em;
+  text-transform: uppercase;
+}
+.home-event-copy p {
+  max-width: 620px;
+  margin: 8px 0 0;
+  color: #6f675e;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.home-event-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: #23221e;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: color .2s ease, gap .25s cubic-bezier(.23, 1, .32, 1);
+}
+.home-event-link:hover { gap: 14px; color: #b22222; }
+
+/* Newsletter Lovable: convite curto para receber drops e encontros antes do público geral. */
+.newsletter-copy h2 { text-transform: uppercase; }
+.newsletter-copy p { max-width: 430px; }
+.newsletter-note { display: inline-block; margin-top: 18px; color: rgba(246, 243, 238, .48); font-size: 9px; letter-spacing: .18em; }
+.newsletter-success { align-items: flex-start; flex-direction: column; }
+.newsletter-success-mark { color: #b22222; font-size: 26px; line-height: 1; }
+
+/* Drawer global: superfície branca, tipografia discreta e scroll só na lista quando necessário. */
+.public-cart-drawer {
+  width: min(430px, 93vw);
+  padding: 28px 25px 24px;
+  border: 0;
+  border-radius: 0;
+  background: #faf9f6;
+  box-shadow: -24px 0 65px rgba(35, 34, 30, .16), 0 1px 0 rgba(255, 255, 255, .9) inset;
+}
+
+.public-cart-drawer .drawer-head {
+  margin: 0 0 22px;
+  padding: 0 0 20px;
+  border-bottom: 1px solid rgba(35, 34, 30, .13);
+}
+
+.public-cart-drawer .drawer-head h2 {
+  margin-top: 8px;
+  color: #23221e;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: .20em;
+  text-transform: uppercase;
+}
+
+.public-cart-drawer .drawer-head .close-button {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #23221e;
+}
+.public-cart-drawer .drawer-head .close-button:hover { background: transparent; color: #b22222; }
+
+.public-cart-drawer .cart-items-list {
+  min-height: 0;
+  max-height: min(42vh, 420px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(35, 34, 30, .2) transparent;
+}
+.public-cart-drawer .cart-items-list::-webkit-scrollbar { width: 3px; }
+.public-cart-drawer .cart-items-list::-webkit-scrollbar-thumb { border-radius: 999px; background: rgba(35, 34, 30, .2); }
+.public-cart-drawer .cart-item { border-color: rgba(35, 34, 30, .13); }
+.public-cart-drawer .cart-item img { border-radius: 0; }
+.public-cart-drawer .cart-item-name { letter-spacing: .02em; }
+.public-cart-drawer .quantity-stepper {
+  gap: 0;
+  border: 1px solid rgba(35, 34, 30, .18);
+  background: #fff;
+}
+.public-cart-drawer .quantity-stepper button {
+  width: 29px;
+  height: 27px;
+  border: 0;
+  background: transparent;
+  color: #23221e;
+}
+.public-cart-drawer .quantity-stepper button:hover { background: #f0ebe3; color: #b22222; }
+.public-cart-drawer .quantity-stepper span { min-width: 28px; text-align: center; }
+.public-cart-drawer .cart-footer { padding-top: 16px; }
+.public-cart-drawer .cart-totals { border-top-color: rgba(35, 34, 30, .13); }
+.public-cart-drawer .cart-total-row.final { border-top-color: rgba(35, 34, 30, .18); }
+
+@media (max-width: 720px) {
+  .lovable-side-menu { width: min(360px, 92vw); padding: 24px 20px 34px; }
+  .home-events-preview { margin-bottom: 78px; padding: 0 20px; }
+  .home-event-row { grid-template-columns: 1fr; gap: 12px; padding: 20px 0; }
+  .home-event-row:hover { padding-left: 8px; padding-right: 8px; }
+  .home-event-link { justify-self: start; }
+  .newsletter-inner { padding-top: 56px; padding-bottom: 56px; }
+  .public-cart-drawer { width: 100vw; padding: 22px 18px 18px; }
+  .public-cart-drawer .cart-items-list { max-height: 34vh; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lovable-menu-overlay,
+  .lovable-side-menu,
+  .home-event-row,
+  .home-event-link,
+  .public-cart-drawer { animation: none; transition: none; }
+}
+
+
+/* Campos adicionais do CMS de eventos */
+.cms-field-help {
+  margin: -2px 0 16px;
+  color: #8a8176;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.cms-publish-toggle {
+  display: flex !important;
+  align-items: flex-start;
+  gap: 11px;
+  margin: 2px 0 18px;
+  padding: 12px 14px;
+  border: 1px solid rgba(178, 34, 34, .16);
+  background: #fffaf5;
+  cursor: pointer;
+}
+
+.cms-publish-toggle input {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  accent-color: #b22222;
+}
+
+.cms-publish-toggle span {
+  display: grid;
+  gap: 4px;
+}
+
+.cms-publish-toggle strong {
+  color: #302b26;
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.cms-publish-toggle small {
+  color: #8a8176;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.4;
+}

@@ -2734,17 +2734,19 @@ function AdminCmsManager() {
               <div className="cms-structured-editor">
                 <div className="cms-structured-heading">
                   <div><span className="section-kicker">AGENDA EDITÁVEL</span><h3>Eventos e encontros</h3><p>Cadastre os eventos e direcione cada botão para uma página, inscrição ou canal externo.</p></div>
-                  <Button type="button" variant="outline" onClick={() => setEventBlocks((current) => [...current, { id: `event-${Date.now()}`, date: "", title: "Novo evento", description: "", ctaLabel: "Saiba mais", ctaUrl: "" }])}><Plus size={15} /> Adicionar evento</Button>
+                  <Button type="button" variant="outline" onClick={() => setEventBlocks((current) => [...current, { id: `event-${Date.now()}`, date: "", eventDate: "", title: "Novo evento", description: "", ctaLabel: "Saiba mais", ctaUrl: "", published: false }])}><Plus size={15} /> Adicionar evento</Button>
                 </div>
                 {eventBlocks.length === 0 ? <div className="cms-empty-state">Nenhum evento publicado. Adicione o próximo encontro da Eras.</div> : eventBlocks.map((event, index) => (
                   <div className="cms-event-card" key={event.id}>
                     <div className="cms-card-index">0{index + 1}</div>
                     <div className="cms-card-fields">
                       <div className="cms-field-grid cms-field-grid-3">
-                        <label>Data<input value={event.date} onChange={(e) => updateEventBlock(event.id, { date: e.target.value })} placeholder="24 AGO 2026" /></label>
-                        <label>Título<input value={event.title} onChange={(e) => updateEventBlock(event.id, { title: e.target.value })} placeholder="Nome do encontro" /></label>
+                        <label>Data editorial<input value={event.date} onChange={(e) => updateEventBlock(event.id, { date: e.target.value })} placeholder="24 AGO 2026" /></label>
+                        <label>Data do evento<input type="date" value={event.eventDate || ""} onChange={(e) => updateEventBlock(event.id, { eventDate: e.target.value })} aria-describedby={`event-date-help-${event.id}`} /></label>
                         <label>Local<input value={event.location || ""} onChange={(e) => updateEventBlock(event.id, { location: e.target.value })} placeholder="Recife, PE" /></label>
                       </div>
+                      <p id={`event-date-help-${event.id}`} className="cms-field-help">A data do evento controla a ordem e remove automaticamente encontros que já passaram.</p>
+                      <label className="cms-publish-toggle"><input type="checkbox" checked={event.published !== false} onChange={(e) => updateEventBlock(event.id, { published: e.target.checked })} /><span><strong>Publicar este evento</strong><small>Quando desativado, fica salvo como rascunho e não aparece no site.</small></span></label>
                       <label>Descrição<textarea rows={3} value={event.description} onChange={(e) => updateEventBlock(event.id, { description: e.target.value })} placeholder="Detalhes do evento..." /></label>
                       <div className="cms-field-grid">
                         <label>Texto do botão<input value={event.ctaLabel || ""} onChange={(e) => updateEventBlock(event.id, { ctaLabel: e.target.value })} placeholder="Inscreva-se" /></label>

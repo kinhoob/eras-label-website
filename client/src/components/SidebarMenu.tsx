@@ -50,9 +50,9 @@ export function SidebarMenu({ isOpen, onClose, onPlaySound }: SidebarMenuProps) 
     <div className={`lovable-menu-overlay ${isOpen ? "is-open" : "is-closing"}`} onClick={onClose} role="presentation">
       <div className={`lovable-side-menu ${isOpen ? "is-open" : "is-closing"}`} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Menu principal da Eras Label">
         <div className="lovable-menu-header">
-          <span className="lovable-menu-kicker">EXPLORAR ERAS</span>
+          <span className="lovable-menu-brand" aria-label="Eras Label">ERAS<span>.</span></span>
           <button type="button" onClick={closeWithSound} className="close-button" aria-label="Fechar menu" title="Fechar menu">
-            <X size={19} />
+            <X size={22} strokeWidth={1.7} />
           </button>
         </div>
         <div className="lovable-menu-links">

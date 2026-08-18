@@ -688,3 +688,14 @@
 
 ## Fecho
 - [ ] Comunicar o resultado final com o checkpoint e limitações de validação
+
+
+## Alinhamento com referência Lovable — eventos, newsletter, menu e sacola
+- [x] Ajustar a secção pública de eventos para mostrar apenas eventos futuros publicados pelo admin
+- [x] Garantir no painel administrativo a criação/edição de data, título, cidade, descrição, imagem opcional, link/CTA e publicação dos eventos
+- [x] Ajustar a newsletter pública para o conceito “Seja avisado antes da próxima era”, mantendo estados reais de carregamento, sucesso e erro
+- [x] Refinar o menu lateral para a composição visual da referência, com X simples sem círculo, backdrop e scrollbar discreto
+- [x] Refinar a sacola global para o drawer branco editorial da referência, preservando cupom, frete, pagamentos e checkout reais
+- [x] Validar responsividade desktop/mobile, navegação, estados vazios e acessibilidade
+- [x] Executar testes, TypeScript, build, screenshots e guardar checkpoint desta rodada
+- [x] Atualizar notas da referência Lovable sem copiar conteúdo ou dados fictícios de clientes

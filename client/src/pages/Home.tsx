@@ -46,6 +46,7 @@ import { getSearchSuggestionText, searchStorefrontProducts, sortStorefrontProduc
 import { clearRecentSearches, loadRecentSearches, removeRecentSearch, saveRecentSearch } from "@/lib/recent-searches";
 import OfficialFooter from "@/components/OfficialFooter";
 import { SidebarMenu } from "@/components/SidebarMenu";
+import { getUpcomingPublishedEvents, parseCmsContent } from "@shared/cms";
 
 type Category = string;
 type SearchFilterKey = "query" | "category" | "price" | "size" | "sort";
@@ -403,6 +404,7 @@ export default function Home() {
   const { data: commercialConfig } = trpc.catalog.getConfig.useQuery();
   const { data: storefrontConfig } = trpc.catalog.getStorefrontConfig.useQuery();
   const { data: homeContent } = trpc.catalog.getHomeContent.useQuery();
+  const { data: eventsPage } = trpc.catalog.getCmsPage.useQuery({ slug: "events" });
   const { data: catalogRows = [] } = trpc.catalog.list.useQuery();
   const { data: publicCategories = [] } = trpc.catalog.categories.useQuery();
   const products = useMemo<Product[]>(() => catalogRows.map(mapCatalogProduct), [catalogRows]);
@@ -432,6 +434,7 @@ export default function Home() {
     shop: homeContent?.sectionTitles?.shop?.trim() || "Produtos da Era",
     community: homeContent?.sectionTitles?.community?.trim() || "Visto fora do estúdio.",
   } satisfies Required<HomeSectionTitles>;
+  const upcomingEvents = useMemo(() => getUpcomingPublishedEvents(parseCmsContent(eventsPage?.content, "events").events ?? []), [eventsPage?.content]);
   const currentBanner = banners[activeBanner % banners.length] ?? fallbackBanners[0];
   const pixDiscountPercent = commercialConfig?.pixDiscountPercent ?? 5;
   const freeShippingThreshold = commercialConfig?.freeShippingThreshold ?? 350;
@@ -1151,6 +1154,24 @@ export default function Home() {
           </div>
         </section>
 
+        {upcomingEvents.length > 0 && (
+          <section className="home-events-preview" aria-labelledby="home-events-title">
+            <div className="section-heading">
+              <div><span className="section-kicker">04 / ENCONTROS</span><h2 id="home-events-title">Próximos encontros</h2></div>
+              <a className="text-link" href="/events" onClick={() => playClick(soundsOn)}>VER AGENDA <ArrowRight size={14} /></a>
+            </div>
+            <div className="home-events-list">
+              {upcomingEvents.slice(0, 3).map((event) => (
+                <article className="home-event-row" key={event.id}>
+                  <div className="home-event-date"><span>{event.date}</span>{event.location && <small>{event.location}</small>}</div>
+                  <div className="home-event-copy"><h3>{event.title}</h3><p>{event.description}</p></div>
+                  {event.ctaUrl && <a className="home-event-link" href={event.ctaUrl} target={/^https?:\/\//i.test(event.ctaUrl) ? "_blank" : undefined} rel={/^https?:\/\//i.test(event.ctaUrl) ? "noreferrer" : undefined} onClick={() => playClick(soundsOn)}>{event.ctaLabel || "Saiba mais"} <ArrowRight size={14} /></a>}
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
+
         <section className="vip-home-banner" aria-label="Grupo VIP">
           <a href={vipBanner.href} target={vipBanner.href.startsWith("http") ? "_blank" : undefined} rel={vipBanner.href.startsWith("http") ? "noreferrer" : undefined} onClick={() => playClick(soundsOn)}>
             <div className="vip-home-media" style={{ backgroundImage: `url(${vipBanner.imageUrl})` }} />
@@ -1166,8 +1187,8 @@ export default function Home() {
         <div className="newsletter-inner">
           <div className="newsletter-copy">
             <span className="section-kicker">NEWSLETTER ERAS</span>
-            <h2 id="newsletter-title">A próxima era começa na sua caixa de entrada.</h2>
-            <p>Receba lançamentos antecipados, convites e 10% de desconto na primeira compra. Sem ruído, apenas o que importa.</p>
+            <h2 id="newsletter-title">Seja avisado antes.</h2>
+            <p>Receba primeiro os próximos drops, encontros e experiências da Eras Label. Sem ruído, apenas o que importa.</p>
             <span className="newsletter-note">SEM SPAM · CANCELAMENTO A QUALQUER MOMENTO</span>
           </div>
           {newsletterSuccess ? (
