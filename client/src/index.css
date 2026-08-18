@@ -10287,3 +10287,49 @@ h1, h2, h3, .heading-editorial {
   font-weight: 400 !important;
   letter-spacing: 0.01em !important;
 }
+
+/* ==========================================================================
+   TRANSIÇÕES SUAVES DO MENU DE NAVEGAÇÃO — ERAS LABEL
+   Garante animação fluida de deslizamento e fade in/out na abertura e fechamento
+   ========================================================================== */
+
+.lovable-menu-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(13, 13, 13, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s cubic-bezier(0.23, 1, 0.32, 1), visibility 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.lovable-menu-overlay.is-open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.lovable-side-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: min(380px, 86vw);
+  background: #fbf9f4;
+  color: #1b1b1b;
+  box-shadow: 12px 0 36px rgba(0, 0, 0, 0.22);
+  transform: translateX(-100%);
+  transition: transform 0.35s cubic-bezier(0.23, 1, 0.32, 1);
+  display: flex;
+  flex-direction: column;
+  z-index: 101;
+}
+
+.lovable-side-menu.is-open {
+  transform: translateX(0);
+}
+
+.lovable-side-menu.is-closing {
+  transform: translateX(-100%);
+}
