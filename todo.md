@@ -801,3 +801,8 @@
 - [x] Mostrar a imagem principal ou miniatura de cada produto no seletor de secções da Home.
 - [x] Preservar checkbox, seleção, ordenação, nome, coleção e fallback para produtos sem imagem.
 - [x] Validar a grelha em desktop/mobile, executar TypeScript, 152 testes Vitest e build de produção.
+
+## Redesign editorial da tela de Eventos (2026-08-18)
+- [x] Reestruturar cabeçalho, métricas, apresentação pública, formulário e lista de eventos com hierarquia editorial premium.
+- [x] Preservar CRUD, publicação, banner, data, local, descrição, links/CTA e estados vazios.
+- [x] Validar desktop/mobile, executar TypeScript, 152 testes Vitest e build de produção.
