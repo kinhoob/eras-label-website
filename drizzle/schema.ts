@@ -286,3 +286,16 @@ export const shipments = mysqlTable("shipments", {
 
 export type Shipment = typeof shipments.$inferSelect;
 export type InsertShipment = typeof shipments.$inferInsert;
+
+export const siteMessages = mysqlTable("site_messages", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 320 }).notNull(),
+  message: text("message"),
+  originTag: varchar("originTag", { length: 50 }).default("contato").notNull(), // "contato" ou "newsletter"
+  couponCode: varchar("couponCode", { length: 50 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SiteMessage = typeof siteMessages.$inferSelect;
+export type InsertSiteMessage = typeof siteMessages.$inferInsert;
