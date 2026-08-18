@@ -772,3 +772,8 @@
 - [x] Executar build de produção e guardar checkpoint desta rodada.
 
 - [x] Confirmar o contrato `coupons.adminList` no router atual e validar que o erro histórico não se reproduz após reiniciar o servidor.
+
+## Ajuste de Categorias baseado na referência visual (2026-08-18)
+- [x] Reestruturar a curadoria de Categorias da Home para aproximar o layout de referência: linhas editoriais, campos alinhados, grelha de produtos organizada e criação de secção com hierarquia clara.
+- [x] Preservar CRUD, ativação, subcategorias, upload de capa e seleção de produtos durante a remodelação.
+- [x] Validar responsividade do painel em desktop/mobile, executar Vitest (152 testes), TypeScript e build de produção.
