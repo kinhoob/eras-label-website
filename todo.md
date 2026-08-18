@@ -811,3 +811,8 @@
 - [x] Reestruturar os cartões de Próximo Drop e Trancar site com a mesma estética editorial do painel.
 - [x] Preservar cronómetro, mensagens, ativação/desativação, campos de imagem/link e pré-visualização.
 - [x] Validar desktop/mobile, executar TypeScript, 152 testes Vitest e build de produção.
+
+## Redesign editorial do Pedido Manual (2026-08-18)
+- [x] Reestruturar cabeçalho, cliente, catálogo de produtos, variações, carrinho do pedido e resumo financeiro com a estética geral da Eras.
+- [x] Preservar criação do pedido, seleção de tamanhos/variações, quantidades, descontos, frete, pagamento e submissão.
+- [x] Validar desktop/mobile, executar TypeScript, 152 testes Vitest e build de produção.
