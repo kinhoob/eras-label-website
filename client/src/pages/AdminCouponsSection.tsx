@@ -92,9 +92,6 @@ export function AdminCouponsSection() {
           <Button variant="outline" onClick={() => toast.success("Mais sobre promoções e descontos na Eras Label.")}>
             <Percent size={15} /> Conhecer mais descontos
           </Button>
-          <Button className="admin-primary-action" onClick={() => startEdit()}>
-            <Plus size={16} /> Criar cupom
-          </Button>
         </div>
       </div>
 
