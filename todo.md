@@ -876,3 +876,5 @@
 
 - [x] Eliminar definitivamente qualquer rotina ou fallback que recrie produtos automáticos (como Camiseta Paradox Oversized) na base de dados.
 - [x] Implementar o filtro lateral de tamanhos no catálogo público com opções visuais de PP, P, M, G e GG (seguindo a referência enviada).
+
+- [x] Otimizar definitivamente o layout do checkout transparente para desktop e mobile, eliminando qualquer corte ou sobreposição de blocos.
