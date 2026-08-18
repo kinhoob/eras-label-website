@@ -827,3 +827,5 @@
 - [x] Adicionar ícone acessível do WhatsApp junto ao contacto correspondente no rodapé público, mantendo a estética editorial e a responsividade.
 
 - [x] Reestruturar a página pública de Produtos com grelha compacta de três produtos por fila no desktop e filtros laterais de preço, ordenação, tamanho e categorias, preservando a responsividade mobile.
+
+- [x] Concluir auditoria integral do site e do painel administrativo, gerando o relatório técnico e estratégico completo.
