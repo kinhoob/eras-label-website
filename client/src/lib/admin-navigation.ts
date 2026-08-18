@@ -67,6 +67,7 @@ export function buildAdminNavGroups(isSuperAdmin: boolean): AdminNavGroup[] {
         { label: "Vendas", icon: "sales" },
         { label: "Pedidos", icon: "sales" },
         { label: "Clientes", icon: "customers" },
+        { label: "Pedido Manual", icon: "sales" },
         { label: "Carrinhos Abandonados", icon: "sales" },
       ],
     },
@@ -101,7 +102,6 @@ export function buildAdminNavGroups(isSuperAdmin: boolean): AdminNavGroup[] {
         { label: "CMS Institucional", icon: "cms" },
         { label: "Eventos", icon: "cms" },
         { label: "Menus Dinâmicos", icon: "menus" },
-        { label: "Pedido Manual", icon: "sales" },
       ],
     },
     {

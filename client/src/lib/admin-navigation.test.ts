@@ -16,6 +16,8 @@ describe("admin navigation groups", () => {
       "Definições & Equipa",
     ]);
     expect(labels).toContain("E-mails (Resend)");
+    expect(labels).toContain("Pedido Manual");
+    expect(labels).toContain("Carrinhos Abandonados");
     expect(labels).toContain("Gestão de Equipa");
     expect(new Set(labels).size).toBe(labels.length);
   });

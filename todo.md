@@ -755,3 +755,18 @@
 - [ ] Auditar identidade visual (#b22222, tipografia editorial, animações suaves e ausência de elementos fictícios)
 - [ ] Executar suíte completa de testes Vitest, TypeScript e build de produção
 - [ ] Gerar relatório de auditoria final com o que está pronto e recomendações de lançamento
+
+## Refinamento Visual e Reorganização do Painel Administrativo
+- [x] Mover a página de Pedido Manual para a área de Clientes (Clientes & Pedidos Manuais) na navegação e nos grupos da sidebar.
+- [x] Refazer o CSS global do painel administrativo (`Admin.tsx`, secções de CMS, inventário, vendas e cupons) aplicando a identidade editorial da Eras Label (fundos limpos, cartões elevados, tipografia refinada e botões consistentes).
+- [x] Reposicionar e redesenhar os controlos de troca de banner no CMS de Aparência, retirando-os de cima das imagens e colocando-os numa barra de ferramentas ou cartão externo limpo.
+- [x] Redesenhar completamente a aba de Categorias (`AdminCategoriesSection.tsx`) com cartões editoriais, upload elegante de capas e tabela alinhada ao restante do admin.
+- [x] Executar testes Vitest, TypeScript, build de produção e guardar checkpoint final.
+
+## Refinamento Admin Atelier — rodada atual (2026-08-18)
+- [x] Manter Pedido Manual no grupo Vendas & Clientes e adicionar atalhos operacionais na aba Clientes.
+- [x] Redesenhar a aba de Categorias com métricas, pesquisa, cards editoriais, subcategorias e upload de capas.
+- [x] Reposicionar os controlos de troca e remoção de banners para fora do preview da imagem.
+- [x] Aplicar acabamento visual específico ao CMS, Categorias e Clientes com a identidade #b22222.
+- [x] Validar visualmente o painel em desktop e mobile.
+- [x] Executar build de produção e guardar checkpoint desta rodada.
