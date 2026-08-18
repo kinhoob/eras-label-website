@@ -139,7 +139,11 @@ export const collections = mysqlTable("collections", {
   slug: varchar("slug", { length: 100 }).notNull().unique(),
   year: varchar("year", { length: 10 }).notNull(),
   description: text("description"),
+  editorialText: text("editorialText"),
   imageUrl: text("imageUrl"),
+  ctaLabel: varchar("ctaLabel", { length: 100 }),
+  ctaUrl: varchar("ctaUrl", { length: 255 }),
+  sortOrder: int("sortOrder").default(0).notNull(),
   active: int("active").default(1).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });

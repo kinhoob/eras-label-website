@@ -58,6 +58,9 @@ import {
   listPublicCategories,
   saveCategoryData,
   archiveCategory,
+  listAdminCollections,
+  saveCollectionData,
+  archiveCollection,
   updateInventoryStock,
   listOrders,
   listOrdersByUser,
@@ -439,6 +442,23 @@ export const appRouter = router({
         throw new TRPCError({ code: "BAD_REQUEST", message: err.message || "Erro ao consultar rastreio." });
       }
     }),
+  }),
+  collections: router({
+    list: publicProcedure.query(() => listAdminCollections()),
+    save: adminProcedure.input(z.object({
+      id: z.number().optional(),
+      name: z.string().min(2),
+      slug: z.string().optional(),
+      year: z.string().min(2),
+      description: z.string().optional(),
+      editorialText: z.string().optional(),
+      imageUrl: z.string().optional(),
+      ctaLabel: z.string().optional(),
+      ctaUrl: z.string().optional(),
+      sortOrder: z.number().optional(),
+      active: z.number().optional(),
+    })).mutation(({ input }) => saveCollectionData(input)),
+    archive: adminProcedure.input(z.object({ id: z.number() })).mutation(({ input }) => archiveCollection(input.id)),
   }),
   admin: router({
     summary: adminProcedure.query(() => getAdminSummary()),

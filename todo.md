@@ -626,13 +626,13 @@
 - [x] Salvar checkpoint final desta rodada.
 
 ## Busca pública e secções editoriais da Home — 2026-08-17
-- [ ] Transformar a busca da navbar num campo de pesquisa real, com entrada de texto, estado de carregamento, resultados e estado sem resultados.
-- [ ] Permitir abrir e navegar para produtos encontrados na pesquisa sem usar apenas um link estático para Produtos.
-- [ ] Redesenhar a grelha de produtos da Home segundo a referência enviada, com imagens, nomes, preços e preço Pix numa apresentação editorial responsiva.
-- [ ] Criar configuração administrativa para o nome de cada secção da Home, incluindo “Destaques” ou qualquer título personalizado.
-- [ ] Ligar a ordenação e os produtos exibidos nas secções da Home ao painel administrativo sem dados fictícios.
-- [ ] Validar pesquisa, listagem Home, sacola global, painel administrativo, TypeScript, Vitest, build e screenshots desktop/mobile.
-- [ ] Rever todo.md e salvar checkpoint desta rodada.
+- [x] Transformar a busca da navbar num campo de pesquisa real, com entrada de texto, estado de carregamento, resultados e estado sem resultados.
+- [x] Permitir abrir e navegar para produtos encontrados na pesquisa sem usar apenas um link estático para Produtos.
+- [x] Redesenhar a grelha de produtos da Home segundo a referência enviada, com imagens, nomes, preços e preço Pix numa apresentação editorial responsiva.
+- [x] Criar configuração administrativa para o nome de cada secção da Home, incluindo “Destaques” ou qualquer título personalizado.
+- [x] Ligar a ordenação e os produtos exibidos nas secções da Home ao painel administrativo sem dados fictícios.
+- [x] Validar pesquisa, listagem Home, sacola global, painel administrativo, TypeScript, Vitest, build e screenshots desktop/mobile.
+- [x] Rever todo.md e salvar checkpoint desta rodada.
 
 ## Refinamento final: busca global e Home editorial
 - [x] Tornar a busca da navbar global visualmente interativa, com dropdown responsivo, resultados reais e navegação para o catálogo com query `q`
@@ -640,54 +640,54 @@
 - [x] Redesenhar a grelha de produtos da Home em composição editorial de quatro colunas, com cards mais limpos e responsivos
 - [x] Ligar títulos das secções da Home ao CMS e criar campos editáveis no painel administrativo
 - [x] Executar testes Vitest, TypeScript, build e verificação visual desktop/mobile; guardar checkpoint
-- [ ] Aplicar refinamento visual final na sacola global, incluindo scroll interno apenas quando necessário e controlos de quantidade consistentes
-- [ ] Rever e corrigir o desenho do checkout transparente para manter a estética editorial Eras Label
-- [ ] Rever funcionamento completo de pesquisa, catálogo, carrinho e checkout após as alterações
-- [ ] Confirmar que não existem loops de atualização ou erros no console durante o uso público
+- [x] Aplicar refinamento visual final na sacola global, incluindo scroll interno apenas quando necessário e controlos de quantidade consistentes
+- [x] Rever e corrigir o desenho do checkout transparente para manter a estética editorial Eras Label
+- [x] Rever funcionamento completo de pesquisa, catálogo, carrinho e checkout após as alterações
+- [x] Confirmar que não existem loops de atualização ou erros no console durante o uso público
 
 ## Histórico
 - [x] Fases anteriores concluídas e checkpoints preservados conforme contexto herdado
 
 ## Estado da execução
-- [ ] Nova rodada de refinamento iniciada a partir do checkpoint e0d9b5e3
+- [x] Nova rodada de refinamento iniciada a partir do checkpoint e0d9b5e3
 
 ## Próximas validações
 - [x] Teste automatizado da busca global e dos títulos configuráveis
-- [ ] Teste visual desktop e mobile
+- [x] Teste visual desktop e mobile
 - [x] Teste de build de produção
-- [ ] Checkpoint final da rodada
+- [x] Checkpoint final da rodada
 
 ## Observações
-- [ ] Não introduzir avaliações, depoimentos ou dados fictícios de clientes
-- [ ] Manter cor principal #b22222, transições próximas de 0,5s e acessibilidade com reduced motion
-- [ ] Manter credenciais de produção fora do código e não alterar integrações Mercado Pago/Melhor Envio nesta rodada
+- [x] Não introduzir avaliações, depoimentos ou dados fictícios de clientes
+- [x] Manter cor principal #b22222, transições próximas de 0,5s e acessibilidade com reduced motion
+- [x] Manter credenciais de produção fora do código e não alterar integrações Mercado Pago/Melhor Envio nesta rodada
 
 ## Backlog de refinamentos identificados
-- [ ] Polimento adicional da sacola global e do checkout, se a verificação visual identificar regressões
-- [ ] Revisão de microinterações e estados vazios na busca e no catálogo
-- [ ] Atualização do checkpoint após todas as validações
+- [x] Polimento adicional da sacola global e do checkout, se a verificação visual identificar regressões
+- [x] Revisão de microinterações e estados vazios na busca e no catálogo
+- [x] Atualização do checkpoint após todas as validações
 
 ## Entregável desta rodada
-- [ ] Busca global com resultados reais
-- [ ] Home editorial com secções nomeadas pelo CMS
-- [ ] Painel de admin com edição de títulos de secção
-- [ ] Validações automatizadas, build e checkpoint
+- [x] Busca global com resultados reais
+- [x] Home editorial com secções nomeadas pelo CMS
+- [x] Painel de admin com edição de títulos de secção
+- [x] Validações automatizadas, build e checkpoint
 
 ## Critérios de aceitação
-- [ ] Pesquisar na navbar mostra resultados clicáveis sem redirecionamento prematuro
-- [ ] Enter na navbar abre `/catalog?q=...` e CatalogView filtra os mesmos produtos
-- [ ] Home exibe grelha de quatro colunas em desktop e adaptação coerente em mobile
-- [ ] Admin consegue editar e guardar os títulos de Destaques, Produtos e Comunidade
-- [ ] Testes e build passam sem erros
+- [x] Pesquisar na navbar mostra resultados clicáveis sem redirecionamento prematuro
+- [x] Enter na navbar abre `/catalog?q=...` e CatalogView filtra os mesmos produtos
+- [x] Home exibe grelha de quatro colunas em desktop e adaptação coerente em mobile
+- [x] Admin consegue editar e guardar os títulos de Destaques, Produtos e Comunidade
+- [x] Testes e build passam sem erros
 
 ## Itens técnicos
-- [ ] Estabilizar referências da busca global para evitar renders ou refetches desnecessários
-- [ ] Adicionar estilos dedicados ao dropdown da busca global
-- [ ] Preservar fallback editorial somente quando o catálogo estiver sem produtos reais
-- [ ] Manter a navbar pública ausente em rotas administrativas e de autenticação
+- [x] Estabilizar referências da busca global para evitar renders ou refetches desnecessários
+- [x] Adicionar estilos dedicados ao dropdown da busca global
+- [x] Preservar fallback editorial somente quando o catálogo estiver sem produtos reais
+- [x] Manter a navbar pública ausente em rotas administrativas e de autenticação
 
 ## Fecho
-- [ ] Comunicar o resultado final com o checkpoint e limitações de validação
+- [x] Comunicar o resultado final com o checkpoint e limitações de validação
 
 
 ## Alinhamento com referência Lovable — eventos, newsletter, menu e sacola
@@ -699,3 +699,13 @@
 - [x] Validar responsividade desktop/mobile, navegação, estados vazios e acessibilidade
 - [x] Executar testes, TypeScript, build, screenshots e guardar checkpoint desta rodada
 - [x] Atualizar notas da referência Lovable sem copiar conteúdo ou dados fictícios de clientes
+
+
+## Nova rodada — tela de coleções e limpeza da busca
+- [x] Redesenhar a página pública de coleções com hero editorial, título “Coleções” e composição de destaque inspirada na referência
+- [x] Exibir todas as coleções públicas com imagem, ano, descrição, texto editorial, CTA e produtos associados
+- [x] Permitir editar no painel administrativo os textos, imagem, ano, ordem, visibilidade e destino/CTA de cada coleção
+- [x] Garantir acesso à tela de coleções pela navbar e pelo menu lateral, com dropdown visual de coleções
+- [x] Remover o texto preto indesejado abaixo da barra de pesquisa da navbar sem quebrar os resultados interativos
+- [x] Validar responsividade, pesquisa, coleções, catálogo, sacola e painel administrativo com testes e build
+- [x] Guardar checkpoint final desta rodada

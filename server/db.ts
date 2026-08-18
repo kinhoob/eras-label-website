@@ -19,6 +19,7 @@ import {
   adminUsers,
   cmsPages,
   customMenus,
+  collections,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 import { collectCollectionRecipients } from "./marketing-audience";
@@ -1240,4 +1241,78 @@ export async function deleteCustomMenu(id: number) {
   if (!db) return false;
   await db.delete(customMenus).where(eq(customMenus.id, id));
   return true;
+}
+
+export async function listAdminCollections() {
+  const db = await getDb();
+  if (!db) {
+    return [
+      { id: 1, name: "Paradox Collection", slug: "paradox", year: "2026", description: "A colisão entre memórias analógicas e o futuro digital.", editorialText: "Travessia, Dissociação, Ressonador, Vórtex e Time Break. A era em curso: estar em dois tempos ao mesmo tempo.", imageUrl: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=2000&q=90", ctaLabel: "COMPRAR A ERA", ctaUrl: "/collection/paradox", sortOrder: 1, active: 1, createdAt: new Date() },
+      { id: 2, name: "Lost Between Eras", slug: "lost-between-eras", year: "2025", description: "Inspirada nos anos 90 e na estética underground de transição de milénio.", editorialText: "Ruínas urbanas, fitas cassete e silhuetas que desafiam a gravidade.", imageUrl: "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=2000&q=90", ctaLabel: "VER COLEÇÃO", ctaUrl: "/collection/lost-between-eras", sortOrder: 2, active: 1, createdAt: new Date() },
+      { id: 3, name: "Raízes — Recife & La Ursa", slug: "raizes", year: "2024", description: "Uma homenagem vibrante à cultura pernambucana.", editorialText: "Raízes fincadas no mangue beat e no frevo de rua.", imageUrl: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=2000&q=90", ctaLabel: "EXPLORAR ERA", ctaUrl: "/collection/raizes", sortOrder: 3, active: 1, createdAt: new Date() },
+    ];
+  }
+  const rows = await db.select().from(collections).orderBy(asc(collections.sortOrder), desc(collections.id));
+  if (rows.length === 0) {
+    // Seed inicial padrão
+    const defaults = [
+      { name: "Paradox Collection", slug: "paradox", year: "2026", description: "A colisão entre memórias analógicas e o futuro digital.", editorialText: "Travessia, Dissociação, Ressonador, Vórtex e Time Break. A era em curso: estar em dois tempos ao mesmo tempo.", imageUrl: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=2000&q=90", ctaLabel: "COMPRAR A ERA", ctaUrl: "/collection/paradox", sortOrder: 1, active: 1 },
+      { name: "Lost Between Eras", slug: "lost-between-eras", year: "2025", description: "Inspirada nos anos 90 e na estética underground de transição de milénio.", editorialText: "Ruínas urbanas, fitas cassete e silhuetas que desafiam a gravidade.", imageUrl: "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=2000&q=90", ctaLabel: "VER COLEÇÃO", ctaUrl: "/collection/lost-between-eras", sortOrder: 2, active: 1 },
+      { name: "Raízes — Recife & La Ursa", slug: "raizes", year: "2024", description: "Uma homenagem vibrante à cultura pernambucana.", editorialText: "Raízes fincadas no mangue beat e no frevo de rua.", imageUrl: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=2000&q=90", ctaLabel: "EXPLORAR ERA", ctaUrl: "/collection/raizes", sortOrder: 3, active: 1 },
+    ];
+    for (const def of defaults) {
+      await db.insert(collections).values(def).onDuplicateKeyUpdate({ set: { name: def.name } });
+    }
+    return db.select().from(collections).orderBy(asc(collections.sortOrder), desc(collections.id));
+  }
+  return rows;
+}
+
+export async function saveCollectionData(data: {
+  id?: number;
+  name: string;
+  slug?: string;
+  year: string;
+  description?: string;
+  editorialText?: string;
+  imageUrl?: string;
+  ctaLabel?: string;
+  ctaUrl?: string;
+  sortOrder?: number;
+  active?: number;
+}) {
+  const db = await getDb();
+  const slug = data.slug?.trim() ? slugifyCategory(data.slug) : slugifyCategory(data.name);
+  const values = {
+    name: data.name,
+    slug,
+    year: data.year || "2026",
+    description: data.description || "",
+    editorialText: data.editorialText || "",
+    imageUrl: data.imageUrl || "",
+    ctaLabel: data.ctaLabel || "VER COLEÇÃO",
+    ctaUrl: data.ctaUrl || `/collection/${slug}`,
+    sortOrder: Number(data.sortOrder || 0),
+    active: data.active !== undefined ? Number(data.active) : 1,
+  };
+
+  if (!db) return { id: data.id || 1, ...values };
+
+  if (data.id) {
+    await db.update(collections).set(values).where(eq(collections.id, data.id));
+    const [updated] = await db.select().from(collections).where(eq(collections.id, data.id)).limit(1);
+    return updated;
+  } else {
+    const [inserted] = await db.insert(collections).values(values);
+    const insertId = Number((inserted as any).insertId || 0);
+    const [created] = await db.select().from(collections).where(eq(collections.id, insertId)).limit(1);
+    return created;
+  }
+}
+
+export async function archiveCollection(id: number) {
+  const db = await getDb();
+  if (!db) return { success: true };
+  await db.update(collections).set({ active: 0 }).where(eq(collections.id, id));
+  return { success: true };
 }
