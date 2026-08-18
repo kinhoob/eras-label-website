@@ -1512,3 +1512,10 @@ export async function saveExtraShippingDays(extraDays: number) {
   }
   return normalized;
 }
+
+export async function restoreCollection(id: number) {
+  const db = await getDb();
+  if (!db) return { success: true };
+  await db.update(collections).set({ active: 1 }).where(eq(collections.id, id));
+  return { success: true };
+}

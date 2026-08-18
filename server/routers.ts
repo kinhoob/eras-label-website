@@ -68,6 +68,7 @@ import {
   listAdminCollections,
   saveCollectionData,
   archiveCollection,
+  restoreCollection,
   updateInventoryStock,
   listOrders,
   listAbandonedCarts,
@@ -485,6 +486,7 @@ export const appRouter = router({
       active: z.number().optional(),
     })).mutation(({ input }) => saveCollectionData(input)),
     archive: adminProcedure.input(z.object({ id: z.number() })).mutation(({ input }) => archiveCollection(input.id)),
+    restore: adminProcedure.input(z.object({ id: z.number() })).mutation(({ input }) => restoreCollection(input.id)),
   }),
   admin: router({
     summary: adminProcedure.query(() => getAdminSummary()),
@@ -1324,8 +1326,7 @@ export const appRouter = router({
     })).mutation(async ({ input }) => {
       const saved = await saveExtraShippingDays(input.extraDays);
       return { success: true, extraDays: saved };
-    }),
-
+    })
   }),
 });
 

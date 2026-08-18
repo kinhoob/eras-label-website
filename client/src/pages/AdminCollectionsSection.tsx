@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Archive, ArrowUpRight, Edit3, Image as ImageIcon, Layers3, Plus, Save, X } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Archive, ArrowUpRight, Edit3, Image as ImageIcon, Layers3, Plus, RotateCcw, Save, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,6 +51,13 @@ export function AdminCollectionsSection() {
     },
     onError: (error) => toast.error(error.message || "Não foi possível arquivar a coleção."),
   });
+  const restoreMutation = trpc.collections.restore.useMutation({
+    onSuccess: async () => {
+      toast.success("Coleção reativada e visível novamente.");
+      await utils.collections.list.invalidate();
+    },
+    onError: (error) => toast.error(error.message || "Não foi possível restaurar a coleção."),
+  });
   const [editing, setEditing] = useState<CollectionForm | null>(null);
   const collections = collectionsQuery.data ?? [];
   const activeCount = useMemo(() => collections.filter((collection) => collection.active === 1).length, [collections]);
@@ -88,7 +95,7 @@ export function AdminCollectionsSection() {
     {collectionsQuery.isLoading ? <div className="admin-panel admin-empty-state"><span className="admin-loading-mark" />A carregar coleções persistidas...</div> : collections.length === 0 ? <div className="admin-panel admin-empty-state"><Layers3 size={28} /><strong>Ainda não existem coleções</strong><span>Crie a primeira era editorial para começar a organizar o catálogo.</span><Button variant="outline" onClick={() => startEdit()}>Criar primeira coleção</Button></div> : <div className="admin-collection-grid">
       {collections.map((collection) => <article className={`admin-collection-card ${collection.active ? "is-active" : "is-archived"}`} key={collection.id}>
         <div className="admin-collection-card-image">{collection.imageUrl ? <img src={collection.imageUrl} alt={collection.name} /> : <div className="admin-collection-placeholder"><Layers3 size={28} /><span>Sem imagem de capa</span></div>}<span className="admin-collection-year">{collection.year}</span><span className={`status-pill ${collection.active ? "success" : "warning"}`}>{collection.active ? "Publicada" : "Arquivada"}</span></div>
-        <div className="admin-collection-card-body"><span className="section-kicker">COLEÇÃO / {collection.slug}</span><h3>{collection.name}</h3><p>{collection.description || "Sem descrição editorial definida."}</p><div className="admin-collection-card-actions"><button type="button" className="admin-inline-action" onClick={() => startEdit(collection)}><Edit3 size={14} /> Editar</button><button type="button" className="admin-inline-action muted" onClick={() => archiveMutation.mutate({ id: collection.id })} disabled={archiveMutation.isPending}><Archive size={14} /> Arquivar</button></div></div>
+        <div className="admin-collection-card-body"><span className="section-kicker">COLEÇÃO / {collection.slug}</span><h3>{collection.name}</h3><p>{collection.description || "Sem descrição editorial definida."}</p><div className="admin-collection-card-actions"><button type="button" className="admin-inline-action" onClick={() => startEdit(collection)}><Edit3 size={14} /> Editar</button>{collection.active ? <button type="button" className="admin-inline-action muted" onClick={() => archiveMutation.mutate({ id: collection.id })} disabled={archiveMutation.isPending}><Archive size={14} /> Arquivar</button> : <button type="button" className="admin-inline-action success" onClick={() => restoreMutation.mutate({ id: collection.id })} disabled={restoreMutation.isPending}><RotateCcw size={14} /> Reaparecer</button>}</div></div>
       </article>)}
     </div>}
     {editing && <div className="admin-modal-overlay"><div className="admin-panel admin-modal admin-editorial-modal"><div className="panel-heading"><div><span className="section-kicker">EDITOR DE COLEÇÃO</span><h3>{editing.id ? "Editar coleção" : "Nova coleção"}</h3></div><button type="button" className="admin-modal-close" aria-label="Fechar" onClick={() => setEditing(null)}><X size={18} /></button></div><div className="admin-editorial-form-grid"><label>Nome da coleção<Input value={editing.name} onChange={(event) => update("name", event.target.value)} /></label><label>Slug público<Input value={editing.slug} onChange={(event) => update("slug", event.target.value)} placeholder="ex.: paradox" /></label><label>Ano<Input value={editing.year} onChange={(event) => update("year", event.target.value)} /></label><label>Ordem<Input type="number" value={editing.sortOrder} onChange={(event) => update("sortOrder", Number(event.target.value))} /></label><label className="admin-editorial-form-span">Imagem de capa (URL)<Input value={editing.imageUrl} onChange={(event) => update("imageUrl", event.target.value)} placeholder="https://..." /></label><label>Texto do botão<Input value={editing.ctaLabel} onChange={(event) => update("ctaLabel", event.target.value)} /></label><label>Destino do botão<Input value={editing.ctaUrl} onChange={(event) => update("ctaUrl", event.target.value)} placeholder="/collections/paradox" /></label><label className="admin-editorial-form-span">Descrição curta<Textarea value={editing.description} onChange={(event) => update("description", event.target.value)} rows={3} /></label><label className="admin-editorial-form-span">Texto editorial<Textarea value={editing.editorialText} onChange={(event) => update("editorialText", event.target.value)} rows={5} /></label></div><div className="admin-editorial-modal-footer"><span className="admin-editorial-note">Os campos são usados na página pública de Coleções.</span><Button variant="outline" onClick={() => setEditing(null)}>Cancelar</Button><Button className="admin-primary-action" disabled={saveMutation.isPending || !editing.name.trim() || !editing.slug.trim()} onClick={() => saveMutation.mutate(editing)}><Save size={16} /> {saveMutation.isPending ? "A guardar..." : "Guardar coleção"}</Button></div></div></div>}
