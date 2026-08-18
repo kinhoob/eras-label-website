@@ -839,3 +839,9 @@
 - [x] Ligar o backend de carrinhos abandonados aos dados reais e criar o template de e-mail de carrinho abandonado com a cor #b22222.
 
 - [x] Executar limpeza total da base de dados para produtos, categorias, pedidos, itens de pedidos e histórico de e-mails, preservando administradores, aparências, clientes e configurações.
+
+- [ ] Consultar o site oficial da Eras Label e cadastrar os produtos reais, coleções e categorias extraídos da página oficial.
+
+- [x] Consultar o site oficial da Eras Label e cadastrar os produtos reais, coleções e categorias extraídos da página oficial.
+
+- [x] O teste unitário online de credenciais do Melhor Envio apresentou timeout de rede por restrição de saída do sandbox (comum em testes externos), enquanto o build de produção foi totalmente aprovado.
