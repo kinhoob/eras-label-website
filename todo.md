@@ -878,3 +878,10 @@
 - [x] Implementar o filtro lateral de tamanhos no catálogo público com opções visuais de PP, P, M, G e GG (seguindo a referência enviada).
 
 - [x] Otimizar definitivamente o layout do checkout transparente para desktop e mobile, eliminando qualquer corte ou sobreposição de blocos.
+
+## Nova Aba: Página em construção
+- [ ] Criar aba "Página em construção" no painel administrativo da Eras Label com ícone adequado
+- [ ] Mover as opções de trancar site, mensagem de manutenção, cronômetro do próximo drop e link do grupo VIP para a nova aba
+- [ ] Garantir persistência completa dessas configurações no backend/banco de dados
+- [ ] Atualizar a Experiência Pública e a página trancada pública para lerem das novas configurações centralizadas
+- [ ] Validar responsividade em desktop e mobile, testar build e salvar checkpoint

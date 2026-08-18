@@ -99,6 +99,7 @@ export function buildAdminNavGroups(isSuperAdmin: boolean): AdminNavGroup[] {
       icon: "appearance",
       items: [
         { label: "Aparência", icon: "appearance" },
+        { label: "Página em construção", icon: "appearance" },
         { label: "CMS Institucional", icon: "cms" },
         { label: "Eventos", icon: "cms" },
         { label: "Menus Dinâmicos", icon: "menus" },
