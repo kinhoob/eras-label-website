@@ -829,3 +829,5 @@
 - [x] Reestruturar a página pública de Produtos com grelha compacta de três produtos por fila no desktop e filtros laterais de preço, ordenação, tamanho e categorias, preservando a responsividade mobile.
 
 - [x] Concluir auditoria integral do site e do painel administrativo, gerando o relatório técnico e estratégico completo.
+
+- [x] Substituir “DESENVOLVIDO COM INTENÇÃO” por “DESENVOLVIDO POR KINHOOB” no rodapé, preservando o link do portfólio.

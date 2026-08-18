@@ -99,7 +99,7 @@ export default function OfficialFooter({ onInteraction }: OfficialFooterProps) {
       <div className="footer-bottom">
         <span>© 2026 ERAS LABEL</span>
         <span>REVIVER. REINVENTAR ERAS.</span>
-        <span>DESENVOLVIDO COM INTENÇÃO</span>
+        <a className="footer-credit-link" href="https://kinhoob.github.io/portfolio" target="_blank" rel="noreferrer" aria-label="Portfólio de Kinhoob" onClick={interact}>DESENVOLVIDO POR KINHOOB</a>
       </div>
     </footer>
   );
