@@ -25,8 +25,8 @@ const emptyCoupon: CouponForm = {
 };
 
 /**
- * Componente AdminCouponsSection: Gerenciamento simplificado e moderno de cupons de desconto
- * da Eras Label, com barra de pesquisa unificada ao botão de criação e listagem em cards.
+ * Componente AdminCouponsSection: Gerenciamento limpo e unificado de cupons de desconto
+ * da Eras Label, com barra de pesquisa superior, botão de criação único e modal editor refinado.
  */
 export function AdminCouponsSection() {
   const utils = trpc.useUtils();
@@ -102,16 +102,22 @@ export function AdminCouponsSection() {
 
   return (
     <section className="admin-content admin-editorial-page admin-coupons-page">
-      {/* Cabeçalho minimalista */}
-      <div className="admin-editorial-hero" style={{ marginBottom: "1.25rem" }}>
+      {/* Cabeçalho unificado com título e botão de ação principal */}
+      <div className="admin-editorial-hero" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
         <div>
           <span className="section-kicker">GESTÃO DE VENDAS · CUPONS</span>
           <h2 className="content-title">Cupons de Desconto</h2>
           <p className="content-subtitle">Crie códigos promocionais, defina regras e acompanhe a utilização em tempo real.</p>
         </div>
+        <Button 
+          onClick={() => startEdit()} 
+          style={{ background: "#b22222", color: "#fff", height: "42px", padding: "0 1.35rem", borderRadius: "8px", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: "0.5rem" }}
+        >
+          <Plus size={16} /> Criar Cupom
+        </Button>
       </div>
 
-      {/* Barra superior unificada: Pesquisa, Filtro de Estado e Botão Criar Cupom */}
+      {/* Barra de Pesquisa e Filtros */}
       <div 
         className="content-toolbar admin-editorial-toolbar" 
         style={{ 
@@ -121,7 +127,7 @@ export function AdminCouponsSection() {
           alignItems: "center", 
           justifyContent: "space-between", 
           background: "#fff", 
-          padding: "1.1rem 1.25rem", 
+          padding: "1rem 1.25rem", 
           borderRadius: "10px", 
           border: "1px solid #eae5de", 
           marginBottom: "1.5rem",
@@ -148,15 +154,6 @@ export function AdminCouponsSection() {
             <option value="active">Apenas ativos</option>
             <option value="inactive">Apenas inativos</option>
           </select>
-        </div>
-
-        <div>
-          <Button 
-            onClick={() => startEdit()} 
-            style={{ background: "#b22222", color: "#fff", height: "40px", padding: "0 1.25rem", borderRadius: "8px", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: "0.5rem" }}
-          >
-            <Plus size={16} /> Novo Cupom
-          </Button>
         </div>
       </div>
 
@@ -198,7 +195,7 @@ export function AdminCouponsSection() {
               }}
             >
               <div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.75rem" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                     <span style={{ fontFamily: "monospace", fontSize: "1.1rem", fontWeight: 700, color: "#111", background: "#faf5f5", padding: "0.2rem 0.5rem", borderRadius: "6px", border: "1px solid #f2d6d6" }}>
                       {coupon.code}
@@ -270,52 +267,114 @@ export function AdminCouponsSection() {
         </div>
       )}
 
-      {/* Modal de Criação / Edição */}
+      {/* Modal de Criação / Edição (Editor de Oferta) redesenhado na estética Eras */}
       {editing && (
-        <div className="admin-modal-overlay">
-          <div className="admin-panel admin-modal admin-editorial-modal">
-            <div className="panel-heading">
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(20, 18, 16, 0.65)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+          <div style={{ background: "#fffdfa", borderRadius: "16px", border: "1px solid #dcd6ce", width: "100%", maxWidth: "520px", boxShadow: "0 24px 64px rgba(20, 18, 16, 0.25)", overflow: "hidden", animation: "modalAppear 0.25s cubic-bezier(0.23, 1, 0.32, 1)" }}>
+            
+            {/* Cabeçalho do modal */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "between", padding: "1.25rem 1.5rem", borderBottom: "1px solid #eae5de", background: "#fbf9f6" }}>
               <div>
-                <span className="section-kicker">EDITOR DE OFERTA</span>
-                <h3>{editing.id ? "Editar cupom" : "Criar novo cupom"}</h3>
+                <span style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.15em", color: "#b22222", textTransform: "uppercase" }}>Editor de Oferta</span>
+                <h3 style={{ fontSize: "1.2rem", fontWeight: 600, color: "#1a1816", fontFamily: "Georgia, serif", margin: "0.1rem 0 0" }}>{editing.id ? "Editar Cupom" : "Novo Cupom Promocional"}</h3>
               </div>
-              <button type="button" className="admin-modal-close" aria-label="Fechar" onClick={() => setEditing(null)}>
-                <X size={18} />
+              <button 
+                type="button" 
+                onClick={() => setEditing(null)} 
+                style={{ background: "transparent", border: "none", cursor: "pointer", color: "#666", padding: "0.4rem", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", transition: "background 0.15s" }}
+                aria-label="Fechar"
+              >
+                <X size={20} />
               </button>
             </div>
-            <div className="admin-editorial-form-grid">
-              <label>
-                Código do Cupom
-                <Input value={editing.code} onChange={(event) => update("code", event.target.value.toUpperCase())} placeholder="Ex: ERAS10" />
+
+            {/* Corpo do formulário */}
+            <div style={{ padding: "1.5rem", display: "grid", gap: "1.1rem", maxHeight: "75vh", overflowY: "auto" }}>
+              <label style={{ display: "grid", gap: "0.4rem", fontSize: "0.8rem", fontWeight: 600, color: "#4a443e" }}>
+                <span>Código do Cupom</span>
+                <Input 
+                  value={editing.code} 
+                  onChange={(event) => update("code", event.target.value.toUpperCase())} 
+                  placeholder="Ex: ERAS10" 
+                  style={{ height: "42px", borderRadius: "8px", borderColor: "#dcd6ce", background: "#fff" }}
+                />
               </label>
-              <label>
-                Desconto (%)
-                <Input type="number" min="0.01" max="100" step="0.01" value={editing.discountPercent} onChange={(event) => update("discountPercent", Number(event.target.value))} />
-              </label>
-              <label>
-                Limite de Usos (Opcional)
-                <Input type="number" min="1" value={editing.usageLimit ?? ""} onChange={(event) => update("usageLimit", event.target.value ? Number(event.target.value) : null)} placeholder="Ex: 100 (vazio = ilimitado)" />
-              </label>
-              <label>
-                Valor Mínimo da Compra (R$)
-                <Input type="number" min="0" step="0.01" value={editing.minPurchase} onChange={(event) => update("minPurchase", Number(event.target.value))} />
-              </label>
-              <label>
-                Validade / Data Limite
-                <Input type="datetime-local" value={editing.validUntil} onChange={(event) => update("validUntil", event.target.value)} />
-              </label>
-              <label className="admin-toggle-field" style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginTop: "0.5rem" }}>
-                <input type="checkbox" checked={editing.active === 1} onChange={(event) => update("active", event.target.checked ? 1 : 0)} style={{ width: "18px", height: "18px", accentColor: "#b22222" }} />
-                <span>Ativar cupom imediatamente após guardar</span>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <label style={{ display: "grid", gap: "0.4rem", fontSize: "0.8rem", fontWeight: 600, color: "#4a443e" }}>
+                  <span>Desconto (%)</span>
+                  <Input 
+                    type="number" 
+                    min="0.01" 
+                    max="100" 
+                    step="0.01" 
+                    value={editing.discountPercent} 
+                    onChange={(event) => update("discountPercent", Number(event.target.value))} 
+                    style={{ height: "42px", borderRadius: "8px", borderColor: "#dcd6ce", background: "#fff" }}
+                  />
+                </label>
+                <label style={{ display: "grid", gap: "0.4rem", fontSize: "0.8rem", fontWeight: 600, color: "#4a443e" }}>
+                  <span>Limite de Usos</span>
+                  <Input 
+                    type="number" 
+                    min="1" 
+                    value={editing.usageLimit ?? ""} 
+                    onChange={(event) => update("usageLimit", event.target.value ? Number(event.target.value) : null)} 
+                    placeholder="Ilimitado" 
+                    style={{ height: "42px", borderRadius: "8px", borderColor: "#dcd6ce", background: "#fff" }}
+                  />
+                </label>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <label style={{ display: "grid", gap: "0.4rem", fontSize: "0.8rem", fontWeight: 600, color: "#4a443e" }}>
+                  <span>Valor Mínimo (R$)</span>
+                  <Input 
+                    type="number" 
+                    min="0" 
+                    step="0.01" 
+                    value={editing.minPurchase} 
+                    onChange={(event) => update("minPurchase", Number(event.target.value))} 
+                    style={{ height: "42px", borderRadius: "8px", borderColor: "#dcd6ce", background: "#fff" }}
+                  />
+                </label>
+                <label style={{ display: "grid", gap: "0.4rem", fontSize: "0.8rem", fontWeight: 600, color: "#4a443e" }}>
+                  <span>Validade Limite</span>
+                  <Input 
+                    type="datetime-local" 
+                    value={editing.validUntil} 
+                    onChange={(event) => update("validUntil", event.target.value)} 
+                    style={{ height: "42px", borderRadius: "8px", borderColor: "#dcd6ce", background: "#fff" }}
+                  />
+                </label>
+              </div>
+
+              <label style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginTop: "0.5rem", cursor: "pointer", background: "#fbf9f6", padding: "0.75rem 1rem", borderRadius: "8px", border: "1px solid #eae5de" }}>
+                <input 
+                  type="checkbox" 
+                  checked={editing.active === 1} 
+                  onChange={(event) => update("active", event.target.checked ? 1 : 0)} 
+                  style={{ width: "18px", height: "18px", accentColor: "#b22222", cursor: "pointer" }} 
+                />
+                <span style={{ fontSize: "0.85rem", fontWeight: 500, color: "#2c2622" }}>Ativar cupom imediatamente após guardar</span>
               </label>
             </div>
-            <div className="admin-editorial-modal-footer">
-              <span className="admin-editorial-note">A validação do desconto utiliza as regras oficiais e o carrinho da Eras Label.</span>
-              <Button variant="outline" onClick={() => setEditing(null)}>Cancelar</Button>
-              <Button className="admin-primary-action" disabled={saveMutation.isPending || !editing.code.trim()} onClick={save}>
-                <Save size={16} /> {saveMutation.isPending ? "A guardar..." : "Guardar cupom"}
-              </Button>
+
+            {/* Rodapé do modal */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1.25rem 1.5rem", borderTop: "1px solid #eae5de", background: "#fbf9f6", gap: "1rem" }}>
+              <span style={{ fontSize: "0.725rem", color: "#777", lineHeight: 1.4 }}>Regras oficiais da Eras Label.</span>
+              <div style={{ display: "flex", gap: "0.75rem" }}>
+                <Button variant="outline" onClick={() => setEditing(null)} style={{ height: "40px", borderRadius: "8px" }}>Cancelar</Button>
+                <Button 
+                  disabled={saveMutation.isPending || !editing.code.trim()} 
+                  onClick={save}
+                  style={{ background: "#b22222", color: "#fff", height: "40px", borderRadius: "8px", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: "0.5rem" }}
+                >
+                  <Save size={16} /> {saveMutation.isPending ? "A guardar..." : "Guardar cupom"}
+                </Button>
+              </div>
             </div>
+
           </div>
         </div>
       )}

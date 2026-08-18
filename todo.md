@@ -880,19 +880,19 @@
 - [x] Otimizar definitivamente o layout do checkout transparente para desktop e mobile, eliminando qualquer corte ou sobreposição de blocos.
 
 ## Nova Aba: Página em construção
-- [ ] Criar aba "Página em construção" no painel administrativo da Eras Label com ícone adequado
-- [ ] Mover as opções de trancar site, mensagem de manutenção, cronômetro do próximo drop e link do grupo VIP para a nova aba
-- [ ] Garantir persistência completa dessas configurações no backend/banco de dados
-- [ ] Atualizar a Experiência Pública e a página trancada pública para lerem das novas configurações centralizadas
-- [ ] Validar responsividade em desktop e mobile, testar build e salvar checkpoint
+- [x] Criar aba "Página em construção" no painel administrativo da Eras Label com ícone adequado
+- [x] Mover as opções de trancar site, mensagem de manutenção, cronômetro do próximo drop e link do grupo VIP para a nova aba
+- [x] Garantir persistência completa dessas configurações no backend/banco de dados
+- [x] Atualizar a Experiência Pública e a página trancada pública para lerem das novas configurações centralizadas
+- [x] Validar responsividade em desktop e mobile, testar build e salvar checkpoint
 
 ## Simplificação da Tela de Cupons
-- [ ] Remover o bloco introdutório e métricas do topo da página de Cupons
-- [ ] Posicionar o formulário de cadastro/criação de cupons junto à barra de pesquisa e filtros no topo
-- [ ] Exibir os cupons criados logo abaixo em formato de cards limpos e responsivos
-- [ ] Validar testes, build e salvar checkpoint
+- [x] Remover o bloco introdutório e métricas do topo da página de Cupons
+- [x] Posicionar o formulário de cadastro/criação de cupons junto à barra de pesquisa e filtros no topo
+- [x] Exibir os cupons criados logo abaixo em formato de cards limpos e responsivos
+- [x] Validar testes, build e salvar checkpoint
 
 ## Redesenho da Tela de Coleções
-- [ ] Reestruturar AdminCollectionsSection.tsx em grid de cards editoriais com preview de imagem
-- [ ] Aplicar identidade visual #b22222 e tipografia limpa da Eras Label aos botões e modais
-- [ ] Validar testes automatizados Vitest e build de produção
+- [x] Reestruturar AdminCollectionsSection.tsx em grid de cards editoriais com preview de imagem
+- [x] Aplicar identidade visual #b22222 e tipografia limpa da Eras Label aos botões e modais
+- [x] Validar testes automatizados Vitest e build de produção
