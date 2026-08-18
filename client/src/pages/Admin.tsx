@@ -37,6 +37,7 @@ import {
   X,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
@@ -380,7 +381,7 @@ function EmailMarketingSection() {
   );
 }
 
-type AdminVariation = { id?: number; size: string; color?: string; stock: number };
+type AdminVariation = { id?: number; size: string; stock: number };
 type ProductVisibility = "visible" | "unlisted" | "hidden";
 type AdminProductOption = { id: number; name: string; collection: string; category: string; subcategory?: string | null; sku?: string | null; slug?: string | null; visibility?: ProductVisibility; categoryIds?: number[]; price: string; stock: number; variations: AdminVariation[]; status: string; images: string[] };
 
@@ -643,6 +644,8 @@ export default function Admin() {
   const [query, setQuery] = useState("");
   const [productCategoryFilter, setProductCategoryFilter] = useState<number | null>(null);
   const [productsDropdownOpen, setProductsDropdownOpen] = useState(false);
+  const [selectedProductIds, setSelectedProductIds] = useState<number[]>([]);
+  const [bulkCategoryId, setBulkCategoryId] = useState("");
   const [appearanceSaved, setAppearanceSaved] = useState(false);
   const [couponActive, setCouponActive] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -706,6 +709,8 @@ export default function Admin() {
   const saveProductMutation = trpc.admin.saveProduct.useMutation();
   const updateInventoryStockMutation = trpc.admin.updateInventoryStock.useMutation();
   const duplicateProductMutation = trpc.admin.duplicateProduct.useMutation();
+  const deleteProductMutation = trpc.admin.deleteProduct.useMutation();
+  const bulkProductActionMutation = trpc.admin.bulkProductAction.useMutation();
   const [stockFeedbackProductId, setStockFeedbackProductId] = useState<number | null>(null);
 
   function handleHomeImageUpload(event: React.ChangeEvent<HTMLInputElement>, target: "banner" | "vip", index?: number) {
@@ -812,7 +817,7 @@ export default function Admin() {
 
   const adminProducts = useMemo<AdminProductOption[]>(() => (catalogProducts ?? []).map((product) => {
     const variations = Array.isArray(product.variations)
-      ? product.variations.map((variation) => ({ id: variation.id, size: String(variation.size), color: variation.color ? String(variation.color) : "Preto", stock: Number(variation.stock ?? 0) }))
+      ? product.variations.map((variation) => ({ id: variation.id, size: String(variation.size), stock: Number(variation.stock ?? 0) }))
       : [];
     return {
       id: product.id,
@@ -895,34 +900,68 @@ export default function Admin() {
     setOpenNavGroups((current) => ({ ...current, [groupId]: !current[groupId] }));
   }
 
+  function toggleProductSelection(productId: number, checked: boolean) {
+    setSelectedProductIds((current) => checked
+      ? Array.from(new Set([...current, productId]))
+      : current.filter((id) => id !== productId));
+  }
+
+  function toggleVisibleProductSelection(checked: boolean) {
+    const visibleIds = filteredProductCatalog.map((product) => product.id);
+    setSelectedProductIds((current) => checked
+      ? Array.from(new Set([...current, ...visibleIds]))
+      : current.filter((id) => !visibleIds.includes(id)));
+  }
+
+  function runBulkProductAction(action: "duplicate" | "delete" | "category") {
+    if (selectedProductIds.length === 0) {
+      toast.info("Selecione pelo menos um produto para continuar.");
+      return;
+    }
+    if (action === "category" && !bulkCategoryId) {
+      toast.error("Escolha uma categoria antes de associar os produtos.");
+      return;
+    }
+    if (action === "delete" && !window.confirm(`Excluir ${selectedProductIds.length} produto(s) selecionado(s)? Esta ação não pode ser desfeita.`)) return;
+    bulkProductActionMutation.mutate({
+      action,
+      productIds: selectedProductIds,
+      ...(action === "category" ? { categoryId: Number(bulkCategoryId) } : {}),
+    }, {
+      onSuccess: (result) => {
+        setSelectedProductIds([]);
+        setBulkCategoryId("");
+        void Promise.all([utils.admin.listProducts.invalidate(), utils.catalog.list.invalidate()]);
+        toast.success(result.message);
+      },
+      onError: (error) => toast.error(error.message || "Não foi possível concluir a ação em lote."),
+    });
+  }
+
   const { data: myAdminDetails } = trpc.admin.myAdminDetails.useQuery(undefined, {
     enabled: Boolean(authUser && authUser.role === "admin"),
   });
   const adminName = myAdminDetails?.name?.trim() || authUser?.name?.trim() || "Eras Label Admin";
   const adminInitial = adminName.charAt(0).toUpperCase();
 
-  function toggleEditingVariation(size: string, color: string, checked: boolean) {
+  function toggleEditingVariation(size: string, checked: boolean) {
     setEditingProduct((current: any) => {
       if (!current) return current;
       const variations: AdminVariation[] = Array.isArray(current.variations) ? current.variations : [];
-      const exists = variations.some((v) => v.size === size && (v.color ?? "Preto") === color);
-      if (checked && !exists) {
-        return { ...current, variations: [...variations, { size, color, stock: 0 }] };
-      }
-      if (!checked) {
-        return { ...current, variations: variations.filter((v) => !(v.size === size && (v.color ?? "Preto") === color)) };
-      }
+      const exists = variations.some((variation) => variation.size === size);
+      if (checked && !exists) return { ...current, variations: [...variations, { size, stock: 0 }] };
+      if (!checked) return { ...current, variations: variations.filter((variation) => variation.size !== size) };
       return current;
     });
   }
 
-  function updateEditingVariationStock(size: string, color: string, value: string) {
+  function updateEditingVariationStock(size: string, value: string) {
     const stock = Math.max(0, Math.floor(Number(value) || 0));
     setEditingProduct((current: any) => {
       if (!current) return current;
       return {
         ...current,
-        variations: (current.variations ?? []).map((variation: AdminVariation) => (variation.size === size && (variation.color ?? "Preto") === color) ? { ...variation, stock } : variation),
+        variations: (current.variations ?? []).map((variation: AdminVariation) => variation.size === size ? { ...variation, stock } : variation),
       };
     });
   }
@@ -1068,16 +1107,26 @@ export default function Admin() {
               setProductImages([]);
             }}><Plus size={16} /> Novo produto</Button>
           </div>
-          <div className="content-toolbar inventory-toolbar"><div className="search-box"><Search size={15} /><Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por nome, SKU ou coleção" /></div><span className="inventory-count">{filteredProductCatalog.length} {filteredProductCatalog.length === 1 ? "produto" : "produtos"}</span></div>
-          <div className="admin-panel table-panel inventory-table-panel"><table><thead><tr><th>Produto</th><th>SKU</th><th>Categoria</th><th>Estoque</th><th>Status</th><th /></tr></thead><tbody>
-            {catalogProductsLoading && <tr><td colSpan={6}><div className="inventory-state"><LoaderCircle className="spin" size={20} /><strong>Carregando produtos</strong><span>Estamos consultando o catálogo persistido.</span></div></td></tr>}
-            {catalogProductsError && !catalogProductsLoading && <tr><td colSpan={6}><div className="inventory-state error"><strong>Não foi possível carregar os produtos</strong><span>Verifique a conexão e tente novamente.</span><Button type="button" variant="outline" onClick={() => void refetchCatalogProducts()}>Tentar novamente</Button></div></td></tr>}
-            {!catalogProductsLoading && !catalogProductsError && filteredProductCatalog.length === 0 && <tr><td colSpan={6}><div className="inventory-state"><Package size={22} /><strong>{query || selectedProductCategory ? "Nenhum produto encontrado" : "O catálogo está vazio"}</strong><span>{query || selectedProductCategory ? "Tente outra pesquisa ou escolha uma categoria diferente." : "Cadastre o primeiro produto para começar."}</span>{(query || selectedProductCategory) && <Button type="button" variant="outline" onClick={() => { setQuery(""); setProductCategoryFilter(null); }}>Limpar filtros</Button>}</div></td></tr>}
-            {!catalogProductsLoading && !catalogProductsError && filteredProductCatalog.map((product) => <tr key={product.id}><td><div className="table-product"><AdminProductThumbnail src={product.images[0]} alt={`Imagem de ${product.name}`} /><div><strong>{product.name}</strong><span>{product.collection}</span></div></div></td><td><span className="inventory-sku">{product.sku || "Sem SKU"}</span></td><td><span>{product.category}</span>{product.subcategory && <small className="inventory-unit">{product.subcategory}</small>}</td><td><strong className={product.stock === 0 ? "inventory-stock-zero" : "inventory-stock-value"}>{product.stock}</strong><span className="inventory-unit">unidades</span></td><td><span className={`status-pill ${product.status === "Publicado" ? "success" : product.status === "Esgotado" ? "danger" : "warning"}`}>{product.status}</span></td><td><div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "0.35rem" }}>
+          <div className="content-toolbar inventory-toolbar">
+            <div className="search-box"><Search size={15} /><Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por nome, SKU ou coleção" /></div>
+            <span className="inventory-count">{filteredProductCatalog.length} {filteredProductCatalog.length === 1 ? "produto" : "produtos"}</span>
+          </div>
+          {selectedProductIds.length > 0 && <div className="bulk-product-actions" role="toolbar" aria-label="Ações para produtos selecionados">
+            <span className="bulk-product-selection-count">{selectedProductIds.length} selecionado(s)</span>
+            <Button type="button" variant="outline" disabled={bulkProductActionMutation.isPending} onClick={() => runBulkProductAction("duplicate")}><Copy size={15} /> Duplicar</Button>
+            <Button type="button" variant="outline" disabled={bulkProductActionMutation.isPending} onClick={() => runBulkProductAction("delete")}><X size={15} /> Apagar</Button>
+            <select className="inventory-category-filter" value={bulkCategoryId} onChange={(event) => setBulkCategoryId(event.target.value)} aria-label="Escolher categoria para os produtos selecionados"><option value="">Adicionar à categoria...</option>{adminCategories.map((category) => <option key={category.id} value={category.id}>{category.parentId ? `↳ ${category.name}` : category.name}</option>)}</select>
+            <Button type="button" disabled={bulkProductActionMutation.isPending || !bulkCategoryId} onClick={() => runBulkProductAction("category")}><Tag size={15} /> Adicionar</Button>
+          </div>}
+          <div className="admin-panel table-panel inventory-table-panel"><table><thead><tr><th className="product-selection-cell"><Checkbox checked={filteredProductCatalog.length > 0 && filteredProductCatalog.every((product) => selectedProductIds.includes(product.id))} onCheckedChange={(checked) => toggleVisibleProductSelection(checked === true)} aria-label="Selecionar todos os produtos visíveis" /></th><th>Produto</th><th>SKU</th><th>Categoria</th><th>Estoque</th><th>Status</th><th /></tr></thead><tbody>
+            {catalogProductsLoading && <tr><td colSpan={7}><div className="inventory-state"><LoaderCircle className="spin" size={20} /><strong>Carregando produtos</strong><span>Estamos consultando o catálogo persistido.</span></div></td></tr>}
+            {catalogProductsError && !catalogProductsLoading && <tr><td colSpan={7}><div className="inventory-state error"><strong>Não foi possível carregar os produtos</strong><span>Verifique a conexão e tente novamente.</span><Button type="button" variant="outline" onClick={() => void refetchCatalogProducts()}>Tentar novamente</Button></div></td></tr>}
+            {!catalogProductsLoading && !catalogProductsError && filteredProductCatalog.length === 0 && <tr><td colSpan={7}><div className="inventory-state"><Package size={22} /><strong>{query || selectedProductCategory ? "Nenhum produto encontrado" : "O catálogo está vazio"}</strong><span>{query || selectedProductCategory ? "Tente outra pesquisa ou escolha uma categoria diferente." : "Cadastre o primeiro produto para começar."}</span>{(query || selectedProductCategory) && <Button type="button" variant="outline" onClick={() => { setQuery(""); setProductCategoryFilter(null); }}>Limpar filtros</Button>}</div></td></tr>}
+            {!catalogProductsLoading && !catalogProductsError && filteredProductCatalog.map((product) => <tr key={product.id}><td className="product-selection-cell"><Checkbox checked={selectedProductIds.includes(product.id)} onCheckedChange={(checked) => toggleProductSelection(product.id, checked === true)} aria-label={`Selecionar ${product.name}`} /></td><td><div className="table-product"><AdminProductThumbnail src={product.images[0]} alt={`Imagem de ${product.name}`} /><div><strong>{product.name}</strong><span>{product.collection}</span></div></div></td><td><span className="inventory-sku">{product.sku || "Sem SKU"}</span></td><td><span>{product.category}</span>{product.subcategory && <small className="inventory-unit">{product.subcategory}</small>}</td><td><strong className={product.stock === 0 ? "inventory-stock-zero" : "inventory-stock-value"}>{product.stock}</strong><span className="inventory-unit">unidades</span></td><td><span className={`status-pill ${product.status === "Publicado" ? "success" : product.status === "Esgotado" ? "danger" : "warning"}`}>{product.status}</span></td><td><div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "0.35rem" }}>
               <button className="table-more" aria-label={`Editar produto ${product.name}`} title="Editar produto" onClick={() => {
                 setEditorMode("product");
                 const numericPrice = Number(product.price.replace(/[^0-9,]/g, "").replace(",", ".")) || 0;
-                setEditingProduct({ id: product.id, name: product.name, collection: product.collection, category: product.category, subcategory: product.subcategory ?? null, sku: product.sku ?? "", slug: product.slug ?? "", visibility: product.visibility ?? "visible", categoryIds: product.categoryIds ?? [], price: numericPrice, pixPrice: numericPrice, description: "Peça de vestuário streetwear com acabamento premium.", status: product.status, variations: product.variations.map((variation) => ({ ...variation })) });
+                setEditingProduct({ id: product.id, name: product.name, collection: product.collection, category: product.category, subcategory: product.subcategory ?? null, sku: product.sku ?? "", slug: product.slug ?? "", visibility: product.visibility ?? "visible", categoryIds: product.categoryIds ?? [], price: numericPrice, pixPrice: numericPrice, description: "Peça de vestuário streetwear com acabamento premium.", status: product.status, variations: product.variations.map((variation) => ({ size: variation.size, stock: variation.stock })) });
                 setProductImages(product.images);
               }}><Pencil size={16} /></button>
               <button className="table-more" aria-label={`Duplicar produto ${product.name}`} title="Duplicar produto" disabled={duplicateProductMutation.isPending} onClick={() => {
@@ -1111,7 +1160,13 @@ export default function Admin() {
               setProductImages([]);
             }}><Pencil size={16} /></button><button type="button" className="table-more" style={{ color: '#b22222', borderColor: '#b22222', marginLeft: '0.4rem', padding: '0.2rem 0.5rem', fontSize: '11px' }} title="Excluir produto" onClick={() => {
               if (window.confirm(`Tem certeza que deseja excluir o produto "${product.name}"?`)) {
-                deleteProductMutation.mutate({ id: product.id });
+                deleteProductMutation.mutate({ productId: product.id }, {
+                  onSuccess: (result) => {
+                    void Promise.all([utils.admin.listProducts.invalidate(), utils.catalog.list.invalidate()]);
+                    toast.success(result.message);
+                  },
+                  onError: () => toast.error("Não foi possível excluir o produto. Tente novamente."),
+                });
               }
             }}>Excluir</button></td></tr>)}
           </tbody></table></div>
@@ -1200,86 +1255,30 @@ export default function Admin() {
 
               <section className="inventory-variation-editor" aria-labelledby="variation-editor-title">
                 <div className="inventory-section-heading">
-                  <div><span className="section-kicker">INVENTÁRIO</span><h4 id="variation-editor-title">Tamanhos, Cores e Estoque</h4><p>Gerencie as variações por tamanho e cor (ex: Preto, Branco, Vermelho) para camisetas e peças da marca.</p></div>
+                  <div><span className="section-kicker">INVENTÁRIO</span><h4 id="variation-editor-title">Tamanhos e estoque</h4><p>Selecione os tamanhos disponíveis e informe o número de peças. Este catálogo não utiliza cores como variação.</p></div>
                   <strong>{(editingProduct.variations ?? []).reduce((total: number, variation: AdminVariation) => total + Number(variation.stock || 0), 0)} un.</strong>
-                </div>
-                <div style={{ marginBottom: '1rem' }}>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#333', marginBottom: '0.35rem' }}>Cor principal da variação</label>
-                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    {["Preto", "Branco", "Off-White", "Vermelho (#b22222)", "Cinza Chumbo", "Azul Marinho"].map((colorOption) => {
-                      const cleanColor = colorOption.split(" ")[0];
-                      return (
-                        <button
-                          key={colorOption}
-                          type="button"
-                          onClick={() => {
-                            // Ao clicar, podemos adicionar um tamanho padrão ou focar nas variações da cor
-                          }}
-                          style={{ fontSize: '0.8rem', padding: '0.3rem 0.6rem', borderRadius: '4px', border: '1px solid #d1d5db', background: '#fff', cursor: 'default' }}
-                        >
-                          {colorOption}
-                        </button>
-                      );
-                    })}
-                  </div>
                 </div>
                 <div className="size-checkbox-grid">
                   {getInventorySizeOptions(String(editingProduct.category ?? "")).map((size) => {
-                    const defaultColor = "Preto";
-                    const variation = (editingProduct.variations ?? []).find((item: AdminVariation) => item.size === size && (item.color ?? "Preto") === defaultColor);
+                    const variation = (editingProduct.variations ?? []).find((item: AdminVariation) => item.size === size);
                     return <label className={`size-checkbox ${variation ? "selected" : ""}`} key={size}>
-                      <input type="checkbox" checked={Boolean(variation)} onChange={(event) => toggleEditingVariation(size, defaultColor, event.target.checked)} />
-                      <span>{size} ({defaultColor})</span>
+                      <input type="checkbox" checked={Boolean(variation)} onChange={(event) => toggleEditingVariation(size, event.target.checked)} />
+                      <span>{size}</span>
                     </label>;
                   })}
                 </div>
                 <div className="inventory-variation-list">
-                  {(editingProduct.variations ?? []).map((variation: AdminVariation, index: number) => {
-                    const varColor = variation.color ?? "Preto";
-                    return (
-                      <div className="inventory-variation-row" key={`${variation.size}-${varColor}-${index}`} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                        <span className="variation-size-label" style={{ minWidth: '90px', fontWeight: 600 }}>{variation.size}</span>
-                        <input
-                          type="text"
-                          value={varColor}
-                          onChange={(event) => {
-                            const newColor = event.target.value;
-                            setEditingProduct((current: any) => {
-                              if (!current) return current;
-                              return {
-                                ...current,
-                                variations: (current.variations ?? []).map((v: AdminVariation, i: number) => i === index ? { ...v, color: newColor } : v),
-                              };
-                            });
-                          }}
-                          placeholder="Cor (ex: Preto)"
-                          style={{ padding: '0.3rem 0.5rem', borderRadius: '4px', border: '1px solid #ccc', fontSize: '0.85rem', width: '130px' }}
-                          aria-label={`Cor para tamanho ${variation.size}`}
-                        />
-                        <span className="variation-stock-field" style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flex: 1 }}>
-                          <Input type="number" min="0" step="1" value={variation.stock} aria-label={`Estoque tamanho ${variation.size} cor ${varColor}`} onChange={(event) => updateEditingVariationStock(variation.size, varColor, event.target.value)} />
-                          <small>peças</small>
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEditingProduct((current: any) => {
-                              if (!current) return current;
-                              return {
-                                ...current,
-                                variations: (current.variations ?? []).filter((_: any, i: number) => i !== index),
-                              };
-                            });
-                          }}
-                          style={{ background: 'transparent', border: 'none', color: '#b22222', cursor: 'pointer', fontSize: '0.9rem', padding: '0.2rem' }}
-                          title="Remover variação"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    );
-                  })}
-                  {(editingProduct.variations ?? []).length === 0 && <p className="inventory-empty-state">Nenhuma variação selecionada. Escolha um tamanho acima para começar.</p>}
+                  {(editingProduct.variations ?? []).map((variation: AdminVariation, index: number) => (
+                    <div className="inventory-variation-row" key={`${variation.size}-${index}`} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                      <span className="variation-size-label" style={{ minWidth: '90px', fontWeight: 600 }}>{variation.size}</span>
+                      <span className="variation-stock-field" style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flex: 1 }}>
+                        <Input type="number" min="0" step="1" value={variation.stock} aria-label={`Estoque tamanho ${variation.size}`} onChange={(event) => updateEditingVariationStock(variation.size, event.target.value)} />
+                        <small>peças</small>
+                      </span>
+                      <button type="button" onClick={() => toggleEditingVariation(variation.size, false)} style={{ background: 'transparent', border: 'none', color: '#b22222', cursor: 'pointer', fontSize: '0.9rem', padding: '0.2rem' }} title={`Remover tamanho ${variation.size}`} aria-label={`Remover tamanho ${variation.size}`}>✕</button>
+                    </div>
+                  ))}
+                  {(editingProduct.variations ?? []).length === 0 && <p className="inventory-empty-state">Nenhum tamanho selecionado. Escolha uma opção acima para começar.</p>}
                 </div>
               </section>
 

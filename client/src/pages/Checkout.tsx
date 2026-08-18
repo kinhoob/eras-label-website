@@ -17,7 +17,6 @@ import { calculateInstallmentAmount, calculateInstallmentTotal } from "@/lib/ins
   image: string;
   alt: string;
   size: string;
-  color?: string;
   quantity: number;
 };
 
@@ -228,12 +227,12 @@ export default function CheckoutPage() {
   }, [cep]);
 
   function changeQuantity(line: CheckoutLine, delta: number) {
-    setCart((current) => updateCartLineQuantity(current, line.id, line.size, delta, line.color));
+    setCart((current) => updateCartLineQuantity(current, line.id, line.size, delta));
   }
 
   function removeItem(line: CheckoutLine) {
-    setCart((current) => removeCartLine(current, line.id, line.size, line.color));
-    toast.success("Item removido da sacola", { description: `${line.name} · ${line.size} · ${line.color ?? "Preto"}` });
+    setCart((current) => removeCartLine(current, line.id, line.size));
+    toast.success("Item removido da sacola", { description: `${line.name} · tamanho ${line.size}` });
   }
 
   function handleFormChange(event: React.FormEvent<HTMLFormElement>) {
@@ -339,7 +338,7 @@ export default function CheckoutPage() {
         city: fields.city.trim(),
         state: fields.state.trim().toUpperCase(),
       },
-      items: cart.map((item) => ({ productId: item.id, name: item.name, size: item.size, color: item.color ?? "Preto", quantity: item.quantity, price: item.price })),
+      items: cart.map((item) => ({ productId: item.id, name: item.name, size: item.size, quantity: item.quantity, price: item.price })),
       subtotal,
       shippingCost,
       shippingMethod: selectedShippingOption?.service,
@@ -422,9 +421,9 @@ export default function CheckoutPage() {
             <div className="checkout-success-order-heading"><span>RESUMO DO PEDIDO</span><strong>{success.items.reduce((sum, item) => sum + item.quantity, 0)} itens</strong></div>
             <div className="checkout-success-order-items">
               {success.items.map((item) => (
-                  <div className="checkout-success-order-item" key={`${item.id}-${item.size}-${item.color ?? "Preto"}`}>
+                  <div className="checkout-success-order-item" key={`${item.id}-${item.size}`}>
                     <img src={item.image} alt={item.alt || item.name} />
-                    <div><strong>{item.name}</strong><span>Tamanho {item.size}{item.color ? ` · Cor ${item.color}` : ""} · {item.quantity}x</span></div>
+                    <div><strong>{item.name}</strong><span>Tamanho {item.size} · {item.quantity}x</span></div>
                   <b>{formatPrice(item.price * item.quantity)}</b>
                 </div>
               ))}
@@ -568,9 +567,9 @@ export default function CheckoutPage() {
           <h2>{cart.length} {cart.length === 1 ? "item" : "itens"}</h2>
           <div className="checkout-summary-lines">
             {cart.map((line) => (
-              <div className="checkout-summary-line" key={`${line.id}-${line.size}-${line.color ?? "Preto"}`}>
+              <div className="checkout-summary-line" key={`${line.id}-${line.size}`}>
                 <img src={line.image} alt={line.alt || line.name} />
-                <div><strong>{line.name}</strong><span>Tamanho {line.size} · Cor {line.color ?? "Preto"} · {line.quantity}x</span><b>{formatPrice(line.price * line.quantity)}</b></div>
+                <div><strong>{line.name}</strong><span>Tamanho {line.size} · {line.quantity}x</span><b>{formatPrice(line.price * line.quantity)}</b></div>
                 <div className="checkout-summary-actions"><button type="button" onClick={() => changeQuantity(line, -1)} aria-label={`Diminuir quantidade de ${line.name}`}><Minus size={13} /></button><button type="button" onClick={() => changeQuantity(line, 1)} aria-label={`Aumentar quantidade de ${line.name}`}><Plus size={13} /></button><button type="button" onClick={() => removeItem(line)} aria-label={`Remover ${line.name}`}><Trash2 size={13} /></button></div>
               </div>
             ))}

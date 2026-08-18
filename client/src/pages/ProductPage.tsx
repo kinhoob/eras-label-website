@@ -65,7 +65,6 @@ export default function ProductPage() {
   const isError = numericId !== null ? idQuery.isError : slugQuery.isError;
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState("");
-  const [selectedColor, setSelectedColor] = useState("");
   const [isAdding, setIsAdding] = useState(false);
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
 
@@ -93,35 +92,20 @@ export default function ProductPage() {
         : [],
     [product?.variations],
   );
-  // Produtos legados sem cor explícita continuam compráveis com a cor editorial padrão.
-  const normalizeColor = (variation: any) => String(variation?.color ?? "Preto").trim() || "Preto";
-  const availableColors = useMemo(() => {
-    const uniqueColors = new Set<string>();
-    variations.forEach((variation: any) => uniqueColors.add(normalizeColor(variation)));
-    return Array.from(uniqueColors);
-  }, [variations]);
-  const selectedColorVariations = useMemo(
-    () => variations.filter((variation: any) => normalizeColor(variation) === selectedColor),
-    [variations, selectedColor],
-  );
   const availableSizes = useMemo(
-    () => Array.from(new Set(selectedColorVariations.map((variation: any) => String(variation.size)))),
-    [selectedColorVariations],
+    () => Array.from(new Set(variations.map((variation: any) => String(variation.size)))),
+    [variations],
   );
-  const selectedVariation = selectedColorVariations.find(
+  const selectedVariation = variations.find(
     (variation: any) => String(variation.size) === selectedSize,
   );
   const selectedStock = Number(selectedVariation?.stock ?? 0);
 
   useEffect(() => {
-    if (availableColors.length > 0 && !availableColors.includes(selectedColor)) {
-      setSelectedColor(availableColors[0]);
-      return;
-    }
     if (availableSizes.length > 0 && !availableSizes.includes(selectedSize)) {
       setSelectedSize(availableSizes[0]);
     }
-  }, [availableColors, availableSizes, selectedColor, selectedSize]);
+  }, [availableSizes, selectedSize]);
 
   useEffect(() => {
     if (!carouselApi) return;
@@ -188,15 +172,14 @@ export default function ProductPage() {
   const handleAddToCart = () => {
     if (isAdding) return;
     if (variations.length > 0 && !selectedVariation) {
-      toast.error("Escolha uma cor e um tamanho disponíveis para continuar.");
+      toast.error("Escolha um tamanho disponível para continuar.");
       return;
     }
 
     const chosenSize = selectedVariation ? String(selectedVariation.size) : selectedSize || "U";
-    const chosenColor = selectedVariation ? normalizeColor(selectedVariation) : selectedColor || "Preto";
     const currentCart = loadCart<PublicCartLine>();
     const existingIndex = currentCart.findIndex(
-      (line) => line.id === product.id && line.size === chosenSize && (line.color ?? "Preto") === chosenColor,
+      (line) => line.id === product.id && line.size === chosenSize,
     );
     const nextCart: PublicCartLine[] =
       existingIndex >= 0
@@ -209,7 +192,6 @@ export default function ProductPage() {
               id: product.id,
               name: product.name,
               size: chosenSize,
-              color: chosenColor,
               quantity: 1,
               price,
               image: images[0] || productImageFallback,
@@ -222,7 +204,7 @@ export default function ProductPage() {
     window.dispatchEvent(new Event("eras-cart-updated"));
     window.dispatchEvent(new Event("eras-open-cart"));
     toast.success("Peça adicionada à sacola", {
-      description: `${product.name} · ${chosenSize}${chosenColor ? ` · ${chosenColor}` : ""}`,
+      description: `${product.name} · tamanho ${chosenSize}`,
     });
     window.setTimeout(() => setIsAdding(false), 850);
   };
@@ -341,34 +323,8 @@ export default function ProductPage() {
                 <span>Frete grátis a partir de R$ 350,00</span>
               </div>
 
-              {(availableColors.length > 0 || variations.length > 0) && (
+              {variations.length > 0 && (
                 <div className="product-options-card" aria-label="Opções do produto">
-                  {availableColors.length > 0 && (
-                    <div className="product-option-group">
-                      <div className="product-option-heading">
-                        <span>Cor</span>
-                        <strong>{selectedColor || "Escolha uma opção"}</strong>
-                      </div>
-                      <div className="product-option-list">
-                        {availableColors.map((color) => (
-                          <button
-                            key={color}
-                            type="button"
-                            onClick={() => {
-                              setSelectedColor(color);
-                              setSelectedSize("");
-                            }}
-                            aria-pressed={selectedColor === color}
-                            className={`product-option-button ${selectedColor === color ? "is-selected" : ""}`}
-                          >
-                            {color}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {variations.length > 0 && (
                     <div className="product-option-group">
                       <div className="product-option-heading">
                         <span>Tamanho</span>
@@ -377,7 +333,7 @@ export default function ProductPage() {
                       <div className="product-option-list">
                         {availableSizes.map((size) => (
                           <button
-                            key={`${selectedColor}-${size}`}
+                            key={size}
                             type="button"
                             onClick={() => setSelectedSize(size)}
                             aria-pressed={selectedSize === size}
@@ -393,7 +349,6 @@ export default function ProductPage() {
                           : "Selecione o tamanho para continuar"}
                       </p>
                     </div>
-                  )}
                 </div>
               )}
 

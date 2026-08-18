@@ -17,34 +17,32 @@ export function getInventorySizeOptions(category: string) {
   return APPAREL_SIZE_OPTIONS;
 }
 
-export type InventoryVariationInput = { size: string; color?: string; stock: number };
-export type NormalizedInventoryVariation = { size: string; color: string; stock: number };
+/** Variação de produto: o estoque é controlado apenas por tamanho. */
+export type InventoryVariationInput = { size: string; stock: number };
+export type NormalizedInventoryVariation = { size: string; stock: number };
 
 /**
- * Normaliza o payload de estoque antes de o servidor persistir os dados.
- * Tamanhos e cores são validados, maiúsculas aplicadas e o estoque nunca fica negativo ou fracionado.
+ * Normaliza o payload de estoque antes de persistir os dados.
+ * Tamanhos são validados, maiúsculas aplicadas, entradas repetidas são consolidadas
+ * pelo último valor informado e o estoque nunca fica negativo ou fracionado.
+ *
+ * O campo de cor é deliberadamente ignorado para manter compatibilidade com dados
+ * legados sem reintroduzir cores na experiência de administração.
  */
-export function normalizeInventoryVariations(variations: InventoryVariationInput[] = []): NormalizedInventoryVariation[] {
+export function normalizeInventoryVariations(variations: Array<InventoryVariationInput | { size: string; color?: string; stock: number }> = []): NormalizedInventoryVariation[] {
   const normalized = variations
     .map((variation) => ({
       size: String(variation.size ?? "").trim().toUpperCase(),
-      color: String(variation.color ?? "Preto").trim() || "Preto",
       stock: Math.max(0, Math.floor(Number(variation.stock) || 0)),
     }))
     .filter((variation) => variation.size.length > 0);
 
-  // Dedup por par (size, color) para permitir a mesma peça em diferentes cores
   const map = new Map<string, NormalizedInventoryVariation>();
-  for (const item of normalized) {
-    const key = `${item.size}__${item.color.toLowerCase()}`;
-    map.set(key, item);
-  }
+  for (const item of normalized) map.set(item.size, item);
   return Array.from(map.values());
 }
 
-/**
- * Soma o estoque de todas as variações selecionadas para exibir o total do produto.
- */
+/** Soma o estoque de todas as variações selecionadas. */
 export function sumInventoryStock(variations: Array<{ stock: number | null | undefined }>) {
   return variations.reduce((total, variation) => total + Math.max(0, Number(variation.stock) || 0), 0);
 }

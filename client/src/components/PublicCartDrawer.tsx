@@ -13,7 +13,6 @@ export type PublicCartLine = {
   id: number;
   name: string;
   size: string;
-  color?: string;
   quantity: number;
   price: number;
   image?: string;
@@ -120,8 +119,8 @@ export default function PublicCartDrawer() {
     window.setTimeout(() => window.dispatchEvent(new Event("eras-cart-updated")), 0);
   }
 
-  function changeQuantity(productId: number, size: string, delta: number, color?: string) {
-    const next = updateCartLineQuantity(cart, productId, size, delta, color);
+  function changeQuantity(productId: number, size: string, delta: number) {
+    const next = updateCartLineQuantity(cart, productId, size, delta);
     setCart(next);
     saveCart(next);
     notifyCartUpdated();
@@ -129,17 +128,16 @@ export default function PublicCartDrawer() {
 
   // Remove a linha, persiste a alteração e só depois notifica os outros componentes do storefront.
   function removeItem(item: PublicCartLine) {
-    const itemColor = item.color ?? "Preto";
-    const next = removeCartLine(cart, item.id, item.size, itemColor);
+    const next = removeCartLine(cart, item.id, item.size);
     setCart(next);
     saveCart(next);
     notifyCartUpdated();
     toast.success("Item removido da sacola.", {
-      description: `${item.name} · ${item.size} (${itemColor})`,
+      description: `${item.name} · tamanho ${item.size}`,
       action: {
         label: "Desfazer",
         onClick: () => {
-          const restored = cart.some((line) => line.id === item.id && line.size === item.size && (line.color ?? "Preto") === itemColor) ? cart : [...cart, item];
+          const restored = cart.some((line) => line.id === item.id && line.size === item.size) ? cart : [...cart, item];
           setCart(restored);
           saveCart(restored);
           notifyCartUpdated();
@@ -218,27 +216,24 @@ export default function PublicCartDrawer() {
         ) : (
           <>
             <div className="cart-items-list">
-              {cart.map((item) => {
-                const itemColor = item.color ?? "Preto";
-                return (
-                  <div className="cart-item" key={`${item.id}-${item.size}-${itemColor}`}>
+              {cart.map((item) => (
+                  <div className="cart-item" key={`${item.id}-${item.size}`}>
                     <img src={item.image || editorialCartImage} alt={item.alt || item.name} />
                     <div className="cart-item-details">
                       <p className="cart-item-name">{item.name}</p>
-                      <p className="cart-item-variant">Tamanho: {item.size} · Cor: {itemColor}</p>
+                      <p className="cart-item-variant">Tamanho: {item.size}</p>
                       <div className="cart-item-bottom">
                         <div className="quantity-stepper">
-                          <button type="button" onClick={() => changeQuantity(item.id, item.size, -1, itemColor)} aria-label="Diminuir quantidade"><Minus size={13} /></button>
+                          <button type="button" onClick={() => changeQuantity(item.id, item.size, -1)} aria-label="Diminuir quantidade"><Minus size={13} /></button>
                           <span>{item.quantity}</span>
-                          <button type="button" onClick={() => changeQuantity(item.id, item.size, 1, itemColor)} aria-label="Aumentar quantidade"><Plus size={13} /></button>
+                          <button type="button" onClick={() => changeQuantity(item.id, item.size, 1)} aria-label="Aumentar quantidade"><Plus size={13} /></button>
                         </div>
                         <strong>{formatPrice(Number(item.price || 0) * item.quantity)}</strong>
                       </div>
                     </div>
                     <button type="button" className="cart-item-remove" onClick={() => removeItem(item)} aria-label={`Remover ${item.name}`}><X size={15} /></button>
                   </div>
-                );
-              })}
+                ))}
             </div>
 
             <div className="cart-footer">

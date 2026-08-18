@@ -18,6 +18,8 @@ import {
   getAdminSummary,
   getAdminProducts,
   duplicateProductData,
+  deleteProductData,
+  assignProductsToCategory,
   getProductWithVariations,
   getPublicProductById,
   getPublicProductBySlug,
@@ -527,7 +529,6 @@ export const appRouter = router({
       categoryIds: z.array(z.number().int().positive()).max(50).optional(),
       variations: z.array(z.object({
         size: z.string().trim().min(1).max(20),
-        color: z.string().trim().max(50).optional(),
         stock: z.number().int().min(0).max(100000),
       })).max(50).optional(),
     })).mutation(async ({ input }) => {
@@ -542,7 +543,6 @@ export const appRouter = router({
       productId: z.number().int().positive(),
       variations: z.array(z.object({
         size: z.string().trim().min(1).max(20),
-        color: z.string().trim().max(50).optional(),
         stock: z.number().int().min(0).max(100000),
       })).max(50),
     })).mutation(async ({ input, ctx }) => {
@@ -551,8 +551,7 @@ export const appRouter = router({
         const prod = await getProductWithVariations(input.productId);
         if (prod) {
           for (const newVar of input.variations) {
-            const colorVal = newVar.color?.trim() || "Preto";
-            const existingVar = prod.variations.find((v) => v.size === newVar.size && (v.color || "Preto") === colorVal);
+            const existingVar = prod.variations.find((v) => v.size === newVar.size);
             const prevStock = existingVar ? existingVar.stock : 0;
             if (prevStock !== newVar.stock) {
               await logInventoryAudit({
@@ -575,6 +574,32 @@ export const appRouter = router({
     duplicateProduct: adminProcedure.input(z.object({ productId: z.number().int().positive() })).mutation(async ({ input }) => {
       const product = await duplicateProductData(input.productId);
       return { success: true, message: "Produto duplicado com sucesso!", product };
+    }),
+    deleteProduct: adminProcedure.input(z.object({ productId: z.number().int().positive() })).mutation(async ({ input }) => {
+      await deleteProductData(input.productId);
+      return { success: true, message: "Produto excluído com sucesso!", productId: input.productId };
+    }),
+    bulkProductAction: adminProcedure.input(z.object({
+      action: z.enum(["duplicate", "delete", "category"]),
+      productIds: z.array(z.number().int().positive()).min(1).max(100),
+      categoryId: z.number().int().positive().optional(),
+    }).superRefine((input, ctx) => {
+      if (input.action === "category" && !input.categoryId) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["categoryId"], message: "Escolha uma categoria." });
+    })).mutation(async ({ input }) => {
+      if (input.action === "category") {
+        const result = await assignProductsToCategory(input.productIds, input.categoryId!);
+        return { success: true, message: `${result.productIds.length} produto(s) associado(s) à categoria.`, affectedIds: result.productIds };
+      }
+      if (input.action === "delete") {
+        for (const productId of input.productIds) await deleteProductData(productId);
+        return { success: true, message: `${input.productIds.length} produto(s) excluído(s) com sucesso.`, affectedIds: input.productIds };
+      }
+      const duplicatedIds: number[] = [];
+      for (const productId of input.productIds) {
+        const product = await duplicateProductData(productId);
+        if (product?.id) duplicatedIds.push(Number(product.id));
+      }
+      return { success: true, message: `${duplicatedIds.length} produto(s) duplicado(s) com sucesso.`, affectedIds: duplicatedIds };
     }),
     saveConfig: adminProcedure.input(z.object({
       pixDiscountPercent: z.number().min(0).max(100),

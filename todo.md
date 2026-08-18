@@ -849,9 +849,13 @@
 
 - [x] O teste unitário online de credenciais do Melhor Envio apresentou timeout de rede por restrição de saída do sandbox (comum em testes externos), enquanto o build de produção foi totalmente aprovado.
 
-- [ ] Diagnosticar e corrigir o erro de importação dinâmica em ProductPage.tsx e remover o fallback que recria o produto automático "Camiseta Paradox Oversized msyvg".
+- [x] Diagnosticar e corrigir o erro de importação dinâmica em ProductPage.tsx e remover o fallback que recria o produto automático "Camiseta Paradox Oversized msyvg".
 
-- [ ] Adicionar funcionalidade de exclusão de produtos no painel administrativo com confirmação segura.
-- [ ] Remover a lógica de cores das variações de produtos, permitindo apenas tamanhos e números de peças definidos pelo administrador.
+- [x] Adicionar funcionalidade de exclusão de produtos no painel administrativo com confirmação segura.
+- [x] Remover a lógica de cores das variações de produtos, permitindo apenas tamanhos e números de peças definidos pelo administrador.
 
 - [x] Rastrear e eliminar toda a origem de criação automática de produtos no backend/frontend, limpando todos os registos indesejados da base de dados.
+
+- [x] Adicionar seleção múltipla de produtos com checkbox individual, seleção total e ações em lote para duplicar, apagar e associar categorias.
+- [x] Remover a apresentação de cores do produto, carrinho lateral e checkout; manter apenas tamanho e quantidade.
+- [x] Atualizar testes de inventário e identidade das linhas do carrinho para o modelo somente por tamanho; validar TypeScript, Vitest e build.

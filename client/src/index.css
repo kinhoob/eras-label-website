@@ -1988,6 +1988,44 @@ td { border-top: 1px solid #e1dacf; padding: 15px 17px; color: #6f675e; font-siz
   white-space: nowrap;
 }
 
+.bulk-product-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin: 0 0 0.85rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid rgba(178, 34, 34, 0.18);
+  border-radius: 0.7rem;
+  background: linear-gradient(135deg, #fff8f7 0%, #fff 100%);
+  box-shadow: 0 8px 20px rgba(68, 36, 25, 0.06);
+  animation: bulk-actions-in 180ms ease-out both;
+}
+
+.bulk-product-selection-count {
+  margin-right: auto;
+  color: #8c2020;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.product-selection-cell {
+  width: 2.85rem;
+  min-width: 2.85rem;
+  text-align: center;
+}
+
+.product-selection-cell button {
+  margin: 0 auto;
+}
+
+@keyframes bulk-actions-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .inventory-table-panel {
   overflow-x: auto;
 }
