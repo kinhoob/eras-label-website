@@ -859,3 +859,5 @@
 - [x] Adicionar seleção múltipla de produtos com checkbox individual, seleção total e ações em lote para duplicar, apagar e associar categorias.
 - [x] Remover a apresentação de cores do produto, carrinho lateral e checkout; manter apenas tamanho e quantidade.
 - [x] Atualizar testes de inventário e identidade das linhas do carrinho para o modelo somente por tamanho; validar TypeScript, Vitest e build.
+
+- [x] Remover a lista intrusiva de alertas de estoque do menu flutuante de notificações, mantendo o alerta de estoque baixo de forma discreta na própria linha do produto na tabela de inventário/catálogo.

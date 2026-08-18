@@ -2425,18 +2425,15 @@ function AdminSettingsSection({ onNavigate }: { onNavigate: (label: string) => v
   );
 }
 
-// Componente do Centro de Notificações Flutuante no Cabeçalho Admin
+// Componente do Centro de Notificações Flutuante no Cabeçalho Admin (Apenas Pedidos e Alertas Reais com Leitura Marcada)
 function AdminNotificationsDropdown({ onNavigate }: { onNavigate: (tab: string) => void }) {
   const [isOpen, setIsOpen] = useState(false);
   const [readIds, setReadIds] = useState<string[]>([]);
-  const { data: stockAlerts = [] } = trpc.admin.lowStockAlerts.useQuery();
   const { data: orders = [] } = trpc.admin.listOrders.useQuery();
 
   const recentOrders = orders.filter((o: any) => o.status === "pending" || o.status === "paid" || o.status === "processing").slice(0, 5);
-  
   const unreadOrders = recentOrders.filter((o: any) => !readIds.includes(`order-${o.id}`));
-  const unreadStock = stockAlerts.filter((i: any) => !readIds.includes(`stock-${i.id}`));
-  const totalCount = unreadOrders.length + unreadStock.length;
+  const totalCount = unreadOrders.length;
 
   return (
     <div style={{ position: "relative" }}>
@@ -2504,10 +2501,8 @@ function AdminNotificationsDropdown({ onNavigate }: { onNavigate: (tab: string) 
               <button
                 type="button"
                 onClick={() => {
-                  // Marca todos os pedidos recentes e alertas de estoque como lidos de uma só vez
                   const allOrderIds = recentOrders.map((o: any) => `order-${o.id}`);
-                  const allStockIds = stockAlerts.map((s: any) => `stock-${s.id}`);
-                  setReadIds(Array.from(new Set([...readIds, ...allOrderIds, ...allStockIds])));
+                  setReadIds(Array.from(new Set([...readIds, ...allOrderIds])));
                   toast.success("Todas as notificações foram limpas.");
                 }}
                 style={{ background: "transparent", border: "none", color: "#b22222", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer", textDecoration: "underline" }}
@@ -2568,47 +2563,7 @@ function AdminNotificationsDropdown({ onNavigate }: { onNavigate: (tab: string) 
                   );
                 })}
 
-                {stockAlerts.length > 0 && unreadStock.length > 0 && (
-                  <div style={{ padding: "0.5rem 0.75rem 0.25rem", fontSize: "0.75rem", fontWeight: 700, color: "#b22222", marginTop: "0.5rem", borderTop: "1px solid #eee" }}>
-                    ALERTAS DE STOCK ({unreadStock.length})
-                  </div>
-                )}
-                {stockAlerts.map((item: any) => {
-                  const keyId = `stock-${item.id}`;
-                  const isRead = readIds.includes(keyId);
-                  if (isRead) return null;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => {
-                        setReadIds((prev) => [...prev, keyId]);
-                        setIsOpen(false);
-                        onNavigate("Inventário");
-                      }}
-                      style={{
-                        display: "block",
-                        width: "100%",
-                        textAlign: "left",
-                        padding: "0.6rem 1rem",
-                        background: "transparent",
-                        border: "none",
-                        borderBottom: "1px solid #f5f5f5",
-                        cursor: "pointer",
-                        transition: "background 0.15s"
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = "#fff8f8"}
-                      onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
-                    >
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", fontWeight: 600, color: "#b22222" }}>
-                        <span>{item.name}</span>
-                        <span>{item.stock} un.</span>
-                      </div>
-                      <div style={{ fontSize: "0.75rem", color: "#666", marginTop: "0.1rem" }}>
-                        Categoria: {item.category} • Requer reposição urgente
-                      </div>
-                    </button>
-                  );
-                })}
+
               </>
             )}
           </div>
