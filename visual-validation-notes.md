@@ -50,3 +50,9 @@ A barra global, o menu público e a sacola continuam presentes no shell público
 A interação com a segunda miniatura atualizou corretamente o indicador da galeria para `02 / 03`, confirmando a sincronização entre miniaturas e o carousel Embla. A captura mobile automática apanhou o estado transitório `A CARREGAR PRODUTO` por ocorrer imediatamente após a navegação; será feita uma verificação após o carregamento para distinguir o skeleton de um problema de layout.
 
 A segunda captura mobile em 390×844 carregou a página completa sem overflow horizontal. A ordem ficou galeria principal com controlos laterais, miniaturas horizontais, breadcrumb e painel de compra; o CTA Comprar manteve boa área de toque; os accordions e a secção `Talvez também goste` renderizaram em duas colunas; o rodapé permaneceu dentro da estética clara comum do storefront.
+
+## Correção de navbar e dropdown — 2026-08-18
+
+A Home e a categoria `/category/camisetas` foram verificadas em desktop 1280×720 e mobile 375×812. O anúncio aparece completo e centrado; a navbar permanece no fluxo normal no topo, sem cobrir o hero ou o título da categoria. No mobile, a faixa vermelha continua visível e o hero começa abaixo da navbar.
+
+O dropdown de Coleções foi testado por clique na categoria. O estado inicial não mostra o menu; após a interação, o popover exibe integralmente “Todas as coleções” e as coleções publicadas, sem ser recortado pela linha de navegação. A correção inclui `overflow: visible` no contentor dos links e `position: sticky` para a navbar.

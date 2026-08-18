@@ -729,3 +729,8 @@
 - [ ] Reexecutar Vitest, TypeScript e build de produção após a atualização da página de produto.
 
 - [x] Redesenhar a página de produto com galeria swiper, painel editorial de compra e recomendações da mesma categoria/coleção.
+
+- [x] Corrigir o dropdown de Coleções que está a aparecer/posicionar-se de forma incorreta nas páginas públicas.
+- [x] Manter o banner totalmente visível no início da página e impedir que a navbar o sobreponha antes de algum scroll.
+- [x] Fazer a navbar passar para sobreposição apenas após o utilizador descer um pouco, em desktop e mobile.
+- [x] Validar Home e categorias, executar Vitest/TypeScript/build e guardar checkpoint da correção.

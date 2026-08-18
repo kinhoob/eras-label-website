@@ -7935,3 +7935,87 @@ body {
   .related-product-image,
   .related-products-heading > a { transition: none; }
 }
+
+
+/* Correção de topo público: o anúncio e a navbar ocupam o fluxo no início; a navbar só fixa ao atingir o topo. */
+.public-global-announcement {
+  position: relative;
+  inset: auto;
+  z-index: 90;
+}
+
+.public-global-nav {
+  position: sticky;
+  inset: auto;
+  top: 0;
+  z-index: 110;
+}
+
+/* A classe de scroll continua a controlar a reaparição, sem alterar o espaço reservado no documento. */
+.public-global-nav.is-hidden {
+  transform: translateY(-115%);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.public-global-nav.is-visible {
+  transform: translateY(0);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* O overflow horizontal anterior recortava o popover, deixando apenas uma caixa vazia sob a navbar. */
+.public-global-links {
+  position: relative;
+  z-index: 120;
+  overflow: visible;
+}
+
+.public-global-collections {
+  position: relative;
+  z-index: 121;
+  flex: 0 0 auto;
+}
+
+.public-global-collections-menu {
+  visibility: hidden;
+}
+
+.public-global-collections.is-open > .public-global-collections-menu,
+.public-global-collections:focus-within > .public-global-collections-menu {
+  visibility: visible;
+}
+
+/* Páginas públicas já possuem o seu próprio espaçamento Tailwind; não duplicar o offset da antiga navbar fixa. */
+.public-page-shell main,
+.manifesto-page main,
+.events-page main,
+.contact-page main,
+.archive-page main {
+  padding-top: 0;
+}
+
+@media (max-width: 820px) {
+  .public-global-announcement {
+    display: grid !important;
+    position: relative;
+    inset: auto;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  .public-global-nav {
+    position: sticky;
+    inset: auto;
+    top: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .public-global-nav.is-hidden,
+  .public-global-nav.is-visible {
+    transition: none;
+  }
+}
