@@ -8702,3 +8702,43 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .category-product-option { transition: none; }
 }
+
+/* Pedido: modal de detalhes ancorado ao viewport, nunca ao scroll da tabela */
+.admin-sales-modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2000 !important;
+  width: 100vw;
+  height: 100dvh;
+  min-height: 100%;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: clamp(.75rem, 2vw, 1.5rem) !important;
+  overflow: hidden;
+  overscroll-behavior: contain;
+  box-sizing: border-box;
+}
+.admin-sales-modal-overlay .admin-sales-modal {
+  position: relative;
+  inset: auto;
+  flex: 0 1 auto;
+  width: min(100%, 720px) !important;
+  max-height: min(90dvh, 860px) !important;
+  margin: 0 auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
+}
+@media (max-width: 640px) {
+  .admin-sales-modal-overlay {
+    align-items: center !important;
+    padding: .65rem !important;
+  }
+  .admin-sales-modal-overlay .admin-sales-modal {
+    width: 100% !important;
+    max-height: calc(100dvh - 1.3rem) !important;
+  }
+}

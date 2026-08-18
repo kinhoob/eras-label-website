@@ -777,3 +777,8 @@
 - [x] Reestruturar a curadoria de Categorias da Home para aproximar o layout de referência: linhas editoriais, campos alinhados, grelha de produtos organizada e criação de secção com hierarquia clara.
 - [x] Preservar CRUD, ativação, subcategorias, upload de capa e seleção de produtos durante a remodelação.
 - [x] Validar responsividade do painel em desktop/mobile, executar Vitest (152 testes), TypeScript e build de produção.
+
+## Modal de detalhes do pedido — abertura no viewport (2026-08-18)
+- [x] Corrigir o modal de detalhes do pedido para abrir centrado no viewport sem exigir scroll da página.
+- [x] Manter o scroll limitado ao conteúdo interno, preservar o botão X e garantir comportamento responsivo.
+- [x] Validar desktop/mobile, executar TypeScript, Vitest (152 testes) e build de produção.

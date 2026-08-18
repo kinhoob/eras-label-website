@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { createPortal } from "react-dom";
+import { useEffect, useMemo, useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,15 @@ export default function AdminSalesSection() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [paymentFilter, setPaymentFilter] = useState("all");
   const [periodFilter, setPeriodFilter] = useState<"all" | "7" | "30" | "90">("all");
+
+  useEffect(() => {
+    if (!selectedOrder) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [selectedOrder]);
 
   // Um pedido está pronto para download quando já tem um PDF persistido ou
   // um ID de envio que permite obtê-lo no Melhor Envio sob demanda.
@@ -315,7 +325,7 @@ export default function AdminSalesSection() {
         )}
       </div>
 
-      {selectedOrder && (
+      {selectedOrder && createPortal(
         <div className="admin-sales-modal-overlay" style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
           <div className="admin-panel admin-modal admin-sales-modal" style={{ background: "var(--background)", width: "100%", maxWidth: "720px", maxHeight: "90vh", overflowY: "auto", padding: "2rem" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
@@ -466,7 +476,8 @@ export default function AdminSalesSection() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </section>
   );
