@@ -964,3 +964,7 @@
 
 
 - [x] Limpeza completa do banco de dados removendo todos os produtos, variações, pedidos, itens de pedidos, clientes fictícios, cupons de teste, promoções, carrinhos abandonados e histórico de e-mails/testes, preservando apenas configurações, administradores e estrutura da aplicação.
+
+- [ ] Importar os produtos reais a partir do CSV da Nuvemshop (`tiendanube-5887838-17871641601727955173772670370.csv`), mapeando colunas, preços, variações, estoque, coleções e imagens reais.
+
+- [x] Importar os produtos reais a partir do CSV da Nuvemshop (`tiendanube-5887838-17871641601727955173772670370.csv`), mapeando colunas, preços, variações, estoque, coleções e imagens reais.
