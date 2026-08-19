@@ -7215,7 +7215,11 @@ body {
 .public-cart-drawer .cart-total-row.final { border-top-color: rgba(35, 34, 30, .18); }
 
 @media (max-width: 720px) {
-  .lovable-side-menu { width: min(360px, 92vw); padding: 24px 20px 34px; }
+  /* Em mobile, o menu usa a maior largura segura sem ultrapassar o viewport. */
+  .lovable-side-menu {
+    width: min(360px, 92vw);
+    padding: max(24px, env(safe-area-inset-top)) 20px max(34px, env(safe-area-inset-bottom));
+  }
   .home-events-preview { margin-bottom: 78px; padding: 0 20px; }
   .home-event-row { grid-template-columns: 1fr; gap: 12px; padding: 20px 0; }
   .home-event-row:hover { padding-left: 8px; padding-right: 8px; }
@@ -10293,10 +10297,13 @@ h1, h2, h3, .heading-editorial {
    Garante animação fluida de deslizamento e fade in/out na abertura e fechamento
    ========================================================================== */
 
+/* O overlay deve criar uma camada acima da navbar sticky para que o menu aberto nunca fique escondido. */
 .lovable-menu-overlay {
   position: fixed;
   inset: 0;
-  z-index: 100;
+  z-index: 1200;
+  isolation: isolate;
+  overscroll-behavior: contain;
   background: rgba(13, 13, 13, 0.55);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
@@ -10310,12 +10317,16 @@ h1, h2, h3, .heading-editorial {
   visibility: visible;
 }
 
+/* O painel fica acima do overlay e da navbar, mantendo a área de toque íntegra em ecrãs pequenos. */
 .lovable-side-menu {
   position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
+  inset: 0 auto 0 0;
   width: min(380px, 86vw);
+  min-height: 100dvh;
+  max-height: 100dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   background: #fbf9f4;
   color: #1b1b1b;
   box-shadow: 12px 0 36px rgba(0, 0, 0, 0.22);
@@ -10323,7 +10334,7 @@ h1, h2, h3, .heading-editorial {
   transition: transform 0.35s cubic-bezier(0.23, 1, 0.32, 1);
   display: flex;
   flex-direction: column;
-  z-index: 101;
+  z-index: 1201;
 }
 
 .lovable-side-menu.is-open {

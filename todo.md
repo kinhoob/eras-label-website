@@ -901,3 +901,8 @@
 - [x] Ajustar as fontes pesadas do checkout transparente para uma estética editorial mais leve e elegante
 - [x] Atualizar títulos, subtítulos, labels de formulário, resumo da sacola e botões
 - [x] Validar testes, build e salvar checkpoint
+
+- [x] Corrigir a camada do menu lateral para ficar acima da navbar quando aberto e garantir comportamento responsivo em mobile
+- [x] Validar menu lateral, navbar, overlay, foco e bloqueio de interação em desktop e mobile
+- [x] Executar testes automatizados e build após a correção
+- [x] Salvar checkpoint da correção do menu lateral
