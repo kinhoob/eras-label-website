@@ -11,6 +11,8 @@ import { serveStatic, setupVite } from "./vite";
 import { getMercadoPagoPayment } from "../mercadopago";
 import { updateOrderPaymentStatus } from "../db";
 import { registerSitemapRoutes } from "../sitemap";
+import { verifyMercadoPagoSignature } from "../mercadopago.signature";
+import { ENV } from "./env";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -54,6 +56,22 @@ async function startServer() {
     try {
       const event = req.body as Record<string, any>;
       const paymentId = event?.data?.id ?? event?.id;
+
+      // Validação de autenticidade: só processamos notificações assinadas pelo
+      // Mercado Pago (HMAC-SHA256 com a chave secreta do webhook).
+      const signatureResult = verifyMercadoPagoSignature({
+        signatureHeader: req.header("x-signature"),
+        requestId: req.header("x-request-id"),
+        // O manifesto usa o data.id enviado na query string quando presente.
+        dataId: String((req.query["data.id"] as string | undefined) ?? paymentId ?? ""),
+        secret: ENV.mpWebhookSecret,
+      });
+      if (!signatureResult.valid) {
+        console.warn(`[MercadoPago Webhook] Notificação rejeitada: ${signatureResult.reason}`);
+        res.status(401).json({ received: false, error: "invalid_signature" });
+        return;
+      }
+
       if (!paymentId) {
         res.status(200).json({ received: true, ignored: true });
         return;
