@@ -51,6 +51,18 @@ async function startServer() {
     })
   );
 
+  // Webhook endpoint para notificações e validação do Melhor Envio (evita erro 404 E-WBH-0002)
+  app.post("/api/melhor-envio/webhook", async (req, res) => {
+    try {
+      console.log("[Melhor Envio Webhook] Evento recebido:", req.body);
+      // O Melhor Envio valida a URL enviando uma requisição de teste. Respondemos com 200 OK.
+      res.status(200).json({ received: true, status: "success" });
+    } catch (err) {
+      console.error("[Melhor Envio Webhook] Erro:", err);
+      res.status(200).json({ received: true });
+    }
+  });
+
   // Webhook endpoint para notificações de pagamento do Mercado Pago.
   app.post("/api/mercadopago/webhook", async (req, res) => {
     try {
