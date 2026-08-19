@@ -926,9 +926,13 @@
 - [x] Unificar os dados de clientes e compradores para que cada pedido recém-criado exiba o cliente correspondente
 - [x] Validar a listagem com testes, build e salvar checkpoint
 
-- [ ] Adicionar uma animação editorial suave e a mensagem de agradecimento no estado de compra concluída
-- [ ] Garantir que a confirmação preserve a limpeza da sacola e o acesso ao histórico do pedido
-- [ ] Validar a confirmação em desktop e mobile, executar testes, build e salvar checkpoint
+- [x] Adicionar uma animação editorial suave e a mensagem de agradecimento no estado de compra concluída
+- [x] Garantir que a confirmação preserve a limpeza da sacola e o acesso ao histórico do pedido
+- [x] Validar a confirmação em desktop e mobile, executar testes, build e salvar checkpoint
+
+- [x] Transferir 'próximo drop & acesso à loja' e 'trancar site' exclusivamente para a aba 'Página em construção' e remover da aba Aparência
+- [x] Reorganizar a aba 'Página em construção' em cards modernos e responsivos para desktop e mobile
+- [x] Executar testes, build de produção e salvar checkpoint
 
 - [x] Adicionar uma animação bonita com a mensagem de agradecimento no estado pós-compra
 - [x] Criar testes e validar responsividade em desktop e mobile para a nova mensagem animada

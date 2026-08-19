@@ -11233,3 +11233,48 @@ h1, h2, h3, .heading-editorial {
     animation: none;
   }
 }
+
+/* Refinamento da Página em Construção e Editor de Trancamento */
+.storefront-settings-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  width: 100%;
+}
+
+.storefront-settings-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  width: 100%;
+}
+
+.storefront-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.75rem;
+  width: 100%;
+}
+
+@media (max-width: 1024px) {
+  .storefront-settings-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.storefront-control-card,
+.storefront-announcement-card {
+  background: #fbfaf7;
+  border: 1px solid #dcd4c7;
+  border-radius: 10px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.storefront-control-card.is-active,
+.storefront-announcement-card {
+  border-color: #b22222;
+  box-shadow: 0 10px 30px rgba(178, 34, 34, 0.08);
+}
