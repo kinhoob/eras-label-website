@@ -275,7 +275,9 @@ export const appRouter = router({
     save: adminProcedure.input(z.object({
       id: z.number().int().positive().optional(),
       code: z.string().trim().min(2).max(50),
-      discountPercent: z.number().min(0.01).max(100),
+      discountType: z.string().optional(),
+      discountPercent: z.number().min(0).max(100).optional(),
+      fixedAmount: z.number().nonnegative().optional(),
       usageLimit: z.number().int().positive().nullable().optional(),
       minPurchase: z.number().nonnegative().optional(),
       validUntil: z.string().datetime().nullable().optional(),

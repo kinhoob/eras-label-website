@@ -140,6 +140,7 @@ export default function CheckoutPage() {
   const [coupon, setCoupon] = useState(() => loadCheckoutDraft().coupon ?? "");
   const [couponApplied, setCouponApplied] = useState(() => loadCheckoutDraft().couponApplied === true);
   const [couponDiscountRate, setCouponDiscountRate] = useState(10);
+  const [couponFreeShipping, setCouponFreeShipping] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<CheckoutPaymentMethod>(() => loadCheckoutDraft().selectedPaymentMethod ?? "pix");
   const [selectedInstallments, setSelectedInstallments] = useState(1);
   const [cep, setCep] = useState(() => loadCheckoutDraft().shippingCep ?? "");
@@ -171,7 +172,7 @@ export default function CheckoutPage() {
   const discount = couponApplied ? subtotal * (couponDiscountRate / 100) : 0;
   const shippingOptions = shippingQuery.data?.options ?? (shippingQuery.data ? [{ id: "default", service: shippingQuery.data.service, cost: shippingQuery.data.cost, deadline: shippingQuery.data.deadline, free: shippingQuery.data.free }] : []);
   const selectedShippingOption = shippingOptions.find((option) => option.service === shippingMethod) ?? shippingOptions[0];
-  const shippingCost = selectedShippingOption?.free ? 0 : Number(selectedShippingOption?.cost ?? 0);
+  const shippingCost = (selectedShippingOption?.free || couponFreeShipping) ? 0 : Number(selectedShippingOption?.cost ?? 0);
   const totalBeforePayment = Math.max(0, subtotal - discount + shippingCost);
   const pixSavings = selectedPaymentMethod === "pix" ? subtotal * (pixDiscountPercent / 100) : 0;
   const cardTotal = selectedPaymentMethod === "credit_card" ? calculateInstallmentTotal(totalBeforePayment, selectedInstallments, installmentInterestRate) : totalBeforePayment;
@@ -259,7 +260,7 @@ export default function CheckoutPage() {
     }
   }
 
-  async function applyCoupon() {
+      async function applyCoupon() {
     if (!coupon.trim()) {
       toast.error("Digite o código do cupom.");
       return;
@@ -267,16 +268,25 @@ export default function CheckoutPage() {
     setCouponLoading(true);
     try {
       const result = await couponValidationQuery.refetch();
-      const validation = result.data;
+      const validation = result.data as any;
       if (validation?.valid) {
-        const rate = subtotal > 0 ? (Number(validation.discount) / subtotal) * 100 : 0;
-        setCouponDiscountRate(rate);
-        setCouponApplied(true);
-        toast.success(`Cupom ${validation.code} aplicado: ${rate.toFixed(0)}% de desconto.`);
+        if (validation.freeShipping) {
+          setCouponFreeShipping(true);
+          setCouponDiscountRate(0);
+          setCouponApplied(true);
+          toast.success(`Cupom ${validation.code} aplicado: Frete Grátis ativado!`);
+        } else {
+          const rate = subtotal > 0 ? (Number(validation.discount) / subtotal) * 100 : 0;
+          setCouponFreeShipping(false);
+          setCouponDiscountRate(rate);
+          setCouponApplied(true);
+          toast.success(`Cupom ${validation.code} aplicado: ${rate.toFixed(0)}% de desconto.`);
+        }
       } else {
         setCouponDiscountRate(0);
+        setCouponFreeShipping(false);
         setCouponApplied(false);
-        toast.error("Cupom não encontrado, expirado ou incompatível com o subtotal.");
+        toast.error(validation?.message || "Cupom não encontrado, expirado ou incompatível com o subtotal.");
       }
     } catch {
       setCouponApplied(false);

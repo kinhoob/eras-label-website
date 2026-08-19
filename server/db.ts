@@ -281,8 +281,20 @@ export async function validateCoupon(code: string, subtotal: number, customerEma
     }
   }
 
-  const discount = coupon.discountPercent ? subtotal * Number(coupon.discountPercent) / 100 : 0;
-  return { valid: true, discount, code: coupon.code };
+  let discount = 0;
+  let freeShipping = false;
+
+  if (coupon.promoType === "free_shipping") {
+    freeShipping = true;
+    discount = 0;
+  } else if (coupon.promoType === "fixed") {
+    const rules = coupon.promoRules as { fixedAmount?: number } | null;
+    discount = Number(rules?.fixedAmount ?? coupon.discountPercent ?? 0);
+  } else {
+    discount = coupon.discountPercent ? subtotal * Number(coupon.discountPercent) / 100 : 0;
+  }
+
+  return { valid: true, discount, freeShipping, code: coupon.code };
 }
 
 export async function getAdminSummary() {
@@ -1490,7 +1502,9 @@ export async function listAdminCoupons() {
 export async function saveCouponData(data: {
   id?: number;
   code: string;
-  discountPercent: number;
+  discountType?: string;
+  discountPercent?: number;
+  fixedAmount?: number;
   usageLimit?: number | null;
   minPurchase?: number;
   validUntil?: string | null;
@@ -1500,13 +1514,27 @@ export async function saveCouponData(data: {
   const db = await getDb();
   const code = data.code.trim().toUpperCase();
   if (!code) throw new Error("Código do cupom é obrigatório.");
+  
+  const discountType = data.discountType || "percent";
+  let promoType = "standard";
+  let percentVal = Number(data.discountPercent ?? 10);
+  
+  if (discountType === "free_shipping") {
+    promoType = "free_shipping";
+    percentVal = 0;
+  } else if (discountType === "fixed") {
+    promoType = "fixed";
+  }
+
   const values: InsertCoupon = {
     code,
-    discountPercent: data.discountPercent.toFixed(2),
+    discountPercent: percentVal.toFixed(2),
     usageLimit: data.usageLimit ?? null,
     minPurchase: (data.minPurchase ?? 0).toFixed(2),
     validUntil: data.validUntil ? new Date(data.validUntil) : null,
     active: data.active ?? 1,
+    promoType,
+    promoRules: discountType === "fixed" ? { fixedAmount: data.fixedAmount || 0 } : null,
     isFirstPurchaseOnly: data.isFirstPurchaseOnly ?? 0,
   };
   if (!db) return { ...values, id: data.id ?? 0, timesUsed: 0, createdAt: new Date() };
