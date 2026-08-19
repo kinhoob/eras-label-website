@@ -980,3 +980,4 @@
 - [ ] Atualizar o cálculo de parcelamento e juros no checkout e no backend para aplicar juros apenas a partir da parcela seguinte ao limite sem juros configurado.
 - [ ] Executar testes Vitest e build de produção.
 - [x] Configurar parcelas sem juros (até 3x por padrão, configurável no painel) e juros compostos a partir da parcela seguinte no checkout e cálculo de parcelamento.
+- [x] Corrigir a sincronização de status de pagamento aprovado do Mercado Pago (cartão e Pix) para atualizar automaticamente o pedido no painel admin e no acompanhamento do cliente.

@@ -966,7 +966,7 @@ export async function listOrdersByUser(userId: number) {
 export async function updateOrderPaymentStatus(orderNumber: string, paymentStatus: string) {
   const db = await getDb();
   if (!db) return undefined;
-  const nextStatus = paymentStatus === "approved" ? "Processando" : paymentStatus === "cancelled" || paymentStatus === "rejected" ? "Pagamento recusado" : "Aguardando pagamento";
+  const nextStatus = (paymentStatus === "approved" || paymentStatus === "authorized") ? "Processando" : paymentStatus === "in_process" ? "Em análise" : paymentStatus === "cancelled" || paymentStatus === "rejected" ? "Pagamento recusado" : "Aguardando pagamento";
   await db.update(orders).set({ paymentStatus, status: nextStatus }).where(eq(orders.orderNumber, orderNumber));
   const updated = await db.select().from(orders).where(eq(orders.orderNumber, orderNumber)).limit(1);
   return updated[0];

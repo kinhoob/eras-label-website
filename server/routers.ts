@@ -396,8 +396,8 @@ export const appRouter = router({
           external_reference: orderNumber,
         });
 
-        if (mpResult?.status === "approved") {
-          initialPaymentStatus = "approved";
+        if (mpResult?.status) {
+          initialPaymentStatus = String(mpResult.status);
         }
       } catch (mpError: any) {
         console.error("[MercadoPago] Erro ao criar pagamento transparente:", mpError);
@@ -420,7 +420,7 @@ export const appRouter = router({
         discount: input.discount.toFixed(2),
         total: serverTotal.toFixed(2),
         paymentStatus: initialPaymentStatus,
-        status: initialPaymentStatus === "approved" ? "Processando" : "Aguardando pagamento",
+        status: (initialPaymentStatus === "approved" || initialPaymentStatus === "authorized") ? "Processando" : initialPaymentStatus === "in_process" ? "Em análise" : "Aguardando pagamento",
       });
 
       // Disparar notificação estilo Nuvemshop para o Administrador
