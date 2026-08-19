@@ -921,3 +921,7 @@
 - [x] Limpar automaticamente a sacola após uma compra aprovada, preservando o pedido no histórico
 - [x] Manter a sacola intacta em pagamentos pendentes ou falhados e cobrir os estados com testes
 - [x] Validar a sacola vazia após conclusão em desktop e mobile, executar build e salvar checkpoint
+
+- [x] Rastrear a persistência de pedidos na rota de checkout e verificar a listagem na aba Clientes
+- [x] Unificar os dados de clientes e compradores para que cada pedido recém-criado exiba o cliente correspondente
+- [x] Validar a listagem com testes, build e salvar checkpoint

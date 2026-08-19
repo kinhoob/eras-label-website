@@ -740,7 +740,42 @@ export async function updateInventoryStock(data: { productId: number; variations
 export async function listClients() {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(users).orderBy(desc(users.lastSignedIn));
+  const registeredUsers = await db.select().from(users).orderBy(desc(users.lastSignedIn));
+  const allOrders = await db.select().from(orders).orderBy(desc(orders.createdAt));
+
+  // Mapear utilizadores registados por e-mail (lowercase)
+  const clientMap = new Map<string, { id: number | string; name: string; email: string; role: string; createdAt: number; source: string }>();
+
+  for (const u of registeredUsers) {
+    const emailKey = (u.email || "").toLowerCase().trim();
+    if (!emailKey) continue;
+    clientMap.set(emailKey, {
+      id: u.id,
+      name: u.name || "Cliente",
+      email: u.email || "",
+      role: u.role || "user",
+      createdAt: u.createdAt ? new Date(u.createdAt).getTime() : Date.now(),
+      source: "user"
+    });
+  }
+
+  // Adicionar compradores que fizeram pedidos (mesmo convidados sem conta dedicada)
+  for (const o of allOrders) {
+    const emailKey = (o.customerEmail || "").toLowerCase().trim();
+    if (!emailKey) continue;
+    if (!clientMap.has(emailKey)) {
+      clientMap.set(emailKey, {
+        id: `order-buyer-${o.id}`,
+        name: o.customerName || "Comprador",
+        email: o.customerEmail || "",
+        role: "customer",
+        createdAt: o.createdAt ? new Date(o.createdAt).getTime() : Date.now(),
+        source: "order"
+      });
+    }
+  }
+
+  return Array.from(clientMap.values()).sort((a, b) => Number(b.createdAt) - Number(a.createdAt));
 }
 
 export async function listMarketingCollections() {
