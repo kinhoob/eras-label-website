@@ -978,7 +978,8 @@
 - [ ] Adicionar campo `interestFreeInstallments` na tabela `commercial_config` e migração correspondente.
 - [ ] Atualizar o painel administrativo de configurações comerciais para permitir definir o número máximo de parcelas sem juros (ex: 3).
 - [ ] Atualizar o cálculo de parcelamento e juros no checkout e no backend para aplicar juros apenas a partir da parcela seguinte ao limite sem juros configurado.
-- [ ] Executar testes Vitest e build de produção.
+- [x] Executar testes Vitest e build de produção.
 - [x] Configurar parcelas sem juros (até 3x por padrão, configurável no painel) e juros compostos a partir da parcela seguinte no checkout e cálculo de parcelamento.
 - [x] Corrigir a sincronização de status de pagamento aprovado do Mercado Pago (cartão e Pix) para atualizar automaticamente o pedido no painel admin e no acompanhamento do cliente.
 - [x] Adicionar mensagens claras e amigáveis de recusa de cartão de crédito no checkout (ex: limite insuficiente, cartão expirado, dados incorretos, recusa do emissor).
+- [x] Persistir e exibir o motivo detalhado das recusas de pagamento no painel administrativo e histórico de falhas de pedidos.

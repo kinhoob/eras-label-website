@@ -127,6 +127,7 @@ export const orders = mysqlTable("orders", {
   total: decimal("total", { precision: 10, scale: 2 }).notNull(),
   status: varchar("status", { length: 50 }).default("pending").notNull(),
   paymentStatus: varchar("paymentStatus", { length: 50 }).default("pending").notNull(),
+  paymentFailureReason: text("paymentFailureReason"),
   trackingCode: varchar("trackingCode", { length: 100 }),
   carrier: varchar("carrier", { length: 100 }),
   shippingOrderId: varchar("shippingOrderId", { length: 100 }),

@@ -365,6 +365,7 @@ export const appRouter = router({
       // Chamar a API oficial do Mercado Pago para gerar a cobrança Pix ou Cartão Transparente
       let mpResult: any = null;
       let initialPaymentStatus = "pending";
+      let paymentFailureReason: string | null = null;
 
       const [firstName, ...lastNameParts] = input.customerName.trim().split(" ");
       const lastName = lastNameParts.join(" ") || "Cliente";
@@ -398,9 +399,13 @@ export const appRouter = router({
 
         if (mpResult?.status) {
           initialPaymentStatus = String(mpResult.status);
+          if (initialPaymentStatus === "rejected" || mpResult.status_detail) {
+            paymentFailureReason = `Status detail: ${mpResult.status_detail || "rejected"}`;
+          }
         }
       } catch (mpError: any) {
         console.error("[MercadoPago] Erro ao criar pagamento transparente:", mpError);
+        paymentFailureReason = mpError.message || "Erro desconhecido ao processar pagamento.";
         throw new TRPCError({ code: "BAD_REQUEST", message: mpError.message || "Erro ao processar pagamento com o Mercado Pago." });
       }
 
@@ -420,6 +425,7 @@ export const appRouter = router({
         discount: input.discount.toFixed(2),
         total: serverTotal.toFixed(2),
         paymentStatus: initialPaymentStatus,
+        paymentFailureReason,
         status: (initialPaymentStatus === "approved" || initialPaymentStatus === "authorized") ? "Processando" : initialPaymentStatus === "in_process" ? "Em análise" : "Aguardando pagamento",
       });
 

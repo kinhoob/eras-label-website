@@ -361,6 +361,11 @@ export default function AdminSalesSection() {
                 </h4>
                 <p style={{ fontSize: "0.85rem", marginBottom: "4px" }}><strong>Método:</strong> {selectedOrder.paymentMethod?.toUpperCase()}</p>
                 <p style={{ fontSize: "0.85rem", marginBottom: "4px" }}><strong>Status Pagamento:</strong> {selectedOrder.paymentStatus}</p>
+                {selectedOrder.paymentFailureReason && (
+                  <p style={{ fontSize: "0.85rem", marginBottom: "4px", color: "#b22222", background: "rgba(178,34,34,0.08)", padding: "6px 8px", borderRadius: "4px" }}>
+                    <strong>Motivo da Falha / Recusa:</strong> {selectedOrder.paymentFailureReason}
+                  </p>
+                )}
                 <p style={{ fontSize: "0.85rem", marginBottom: "4px" }}><strong>Método de Entrega:</strong> {selectedOrder.shippingService || selectedOrder.shippingMethod}</p>
                 <p style={{ fontSize: "0.85rem", marginBottom: "4px" }}><strong>Subtotal Produtos:</strong> R$ {Number(selectedOrder.subtotal || selectedOrder.items?.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0) || 0).toFixed(2)}</p>
                 {Number(selectedOrder.discount || 0) > 0 && (
