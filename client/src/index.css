@@ -8314,6 +8314,38 @@ body {
 .admin-sales-items-scroll table {
   min-width: 700px;
 }
+.admin-order-delivery-timeline > div {
+  min-width: 0;
+}
+.admin-order-delivery-panel {
+  overflow: hidden;
+}
+@media (max-width: 720px) {
+  .admin-order-delivery-timeline {
+    grid-template-columns: 1fr !important;
+    gap: .8rem !important;
+  }
+  .admin-order-delivery-timeline > div {
+    display: grid;
+    grid-template-columns: 12px minmax(0, 1fr);
+    column-gap: .65rem;
+    align-items: start;
+  }
+  .admin-order-delivery-timeline > div > div:first-child {
+    grid-row: 1 / span 2;
+    width: 3px;
+    height: 100% !important;
+    min-height: 42px;
+    margin: 0 auto !important;
+  }
+  .admin-order-delivery-timeline > div > div:nth-child(2) {
+    min-width: 0;
+  }
+  .admin-order-delivery-timeline > div > p {
+    grid-column: 2;
+    margin-top: .25rem !important;
+  }
+}
 .admin-sales-items-scroll tbody tr,
 .admin-content > .table-panel tbody tr {
   transition: background .18s ease;

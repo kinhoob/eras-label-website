@@ -98,9 +98,35 @@ export async function getUserByOpenId(openId: string) {
   return result[0];
 }
 
+async function getProductSalesCountMap(db: NonNullable<Awaited<ReturnType<typeof getDb>>>) {
+  // A popularidade deve representar unidades presentes nos pedidos reais,
+  // sem criar registros ou depender de dados de demonstração.
+  const orderRows = await db.select({ items: orders.items }).from(orders);
+  const salesMap = new Map<number, number>();
+
+  for (const order of orderRows) {
+    try {
+      const items = typeof order.items === "string" ? JSON.parse(order.items) : (order.items ?? []);
+      if (!Array.isArray(items)) continue;
+      for (const item of items as Array<Record<string, unknown>>) {
+        const productId = Number(item.productId ?? item.id ?? 0);
+        const quantity = Number(item.quantity ?? 1);
+        if (productId > 0 && Number.isFinite(quantity) && quantity > 0) {
+          salesMap.set(productId, (salesMap.get(productId) ?? 0) + quantity);
+        }
+      }
+    } catch {
+      // Pedidos com itens legados inválidos não podem quebrar o catálogo.
+    }
+  }
+
+  return salesMap;
+}
+
 export async function listProducts(category?: string) {
   const db = await getDb();
   if (!db) return [];
+  const productSalesCount = await getProductSalesCountMap(db);
   const resolvedCategory = category && category !== "Todos" ? await resolveCategoryName(category) : undefined;
   let categoryProductIds: number[] = [];
   if (resolvedCategory) {
@@ -130,7 +156,14 @@ export async function listProducts(category?: string) {
       const categoryRow = await db.select({ name: categories.name }).from(categories).where(eq(categories.id, categoryId)).limit(1);
       return categoryRow[0]?.name;
     }))).filter((name): name is string => Boolean(name));
-    return { ...product, variations, categoryIds, categoryNames };
+    return {
+      ...product,
+      variations,
+      categoryIds,
+      categoryNames,
+      // O catálogo consome este campo para ordenar por popularidade real.
+      salesCount: productSalesCount.get(product.id) ?? 0,
+    };
   }));
 }
 

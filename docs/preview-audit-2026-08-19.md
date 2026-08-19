@@ -49,3 +49,19 @@ A auditoria identificou também um item antigo persistido apenas no `localStorag
 | Link KINHOOB | Presente e aponta para `https://kinhoob.github.io/portfolio` |
 
 O screenshot capturado durante o carregamento ainda pode mostrar a animação de transição do storefront; a validação textual posterior confirmou o estado final correto. A próxima etapa é validar responsividade da Home, `/produtos`, páginas de categoria/coleção e painel, sem criar novos dados fictícios e sem apontar o domínio final.
+
+## 2026-08-19 — Ordenação do catálogo e detalhe administrativo
+
+A rota pública `/produtos` e o alias `/catalog` carregaram no preview em viewport desktop, com o seletor **Ordenar por** exibindo “Mais vendidos”, “Menor preço”, “Maior preço” e “Mais recentes”. Como o catálogo está sem produtos persistidos, a tela mostrou o estado vazio honesto e não criou registros.
+
+O painel administrativo carregou no preview com os dois pedidos reais preservados e sem produtos fictícios. A seção de vendas continua acessível pelo agrupamento “Vendas & Clientes”. A implementação do detalhe administrativo inclui linha de acompanhamento com pedido recebido, pagamento confirmado, preparação, envio e entrega, além de transportadora, rastreio, data de criação e status atual. A versão mobile usa uma disposição vertical para essa linha de acompanhamento.
+
+A agregação de popularidade do catálogo usa `salesCount` calculado a partir dos itens dos pedidos persistidos; a ordenação por “Mais vendidos” permanece estável e cai para produtos mais recentes quando há empate. Nenhuma credencial ou domínio oficial foi alterado nesta etapa.
+
+Preview audit URL: https://3000-i1vmpb2fupe7yq0wcir14-ca512cf4.us1.manus.computer/produtos
+Admin audit URL: https://3000-i1vmpb2fupe7yq0wcir14-ca512cf4.us1.manus.computer/admin
+
+
+## Validação mobile — 375px
+
+A captura mobile confirmou que `/produtos` mantém a barra de ordenação, filtros de categoria, tamanho e preço, estado vazio e rodapé sem overflow horizontal visível. O painel administrativo reorganiza os cards de métricas, gráfico, pedidos recentes e orientação em uma coluna legível; os controles do período permanecem acessíveis. O acompanhamento detalhado foi preparado com layout vertical em telas pequenas para evitar cortes no modal.

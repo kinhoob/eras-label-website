@@ -5,7 +5,37 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { filterOrdersWithReadyLabels } from "@/lib/order-label-filter";
-import { Download, Eye, FileText, ExternalLink, Truck, Package, LoaderCircle, CreditCard, Users, Check, Minus, Files, X } from "lucide-react";
+import { Download, Eye, FileText, ExternalLink, Truck, Package, LoaderCircle, CreditCard, Users, Check, Minus, Files, X, Clock3, MapPin, ReceiptText } from "lucide-react";
+
+type DeliveryStep = {
+  key: string;
+  label: string;
+  description: string;
+};
+
+const DELIVERY_STEPS: DeliveryStep[] = [
+  { key: "received", label: "Pedido recebido", description: "O pedido foi registado na Eras Label." },
+  { key: "paid", label: "Pagamento confirmado", description: "O pagamento foi aprovado ou está em processamento." },
+  { key: "preparing", label: "Em preparação", description: "A equipa está a separar e embalar as peças." },
+  { key: "shipped", label: "Enviado", description: "A encomenda foi entregue à transportadora." },
+  { key: "delivered", label: "Entregue", description: "A entrega foi concluída." },
+];
+
+function getDeliveryStepIndex(order: any) {
+  const status = String(order.status ?? "").toLowerCase();
+  if (status.includes("cancel") || status.includes("recus")) return -1;
+  if (status.includes("entregue")) return 4;
+  if (status.includes("enviado") || order.trackingCode || order.shippingOrderId) return 3;
+  if (status.includes("prepara") || status.includes("process") || status.includes("embalar")) return 2;
+  if (["approved", "authorized", "in_process", "paid", "pago"].includes(String(order.paymentStatus ?? "").toLowerCase())) return 1;
+  return 0;
+}
+
+function formatOrderDate(value: unknown) {
+  if (!value) return "Data não informada";
+  const date = new Date(String(value));
+  return Number.isNaN(date.getTime()) ? "Data não informada" : date.toLocaleString("pt-BR", { dateStyle: "medium", timeStyle: "short" });
+}
 
 export default function AdminSalesSection() {
   const { data: orders = [], isLoading, refetch } = trpc.admin.listOrders.useQuery();
@@ -373,6 +403,50 @@ export default function AdminSalesSection() {
                 )}
                 <p style={{ fontSize: "0.85rem", marginBottom: "4px" }}><strong>Frete:</strong> R$ {Number(selectedOrder.shippingCost || 0).toFixed(2)}</p>
                 <p style={{ fontSize: "0.95rem", fontWeight: 700, borderTop: "1px solid var(--border)", paddingTop: "6px", marginTop: "4px" }}><strong>Total Final Pago:</strong> R$ {Number(selectedOrder.total || 0).toFixed(2)}</p>
+              </div>
+            </div>
+
+            <div className="admin-order-delivery-panel" style={{ marginBottom: "1.5rem", background: "var(--card)", border: "1px solid var(--border)", borderRadius: "10px", padding: "1rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem", flexWrap: "wrap", marginBottom: "1rem" }}>
+                <div>
+                  <span className="section-kicker">ACOMPANHAMENTO</span>
+                  <h4 style={{ fontSize: "0.95rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px", marginTop: "0.25rem" }}><Clock3 size={16} /> Status da entrega</h4>
+                  <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", marginTop: "0.3rem" }}>Visão consolidada do estado atual do pedido e da logística.</p>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <strong style={{ display: "block", color: "#b22222" }}>{selectedOrder.status || "Aguardando processamento"}</strong>
+                  <small style={{ color: "var(--muted-foreground)" }}>Atualizado em {formatOrderDate(selectedOrder.updatedAt || selectedOrder.createdAt)}</small>
+                </div>
+              </div>
+              {getDeliveryStepIndex(selectedOrder) < 0 ? (
+                <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", padding: "0.75rem", borderRadius: "8px", background: "rgba(178,34,34,0.08)", color: "#8e1b1b" }}>
+                  <X size={17} /> <span>Este pedido está cancelado ou com pagamento recusado. Verifique o motivo antes de preparar o envio.</span>
+                </div>
+              ) : (
+                <div className="admin-order-delivery-timeline" style={{ display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))", gap: "0.5rem" }}>
+                  {DELIVERY_STEPS.map((step, index) => {
+                    const currentStep = getDeliveryStepIndex(selectedOrder);
+                    const isCompleted = index <= currentStep;
+                    const isCurrent = index === currentStep;
+                    return (
+                      <div key={step.key} style={{ position: "relative", minWidth: 0 }}>
+                        <div style={{ height: "3px", background: isCompleted ? "#b22222" : "var(--border)", margin: "0 0 0.65rem", borderRadius: "999px" }} />
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.35rem", color: isCompleted ? "#b22222" : "var(--muted-foreground)" }}>
+                          <span style={{ width: "24px", height: "24px", borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", flex: "0 0 auto", border: `1px solid ${isCompleted ? "#b22222" : "var(--border)"}`, background: isCompleted ? "rgba(178,34,34,0.1)" : "transparent" }}>
+                            {isCompleted ? <Check size={13} /> : <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "currentColor" }} />}
+                          </span>
+                          <strong style={{ fontSize: "0.72rem", lineHeight: 1.25 }}>{step.label}</strong>
+                        </div>
+                        <p style={{ fontSize: "0.68rem", lineHeight: 1.35, color: isCurrent ? "var(--foreground)" : "var(--muted-foreground)", margin: "0.45rem 0 0" }}>{isCurrent ? step.description : index < currentStep ? "Concluído" : "Aguardando"}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", marginTop: "1rem", paddingTop: "0.85rem", borderTop: "1px solid var(--border)" }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", fontSize: "0.78rem" }}><Truck size={14} /> {selectedOrder.carrier || selectedOrder.shippingService || selectedOrder.shippingMethod || "Transportadora não definida"}</span>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", fontSize: "0.78rem" }}><MapPin size={14} /> {selectedOrder.trackingCode ? `Rastreio: ${selectedOrder.trackingCode}` : "Código de rastreio ainda não informado"}</span>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", fontSize: "0.78rem" }}><ReceiptText size={14} /> Pedido criado em {formatOrderDate(selectedOrder.createdAt)}</span>
               </div>
             </div>
 

@@ -3111,3 +3111,9 @@
 - [ ] Revisar se o usuário terá controle sobre a acessibilidade.
 - [ ] Revisar se o usuário terá controle sobre o teclado.
 - [ ] Revis
+
+- [x] Implementar opções completas de ordenação no catálogo público (menor preço, maior preço, mais populares/vendidos e mais recentes).
+- [x] Aprimorar a visualização detalhada de pedidos no painel administrativo com histórico de status, itens adquiridos, rastreamento de entrega e ações rápidas.
+- [x] Escrever testes unitários para validar a ordenação de produtos e a formatação de detalhes de pedidos.
+- [ ] Executar suíte Vitest, TypeScript e build de produção com sucesso.
+- [ ] Salvar checkpoint final com as novas melhorias implementadas.
