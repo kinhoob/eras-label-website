@@ -393,7 +393,7 @@ export default function CheckoutPage() {
       <main className="checkout-page">
         <section className="checkout-success-page" aria-live="polite" aria-labelledby="checkout-success-title">
           <span className="checkout-success-icon"><Check size={30} /></span>
-          <span className="section-kicker">UMA NOVA ERA COMEÇA AQUI</span>
+          <span className="section-kicker">COMPRA CONCLUÍDA</span>
           <h1 id="checkout-success-title">{isApproved ? "Pagamento confirmado." : isRejected ? "Pagamento não aprovado." : "Pedido gerado com sucesso."}</h1>
           <p>O pedido <strong>{success.orderNumber}</strong> foi registrado na Eras Label. {isApproved ? "O pagamento foi aprovado." : isRejected ? "O pagamento foi recusado pelo Mercado Pago. Pode tentar novamente." : isPix ? "Escaneie o QR Code Pix ou copie o código para concluir." : "O pagamento está a ser analisado pelo Mercado Pago. Atualizaremos o seu histórico assim que houver confirmação."}</p>
           <span className={`checkout-payment-status checkout-payment-status-${isApproved ? "approved" : isRejected ? "rejected" : "pending"}`}>{isApproved ? "PAGAMENTO APROVADO" : isRejected ? "PAGAMENTO RECUSADO" : "PAGAMENTO PENDENTE"}</span>
@@ -452,7 +452,7 @@ export default function CheckoutPage() {
         <section className="checkout-empty-page">
           <ShoppingBagIcon />
           <span className="section-kicker">SACOLA VAZIA</span>
-          <h1>Comece uma nova era.</h1>
+          <h1>Sua sacola está vazia.</h1>
           <p>Adicione uma peça à sua Sacola para continuar até ao checkout.</p>
           <Link href="/" className="primary-button">VOLTAR À HOME <ArrowRight size={16} /></Link>
         </section>
@@ -474,7 +474,7 @@ export default function CheckoutPage() {
           <div className="checkout-page-intro">
             <span className="section-kicker">FINALIZAR COMPRA</span>
             <h1>Os seus dados.</h1>
-            <p>Preencha as informações para receber as peças da sua próxima era.</p>
+            <p>Preencha as informações para receber o seu pedido.</p>
           </div>
 
           {status === "processing" && (
