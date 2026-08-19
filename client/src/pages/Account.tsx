@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
-import { Package, Truck, CheckCircle2, Clock, ArrowLeft, ExternalLink, ShieldCheck, User as UserIcon, LogOut, Check, X, Box, Copy, RefreshCw } from "lucide-react";
+import { Package, Truck, CheckCircle2, Clock, ArrowLeft, ExternalLink, ShieldCheck, User as UserIcon, LogOut, Check, X, Box, Copy, RefreshCw, CalendarDays, MapPin, CreditCard, ChevronRight, PackageCheck } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { PageTransitionHandler } from "@/components/PageTransition";
 import OfficialFooter from "@/components/OfficialFooter";
@@ -92,49 +92,105 @@ export default function Account() {
               </div>
             ) : (
               <div className="orders-list">
-                {orders.map((order) => (
-                  <div key={order.id} className="order-card" onClick={() => setSelectedOrder(order)}>
-                    <div className="order-header">
-                      <div>
-                        <span className="order-num">{order.orderNumber}</span>
-                        <span className="order-date">{new Date(order.createdAt).toLocaleDateString("pt-BR")}</span>
-                      </div>
-                      <div className="order-status-stack">
-                        <span className={`order-status-badge ${String(order.status).toLowerCase()}`}>
-                          {order.status === "Enviado" && <Truck size={14} />}
-                          {order.status === "Entregue" && <CheckCircle2 size={14} />}
-                          {order.status === "Processando" && <Clock size={14} />}
-                          {order.status}
-                        </span>
-                        <span className={`order-payment-badge ${order.paymentStatus === "approved" ? "approved" : order.paymentStatus === "failed" || order.paymentStatus === "rejected" ? "failed" : "pending"}`}>
-                          <ShieldCheck size={12} /> {order.paymentStatus === "approved" ? "Pagamento confirmado" : order.paymentStatus === "failed" || order.paymentStatus === "rejected" ? "Pagamento recusado" : "Pagamento pendente"}
-                        </span>
-                      </div>
-                    </div>
+                {orders.map((order) => {
+                  /* Calcula a quantidade total de peças sem alterar os dados reais do pedido. */
+                  const itemCount = order.items.reduce((total: number, item: any) => total + Number(item.quantity || 0), 0);
+                  const isPaymentApproved = order.paymentStatus === "approved";
+                  const isPaymentFailed = order.paymentStatus === "failed" || order.paymentStatus === "rejected";
+                  const paymentLabel = isPaymentApproved ? "Pagamento confirmado" : isPaymentFailed ? "Pagamento recusado" : "Pagamento pendente";
+                  const paymentMethodLabel = order.paymentMethod === "credit_card" ? "Cartão de crédito" : "Pix";
+                  const orderAddress = order.address as { city?: string; state?: string } | null;
 
-                    <div className="order-preview-items">
-                      {order.items.map((item: any, idx: number) => (
-                        <div key={idx} className="preview-item">
-                          <img src={item.image} alt={item.name} />
-                          <div>
-                            <p>{item.name}</p>
-                            <span>Tam: {item.size} · {item.quantity}x</span>
+                  return (
+                    <article key={order.id} className="order-card">
+                      {/* Linha de destaque editorial que identifica o cartão sem competir com o conteúdo. */}
+                      <div className="order-card-accent" aria-hidden="true" />
+
+                      <div className="order-header">
+                        <div className="order-heading-copy">
+                          <span className="order-eyebrow">PEDIDO ERAS</span>
+                          <div className="order-identity">
+                            <span className="order-num">{order.orderNumber}</span>
+                            <span className="order-date"><CalendarDays size={14} /> {new Date(order.createdAt).toLocaleDateString("pt-BR")}</span>
                           </div>
                         </div>
-                      ))}
-                    </div>
-
-                    <div className="order-footer">
-                      <div className="order-total-info">
-                        <span>Total do Pedido</span>
-                        <strong>{formatPrice(order.total)}</strong>
+                        <div className="order-status-stack">
+                          <span className={`order-status-badge ${String(order.status).toLowerCase()}`}>
+                            {order.status === "Enviado" && <Truck size={14} />}
+                            {order.status === "Entregue" && <CheckCircle2 size={14} />}
+                            {order.status === "Processando" && <Clock size={14} />}
+                            {order.status}
+                          </span>
+                          <span className={`order-payment-badge ${isPaymentApproved ? "approved" : isPaymentFailed ? "failed" : "pending"}`}>
+                            <ShieldCheck size={12} /> {paymentLabel}
+                          </span>
+                        </div>
                       </div>
-                      <button className="details-button">
-                        VER DETALHES & RASTREIO <ExternalLink size={14} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+
+                      {/* Resumo rápido com os dados essenciais que o cliente procura depois da compra. */}
+                      <div className="order-info-grid">
+                        <div className="order-info-cell">
+                          <CreditCard size={17} aria-hidden="true" />
+                          <span>Método de pagamento</span>
+                          <strong>{paymentMethodLabel}</strong>
+                        </div>
+                        <div className="order-info-cell">
+                          <Truck size={17} aria-hidden="true" />
+                          <span>Entrega</span>
+                          <strong>{order.shippingService || "A preparar envio"}</strong>
+                        </div>
+                        <div className="order-info-cell">
+                          <PackageCheck size={17} aria-hidden="true" />
+                          <span>Itens da compra</span>
+                          <strong>{itemCount} {itemCount === 1 ? "peça" : "peças"}</strong>
+                        </div>
+                      </div>
+
+                      <div className="order-items-heading">
+                        <span>Itens do pedido</span>
+                        <span>{order.items.length} {order.items.length === 1 ? "produto" : "produtos"}</span>
+                      </div>
+                      <div className="order-preview-items">
+                        {order.items.slice(0, 4).map((item: any, idx: number) => (
+                          <div key={idx} className="preview-item">
+                            <div className="preview-item-image">
+                              {item.image ? <img src={item.image} alt="" onError={(event) => { event.currentTarget.style.display = "none"; }} /> : <Box size={18} aria-hidden="true" />}
+                            </div>
+                            <div className="preview-item-copy">
+                              <p>{item.name}</p>
+                              <span>Tam: {item.size || "Único"} · {item.quantity}x</span>
+                            </div>
+                          </div>
+                        ))}
+                        {order.items.length > 4 && <span className="order-more-items">+{order.items.length - 4} itens</span>}
+                      </div>
+
+                      {/* Destino e rastreio ficam visíveis no próprio cartão, sem obrigar o cliente a abrir o detalhe. */}
+                      <div className="order-delivery-strip">
+                        <div>
+                          <MapPin size={16} aria-hidden="true" />
+                          <span>Entrega para</span>
+                          <strong>{orderAddress?.city && orderAddress?.state ? `${orderAddress.city}/${orderAddress.state}` : "Endereço confirmado no pedido"}</strong>
+                        </div>
+                        <div>
+                          <Truck size={16} aria-hidden="true" />
+                          <span>Rastreio</span>
+                          <strong>{order.trackingCode || "Disponível após despacho"}</strong>
+                        </div>
+                      </div>
+
+                      <div className="order-footer">
+                        <div className="order-total-info">
+                          <span>Total do pedido</span>
+                          <strong>{formatPrice(order.total)}</strong>
+                        </div>
+                        <button type="button" className="details-button" onClick={() => setSelectedOrder(order)}>
+                          VER DETALHES <ChevronRight size={15} />
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             )}
           </section>

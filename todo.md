@@ -911,3 +911,9 @@
 - [x] Validar o resumo da sacola em mobile e desktop sem cortar conteúdo nem criar scroll horizontal
 - [x] Executar testes automatizados e build após a correção do checkout mobile
 - [x] Salvar checkpoint da melhoria do resumo da sacola mobile
+
+- [x] Redesenhar o histórico de pedidos pós-compra em cards editoriais completos da Eras Label
+- [x] Mostrar em cada pedido os itens, imagens, data, pagamento, estado, total, entrega e rastreio quando disponível
+- [x] Melhorar o detalhe expandido do pedido e a responsividade desktop/mobile
+- [x] Criar testes para os estados e dados do histórico de pedidos
+- [x] Executar testes, build e salvar checkpoint da melhoria do histórico

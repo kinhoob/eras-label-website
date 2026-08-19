@@ -47,3 +47,31 @@ describe("Eras checkout mobile layout", () => {
     expect(stylesheet).toContain("grid-template-columns: 48px minmax(0, 1fr) auto !important");
   });
 });
+
+
+describe("Eras post-purchase order history cards", () => {
+  const stylesheet = readFileSync(resolve(process.cwd(), "client/src/index.css"), "utf8");
+  const accountPage = readFileSync(resolve(process.cwd(), "client/src/pages/Account.tsx"), "utf8");
+
+  it("contains the complete order card information hierarchy", () => {
+    expect(accountPage).toContain("order-info-grid");
+    expect(accountPage).toContain("Método de pagamento");
+    expect(accountPage).toContain("Entrega");
+    expect(accountPage).toContain("Itens da compra");
+    expect(accountPage).toContain("order-delivery-strip");
+    expect(accountPage).toContain("Entrega para");
+    expect(accountPage).toContain("Rastreio");
+    expect(accountPage).toContain("VER DETALHES");
+    expect(accountPage).toContain("setSelectedOrder(order)");
+  });
+
+  it("keeps the post-purchase card readable on small screens", () => {
+    expect(stylesheet).toContain(".account-page .order-info-grid {");
+    expect(stylesheet).toContain("grid-template-columns: repeat(3, minmax(0, 1fr));");
+    expect(stylesheet).toContain(".account-page .order-preview-items {");
+    expect(stylesheet).toContain("display: grid;");
+    expect(stylesheet).toContain("@media (max-width: 700px)");
+    expect(stylesheet).toContain(".account-page .order-preview-items { grid-template-columns: 1fr;");
+    expect(stylesheet).toContain(".account-page .details-button { justify-content: center; width: 100%;");
+  });
+});
