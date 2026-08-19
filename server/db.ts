@@ -33,7 +33,17 @@ import { DEFAULT_STOREFRONT_CONFIG, type StorefrontConfig, type StorefrontAnnoun
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
+/**
+ * Tests must never write to the shared preview database. The explicit
+ * ERAS_TEST_MODE flag is set by the test script; VITEST/NODE_ENV are
+ * additional safeguards for direct Vitest invocations.
+ */
+function isDatabaseDisabledForTests() {
+  return process.env.ERAS_TEST_MODE === "1" || process.env.VITEST === "true" || process.env.NODE_ENV === "test";
+}
+
 export async function getDb() {
+  if (isDatabaseDisabledForTests()) return null;
   if (!_db && process.env.DATABASE_URL) {
     try {
       _db = drizzle(process.env.DATABASE_URL);

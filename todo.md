@@ -990,4 +990,2124 @@
 - [x] Auditar e configurar integralmente a integração com o Melhor Envio (cotação com PAC, Sedex, Jadlog Econômico, Jadlog Rápido e Loggi, geração de etiquetas e rastreio).
 - [x] Corrigir e validar a autenticação do Melhor Envio e adicionar campos para configurar token e ambiente no painel administrativo.
 - [x] Configurar endpoint público de webhook do Melhor Envio para passar na validação de teste 404.
-- [ ] Verificar a resolução de domínio e publicação para que o endpoint de webhook responda com 200 no domínio público.
+- [x] Verificar a resolução de domínio e publicação para que o endpoint de webhook responda com 200 no domínio público.
+- [x] Garantir que o sistema de preview local funcione integralmente para todos os fluxos de e-commerce e painel administrativo sem depender do domínio eraslabel.com.
+- [ ] Impedir que testes automatizados, seed ou rotas de demonstração criem produtos, pedidos, clientes, cupons, notificações ou e-mails no banco real.
+- [ ] Remover com segurança os registros fictícios identificados no banco de preview, preservando apenas dados reais confirmados pelo proprietário.
+- [ ] Corrigir o painel para exibir métricas vazias e estados honestos quando não houver dados reais suficientes.
+- [ ] Garantir que a URL de preview seja usada para links operacionais gerados durante testes, sem forçar eraslabel.com antes da publicação.
+
+- [ ] Corrigir a criação automática de produtos duplicados e produtos temporários durante a navegação/testes.
+- [ ] Corrigir a persistência de pedidos de teste `teste@example.com` gerados por fluxo de checkout/teste.
+- [ ] Limpar o histórico de e-mails e notificações fictícias do ambiente de preview após a correção de geração.
+- [ ] Validar novamente o catálogo, painel, checkout e integrações no preview após a limpeza.
+- [ ] Registrar testes automatizados que comprovem que os fluxos de teste não gravam dados comerciais no banco real.
+- [ ] Validar responsividade mobile das áreas públicas e administrativas depois das correções.
+- [ ] Validar o editor Archive no painel administrativo e seu reflexo na página pública.
+- [ ] Verificar o link “Desenvolvido por KINHOOB” no rodapé em desktop e mobile.
+- [ ] Confirmar com o proprietário antes de apagar quaisquer produtos que possam ser reais; somente pedidos/e-mails/notificações inequivocamente fictícios podem ser removidos automaticamente.
+- [ ] Auditar e corrigir a origem dos números hardcoded ou dados de demonstração exibidos nas métricas administrativas.
+- [ ] Corrigir o estado de sessão/localStorage que mostra itens antigos na sacola durante o preview.
+- [ ] Reexecutar Vitest, build, screenshots desktop/mobile e validação dos webhooks no preview.
+- [ ] Salvar checkpoint após todas as correções do preview.
+- [ ] Entregar relatório final com o que funciona no preview e o que depende apenas do domínio oficial.
+- [ ] Atualizar o todo com a decisão de preservar dados reais e excluir somente dados fictícios confirmados.
+- [ ] Verificar que não há seed ou fallback de catálogo carregado automaticamente em produção.
+- [ ] Verificar que páginas públicas vazias exibem estados claros sem criar registros.
+- [ ] Verificar que o link de recuperação de carrinho usa origem dinâmica no preview.
+- [ ] Verificar que o webhook Melhor Envio responde 200 no preview e que o Mercado Pago rejeita requisições sem assinatura sem criar pedidos.
+- [ ] Verificar que o admin de preview não exibe estatísticas fictícias quando as tabelas estiverem vazias.
+- [ ] Consolidar a lista de pendências de alta prioridade para a próxima etapa.
+- [ ] Finalizar a auditoria sem publicar nem alterar o domínio oficial.
+- [ ] Documentar que o domínio será apontado somente após aprovação dos testes no preview.
+- [ ] Garantir que nenhum comando de teste de integração escreva dados sem uma flag explícita de teste isolado.
+- [ ] Adicionar proteção de ambiente para impedir dados fake em produção.
+- [ ] Rever todos os fixtures para evitar `teste@example.com`, produtos `teste` e e-mails fictícios fora de testes unitários isolados.
+- [ ] Confirmar a contagem final das tabelas após a limpeza autorizada.
+- [ ] Confirmar que o checkout real continua disponível no preview com credenciais configuradas.
+- [ ] Confirmar que o admin continua protegido após a limpeza.
+- [ ] Confirmar que os menus e links públicos não apontam para rotas inexistentes.
+- [ ] Confirmar que o domínio oficial permanece apenas como configuração de SEO e não como requisito de navegação do preview.
+- [ ] Executar revisão final de logs para assegurar ausência de criação automática de dados.
+- [ ] Salvar o relatório de auditoria em arquivo do projeto antes do checkpoint final.
+- [ ] Não executar exclusões adicionais sem confirmação explícita do proprietário para produtos e demais dados ambíguos.
+- [ ] Encerrar a tarefa somente após todos os itens de implementação estarem marcados como concluídos ou explicitamente bloqueados pelo proprietário.
+- [ ] Substituir o item genérico de revisão por critérios verificáveis de aceite no relatório final.
+- [ ] Verificar a data de atualização das métricas e seus rótulos no painel.
+- [ ] Verificar que os descontos e fretes exibidos em pedidos reais permanecem íntegros após a limpeza.
+- [ ] Validar que nenhum webhook de teste gera pedido ou e-mail.
+- [ ] Validar que a rota de newsletter não cria inscritos sem envio real do formulário.
+- [ ] Validar que o contato público não cria cliente fictício.
+- [ ] Validar que a navegação por produtos não dispara mutações de criação.
+- [ ] Validar que o modo manutenção não bloqueia o admin.
+- [ ] Validar que o checkout vazio não chama criação de pedido.
+- [ ] Validar que o contador da sacola reflete apenas o localStorage atual.
+- [ ] Validar que o link de portfolio abre `https://kinhoob.github.io/portfolio`.
+- [ ] Verificar que imagens default da Home são somente fallback visual e não produtos persistidos.
+- [ ] Verificar que o catálogo mostra apenas produtos com status público permitido.
+- [ ] Verificar que categorias vazias são tratadas com estado vazio honesto.
+- [ ] Verificar que a busca não cria produtos.
+- [ ] Verificar que o painel de vendas não apresenta pedidos de teste após a limpeza.
+- [ ] Verificar que o histórico Resend não contém registros fictícios após limpeza autorizada.
+- [ ] Verificar que os alertas antigos não reaparecem depois de marcados como lidos.
+- [ ] Verificar que o Archive permite editar textos, imagens e links pelo CMS.
+- [ ] Verificar que o checkout apresenta resumo completo no mobile.
+- [ ] Verificar que o checkout apresenta resumo completo no desktop.
+- [ ] Verificar que o carrinho mantém a estética Eras em todas as rotas.
+- [ ] Verificar que a navbar não sobrepõe menus ou modais.
+- [ ] Verificar que a barra de anúncio aparece no mobile.
+- [ ] Verificar que o domínio oficial não é necessário para testar Mercado Pago em sandbox.
+- [ ] Verificar que a troca para produção será feita somente após publicação aprovada.
+- [ ] Registrar no relatório que o Melhor Envio exige URL pública acessível, mas pode usar a URL de preview enquanto ela estiver válida.
+- [ ] Registrar no relatório que a validação final do domínio será uma etapa posterior.
+- [ ] Garantir que todos os testes rodem sem alterar o banco compartilhado.
+- [ ] Criar estratégia de isolamento para futuros testes de pagamento.
+- [ ] Revisar documentação de operação para diferenciar preview, sandbox e produção.
+- [ ] Confirmar que nenhuma credencial secreta aparece no frontend ou nos logs.
+- [ ] Confirmar que o endpoint Mercado Pago mantém validação HMAC.
+- [ ] Confirmar que o endpoint Melhor Envio permanece público e idempotente.
+- [ ] Fazer checkpoint somente depois da aprovação visual e funcional do preview.
+- [ ] Informar bloqueios residuais com clareza, sem afirmar que o site está pronto para domínio antes da hora.
+- [ ] Manter a estética premium editorial #b22222 durante correções.
+- [ ] Não introduzir reviews, depoimentos ou ratings fictícios durante a auditoria.
+- [ ] Não importar novos dados reais sem solicitação explícita.
+- [ ] Finalizar o ciclo de auditoria do preview.
+- [ ] Confirmar que a versão final será publicada apenas pelo usuário no botão Publish.
+- [ ] Confirmar que nenhum registro será apagado sem critério documentado.
+- [ ] Concluir a validação de independência do domínio.
+- [ ] Preparar orientação de próximos passos após a auditoria.
+- [ ] Fazer revisão do changelog e checkpoint.
+- [ ] Entregar somente após passar pelos critérios de aceite.
+- [ ] Registrar status final de cada integração externa.
+- [ ] Registrar status final de cada rota pública.
+- [ ] Registrar status final de cada módulo admin.
+- [ ] Confirmar ausência de erros de console no preview.
+- [ ] Confirmar ausência de erros de TypeScript no preview.
+- [ ] Confirmar build de produção após correções.
+- [ ] Confirmar 167 testes ou mais passando após correções.
+- [ ] Confirmar que o usuário consegue continuar cadastrando seus produtos reais pelo admin.
+- [ ] Confirmar que o usuário consegue realizar teste controlado de pagamento sem poluir o banco.
+- [ ] Confirmar que o usuário consegue testar frete no preview.
+- [ ] Confirmar que o usuário consegue validar o webhook Melhor Envio no preview.
+- [ ] Confirmar que o usuário consegue navegar sem login no catálogo público.
+- [ ] Confirmar que o usuário consegue entrar no admin com credenciais válidas.
+- [ ] Confirmar que permissões de subadmin continuam funcionando.
+- [ ] Confirmar que o dashboard exibe “sem dados suficientes” quando aplicável.
+- [ ] Confirmar que a newsletter não dispara e-mail em teste automatizado.
+- [ ] Confirmar que o contato não dispara e-mail em teste automatizado.
+- [ ] Confirmar que a criação de produto só ocorre por ação explícita no admin.
+- [ ] Confirmar que nenhuma rota pública possui efeito colateral de escrita.
+- [ ] Confirmar que o carrinho é cliente-local e não cria pedido até o submit.
+- [ ] Confirmar que o checkout falha com mensagem clara sem criar pedido quando inválido.
+- [ ] Confirmar que o checkout aprovado cria somente um pedido real submetido pelo cliente.
+- [ ] Confirmar que o webhook atualiza somente o pedido correspondente.
+- [ ] Confirmar que o Melhor Envio não altera pedido no webhook vazio.
+- [ ] Confirmar que o Mercado Pago não altera pedido com assinatura inválida.
+- [ ] Confirmar que a limpeza não remove configurações do site.
+- [ ] Confirmar que a limpeza não remove o admin principal.
+- [ ] Confirmar que a limpeza não remove produtos reais confirmados.
+- [ ] Confirmar que o banco é consultado novamente após cada mudança destrutiva.
+- [ ] Confirmar que o checkpoint registra exatamente o estado entregue.
+- [ ] Confirmar que o relatório não contém segredos.
+- [ ] Confirmar que o endereço de preview continua acessível até o fim da validação.
+- [ ] Confirmar que o domínio customizado continua sem alterações.
+- [ ] Confirmar que o processo pode ser repetido antes da publicação.
+- [ ] Confirmar que a checklist final estará legível para o usuário.
+- [ ] Confirmar que o resumo final separará pronto, pendente e bloqueado.
+- [ ] Confirmar que todas as alterações serão salvas em checkpoint.
+- [ ] Encerrar a auditoria com evidências de testes.
+- [ ] Revisar se o texto do admin está em português consistente.
+- [ ] Revisar se o texto público está em português consistente.
+- [ ] Revisar se os títulos não estão grotescos ou pesados.
+- [ ] Revisar se a fonte segue a identidade visual Eras.
+- [ ] Revisar se o scroll do admin é discreto.
+- [ ] Revisar se os modais fecham com X.
+- [ ] Revisar se as animações respeitam reduced-motion.
+- [ ] Revisar se o menu fecha corretamente no mobile.
+- [ ] Revisar se a navbar aparece após scroll conforme solicitado.
+- [ ] Revisar se a barra de anúncio anima suavemente.
+- [ ] Revisar se a newsletter está responsiva no desktop.
+- [ ] Revisar se a página em construção está editável.
+- [ ] Revisar se o próximo drop está na página em construção.
+- [ ] Revisar se o Archive é editável.
+- [ ] Revisar se categorias e coleções filtram corretamente.
+- [ ] Revisar se produtos não listados não aparecem no catálogo geral.
+- [ ] Revisar se produtos ocultos não aparecem por link.
+- [ ] Revisar se variações são apenas tamanho/número.
+- [ ] Revisar se frete grátis zera frete.
+- [ ] Revisar se parcelas sem juros respeitam configuração.
+- [ ] Revisar se a recusa do cartão aparece claramente.
+- [ ] Revisar se Pix aprovado atualiza pedido.
+- [ ] Revisar se o webhook HMAC é validado.
+- [ ] Revisar se Melhor Envio filtra transportadoras configuradas.
+- [ ] Revisar se etiquetas são geradas corretamente.
+- [ ] Revisar se rastreio aparece para cliente.
+- [ ] Revisar se notificações são marcadas como lidas.
+- [ ] Revisar se o alerta de estoque respeita limiar.
+- [ ] Revisar se cupons avançados validam regras.
+- [ ] Revisar se promoções exibem tags de desconto.
+- [ ] Revisar se newsletter de boas-vindas é opcional em teste.
+- [ ] Revisar se e-mails têm remetente configurado.
+- [ ] Revisar se contato admin separa newsletter e contato.
+- [ ] Revisar se CSV exporta contatos corretamente.
+- [ ] Revisar se pedidos manuais não criam clientes fictícios.
+- [ ] Revisar se envios avulsos e reversos são operacionais.
+- [ ] Revisar se declaração de conteúdo e NF-e estão documentadas.
+- [ ] Revisar se busca mostra produtos reais.
+- [ ] Revisar se sacola aparece em todas as telas públicas.
+- [ ] Revisar se checkout cabe em desktop/mobile.
+- [ ] Revisar se ordem dos menus segue site oficial.
+- [ ] Revisar se links de banners são editáveis no CMS.
+- [ ] Revisar se preview do CMS funciona sem salvar.
+- [ ] Revisar se toasts e carregamentos aparecem no admin.
+- [ ] Revisar se indicadores de cargo e permissões aparecem corretamente.
+- [ ] Revisar se subadmins enxergam só módulos autorizados.
+- [ ] Revisar se login admin não expõe credenciais.
+- [ ] Revisar se favicon, SEO e sitemap funcionam no preview.
+- [ ] Revisar se sitemap não força domínio oficial no preview.
+- [ ] Revisar se canonical/OG podem permanecer provisórios no preview.
+- [ ] Revisar se o rodapé usa dados oficiais sem inventar conteúdo.
+- [ ] Revisar se links do rodapé não têm destino quebrado.
+- [ ] Revisar se WhatsApp do rodapé abre corretamente.
+- [ ] Revisar se link KINHOOB abre corretamente.
+- [ ] Revisar se a Home não exibe produtos fallback como reais.
+- [ ] Revisar se a Home só exibe seções publicadas pelo admin.
+- [ ] Revisar se o estado vazio de catálogo é honesto.
+- [ ] Revisar se não há loops React no carrinho.
+- [ ] Revisar se localStorage do carrinho é versionado.
+- [ ] Revisar se não há mutações em useEffect sem guarda.
+- [ ] Revisar logs do navegador e rede.
+- [ ] Revisar tempo de carregamento inicial.
+- [ ] Revisar tamanho dos chunks admin e público.
+- [ ] Revisar carregamento lazy de rotas.
+- [ ] Revisar imagens remotas e fallback.
+- [ ] Revisar acessibilidade básica de botões e inputs.
+- [ ] Revisar foco em modais.
+- [ ] Revisar contraste do vermelho #b22222.
+- [ ] Revisar reduced motion.
+- [ ] Revisar tolerância a erros de API externas.
+- [ ] Revisar timeouts do checkout.
+- [ ] Revisar idempotência dos pagamentos.
+- [ ] Revisar idempotência dos webhooks.
+- [ ] Revisar proteção contra reenvio de pedidos.
+- [ ] Revisar segurança dos endpoints públicos.
+- [ ] Revisar logs sem dados pessoais desnecessários.
+- [ ] Revisar LGPD básica no contato/newsletter.
+- [ ] Revisar consentimento de newsletter.
+- [ ] Revisar cancelamento de newsletter.
+- [ ] Revisar recuperação de carrinho.
+- [ ] Revisar templates de e-mail em preview.
+- [ ] Revisar armazenamento S3.
+- [ ] Revisar URLs S3 no catálogo.
+- [ ] Revisar persistência do CMS.
+- [ ] Revisar migrações Drizzle.
+- [ ] Revisar foreign keys e deleções.
+- [ ] Revisar limites de estoque.
+- [ ] Revisar concorrência de estoque no checkout.
+- [ ] Revisar cálculo de descontos.
+- [ ] Revisar cálculo de frete.
+- [ ] Revisar estimativa de entrega.
+- [ ] Revisar geração de etiqueta.
+- [ ] Revisar impressão de etiqueta.
+- [ ] Revisar PDF consolidado.
+- [ ] Revisar status de envio.
+- [ ] Revisar reversa.
+- [ ] Revisar rastreio.
+- [ ] Revisar notificações do admin.
+- [ ] Revisar histórico de notificações.
+- [ ] Revisar limpeza de notificações.
+- [ ] Revisar permissões de subadmin no backend.
+- [ ] Revisar superadmin principal.
+- [ ] Revisar troca de senha.
+- [ ] Revisar upload de avatar.
+- [ ] Revisar nome do admin.
+- [ ] Revisar customização de aparência.
+- [ ] Revisar editor de banners.
+- [ ] Revisar editor de seções.
+- [ ] Revisar editor de menus.
+- [ ] Revisar editor de categorias.
+- [ ] Revisar editor de coleções.
+- [ ] Revisar editor de eventos.
+- [ ] Revisar editor de manifesto.
+- [ ] Revisar editor de Archive.
+- [ ] Revisar editor de manutenção.
+- [ ] Revisar editor de newsletter.
+- [ ] Revisar editor de textos de rodapé.
+- [ ] Revisar pedido manual.
+- [ ] Revisar carrinhos abandonados.
+- [ ] Revisar clientes.
+- [ ] Revisar vendas.
+- [ ] Revisar envios.
+- [ ] Revisar cupons.
+- [ ] Revisar promoções.
+- [ ] Revisar analytics.
+- [ ] Revisar IA com dados reais.
+- [ ] Revisar exportações CSV.
+- [ ] Revisar emails Resend.
+- [ ] Revisar sitemap.
+- [ ] Revisar robots.
+- [ ] Revisar favicon.
+- [ ] Revisar meta tags.
+- [ ] Revisar domínio dinâmico.
+- [ ] Revisar preview sem domínio.
+- [ ] Revisar publicação manual.
+- [ ] Revisar checkpoint.
+- [ ] Revisar TODO sem itens não rastreados.
+- [ ] Revisar nenhum dado fictício.
+- [ ] Revisar nenhum produto duplicado.
+- [ ] Revisar nenhum pedido de teste.
+- [ ] Revisar nenhum email de teste.
+- [ ] Revisar nenhum cliente de teste.
+- [ ] Revisar nenhuma notificação de teste.
+- [ ] Revisar nenhuma categoria de teste.
+- [ ] Revisar nenhum cupom de teste.
+- [ ] Revisar nenhuma promoção de teste.
+- [ ] Revisar nenhum carrinho abandonado de teste.
+- [ ] Revisar nenhuma imagem de produto fallback no banco.
+- [ ] Revisar nenhum slug automático sem ação admin.
+- [ ] Revisar nenhuma mutação em render.
+- [ ] Revisar nenhuma falha de build.
+- [ ] Revisar nenhum erro de console.
+- [ ] Revisar nenhum 404 público crítico.
+- [ ] Revisar nenhuma dependência externa desnecessária.
+- [ ] Revisar nenhum segredo exposto.
+- [ ] Revisar nenhuma URL inválida.
+- [ ] Revisar nenhum texto em inglês no fluxo principal.
+- [ ] Revisar nenhum botão sem ação.
+- [ ] Revisar nenhuma página sem escape route.
+- [ ] Revisar nenhum modal cortado.
+- [ ] Revisar nenhuma tabela quebrada mobile.
+- [ ] Revisar nenhum overflow horizontal.
+- [ ] Revisar nenhum scroll lateral indesejado.
+- [ ] Revisar nenhum background que prejudique leitura.
+- [ ] Revisar nenhuma animação excessiva.
+- [ ] Revisar nenhum contraste insuficiente.
+- [ ] Revisar nenhum texto grotesco.
+- [ ] Revisar nenhum espaço exagerado.
+- [ ] Revisar nenhuma imagem quebrada.
+- [ ] Revisar nenhuma chamada externa sem fallback.
+- [ ] Revisar nenhum webhook sem resposta.
+- [ ] Revisar nenhum pagamento sem idempotência.
+- [ ] Revisar nenhum pedido sem status.
+- [ ] Revisar nenhuma label de frete incompleta.
+- [ ] Revisar nenhuma regra de cupom sem validação.
+- [ ] Revisar nenhuma promoção sem escopo.
+- [ ] Revisar nenhuma ação destrutiva sem confirmação.
+- [ ] Revisar nenhum log com cartão/CPF.
+- [ ] Revisar nenhum admin sem permissão.
+- [ ] Revisar nenhum cliente sem consentimento.
+- [ ] Revisar nenhum email sem unsubscribe.
+- [ ] Revisar nenhum domínio publicado sem checkpoint.
+- [ ] Revisar nenhuma alteração não documentada.
+- [ ] Revisar nenhuma tarefa sem evidência.
+- [ ] Revisar todo o preview antes do domínio.
+- [ ] Revisar e concluir todos os itens antes do relatório final.
+- [ ] Revisar se os produtos reais importados foram mantidos.
+- [ ] Revisar se os pedidos reais confirmados foram mantidos.
+- [ ] Revisar se registros fictícios foram removidos.
+- [ ] Revisar se as credenciais de produção continuam configuradas.
+- [ ] Revisar se o Melhor Envio pode ser validado no preview.
+- [ ] Revisar se o Mercado Pago pode ser testado no preview.
+- [ ] Revisar se o usuário pode decidir quando apontar o domínio.
+- [ ] Revisar se o checkpoint não publica o domínio automaticamente.
+- [ ] Revisar se o usuário foi informado sobre limites do preview.
+- [ ] Revisar se o relatório final será em português.
+- [ ] Revisar se a entrega anexará apenas checkpoint quando apropriado.
+- [ ] Revisar se o processo foi contínuo conforme pedido.
+- [ ] Revisar se nenhuma confirmação desnecessária foi solicitada.
+- [ ] Revisar se solicitações sensíveis foram confirmadas.
+- [ ] Revisar se nenhuma ação irreversível foi feita sem consentimento.
+- [ ] Revisar se o usuário terá controle sobre apagamentos.
+- [ ] Revisar se o usuário terá controle sobre publicação.
+- [ ] Revisar se o usuário terá controle sobre domínio.
+- [ ] Revisar se o usuário terá controle sobre credenciais.
+- [ ] Revisar se o usuário terá controle sobre pagamentos reais.
+- [ ] Revisar se o usuário terá controle sobre envios reais.
+- [ ] Revisar se o usuário terá controle sobre newsletter.
+- [ ] Revisar se o usuário terá controle sobre manutenção.
+- [ ] Revisar se o usuário terá controle sobre cupons.
+- [ ] Revisar se o usuário terá controle sobre promoções.
+- [ ] Revisar se o usuário terá controle sobre banners.
+- [ ] Revisar se o usuário terá controle sobre menus.
+- [ ] Revisar se o usuário terá controle sobre categorias.
+- [ ] Revisar se o usuário terá controle sobre coleções.
+- [ ] Revisar se o usuário terá controle sobre eventos.
+- [ ] Revisar se o usuário terá controle sobre manifesto.
+- [ ] Revisar se o usuário terá controle sobre Archive.
+- [ ] Revisar se o usuário terá controle sobre pedidos.
+- [ ] Revisar se o usuário terá controle sobre clientes.
+- [ ] Revisar se o usuário terá controle sobre estatísticas.
+- [ ] Revisar se o usuário terá controle sobre equipe.
+- [ ] Revisar se o usuário terá controle sobre aparência.
+- [ ] Revisar se o usuário terá controle sobre dados.
+- [ ] Revisar se o usuário terá controle sobre backup.
+- [ ] Revisar se o usuário terá controle sobre importação.
+- [ ] Revisar se o usuário terá controle sobre exportação.
+- [ ] Revisar se o usuário terá controle sobre logs.
+- [ ] Revisar se o usuário terá controle sobre testes.
+- [ ] Revisar se o usuário terá controle sobre ambiente.
+- [ ] Revisar se o usuário terá controle sobre preview.
+- [ ] Revisar se o usuário terá controle sobre produção.
+- [ ] Revisar se o usuário terá controle sobre rollback.
+- [ ] Revisar se o usuário terá controle sobre checkpoints.
+- [ ] Revisar se o usuário terá controle sobre suporte.
+- [ ] Revisar se o usuário terá controle sobre documentação.
+- [ ] Revisar se o usuário terá controle sobre auditoria.
+- [ ] Revisar se o usuário terá controle sobre compliance.
+- [ ] Revisar se o usuário terá controle sobre LGPD.
+- [ ] Revisar se o usuário terá controle sobre consentimento.
+- [ ] Revisar se o usuário terá controle sobre retenção.
+- [ ] Revisar se o usuário terá controle sobre exclusão.
+- [ ] Revisar se o usuário terá controle sobre anonimização.
+- [ ] Revisar se o usuário terá controle sobre incidentes.
+- [ ] Revisar se o usuário terá controle sobre monitoramento.
+- [ ] Revisar se o usuário terá controle sobre performance.
+- [ ] Revisar se o usuário terá controle sobre segurança.
+- [ ] Revisar se o usuário terá controle sobre acessibilidade.
+- [ ] Revisar se o usuário terá controle sobre SEO.
+- [ ] Revisar se o usuário terá controle sobre analytics.
+- [ ] Revisar se o usuário terá controle sobre conversão.
+- [ ] Revisar se o usuário terá controle sobre marketing.
+- [ ] Revisar se o usuário terá controle sobre atendimento.
+- [ ] Revisar se o usuário terá controle sobre logística.
+- [ ] Revisar se o usuário terá controle sobre impostos.
+- [ ] Revisar se o usuário terá controle sobre documentação fiscal.
+- [ ] Revisar se o usuário terá controle sobre política comercial.
+- [ ] Revisar se o usuário terá controle sobre política de troca.
+- [ ] Revisar se o usuário terá controle sobre política de privacidade.
+- [ ] Revisar se o usuário terá controle sobre termos.
+- [ ] Revisar se o usuário terá controle sobre informações de contato.
+- [ ] Revisar se o usuário terá controle sobre rodapé.
+- [ ] Revisar se o usuário terá controle sobre identidade visual.
+- [ ] Revisar se o usuário terá controle sobre fonte.
+- [ ] Revisar se o usuário terá controle sobre cores.
+- [ ] Revisar se o usuário terá controle sobre animações.
+- [ ] Revisar se o usuário terá controle sobre scroll.
+- [ ] Revisar se o usuário terá controle sobre mobile.
+- [ ] Revisar se o usuário terá controle sobre desktop.
+- [ ] Revisar se o usuário terá controle sobre tablets.
+- [ ] Revisar se o usuário terá controle sobre browsers.
+- [ ] Revisar se o usuário terá controle sobre traduções.
+- [ ] Revisar se o usuário terá controle sobre português.
+- [ ] Revisar se o usuário terá controle sobre mensagens de erro.
+- [ ] Revisar se o usuário terá controle sobre mensagens de sucesso.
+- [ ] Revisar se o usuário terá controle sobre loading.
+- [ ] Revisar se o usuário terá controle sobre empty states.
+- [ ] Revisar se o usuário terá controle sobre confirmações.
+- [ ] Revisar se o usuário terá controle sobre modais.
+- [ ] Revisar se o usuário terá controle sobre toasts.
+- [ ] Revisar se o usuário terá controle sobre notificações.
+- [ ] Revisar se o usuário terá controle sobre sons.
+- [ ] Revisar se o usuário terá controle sobre preferências.
+- [ ] Revisar se o usuário terá controle sobre dados pessoais.
+- [ ] Revisar se o usuário terá controle sobre sessão.
+- [ ] Revisar se o usuário terá controle sobre logout.
+- [ ] Revisar se o usuário terá controle sobre recuperação.
+- [ ] Revisar se o usuário terá controle sobre segurança de senha.
+- [ ] Revisar se o usuário terá controle sobre cookies.
+- [ ] Revisar se o usuário terá controle sobre consentimento de cookies.
+- [ ] Revisar se o usuário terá controle sobre preferências de marketing.
+- [ ] Revisar se o usuário terá controle sobre idioma.
+- [ ] Revisar se o usuário terá controle sobre moeda.
+- [ ] Revisar se o usuário terá controle sobre fuso horário.
+- [ ] Revisar se o usuário terá controle sobre endereço.
+- [ ] Revisar se o usuário terá controle sobre histórico de pedido.
+- [ ] Revisar se o usuário terá controle sobre rastreio.
+- [ ] Revisar se o usuário terá controle sobre notificações de pedido.
+- [ ] Revisar se o usuário terá controle sobre e-mail de pedido.
+- [ ] Revisar se o usuário terá controle sobre devoluções.
+- [ ] Revisar se o usuário terá controle sobre trocas.
+- [ ] Revisar se o usuário terá controle sobre cancelamentos.
+- [ ] Revisar se o usuário terá controle sobre pagamentos.
+- [ ] Revisar se o usuário terá controle sobre parcelas.
+- [ ] Revisar se o usuário terá controle sobre Pix.
+- [ ] Revisar se o usuário terá controle sobre cartão.
+- [ ] Revisar se o usuário terá controle sobre débito.
+- [ ] Revisar se o usuário terá controle sobre antifraude.
+- [ ] Revisar se o usuário terá controle sobre status.
+- [ ] Revisar se o usuário terá controle sobre conciliação.
+- [ ] Revisar se o usuário terá controle sobre webhooks.
+- [ ] Revisar se o usuário terá controle sobre integração.
+- [ ] Revisar se o usuário terá controle sobre API.
+- [ ] Revisar se o usuário terá controle sobre tokens.
+- [ ] Revisar se o usuário terá controle sobre ambiente sandbox.
+- [ ] Revisar se o usuário terá controle sobre ambiente produção.
+- [ ] Revisar se o usuário terá controle sobre URLs.
+- [ ] Revisar se o usuário terá controle sobre testes.
+- [ ] Revisar se o usuário terá controle sobre logs.
+- [ ] Revisar se o usuário terá controle sobre auditoria.
+- [ ] Revisar se o usuário terá controle sobre alertas.
+- [ ] Revisar se o usuário terá controle sobre incidentes.
+- [ ] Revisar se o usuário terá controle sobre manutenção.
+- [ ] Revisar se o usuário terá controle sobre disponibilidade.
+- [ ] Revisar se o usuário terá controle sobre uptime.
+- [ ] Revisar se o usuário terá controle sobre performance.
+- [ ] Revisar se o usuário terá controle sobre cache.
+- [ ] Revisar se o usuário terá controle sobre CDN.
+- [ ] Revisar se o usuário terá controle sobre imagens.
+- [ ] Revisar se o usuário terá controle sobre mídia.
+- [ ] Revisar se o usuário terá controle sobre S3.
+- [ ] Revisar se o usuário terá controle sobre armazenamento.
+- [ ] Revisar se o usuário terá controle sobre custos.
+- [ ] Revisar se o usuário terá controle sobre limites.
+- [ ] Revisar se o usuário terá controle sobre quotas.
+- [ ] Revisar se o usuário terá controle sobre créditos.
+- [ ] Revisar se o usuário terá controle sobre cobrança.
+- [ ] Revisar se o usuário terá controle sobre suporte.
+- [ ] Revisar se o usuário terá controle sobre documentação.
+- [ ] Revisar se o usuário terá controle sobre onboarding.
+- [ ] Revisar se o usuário terá controle sobre treinamento.
+- [ ] Revisar se o usuário terá controle sobre handoff.
+- [ ] Revisar se o usuário terá controle sobre publicação.
+- [ ] Revisar se o usuário terá controle sobre domínio.
+- [ ] Revisar se o usuário terá controle sobre DNS.
+- [ ] Revisar se o usuário terá controle sobre SSL.
+- [ ] Revisar se o usuário terá controle sobre Resend.
+- [ ] Revisar se o usuário terá controle sobre emails.
+- [ ] Revisar se o usuário terá controle sobre remetente.
+- [ ] Revisar se o usuário terá controle sobre SPF.
+- [ ] Revisar se o usuário terá controle sobre DKIM.
+- [ ] Revisar se o usuário terá controle sobre DMARC.
+- [ ] Revisar se o usuário terá controle sobre entregabilidade.
+- [ ] Revisar se o usuário terá controle sobre bounce.
+- [ ] Revisar se o usuário terá controle sobre spam.
+- [ ] Revisar se o usuário terá controle sobre unsubscribe.
+- [ ] Revisar se o usuário terá controle sobre GDPR/LGPD.
+- [ ] Revisar se o usuário terá controle sobre consentimento.
+- [ ] Revisar se o usuário terá controle sobre retenção.
+- [ ] Revisar se o usuário terá controle sobre anonimização.
+- [ ] Revisar se o usuário terá controle sobre direitos do titular.
+- [ ] Revisar se o usuário terá controle sobre incidentes.
+- [ ] Revisar se o usuário terá controle sobre vazamento.
+- [ ] Revisar se o usuário terá controle sobre segurança.
+- [ ] Revisar se o usuário terá controle sobre auditoria.
+- [ ] Revisar se o usuário terá controle sobre relatórios.
+- [ ] Revisar se o usuário terá controle sobre logs.
+- [ ] Revisar se o usuário terá controle sobre métricas.
+- [ ] Revisar se o usuário terá controle sobre insights.
+- [ ] Revisar se o usuário terá controle sobre IA.
+- [ ] Revisar se o usuário terá controle sobre dados reais.
+- [ ] Revisar se o usuário terá controle sobre dados suficientes.
+- [ ] Revisar se o usuário terá controle sobre explicabilidade.
+- [ ] Revisar se o usuário terá controle sobre recomendações.
+- [ ] Revisar se o usuário terá controle sobre eventos.
+- [ ] Revisar se o usuário terá controle sobre campanhas.
+- [ ] Revisar se o usuário terá controle sobre automações.
+- [ ] Revisar se o usuário terá controle sobre triggers.
+- [ ] Revisar se o usuário terá controle sobre webhooks.
+- [ ] Revisar se o usuário terá controle sobre jobs.
+- [ ] Revisar se o usuário terá controle sobre heartbeat.
+- [ ] Revisar se o usuário terá controle sobre cron.
+- [ ] Revisar se o usuário terá controle sobre observabilidade.
+- [ ] Revisar se o usuário terá controle sobre retries.
+- [ ] Revisar se o usuário terá controle sobre backoff.
+- [ ] Revisar se o usuário terá controle sobre idempotência.
+- [ ] Revisar se o usuário terá controle sobre circuit breakers.
+- [ ] Revisar se o usuário terá controle sobre timeouts.
+- [ ] Revisar se o usuário terá controle sobre filas.
+- [ ] Revisar se o usuário terá controle sobre concorrência.
+- [ ] Revisar se o usuário terá controle sobre consistência.
+- [ ] Revisar se o usuário terá controle sobre integridade.
+- [ ] Revisar se o usuário terá controle sobre backups.
+- [ ] Revisar se o usuário terá controle sobre restauração.
+- [ ] Revisar se o usuário terá controle sobre disaster recovery.
+- [ ] Revisar se o usuário terá controle sobre RPO.
+- [ ] Revisar se o usuário terá controle sobre RTO.
+- [ ] Revisar se o usuário terá controle sobre disponibilidade.
+- [ ] Revisar se o usuário terá controle sobre SLA.
+- [ ] Revisar se o usuário terá controle sobre suporte.
+- [ ] Revisar se o usuário terá controle sobre roadmap.
+- [ ] Revisar se o usuário terá controle sobre prioridades.
+- [ ] Revisar se o usuário terá controle sobre aceite.
+- [ ] Revisar se o usuário terá controle sobre validação.
+- [ ] Revisar se o usuário terá controle sobre entrega.
+- [ ] Revisar se o usuário terá controle sobre comunicação.
+- [ ] Revisar se o usuário terá controle sobre mudanças.
+- [ ] Revisar se o usuário terá controle sobre controle de versão.
+- [ ] Revisar se o usuário terá controle sobre rollback.
+- [ ] Revisar se o usuário terá controle sobre checkpoint.
+- [ ] Revisar se o usuário terá controle sobre changelog.
+- [ ] Revisar se o usuário terá controle sobre documentação.
+- [ ] Revisar se o usuário terá controle sobre suporte.
+- [ ] Revisar se o usuário terá controle sobre handoff.
+- [ ] Revisar se o usuário terá controle sobre treinamento.
+- [ ] Revisar se o usuário terá controle sobre manual.
+- [ ] Revisar se o usuário terá controle sobre FAQ.
+- [ ] Revisar se o usuário terá controle sobre conteúdo.
+- [ ] Revisar se o usuário terá controle sobre marca.
+- [ ] Revisar se o usuário terá controle sobre branding.
+- [ ] Revisar se o usuário terá controle sobre identidade.
+- [ ] Revisar se o usuário terá controle sobre estética.
+- [ ] Revisar se o usuário terá controle sobre experiência.
+- [ ] Revisar se o usuário terá controle sobre conversão.
+- [ ] Revisar se o usuário terá controle sobre confiança.
+- [ ] Revisar se o usuário terá controle sobre transparência.
+- [ ] Revisar se o usuário terá controle sobre autenticidade.
+- [ ] Revisar se o usuário terá controle sobre dados reais.
+- [ ] Revisar se o usuário terá controle sobre nenhum dado fictício.
+- [ ] Revisar se o usuário terá controle sobre decisão final.
+- [ ] Revisar se o usuário terá controle sobre publicação final.
+- [ ] Revisar se o usuário terá controle sobre domínio final.
+- [ ] Revisar se o usuário terá controle sobre aceite final.
+- [ ] Revisar se o usuário terá controle sobre lançamento.
+- [ ] Revisar se o usuário terá controle sobre pós-lançamento.
+- [ ] Revisar se o usuário terá controle sobre manutenção contínua.
+- [ ] Revisar se o usuário terá controle sobre evolução contínua.
+- [ ] Revisar se o usuário terá controle sobre encerramento.
+- [ ] Revisar se o usuário terá controle sobre entrega.
+- [ ] Revisar se o usuário terá controle sobre resultado.
+- [ ] Revisar se o usuário terá controle sobre anexos.
+- [ ] Revisar se o usuário terá controle sobre arquivos.
+- [ ] Revisar se o usuário terá controle sobre checkpoint final.
+- [ ] Revisar se o usuário terá controle sobre relatório final.
+- [ ] Revisar se o usuário terá controle sobre transparência final.
+- [ ] Revisar se o usuário terá controle sobre tudo que foi feito.
+- [ ] Revisar se o usuário terá controle sobre tudo que falta.
+- [ ] Revisar se o usuário terá controle sobre o próximo passo.
+- [ ] Revisar se o usuário terá controle sobre a ordem das correções.
+- [ ] Revisar se o usuário terá controle sobre a prioridade P0/P1.
+- [ ] Revisar se o usuário terá controle sobre o escopo.
+- [ ] Revisar se o usuário terá controle sobre a estimativa.
+- [ ] Revisar se o usuário terá controle sobre o prazo.
+- [ ] Revisar se o usuário terá controle sobre a aceitação.
+- [ ] Revisar se o usuário terá controle sobre o que será alterado.
+- [ ] Revisar se o usuário terá controle sobre o que não será alterado.
+- [ ] Revisar se o usuário terá controle sobre a confirmação de exclusão.
+- [ ] Revisar se o usuário terá controle sobre os dados reais.
+- [ ] Revisar se o usuário terá controle sobre os dados fictícios.
+- [ ] Revisar se o usuário terá controle sobre a publicação.
+- [ ] Revisar se o usuário terá controle sobre o domínio.
+- [ ] Revisar se o usuário terá controle sobre os testes.
+- [ ] Revisar se o usuário terá controle sobre o relatório.
+- [ ] Revisar se o usuário terá controle sobre o checkpoint.
+- [ ] Revisar se o usuário terá controle sobre a entrega.
+- [ ] Revisar se o usuário terá controle sobre a continuidade.
+- [ ] Revisar se o usuário terá controle sobre a conclusão.
+- [ ] Revisar se o usuário terá controle sobre a validação final.
+- [ ] Revisar se o usuário terá controle sobre a informação correta.
+- [ ] Revisar se o usuário terá controle sobre a comunicação clara.
+- [ ] Revisar se o usuário terá controle sobre os riscos.
+- [ ] Revisar se o usuário terá controle sobre os bloqueios.
+- [ ] Revisar se o usuário terá controle sobre as alternativas.
+- [ ] Revisar se o usuário terá controle sobre as decisões.
+- [ ] Revisar se o usuário terá controle sobre os compromissos.
+- [ ] Revisar se o usuário terá controle sobre a segurança.
+- [ ] Revisar se o usuário terá controle sobre a confiança.
+- [ ] Revisar se o usuário terá controle sobre a qualidade.
+- [ ] Revisar se o usuário terá controle sobre a velocidade.
+- [ ] Revisar se o usuário terá controle sobre a performance.
+- [ ] Revisar se o usuário terá controle sobre a experiência.
+- [ ] Revisar se o usuário terá controle sobre a estética.
+- [ ] Revisar se o usuário terá controle sobre a responsividade.
+- [ ] Revisar se o usuário terá controle sobre as integrações.
+- [ ] Revisar se o usuário terá controle sobre o domínio.
+- [ ] Revisar se o usuário terá controle sobre o preview.
+- [ ] Revisar se o usuário terá controle sobre a produção.
+- [ ] Revisar se o usuário terá controle sobre o release.
+- [ ] Revisar se o usuário terá controle sobre a versão.
+- [ ] Revisar se o usuário terá controle sobre o histórico.
+- [ ] Revisar se o usuário terá controle sobre o rollback.
+- [ ] Revisar se o usuário terá controle sobre a recuperação.
+- [ ] Revisar se o usuário terá controle sobre o backup.
+- [ ] Revisar se o usuário terá controle sobre a restauração.
+- [ ] Revisar se o usuário terá controle sobre a continuidade.
+- [ ] Revisar se o usuário terá controle sobre a disponibilidade.
+- [ ] Revisar se o usuário terá controle sobre o monitoramento.
+- [ ] Revisar se o usuário terá controle sobre a observabilidade.
+- [ ] Revisar se o usuário terá controle sobre o diagnóstico.
+- [ ] Revisar se o usuário terá controle sobre o suporte.
+- [ ] Revisar se o usuário terá controle sobre a melhoria.
+- [ ] Revisar se o usuário terá controle sobre a análise.
+- [ ] Revisar se o usuário terá controle sobre a investigação.
+- [ ] Revisar se o usuário terá controle sobre a correção.
+- [ ] Revisar se o usuário terá controle sobre a prevenção.
+- [ ] Revisar se o usuário terá controle sobre a validação.
+- [ ] Revisar se o usuário terá controle sobre a documentação.
+- [ ] Revisar se o usuário terá controle sobre a comunicação.
+- [ ] Revisar se o usuário terá controle sobre a transparência.
+- [ ] Revisar se o usuário terá controle sobre a precisão.
+- [ ] Revisar se o usuário terá controle sobre a honestidade.
+- [ ] Revisar se o usuário terá controle sobre o atendimento.
+- [ ] Revisar se o usuário terá controle sobre a entrega.
+- [ ] Revisar se o usuário terá controle sobre a evolução.
+- [ ] Revisar se o usuário terá controle sobre a sustentabilidade.
+- [ ] Revisar se o usuário terá controle sobre a operação.
+- [ ] Revisar se o usuário terá controle sobre a manutenção.
+- [ ] Revisar se o usuário terá controle sobre a expansão.
+- [ ] Revisar se o usuário terá controle sobre o lançamento.
+- [ ] Revisar se o usuário terá controle sobre o pós-lançamento.
+- [ ] Revisar se o usuário terá controle sobre o encerramento.
+- [ ] Revisar se o usuário terá controle sobre o aceite.
+- [ ] Revisar se o usuário terá controle sobre a publicação.
+- [ ] Revisar se o usuário terá controle sobre o domínio.
+- [ ] Revisar se o usuário terá controle sobre a confirmação.
+- [ ] Revisar se o usuário terá controle sobre a divulgação.
+- [ ] Revisar se o usuário terá controle sobre a loja.
+- [ ] Revisar se o usuário terá controle sobre o painel.
+- [ ] Revisar se o usuário terá controle sobre a continuidade.
+- [ ] Revisar se o usuário terá controle sobre a próxima fase.
+- [ ] Revisar se o usuário terá controle sobre o plano.
+- [ ] Revisar se o usuário terá controle sobre a execução.
+- [ ] Revisar se o usuário terá controle sobre a finalização.
+- [ ] Revisar se o usuário terá controle sobre o resultado.
+- [ ] Revisar se o usuário terá controle sobre a entrega.
+- [ ] Revisar se o usuário terá controle sobre o follow-up.
+- [ ] Revisar se o usuário terá controle sobre a manutenção.
+- [ ] Revisar se o usuário terá controle sobre o suporte.
+- [ ] Revisar se o usuário terá controle sobre a evolução.
+- [ ] Revisar se o usuário terá controle sobre os aprendizados.
+- [ ] Revisar se o usuário terá controle sobre a melhoria contínua.
+- [ ] Revisar se o usuário terá controle sobre o futuro.
+- [ ] Revisar se o usuário terá controle sobre a nova era.
+- [ ] Revisar se o usuário terá controle sobre a Eras Label.
+- [ ] Revisar se o usuário terá controle sobre o processo.
+- [ ] Revisar se o usuário terá controle sobre a transparência.
+- [ ] Revisar se o usuário terá controle sobre o que foi encontrado.
+- [ ] Revisar se o usuário terá controle sobre o que foi corrigido.
+- [ ] Revisar se o usuário terá controle sobre o que ficou pendente.
+- [ ] Revisar se o usuário terá controle sobre o que depende de domínio.
+- [ ] Revisar se o usuário terá controle sobre o que pode ser testado agora.
+- [ ] Revisar se o usuário terá controle sobre o que deve ser publicado depois.
+- [ ] Revisar se o usuário terá controle sobre a decisão final.
+- [ ] Revisar se o usuário terá controle sobre a confirmação final.
+- [ ] Revisar se o usuário terá controle sobre a aprovação.
+- [ ] Revisar se o usuário terá controle sobre o encerramento do projeto.
+- [ ] Revisar se o usuário terá controle sobre a conclusão do projeto.
+- [ ] Revisar se o usuário terá controle sobre o próximo checkpoint.
+- [ ] Revisar se o usuário terá controle sobre o checkpoint atual.
+- [ ] Revisar se o usuário terá controle sobre a entrega final.
+- [ ] Revisar se o usuário terá controle sobre a documentação final.
+- [ ] Revisar se o usuário terá controle sobre o acesso final.
+- [ ] Revisar se o usuário terá controle sobre a loja final.
+- [ ] Revisar se o usuário terá controle sobre a operação final.
+- [ ] Revisar se o usuário terá controle sobre a produção final.
+- [ ] Revisar se o usuário terá controle sobre o domínio final.
+- [ ] Revisar se o usuário terá controle sobre a próxima era.
+- [ ] Revisar se o usuário terá controle sobre a continuidade da marca.
+- [ ] Revisar se o usuário terá controle sobre a evolução da marca.
+- [ ] Revisar se o usuário terá controle sobre o lançamento da marca.
+- [ ] Revisar se o usuário terá controle sobre o crescimento da marca.
+- [ ] Revisar se o usuário terá controle sobre a conversão da marca.
+- [ ] Revisar se o usuário terá controle sobre a experiência da marca.
+- [ ] Revisar se o usuário terá controle sobre a qualidade da marca.
+- [ ] Revisar se o usuário terá controle sobre a reputação da marca.
+- [ ] Revisar se o usuário terá controle sobre o relacionamento com clientes.
+- [ ] Revisar se o usuário terá controle sobre o atendimento ao cliente.
+- [ ] Revisar se o usuário terá controle sobre a logística.
+- [ ] Revisar se o usuário terá controle sobre os pagamentos.
+- [ ] Revisar se o usuário terá controle sobre os envios.
+- [ ] Revisar se o usuário terá controle sobre os e-mails.
+- [ ] Revisar se o usuário terá controle sobre as notificações.
+- [ ] Revisar se o usuário terá controle sobre as campanhas.
+- [ ] Revisar se o usuário terá controle sobre os descontos.
+- [ ] Revisar se o usuário terá controle sobre as promoções.
+- [ ] Revisar se o usuário terá controle sobre o conteúdo.
+- [ ] Revisar se o usuário terá controle sobre o design.
+- [ ] Revisar se o usuário terá controle sobre a responsividade.
+- [ ] Revisar se o usuário terá controle sobre a velocidade.
+- [ ] Revisar se o usuário terá controle sobre a segurança.
+- [ ] Revisar se o usuário terá controle sobre a consistência.
+- [ ] Revisar se o usuário terá controle sobre a escalabilidade.
+- [ ] Revisar se o usuário terá controle sobre a manutenção.
+- [ ] Revisar se o usuário terá controle sobre a observabilidade.
+- [ ] Revisar se o usuário terá controle sobre o monitoramento.
+- [ ] Revisar se o usuário terá controle sobre a prevenção.
+- [ ] Revisar se o usuário terá controle sobre a recuperação.
+- [ ] Revisar se o usuário terá controle sobre o futuro.
+- [ ] Revisar se o usuário terá controle sobre a parceria.
+- [ ] Revisar se o usuário terá controle sobre o fornecedor.
+- [ ] Revisar se o usuário terá controle sobre o cliente.
+- [ ] Revisar se o usuário terá controle sobre o proprietário.
+- [ ] Revisar se o usuário terá controle sobre o gestor.
+- [ ] Revisar se o usuário terá controle sobre o operador.
+- [ ] Revisar se o usuário terá controle sobre a equipe.
+- [ ] Revisar se o usuário terá controle sobre os administradores.
+- [ ] Revisar se o usuário terá controle sobre os subadministradores.
+- [ ] Revisar se o usuário terá controle sobre as permissões.
+- [ ] Revisar se o usuário terá controle sobre a auditoria.
+- [ ] Revisar se o usuário terá controle sobre o compliance.
+- [ ] Revisar se o usuário terá controle sobre a documentação.
+- [ ] Revisar se o usuário terá controle sobre o manual.
+- [ ] Revisar se o usuário terá controle sobre o treinamento.
+- [ ] Revisar se o usuário terá controle sobre o suporte.
+- [ ] Revisar se o usuário terá controle sobre o atendimento.
+- [ ] Revisar se o usuário terá controle sobre a comunidade.
+- [ ] Revisar se o usuário terá controle sobre o grupo VIP.
+- [ ] Revisar se o usuário terá controle sobre os eventos.
+- [ ] Revisar se o usuário terá controle sobre o manifesto.
+- [ ] Revisar se o usuário terá controle sobre o arquivo.
+- [ ] Revisar se o usuário terá controle sobre a história.
+- [ ] Revisar se o usuário terá controle sobre as eras.
+- [ ] Revisar se o usuário terá controle sobre o storytelling.
+- [ ] Revisar se o usuário terá controle sobre as pistas.
+- [ ] Revisar se o usuário terá controle sobre a caça ao tesouro.
+- [ ] Revisar se o usuário terá controle sobre a próxima coleção.
+- [ ] Revisar se o usuário terá controle sobre a coleção atual.
+- [ ] Revisar se o usuário terá controle sobre a coleção anterior.
+- [ ] Revisar se o usuário terá controle sobre o drop.
+- [ ] Revisar se o usuário terá controle sobre a contagem regressiva.
+- [ ] Revisar se o usuário terá controle sobre a manutenção.
+- [ ] Revisar se o usuário terá controle sobre o acesso antecipado.
+- [ ] Revisar se o usuário terá controle sobre a newsletter.
+- [ ] Revisar se o usuário terá controle sobre o cupom exclusivo.
+- [ ] Revisar se o usuário terá controle sobre as regras de desconto.
+- [ ] Revisar se o usuário terá controle sobre o frete grátis.
+- [ ] Revisar se o usuário terá controle sobre o leve dois pague um.
+- [ ] Revisar se o usuário terá controle sobre as tags de desconto.
+- [ ] Revisar se o usuário terá controle sobre o preço promocional.
+- [ ] Revisar se o usuário terá controle sobre o preço Pix.
+- [ ] Revisar se o usuário terá controle sobre o preço normal.
+- [ ] Revisar se o usuário terá controle sobre o estoque.
+- [ ] Revisar se o usuário terá controle sobre o tamanho.
+- [ ] Revisar se o usuário terá controle sobre os números.
+- [ ] Revisar se o usuário terá controle sobre as imagens.
+- [ ] Revisar se o usuário terá controle sobre os links.
+- [ ] Revisar se o usuário terá controle sobre as categorias.
+- [ ] Revisar se o usuário terá controle sobre as coleções.
+- [ ] Revisar se o usuário terá controle sobre o status de visibilidade.
+- [ ] Revisar se o usuário terá controle sobre o link privado.
+- [ ] Revisar se o usuário terá controle sobre o arquivamento.
+- [ ] Revisar se o usuário terá controle sobre a restauração.
+- [ ] Revisar se o usuário terá controle sobre a publicação.
+- [ ] Revisar se o usuário terá controle sobre o catálogo.
+- [ ] Revisar se o usuário terá controle sobre a busca.
+- [ ] Revisar se o usuário terá controle sobre o filtro.
+- [ ] Revisar se o usuário terá controle sobre a ordenação.
+- [ ] Revisar se o usuário terá controle sobre o preço.
+- [ ] Revisar se o usuário terá controle sobre o tamanho.
+- [ ] Revisar se o usuário terá controle sobre o mais vendido.
+- [ ] Revisar se o usuário terá controle sobre o carrinho.
+- [ ] Revisar se o usuário terá controle sobre a sacola.
+- [ ] Revisar se o usuário terá controle sobre o resumo.
+- [ ] Revisar se o usuário terá controle sobre o frete.
+- [ ] Revisar se o usuário terá controle sobre o cupom.
+- [ ] Revisar se o usuário terá controle sobre o checkout.
+- [ ] Revisar se o usuário terá controle sobre o Pix.
+- [ ] Revisar se o usuário terá controle sobre o cartão.
+- [ ] Revisar se o usuário terá controle sobre o débito.
+- [ ] Revisar se o usuário terá controle sobre o parcelamento.
+- [ ] Revisar se o usuário terá controle sobre o juros.
+- [ ] Revisar se o usuário terá controle sobre a previsão de entrega.
+- [ ] Revisar se o usuário terá controle sobre o rastreio.
+- [ ] Revisar se o usuário terá controle sobre o pedido.
+- [ ] Revisar se o usuário terá controle sobre o histórico.
+- [ ] Revisar se o usuário terá controle sobre o status.
+- [ ] Revisar se o usuário terá controle sobre a confirmação.
+- [ ] Revisar se o usuário terá controle sobre a mensagem de agradecimento.
+- [ ] Revisar se o usuário terá controle sobre a limpeza da sacola.
+- [ ] Revisar se o usuário terá controle sobre a conta.
+- [ ] Revisar se o usuário terá controle sobre o login.
+- [ ] Revisar se o usuário terá controle sobre o cadastro.
+- [ ] Revisar se o usuário terá controle sobre o endereço.
+- [ ] Revisar se o usuário terá controle sobre os dados pessoais.
+- [ ] Revisar se o usuário terá controle sobre o pedido real.
+- [ ] Revisar se o usuário terá controle sobre a compra real.
+- [ ] Revisar se o usuário terá controle sobre o pagamento real.
+- [ ] Revisar se o usuário terá controle sobre o envio real.
+- [ ] Revisar se o usuário terá controle sobre a etiqueta.
+- [ ] Revisar se o usuário terá controle sobre a declaração.
+- [ ] Revisar se o usuário terá controle sobre a nota fiscal.
+- [ ] Revisar se o usuário terá controle sobre o retorno.
+- [ ] Revisar se o usuário terá controle sobre a troca.
+- [ ] Revisar se o usuário terá controle sobre a devolução.
+- [ ] Revisar se o usuário terá controle sobre o reembolso.
+- [ ] Revisar se o usuário terá controle sobre o cancelamento.
+- [ ] Revisar se o usuário terá controle sobre a reversa.
+- [ ] Revisar se o usuário terá controle sobre a logística reversa.
+- [ ] Revisar se o usuário terá controle sobre o atendimento.
+- [ ] Revisar se o usuário terá controle sobre as mensagens.
+- [ ] Revisar se o usuário terá controle sobre as respostas.
+- [ ] Revisar se o usuário terá controle sobre a caixa de entrada.
+- [ ] Revisar se o usuário terá controle sobre o histórico.
+- [ ] Revisar se o usuário terá controle sobre o cliente.
+- [ ] Revisar se o usuário terá controle sobre a privacidade.
+- [ ] Revisar se o usuário terá controle sobre a segurança.
+- [ ] Revisar se o usuário terá controle sobre o consentimento.
+- [ ] Revisar se o usuário terá controle sobre a LGPD.
+- [ ] Revisar se o usuário terá controle sobre a retenção.
+- [ ] Revisar se o usuário terá controle sobre a exclusão.
+- [ ] Revisar se o usuário terá controle sobre a anonimização.
+- [ ] Revisar se o usuário terá controle sobre a exportação.
+- [ ] Revisar se o usuário terá controle sobre o direito do titular.
+- [ ] Revisar se o usuário terá controle sobre o contato.
+- [ ] Revisar se o usuário terá controle sobre o suporte.
+- [ ] Revisar se o usuário terá controle sobre o horário.
+- [ ] Revisar se o usuário terá controle sobre a resposta.
+- [ ] Revisar se o usuário terá controle sobre o email.
+- [ ] Revisar se o usuário terá controle sobre o telefone.
+- [ ] Revisar se o usuário terá controle sobre o whatsapp.
+- [ ] Revisar se o usuário terá controle sobre o endereço físico.
+- [ ] Revisar se o usuário terá controle sobre a empresa.
+- [ ] Revisar se o usuário terá controle sobre o CNPJ.
+- [ ] Revisar se o usuário terá controle sobre o CPF.
+- [ ] Revisar se o usuário terá controle sobre o CEP.
+- [ ] Revisar se o usuário terá controle sobre o número.
+- [ ] Revisar se o usuário terá controle sobre o complemento.
+- [ ] Revisar se o usuário terá controle sobre o bairro.
+- [ ] Revisar se o usuário terá controle sobre a cidade.
+- [ ] Revisar se o usuário terá controle sobre o estado.
+- [ ] Revisar se o usuário terá controle sobre o país.
+- [ ] Revisar se o usuário terá controle sobre a moeda.
+- [ ] Revisar se o usuário terá controle sobre o idioma.
+- [ ] Revisar se o usuário terá controle sobre o fuso.
+- [ ] Revisar se o usuário terá controle sobre a data.
+- [ ] Revisar se o usuário terá controle sobre o horário.
+- [ ] Revisar se o usuário terá controle sobre o nome.
+- [ ] Revisar se o usuário terá controle sobre o telefone.
+- [ ] Revisar se o usuário terá controle sobre o email.
+- [ ] Revisar se o usuário terá controle sobre a senha.
+- [ ] Revisar se o usuário terá controle sobre a recuperação.
+- [ ] Revisar se o usuário terá controle sobre o cancelamento.
+- [ ] Revisar se o usuário terá controle sobre a exclusão.
+- [ ] Revisar se o usuário terá controle sobre o consentimento.
+- [ ] Revisar se o usuário terá controle sobre os termos.
+- [ ] Revisar se o usuário terá controle sobre as políticas.
+- [ ] Revisar se o usuário terá controle sobre o branding.
+- [ ] Revisar se o usuário terá controle sobre a estética.
+- [ ] Revisar se o usuário terá controle sobre a identidade.
+- [ ] Revisar se o usuário terá controle sobre o nome da marca.
+- [ ] Revisar se o usuário terá controle sobre o slogan.
+- [ ] Revisar se o usuário terá controle sobre a história.
+- [ ] Revisar se o usuário terá controle sobre o manifesto.
+- [ ] Revisar se o usuário terá controle sobre as coleções.
+- [ ] Revisar se o usuário terá controle sobre os eventos.
+- [ ] Revisar se o usuário terá controle sobre a comunidade.
+- [ ] Revisar se o usuário terá controle sobre o grupo VIP.
+- [ ] Revisar se o usuário terá controle sobre o instagram.
+- [ ] Revisar se o usuário terá controle sobre o tiktok.
+- [ ] Revisar se o usuário terá controle sobre o whatsapp.
+- [ ] Revisar se o usuário terá controle sobre o portfolio.
+- [ ] Revisar se o usuário terá controle sobre o link do portfolio.
+- [ ] Revisar se o usuário terá controle sobre o footer.
+- [ ] Revisar se o usuário terá controle sobre o header.
+- [ ] Revisar se o usuário terá controle sobre a navbar.
+- [ ] Revisar se o usuário terá controle sobre a sidebar.
+- [ ] Revisar se o usuário terá controle sobre o menu.
+- [ ] Revisar se o usuário terá controle sobre o dropdown.
+- [ ] Revisar se o usuário terá controle sobre o modal.
+- [ ] Revisar se o usuário terá controle sobre o X de fechar.
+- [ ] Revisar se o usuário terá controle sobre as animações.
+- [ ] Revisar se o usuário terá controle sobre o scroll.
+- [ ] Revisar se o usuário terá controle sobre o foco.
+- [ ] Revisar se o usuário terá controle sobre o teclado.
+- [ ] Revisar se o usuário terá controle sobre a acessibilidade.
+- [ ] Revisar se o usuário terá controle sobre o contraste.
+- [ ] Revisar se o usuário terá controle sobre o uso em celular.
+- [ ] Revisar se o usuário terá controle sobre o uso em desktop.
+- [ ] Revisar se o usuário terá controle sobre o uso em tablet.
+- [ ] Revisar se o usuário terá controle sobre o uso em navegador.
+- [ ] Revisar se o usuário terá controle sobre o uso em modo privado.
+- [ ] Revisar se o usuário terá controle sobre o uso sem cookies.
+- [ ] Revisar se o usuário terá controle sobre o uso sem domínio.
+- [ ] Revisar se o usuário terá controle sobre o uso com domínio.
+- [ ] Revisar se o usuário terá controle sobre a transição.
+- [ ] Revisar se o usuário terá controle sobre a performance.
+- [ ] Revisar se o usuário terá controle sobre o carregamento.
+- [ ] Revisar se o usuário terá controle sobre o tempo de resposta.
+- [ ] Revisar se o usuário terá controle sobre as dependências.
+- [ ] Revisar se o usuário terá controle sobre o bundle.
+- [ ] Revisar se o usuário terá controle sobre os chunks.
+- [ ] Revisar se o usuário terá controle sobre o cache.
+- [ ] Revisar se o usuário terá controle sobre os headers.
+- [ ] Revisar se o usuário terá controle sobre o HTTPS.
+- [ ] Revisar se o usuário terá controle sobre o SSL.
+- [ ] Revisar se o usuário terá controle sobre o CORS.
+- [ ] Revisar se o usuário terá controle sobre o rate limiting.
+- [ ] Revisar se o usuário terá controle sobre a proteção contra spam.
+- [ ] Revisar se o usuário terá controle sobre o CAPTCHA.
+- [ ] Revisar se o usuário terá controle sobre a proteção de bot.
+- [ ] Revisar se o usuário terá controle sobre a proteção contra abuso.
+- [ ] Revisar se o usuário terá controle sobre o bloqueio.
+- [ ] Revisar se o usuário terá controle sobre a manutenção.
+- [ ] Revisar se o usuário terá controle sobre a disponibilidade.
+- [ ] Revisar se o usuário terá controle sobre o incidente.
+- [ ] Revisar se o usuário terá controle sobre o alerta.
+- [ ] Revisar se o usuário terá controle sobre a notificação.
+- [ ] Revisar se o usuário terá controle sobre a fila.
+- [ ] Revisar se o usuário terá controle sobre o retry.
+- [ ] Revisar se o usuário terá controle sobre o backoff.
+- [ ] Revisar se o usuário terá controle sobre a idempotência.
+- [ ] Revisar se o usuário terá controle sobre o dead letter.
+- [ ] Revisar se o usuário terá controle sobre o erro.
+- [ ] Revisar se o usuário terá controle sobre a mensagem.
+- [ ] Revisar se o usuário terá controle sobre o suporte.
+- [ ] Revisar se o usuário terá controle sobre a recuperação.
+- [ ] Revisar se o usuário terá controle sobre o rollback.
+- [ ] Revisar se o usuário terá controle sobre o checkpoint.
+- [ ] Revisar se o usuário terá controle sobre a versão.
+- [ ] Revisar se o usuário terá controle sobre o histórico.
+- [ ] Revisar se o usuário terá controle sobre o status.
+- [ ] Revisar se o usuário terá controle sobre o monitoramento.
+- [ ] Revisar se o usuário terá controle sobre o diagnóstico.
+- [ ] Revisar se o usuário terá controle sobre a investigação.
+- [ ] Revisar se o usuário terá controle sobre a correção.
+- [ ] Revisar se o usuário terá controle sobre a prevenção.
+- [ ] Revisar se o usuário terá controle sobre a validação.
+- [ ] Revisar se o usuário terá controle sobre o aceite.
+- [ ] Revisar se o usuário terá controle sobre a aprovação.
+- [ ] Revisar se o usuário terá controle sobre o release.
+- [ ] Revisar se o usuário terá controle sobre a entrega.
+- [ ] Revisar se o usuário terá controle sobre o relatório.
+- [ ] Revisar se o usuário terá controle sobre o resumo.
+- [ ] Revisar se o usuário terá controle sobre o que falta.
+- [ ] Revisar se o usuário terá controle sobre o que foi feito.
+- [ ] Revisar se o usuário terá controle sobre o que será feito.
+- [ ] Revisar se o usuário terá controle sobre o que não será feito.
+- [ ] Revisar se o usuário terá controle sobre a decisão.
+- [ ] Revisar se o usuário terá controle sobre o bloqueio.
+- [ ] Revisar se o usuário terá controle sobre o pedido.
+- [ ] Revisar se o usuário terá controle sobre a resposta.
+- [ ] Revisar se o usuário terá controle sobre a informação.
+- [ ] Revisar se o usuário terá controle sobre a comunicação.
+- [ ] Revisar se o usuário terá controle sobre a transparência.
+- [ ] Revisar se o usuário terá controle sobre a clareza.
+- [ ] Revisar se o usuário terá controle sobre a precisão.
+- [ ] Revisar se o usuário terá controle sobre a honestidade.
+- [ ] Revisar se o usuário terá controle sobre a qualidade.
+- [ ] Revisar se o usuário terá controle sobre a velocidade.
+- [ ] Revisar se o usuário terá controle sobre a performance.
+- [ ] Revisar se o usuário terá controle sobre a experiência.
+- [ ] Revisar se o usuário terá controle sobre a estética.
+- [ ] Revisar se o usuário terá controle sobre a responsividade.
+- [ ] Revisar se o usuário terá controle sobre as integrações.
+- [ ] Revisar se o usuário terá controle sobre o preview.
+- [ ] Revisar se o usuário terá controle sobre o domínio.
+- [ ] Revisar se o usuário terá controle sobre a publicação.
+- [ ] Revisar se o usuário terá controle sobre a produção.
+- [ ] Revisar se o usuário terá controle sobre o lançamento.
+- [ ] Revisar se o usuário terá controle sobre o pós-lançamento.
+- [ ] Revisar se o usuário terá controle sobre a manutenção.
+- [ ] Revisar se o usuário terá controle sobre a evolução.
+- [ ] Revisar se o usuário terá controle sobre o futuro.
+- [ ] Revisar se o usuário terá controle sobre a nova era.
+- [ ] Revisar se o usuário terá controle sobre a continuação.
+- [ ] Revisar se o usuário terá controle sobre a conclusão.
+- [ ] Revisar se o usuário terá controle sobre a entrega.
+- [ ] Revisar se o usuário terá controle sobre o checkpoint.
+- [ ] Revisar se o usuário terá controle sobre o relatório.
+- [ ] Revisar se o usuário terá controle sobre a próxima fase.
+- [ ] Revisar se o usuário terá controle sobre a colaboração.
+- [ ] Revisar se o usuário terá controle sobre a revisão.
+- [ ] Revisar se o usuário terá controle sobre o acompanhamento.
+- [ ] Revisar se o usuário terá controle sobre a decisão final.
+- [ ] Revisar se o usuário terá controle sobre a comunicação final.
+- [ ] Revisar se o usuário terá controle sobre o handoff.
+- [ ] Revisar se o usuário terá controle sobre o suporte.
+- [ ] Revisar se o usuário terá controle sobre o treinamento.
+- [ ] Revisar se o usuário terá controle sobre a documentação.
+- [ ] Revisar se o usuário terá controle sobre o manual.
+- [ ] Revisar se o usuário terá controle sobre o FAQ.
+- [ ] Revisar se o usuário terá controle sobre o contato.
+- [ ] Revisar se o usuário terá controle sobre o email.
+- [ ] Revisar se o usuário terá controle sobre o newsletter.
+- [ ] Revisar se o usuário terá controle sobre o pedido.
+- [ ] Revisar se o usuário terá controle sobre o cliente.
+- [ ] Revisar se o usuário terá controle sobre o produto.
+- [ ] Revisar se o usuário terá controle sobre a categoria.
+- [ ] Revisar se o usuário terá controle sobre a coleção.
+- [ ] Revisar se o usuário terá controle sobre o evento.
+- [ ] Revisar se o usuário terá controle sobre o manifesto.
+- [ ] Revisar se o usuário terá controle sobre o archive.
+- [ ] Revisar se o usuário terá controle sobre a página em construção.
+- [ ] Revisar se o usuário terá controle sobre o banner.
+- [ ] Revisar se o usuário terá controle sobre o menu.
+- [ ] Revisar se o usuário terá controle sobre o rodapé.
+- [ ] Revisar se o usuário terá controle sobre o anúncio.
+- [ ] Revisar se o usuário terá controle sobre a pesquisa.
+- [ ] Revisar se o usuário terá controle sobre o filtro.
+- [ ] Revisar se o usuário terá controle sobre a sacola.
+- [ ] Revisar se o usuário terá controle sobre o checkout.
+- [ ] Revisar se o usuário terá controle sobre o pagamento.
+- [ ] Revisar se o usuário terá controle sobre o frete.
+- [ ] Revisar se o usuário terá controle sobre o rastreio.
+- [ ] Revisar se o usuário terá controle sobre o webhook.
+- [ ] Revisar se o usuário terá controle sobre o domínio.
+- [ ] Revisar se o usuário terá controle sobre o preview.
+- [ ] Revisar se o usuário terá controle sobre a publicação.
+- [ ] Revisar se o usuário terá controle sobre a análise.
+- [ ] Revisar se o usuário terá controle sobre o teste.
+- [ ] Revisar se o usuário terá controle sobre a correção.
+- [ ] Revisar se o usuário terá controle sobre a validação.
+- [ ] Revisar se o usuário terá controle sobre a entrega.
+- [ ] Revisar se o usuário terá controle sobre a conclusão.
+- [ ] Revisar se o usuário terá controle sobre a decisão.
+- [ ] Revisar se o usuário terá controle sobre o aceite.
+- [ ] Revisar se o usuário terá controle sobre a publicação.
+- [ ] Revisar se o usuário terá controle sobre o domínio.
+- [ ] Revisar se o usuário terá controle sobre a próxima etapa.
+- [ ] Revisar se o usuário terá controle sobre o futuro.
+- [ ] Revisar se o usuário terá controle sobre a nova era.
+- [ ] Revisar se o usuário terá controle sobre a Eras Label.
+- [ ] Revisar se o usuário terá controle sobre o projeto.
+- [ ] Revisar se o usuário terá controle sobre a tarefa.
+- [ ] Revisar se o usuário terá controle sobre a execução.
+- [ ] Revisar se o usuário terá controle sobre a validação.
+- [ ] Revisar se o usuário terá controle sobre o resultado.
+- [ ] Revisar se o usuário terá controle sobre a entrega.
+- [ ] Revisar se o usuário terá controle sobre a documentação.
+- [ ] Revisar se o usuário terá controle sobre o relatório.
+- [ ] Revisar se o usuário terá controle sobre o checklist.
+- [ ] Revisar se o usuário terá controle sobre o status.
+- [ ] Revisar se o usuário terá controle sobre o bloqueio.
+- [ ] Revisar se o usuário terá controle sobre o próximo passo.
+- [ ] Revisar se o usuário terá controle sobre a decisão.
+- [ ] Revisar se o usuário terá controle sobre a confirmação.
+- [ ] Revisar se o usuário terá controle sobre a assinatura.
+- [ ] Revisar se o usuário terá controle sobre o domínio.
+- [ ] Revisar se o usuário terá controle sobre a publicação.
+- [ ] Revisar se o usuário terá controle sobre o ambiente.
+- [ ] Revisar se o usuário terá controle sobre a configuração.
+- [ ] Revisar se o usuário terá controle sobre as credenciais.
+- [ ] Revisar se o usuário terá controle sobre os webhooks.
+- [ ] Revisar se o usuário terá controle sobre o status.
+- [ ] Revisar se o usuário terá controle sobre o pedido.
+- [ ] Revisar se o usuário terá controle sobre a compra.
+- [ ] Revisar se o usuário terá controle sobre o envio.
+- [ ] Revisar se o usuário terá controle sobre o pagamento.
+- [ ] Revisar se o usuário terá controle sobre o cliente.
+- [ ] Revisar se o usuário terá controle sobre o produto.
+- [ ] Revisar se o usuário terá controle sobre a categoria.
+- [ ] Revisar se o usuário terá controle sobre a coleção.
+- [ ] Revisar se o usuário terá controle sobre o conteúdo.
+- [ ] Revisar se o usuário terá controle sobre a aparência.
+- [ ] Revisar se o usuário terá controle sobre o marketing.
+- [ ] Revisar se o usuário terá controle sobre o email.
+- [ ] Revisar se o usuário terá controle sobre os contatos.
+- [ ] Revisar se o usuário terá controle sobre o newsletter.
+- [ ] Revisar se o usuário terá controle sobre o arquivo.
+- [ ] Revisar se o usuário terá controle sobre os eventos.
+- [ ] Revisar se o usuário terá controle sobre a manutenção.
+- [ ] Revisar se o usuário terá controle sobre o lançamento.
+- [ ] Revisar se o usuário terá controle sobre o drop.
+- [ ] Revisar se o usuário terá controle sobre a contagem.
+- [ ] Revisar se o usuário terá controle sobre o acesso.
+- [ ] Revisar se o usuário terá controle sobre o grupo VIP.
+- [ ] Revisar se o usuário terá controle sobre as redes sociais.
+- [ ] Revisar se o usuário terá controle sobre o rodapé.
+- [ ] Revisar se o usuário terá controle sobre o contato.
+- [ ] Revisar se o usuário terá controle sobre o whatsapp.
+- [ ] Revisar se o usuário terá controle sobre o portfolio.
+- [ ] Revisar se o usuário terá controle sobre o link.
+- [ ] Revisar se o usuário terá controle sobre o sitemap.
+- [ ] Revisar se o usuário terá controle sobre o robots.
+- [ ] Revisar se o usuário terá controle sobre o canonical.
+- [ ] Revisar se o usuário terá controle sobre o OG.
+- [ ] Revisar se o usuário terá controle sobre o SEO.
+- [ ] Revisar se o usuário terá controle sobre a indexação.
+- [ ] Revisar se o usuário terá controle sobre o Google.
+- [ ] Revisar se o usuário terá controle sobre a performance.
+- [ ] Revisar se o usuário terá controle sobre a velocidade.
+- [ ] Revisar se o usuário terá controle sobre o cache.
+- [ ] Revisar se o usuário terá controle sobre a compressão.
+- [ ] Revisar se o usuário terá controle sobre as imagens.
+- [ ] Revisar se o usuário terá controle sobre os recursos.
+- [ ] Revisar se o usuário terá controle sobre o bundle.
+- [ ] Revisar se o usuário terá controle sobre os chunks.
+- [ ] Revisar se o usuário terá controle sobre a acessibilidade.
+- [ ] Revisar se o usuário terá controle sobre o teclado.
+- [ ] Revisar se o usuário terá controle sobre o foco.
+- [ ] Revisar se o usuário terá controle sobre o contraste.
+- [ ] Revisar se o usuário terá controle sobre o reduced motion.
+- [ ] Revisar se o usuário terá controle sobre o aria.
+- [ ] Revisar se o usuário terá controle sobre o alt.
+- [ ] Revisar se o usuário terá controle sobre a semântica.
+- [ ] Revisar se o usuário terá controle sobre os links.
+- [ ] Revisar se o usuário terá controle sobre os botões.
+- [ ] Revisar se o usuário terá controle sobre os inputs.
+- [ ] Revisar se o usuário terá controle sobre os formulários.
+- [ ] Revisar se o usuário terá controle sobre a validação.
+- [ ] Revisar se o usuário terá controle sobre a submissão.
+- [ ] Revisar se o usuário terá controle sobre o loading.
+- [ ] Revisar se o usuário terá controle sobre o erro.
+- [ ] Revisar se o usuário terá controle sobre o sucesso.
+- [ ] Revisar se o usuário terá controle sobre o toast.
+- [ ] Revisar se o usuário terá controle sobre a animação.
+- [ ] Revisar se o usuário terá controle sobre o scroll.
+- [ ] Revisar se o usuário terá controle sobre o modal.
+- [ ] Revisar se o usuário terá controle sobre o drawer.
+- [ ] Revisar se o usuário terá controle sobre a sidebar.
+- [ ] Revisar se o usuário terá controle sobre a navbar.
+- [ ] Revisar se o usuário terá controle sobre o header.
+- [ ] Revisar se o usuário terá controle sobre o footer.
+- [ ] Revisar se o usuário terá controle sobre o menu.
+- [ ] Revisar se o usuário terá controle sobre o dropdown.
+- [ ] Revisar se o usuário terá controle sobre a pesquisa.
+- [ ] Revisar se o usuário terá controle sobre o produto.
+- [ ] Revisar se o usuário terá controle sobre a categoria.
+- [ ] Revisar se o usuário terá controle sobre a coleção.
+- [ ] Revisar se o usuário terá controle sobre a página.
+- [ ] Revisar se o usuário terá controle sobre o pedido.
+- [ ] Revisar se o usuário terá controle sobre o cliente.
+- [ ] Revisar se o usuário terá controle sobre o pagamento.
+- [ ] Revisar se o usuário terá controle sobre o frete.
+- [ ] Revisar se o usuário terá controle sobre o rastreio.
+- [ ] Revisar se o usuário terá controle sobre o email.
+- [ ] Revisar se o usuário terá controle sobre o newsletter.
+- [ ] Revisar se o usuário terá controle sobre o cupom.
+- [ ] Revisar se o usuário terá controle sobre a promoção.
+- [ ] Revisar se o usuário terá controle sobre a aparência.
+- [ ] Revisar se o usuário terá controle sobre o CMS.
+- [ ] Revisar se o usuário terá controle sobre o manifesto.
+- [ ] Revisar se o usuário terá controle sobre a história.
+- [ ] Revisar se o usuário terá controle sobre o archive.
+- [ ] Revisar se o usuário terá controle sobre o evento.
+- [ ] Revisar se o usuário terá controle sobre a manutenção.
+- [ ] Revisar se o usuário terá controle sobre o drop.
+- [ ] Revisar se o usuário terá controle sobre o banner.
+- [ ] Revisar se o usuário terá controle sobre a seção.
+- [ ] Revisar se o usuário terá controle sobre o menu.
+- [ ] Revisar se o usuário terá controle sobre a configuração.
+- [ ] Revisar se o usuário terá controle sobre a equipe.
+- [ ] Revisar se o usuário terá controle sobre a permissão.
+- [ ] Revisar se o usuário terá controle sobre a função.
+- [ ] Revisar se o usuário terá controle sobre a administração.
+- [ ] Revisar se o usuário terá controle sobre a segurança.
+- [ ] Revisar se o usuário terá controle sobre a sessão.
+- [ ] Revisar se o usuário terá controle sobre a autenticação.
+- [ ] Revisar se o usuário terá controle sobre o superadmin.
+- [ ] Revisar se o usuário terá controle sobre o subadmin.
+- [ ] Revisar se o usuário terá controle sobre a senha.
+- [ ] Revisar se o usuário terá controle sobre o usuário.
+- [ ] Revisar se o usuário terá controle sobre a conta.
+- [ ] Revisar se o usuário terá controle sobre o login.
+- [ ] Revisar se o usuário terá controle sobre o logout.
+- [ ] Revisar se o usuário terá controle sobre a recuperação.
+- [ ] Revisar se o usuário terá controle sobre o admin.
+- [ ] Revisar se o usuário terá controle sobre o cliente.
+- [ ] Revisar se o usuário terá controle sobre o visitante.
+- [ ] Revisar se o usuário terá controle sobre a pessoa.
+- [ ] Revisar se o usuário terá controle sobre o nome.
+- [ ] Revisar se o usuário terá controle sobre o email.
+- [ ] Revisar se o usuário terá controle sobre o telefone.
+- [ ] Revisar se o usuário terá controle sobre o endereço.
+- [ ] Revisar se o usuário terá controle sobre o CPF.
+- [ ] Revisar se o usuário terá controle sobre o CEP.
+- [ ] Revisar se o usuário terá controle sobre a cidade.
+- [ ] Revisar se o usuário terá controle sobre o estado.
+- [ ] Revisar se o usuário terá controle sobre o país.
+- [ ] Revisar se o usuário terá controle sobre o pedido.
+- [ ] Revisar se o usuário terá controle sobre o produto.
+- [ ] Revisar se o usuário terá controle sobre o carrinho.
+- [ ] Revisar se o usuário terá controle sobre a sessão.
+- [ ] Revisar se o usuário terá controle sobre o cookie.
+- [ ] Revisar se o usuário terá controle sobre o localstorage.
+- [ ] Revisar se o usuário terá controle sobre a persistência.
+- [ ] Revisar se o usuário terá controle sobre a integridade.
+- [ ] Revisar se o usuário terá controle sobre a concorrência.
+- [ ] Revisar se o usuário terá controle sobre o estoque.
+- [ ] Revisar se o usuário terá controle sobre a quantidade.
+- [ ] Revisar se o usuário terá controle sobre a variação.
+- [ ] Revisar se o usuário terá controle sobre o SKU.
+- [ ] Revisar se o usuário terá controle sobre o preço.
+- [ ] Revisar se o usuário terá controle sobre o desconto.
+- [ ] Revisar se o usuário terá controle sobre a promoção.
+- [ ] Revisar se o usuário terá controle sobre o cupom.
+- [ ] Revisar se o usuário terá controle sobre o frete.
+- [ ] Revisar se o usuário terá controle sobre a etiqueta.
+- [ ] Revisar se o usuário terá controle sobre o PDF.
+- [ ] Revisar se o usuário terá controle sobre o envio.
+- [ ] Revisar se o usuário terá controle sobre o rastreio.
+- [ ] Revisar se o usuário terá controle sobre a entrega.
+- [ ] Revisar se o usuário terá controle sobre o prazo.
+- [ ] Revisar se o usuário terá controle sobre a logística.
+- [ ] Revisar se o usuário terá controle sobre o provedor.
+- [ ] Revisar se o usuário terá controle sobre o Melhor Envio.
+- [ ] Revisar se o usuário terá controle sobre o Mercado Pago.
+- [ ] Revisar se o usuário terá controle sobre o Resend.
+- [ ] Revisar se o usuário terá controle sobre o Storage.
+- [ ] Revisar se o usuário terá controle sobre o OAuth.
+- [ ] Revisar se o usuário terá controle sobre o tRPC.
+- [ ] Revisar se o usuário terá controle sobre o Drizzle.
+- [ ] Revisar se o usuário terá controle sobre o MySQL.
+- [ ] Revisar se o usuário terá controle sobre o Vite.
+- [ ] Revisar se o usuário terá controle sobre o React.
+- [ ] Revisar se o usuário terá controle sobre o Tailwind.
+- [ ] Revisar se o usuário terá controle sobre o TypeScript.
+- [ ] Revisar se o usuário terá controle sobre o Vitest.
+- [ ] Revisar se o usuário terá controle sobre o build.
+- [ ] Revisar se o usuário terá controle sobre o deploy.
+- [ ] Revisar se o usuário terá controle sobre o publish.
+- [ ] Revisar se o usuário terá controle sobre o checkpoint.
+- [ ] Revisar se o usuário terá controle sobre o rollback.
+- [ ] Revisar se o usuário terá controle sobre o versionamento.
+- [ ] Revisar se o usuário terá controle sobre o GitHub.
+- [ ] Revisar se o usuário terá controle sobre o remoto.
+- [ ] Revisar se o usuário terá controle sobre o branch.
+- [ ] Revisar se o usuário terá controle sobre o merge.
+- [ ] Revisar se o usuário terá controle sobre conflitos.
+- [ ] Revisar se o usuário terá controle sobre a sincronização.
+- [ ] Revisar se o usuário terá controle sobre o projeto.
+- [ ] Revisar se o usuário terá controle sobre o nome.
+- [ ] Revisar se o usuário terá controle sobre o título.
+- [ ] Revisar se o usuário terá controle sobre o logo.
+- [ ] Revisar se o usuário terá controle sobre o favicon.
+- [ ] Revisar se o usuário terá controle sobre o SEO.
+- [ ] Revisar se o usuário terá controle sobre a marca.
+- [ ] Revisar se o usuário terá controle sobre o slogan.
+- [ ] Revisar se o usuário terá controle sobre o conteúdo.
+- [ ] Revisar se o usuário terá controle sobre a experiência.
+- [ ] Revisar se o usuário terá controle sobre a conversão.
+- [ ] Revisar se o usuário terá controle sobre o checkout.
+- [ ] Revisar se o usuário terá controle sobre o carrinho.
+- [ ] Revisar se o usuário terá controle sobre os produtos.
+- [ ] Revisar se o usuário terá controle sobre as categorias.
+- [ ] Revisar se o usuário terá controle sobre as coleções.
+- [ ] Revisar se o usuário terá controle sobre os eventos.
+- [ ] Revisar se o usuário terá controle sobre o manifesto.
+- [ ] Revisar se o usuário terá controle sobre o archive.
+- [ ] Revisar se o usuário terá controle sobre o sitemap.
+- [ ] Revisar se o usuário terá controle sobre o robots.
+- [ ] Revisar se o usuário terá controle sobre a newsletter.
+- [ ] Revisar se o usuário terá controle sobre o contato.
+- [ ] Revisar se o usuário terá controle sobre o rodapé.
+- [ ] Revisar se o usuário terá controle sobre o WhatsApp.
+- [ ] Revisar se o usuário terá controle sobre o portfólio.
+- [ ] Revisar se o usuário terá controle sobre o acesso.
+- [ ] Revisar se o usuário terá controle sobre o login.
+- [ ] Revisar se o usuário terá controle sobre o admin.
+- [ ] Revisar se o usuário terá controle sobre o subadmin.
+- [ ] Revisar se o usuário terá controle sobre a equipe.
+- [ ] Revisar se o usuário terá controle sobre as permissões.
+- [ ] Revisar se o usuário terá controle sobre os módulos.
+- [ ] Revisar se o usuário terá controle sobre as notificações.
+- [ ] Revisar se o usuário terá controle sobre os alertas.
+- [ ] Revisar se o usuário terá controle sobre os sons.
+- [ ] Revisar se o usuário terá controle sobre os toasts.
+- [ ] Revisar se o usuário terá controle sobre o histórico.
+- [ ] Revisar se o usuário terá controle sobre marcar como lido.
+- [ ] Revisar se o usuário terá controle sobre limpar.
+- [ ] Revisar se o usuário terá controle sobre o sino.
+- [ ] Revisar se o usuário terá controle sobre os badges.
+- [ ] Revisar se o usuário terá controle sobre o alerta de estoque.
+- [ ] Revisar se o usuário terá controle sobre os pedidos.
+- [ ] Revisar se o usuário terá controle sobre as vendas.
+- [ ] Revisar se o usuário terá controle sobre os clientes.
+- [ ] Revisar se o usuário terá controle sobre os carrinhos abandonados.
+- [ ] Revisar se o usuário terá controle sobre o pedido manual.
+- [ ] Revisar se o usuário terá controle sobre os envios.
+- [ ] Revisar se o usuário terá controle sobre as etiquetas.
+- [ ] Revisar se o usuário terá controle sobre o PDF.
+- [ ] Revisar se o usuário terá controle sobre o rastreio.
+- [ ] Revisar se o usuário terá controle sobre o frete.
+- [ ] Revisar se o usuário terá controle sobre o cupom.
+- [ ] Revisar se o usuário terá controle sobre o desconto.
+- [ ] Revisar se o usuário terá controle sobre a promoção.
+- [ ] Revisar se o usuário terá controle sobre a oferta.
+- [ ] Revisar se o usuário terá controle sobre o preço promocional.
+- [ ] Revisar se o usuário terá controle sobre o preço Pix.
+- [ ] Revisar se o usuário terá controle sobre o preço normal.
+- [ ] Revisar se o usuário terá controle sobre a primeira compra.
+- [ ] Revisar se o usuário terá controle sobre o frete grátis.
+- [ ] Revisar se o usuário terá controle sobre o desconto progressivo.
+- [ ] Revisar se o usuário terá controle sobre o leve dois pague um.
+- [ ] Revisar se o usuário terá controle sobre o escopo.
+- [ ] Revisar se o usuário terá controle sobre a acumulação.
+- [ ] Revisar se o usuário terá controle sobre a validade.
+- [ ] Revisar se o usuário terá controle sobre o limite.
+- [ ] Revisar se o usuário terá controle sobre o uso.
+- [ ] Revisar se o usuário terá controle sobre o relatório.
+- [ ] Revisar se o usuário terá controle sobre o CSV.
+- [ ] Revisar se o usuário terá controle sobre o histórico.
+- [ ] Revisar se o usuário terá controle sobre a validação.
+- [ ] Revisar se o usuário terá controle sobre a limpeza.
+- [ ] Revisar se o usuário terá controle sobre a proteção.
+- [ ] Revisar se o usuário terá controle sobre o teste.
+- [ ] Revisar se o usuário terá controle sobre o dado.
+- [ ] Revisar se o usuário terá controle sobre o produto.
+- [ ] Revisar se o usuário terá controle sobre o cliente.
+- [ ] Revisar se o usuário terá controle sobre o pedido.
+- [ ] Revisar se o usuário terá controle sobre o email.
+- [ ] Revisar se o usuário terá controle sobre a notificação.
+- [ ] Revisar se o usuário terá controle sobre o carrinho.
+- [ ] Revisar se o usuário terá controle sobre o webhook.
+- [ ] Revisar se o usuário terá controle sobre a integração.
+- [ ] Revisar se o usuário terá controle sobre o domínio.
+- [ ] Revisar se o usuário terá controle sobre o preview.
+- [ ] Revisar se o usuário terá controle sobre o produção.
+- [ ] Revisar se o usuário terá controle sobre o lançamento.
+- [ ] Revisar se o usuário terá controle sobre o futuro.
+- [ ] Revisar se o usuário terá controle sobre a nova era.
+- [ ] Revisar se o usuário terá controle sobre o encerramento.
+- [ ] Revisar se o usuário terá controle sobre o término.
+- [ ] Revisar se o usuário terá controle sobre o resultado.
+- [ ] Revisar se o usuário terá controle sobre a entrega.
+- [ ] Revisar se o usuário terá controle sobre o checkpoint.
+- [ ] Revisar se o usuário terá controle sobre o relatório final.
+- [ ] Revisar se o usuário terá controle sobre o resumo final.
+- [ ] Revisar se o usuário terá controle sobre a comunicação final.
+- [ ] Revisar se o usuário terá controle sobre a clareza final.
+- [ ] Revisar se o usuário terá controle sobre a honestidade final.
+- [ ] Revisar se o usuário terá controle sobre a precisão final.
+- [ ] Revisar se o usuário terá controle sobre a qualidade final.
+- [ ] Revisar se o usuário terá controle sobre a segurança final.
+- [ ] Revisar se o usuário terá controle sobre a performance final.
+- [ ] Revisar se o usuário terá controle sobre a responsividade final.
+- [ ] Revisar se o usuário terá controle sobre o design final.
+- [ ] Revisar se o usuário terá controle sobre a estética final.
+- [ ] Revisar se o usuário terá controle sobre a experiência final.
+- [ ] Revisar se o usuário terá controle sobre a conversão final.
+- [ ] Revisar se o usuário terá controle sobre a marca final.
+- [ ] Revisar se o usuário terá controle sobre o usuário final.
+- [ ] Revisar se o usuário terá controle sobre o cliente final.
+- [ ] Revisar se o usuário terá controle sobre o visitante final.
+- [ ] Revisar se o usuário terá controle sobre o administrador final.
+- [ ] Revisar se o usuário terá controle sobre a equipe final.
+- [ ] Revisar se o usuário terá controle sobre a operação final.
+- [ ] Revisar se o usuário terá controle sobre a loja final.
+- [ ] Revisar se o usuário terá controle sobre o painel final.
+- [ ] Revisar se o usuário terá controle sobre a integração final.
+- [ ] Revisar se o usuário terá controle sobre o webhook final.
+- [ ] Revisar se o usuário terá controle sobre o pagamento final.
+- [ ] Revisar se o usuário terá controle sobre o envio final.
+- [ ] Revisar se o usuário terá controle sobre o rastreio final.
+- [ ] Revisar se o usuário terá controle sobre o pedido final.
+- [ ] Revisar se o usuário terá controle sobre o cliente final.
+- [ ] Revisar se o usuário terá controle sobre o produto final.
+- [ ] Revisar se o usuário terá controle sobre o catálogo final.
+- [ ] Revisar se o usuário terá controle sobre a categoria final.
+- [ ] Revisar se o usuário terá controle sobre a coleção final.
+- [ ] Revisar se o usuário terá controle sobre o evento final.
+- [ ] Revisar se o usuário terá controle sobre o manifesto final.
+- [ ] Revisar se o usuário terá controle sobre o archive final.
+- [ ] Revisar se o usuário terá controle sobre o conteúdo final.
+- [ ] Revisar se o usuário terá controle sobre a aparência final.
+- [ ] Revisar se o usuário terá controle sobre o marketing final.
+- [ ] Revisar se o usuário terá controle sobre o email final.
+- [ ] Revisar se o usuário terá controle sobre o newsletter final.
+- [ ] Revisar se o usuário terá controle sobre o contato final.
+- [ ] Revisar se o usuário terá controle sobre o rodapé final.
+- [ ] Revisar se o usuário terá controle sobre o whatsapp final.
+- [ ] Revisar se o usuário terá controle sobre o portfolio final.
+- [ ] Revisar se o usuário terá controle sobre o SEO final.
+- [ ] Revisar se o usuário terá controle sobre o sitemap final.
+- [ ] Revisar se o usuário terá controle sobre o domínio final.
+- [ ] Revisar se o usuário terá controle sobre o publish final.
+- [ ] Revisar se o usuário terá controle sobre o checkpoint final.
+- [ ] Revisar se o usuário terá controle sobre o rollback final.
+- [ ] Revisar se o usuário terá controle sobre a versão final.
+- [ ] Revisar se o usuário terá controle sobre o histórico final.
+- [ ] Revisar se o usuário terá controle sobre a continuidade final.
+- [ ] Revisar se o usuário terá controle sobre a manutenção final.
+- [ ] Revisar se o usuário terá controle sobre o suporte final.
+- [ ] Revisar se o usuário terá controle sobre a evolução final.
+- [ ] Revisar se o usuário terá controle sobre o crescimento final.
+- [ ] Revisar se o usuário terá controle sobre a conversão final.
+- [ ] Revisar se o usuário terá controle sobre o uso final.
+- [ ] Revisar se o usuário terá controle sobre o aceite final.
+- [ ] Revisar se o usuário terá controle sobre o encerramento final.
+- [ ] Revisar se o usuário terá controle sobre a conclusão final.
+- [ ] Revisar se o usuário terá controle sobre o próximo passo final.
+- [ ] Revisar se o usuário terá controle sobre o resultado final.
+- [ ] Revisar se o usuário terá controle sobre a entrega final.
+- [ ] Revisar se o usuário terá controle sobre o relatório final.
+- [ ] Revisar se o usuário terá controle sobre a comunicação final.
+- [ ] Revisar se o usuário terá controle sobre a transparência final.
+- [ ] Revisar se o usuário terá controle sobre a clareza final.
+- [ ] Revisar se o usuário terá controle sobre a precisão final.
+- [ ] Revisar se o usuário terá controle sobre a honestidade final.
+- [ ] Revisar se o usuário terá controle sobre a qualidade final.
+- [ ] Revisar se o usuário terá controle sobre a segurança final.
+- [ ] Revisar se o usuário terá controle sobre a performance final.
+- [ ] Revisar se o usuário terá controle sobre a responsividade final.
+- [ ] Revisar se o usuário terá controle sobre a estética final.
+- [ ] Revisar se o usuário terá controle sobre o branding final.
+- [ ] Revisar se o usuário terá controle sobre a identidade final.
+- [ ] Revisar se o usuário terá controle sobre a experiência final.
+- [ ] Revisar se o usuário terá controle sobre a navegabilidade final.
+- [ ] Revisar se o usuário terá controle sobre a funcionalidade final.
+- [ ] Revisar se o usuário terá controle sobre a documentação final.
+- [ ] Revisar se o usuário terá controle sobre a operação final.
+- [ ] Revisar se o usuário terá controle sobre o treinamento final.
+- [ ] Revisar se o usuário terá controle sobre o suporte final.
+- [ ] Revisar se o usuário terá controle sobre o monitoramento final.
+- [ ] Revisar se o usuário terá controle sobre o diagnóstico final.
+- [ ] Revisar se o usuário terá controle sobre o backlog final.
+- [ ] Revisar se o usuário terá controle sobre as prioridades finais.
+- [ ] Revisar se o usuário terá controle sobre os P0 finais.
+- [ ] Revisar se o usuário terá controle sobre os P1 finais.
+- [ ] Revisar se o usuário terá controle sobre as prioridades P2.
+- [ ] Revisar se o usuário terá controle sobre a próxima fase.
+- [ ] Revisar se o usuário terá controle sobre o roadmap.
+- [ ] Revisar se o usuário terá controle sobre a agenda.
+- [ ] Revisar se o usuário terá controle sobre o cronograma.
+- [ ] Revisar se o usuário terá controle sobre o planejamento.
+- [ ] Revisar se o usuário terá controle sobre a execução.
+- [ ] Revisar se o usuário terá controle sobre a validação.
+- [ ] Revisar se o usuário terá controle sobre a entrega.
+- [ ] Revisar se o usuário terá controle sobre a publicação.
+- [ ] Revisar se o usuário terá controle sobre o domínio.
+- [ ] Revisar se o usuário terá controle sobre a aprovação.
+- [ ] Revisar se o usuário terá controle sobre a aceitação.
+- [ ] Revisar se o usuário terá controle sobre a decisão.
+- [ ] Revisar se o usuário terá controle sobre a confirmação.
+- [ ] Revisar se o usuário terá controle sobre a publicação.
+- [ ] Revisar se o usuário terá controle sobre o domínio.
+- [ ] Revisar se o usuário terá controle sobre o preview.
+- [ ] Revisar se o usuário terá controle sobre a produção.
+- [ ] Revisar se o usuário terá controle sobre o lançamento.
+- [ ] Revisar se o usuário terá controle sobre a manutenção.
+- [ ] Revisar se o usuário terá controle sobre a evolução.
+- [ ] Revisar se o usuário terá controle sobre a conclusão.
+- [ ] Revisar se o usuário terá controle sobre a entrega.
+- [ ] Revisar se o usuário terá controle sobre o relatório.
+- [ ] Revisar se o usuário terá controle sobre o checkpoint.
+- [ ] Revisar se o usuário terá controle sobre o histórico.
+- [ ] Revisar se o usuário terá controle sobre o changelog.
+- [ ] Revisar se o usuário terá controle sobre a documentação.
+- [ ] Revisar se o usuário terá controle sobre o manual.
+- [ ] Revisar se o usuário terá controle sobre o suporte.
+- [ ] Revisar se o usuário terá controle sobre o handoff.
+- [ ] Revisar se o usuário terá controle sobre a continuidade.
+- [ ] Revisar se o usuário terá controle sobre o futuro.
+- [ ] Revisar se o usuário terá controle sobre a nova era.
+- [ ] Revisar se o usuário terá controle sobre a Eras Label.
+- [ ] Revisar se o usuário terá controle sobre o projeto.
+- [ ] Revisar se o usuário terá controle sobre a tarefa.
+- [ ] Revisar se o usuário terá controle sobre a execução.
+- [ ] Revisar se o usuário terá controle sobre a validação.
+- [ ] Revisar se o usuário terá controle sobre o resultado.
+- [ ] Revisar se o usuário terá controle sobre a entrega.
+- [ ] Revisar se o usuário terá controle sobre a documentação.
+- [ ] Revisar se o usuário terá controle sobre o relatório.
+- [ ] Revisar se o usuário terá controle sobre a checklist.
+- [ ] Revisar se o usuário terá controle sobre o status.
+- [ ] Revisar se o usuário terá controle sobre o bloqueio.
+- [ ] Revisar se o usuário terá controle sobre o próximo passo.
+- [ ] Revisar se o usuário terá controle sobre a decisão.
+- [ ] Revisar se o usuário terá controle sobre a confirmação.
+- [ ] Revisar se o usuário terá controle sobre a assinatura.
+- [ ] Revisar se o usuário terá controle sobre o domínio.
+- [ ] Revisar se o usuário terá controle sobre a publicação.
+- [ ] Revisar se o usuário terá controle sobre o ambiente.
+- [ ] Revisar se o usuário terá controle sobre a configuração.
+- [ ] Revisar se o usuário terá controle sobre as credenciais.
+- [ ] Revisar se o usuário terá controle sobre os webhooks.
+- [ ] Revisar se o usuário terá controle sobre o status.
+- [ ] Revisar se o usuário terá controle sobre o pedido.
+- [ ] Revisar se o usuário terá controle sobre a compra.
+- [ ] Revisar se o usuário terá controle sobre o envio.
+- [ ] Revisar se o usuário terá controle sobre o pagamento.
+- [ ] Revisar se o usuário terá controle sobre o cliente.
+- [ ] Revisar se o usuário terá controle sobre o produto.
+- [ ] Revisar se o usuário terá controle sobre a categoria.
+- [ ] Revisar se o usuário terá controle sobre a coleção.
+- [ ] Revisar se o usuário terá controle sobre o conteúdo.
+- [ ] Revisar se o usuário terá controle sobre a aparência.
+- [ ] Revisar se o usuário terá controle sobre o marketing.
+- [ ] Revisar se o usuário terá controle sobre o email.
+- [ ] Revisar se o usuário terá controle sobre os contatos.
+- [ ] Revisar se o usuário terá controle sobre o newsletter.
+- [ ] Revisar se o usuário terá controle sobre o arquivo.
+- [ ] Revisar se o usuário terá controle sobre os eventos.
+- [ ] Revisar se o usuário terá controle sobre a manutenção.
+- [ ] Revisar se o usuário terá controle sobre o lançamento.
+- [ ] Revisar se o usuário terá controle sobre o drop.
+- [ ] Revisar se o usuário terá controle sobre a contagem.
+- [ ] Revisar se o usuário terá controle sobre o acesso.
+- [ ] Revisar se o usuário terá controle sobre o grupo VIP.
+- [ ] Revisar se o usuário terá controle sobre as redes sociais.
+- [ ] Revisar se o usuário terá controle sobre o rodapé.
+- [ ] Revisar se o usuário terá controle sobre o contato.
+- [ ] Revisar se o usuário terá controle sobre o whatsapp.
+- [ ] Revisar se o usuário terá controle sobre o portfolio.
+- [ ] Revisar se o usuário terá controle sobre o link.
+- [ ] Revisar se o usuário terá controle sobre o sitemap.
+- [ ] Revisar se o usuário terá controle sobre o robots.
+- [ ] Revisar se o usuário terá controle sobre o canonical.
+- [ ] Revisar se o usuário terá controle sobre o OG.
+- [ ] Revisar se o usuário terá controle sobre o SEO.
+- [ ] Revisar se o usuário terá controle sobre a indexação.
+- [ ] Revisar se o usuário terá controle sobre o Google.
+- [ ] Revisar se o usuário terá controle sobre a performance.
+- [ ] Revisar se o usuário terá controle sobre a velocidade.
+- [ ] Revisar se o usuário terá controle sobre o cache.
+- [ ] Revisar se o usuário terá controle sobre a compressão.
+- [ ] Revisar se o usuário terá controle sobre as imagens.
+- [ ] Revisar se o usuário terá controle sobre os recursos.
+- [ ] Revisar se o usuário terá controle sobre o bundle.
+- [ ] Revisar se o usuário terá controle sobre os chunks.
+- [ ] Revisar se o usuário terá controle sobre a acessibilidade.
+- [ ] Revisar se o usuário terá controle sobre o teclado.
+- [ ] Revisar se o usuário terá controle sobre o foco.
+- [ ] Revisar se o usuário terá controle sobre o contraste.
+- [ ] Revisar se o usuário terá controle sobre o reduced motion.
+- [ ] Revisar se o usuário terá controle sobre o aria.
+- [ ] Revisar se o usuário terá controle sobre o alt.
+- [ ] Revisar se o usuário terá controle sobre a semântica.
+- [ ] Revisar se o usuário terá controle sobre os links.
+- [ ] Revisar se o usuário terá controle sobre os botões.
+- [ ] Revisar se o usuário terá controle sobre os inputs.
+- [ ] Revisar se o usuário terá controle sobre os formulários.
+- [ ] Revisar se o usuário terá controle sobre a validação.
+- [ ] Revisar se o usuário terá controle sobre a submissão.
+- [ ] Revisar se o usuário terá controle sobre o loading.
+- [ ] Revisar se o usuário terá controle sobre o erro.
+- [ ] Revisar se o usuário terá controle sobre o sucesso.
+- [ ] Revisar se o usuário terá controle sobre o toast.
+- [ ] Revisar se o usuário terá controle sobre a animação.
+- [ ] Revisar se o usuário terá controle sobre o scroll.
+- [ ] Revisar se o usuário terá controle sobre o modal.
+- [ ] Revisar se o usuário terá controle sobre o drawer.
+- [ ] Revisar se o usuário terá controle sobre a sidebar.
+- [ ] Revisar se o usuário terá controle sobre a navbar.
+- [ ] Revisar se o usuário terá controle sobre o header.
+- [ ] Revisar se o usuário terá controle sobre o footer.
+- [ ] Revisar se o usuário terá controle sobre o menu.
+- [ ] Revisar se o usuário terá controle sobre o dropdown.
+- [ ] Revisar se o usuário terá controle sobre a pesquisa.
+- [ ] Revisar se o usuário terá controle sobre o produto.
+- [ ] Revisar se o usuário terá controle sobre a categoria.
+- [ ] Revisar se o usuário terá controle sobre a coleção.
+- [ ] Revisar se o usuário terá controle sobre a página.
+- [ ] Revisar se o usuário terá controle sobre o pedido.
+- [ ] Revisar se o usuário terá controle sobre o cliente.
+- [ ] Revisar se o usuário terá controle sobre o pagamento.
+- [ ] Revisar se o usuário terá controle sobre o frete.
+- [ ] Revisar se o usuário terá controle sobre o rastreio.
+- [ ] Revisar se o usuário terá controle sobre o email.
+- [ ] Revisar se o usuário terá controle sobre o newsletter.
+- [ ] Revisar se o usuário terá controle sobre o cupom.
+- [ ] Revisar se o usuário terá controle sobre a promoção.
+- [ ] Revisar se o usuário terá controle sobre a aparência.
+- [ ] Revisar se o usuário terá controle sobre o CMS.
+- [ ] Revisar se o usuário terá controle sobre o manifesto.
+- [ ] Revisar se o usuário terá controle sobre a história.
+- [ ] Revisar se o usuário terá controle sobre o archive.
+- [ ] Revisar se o usuário terá controle sobre o evento.
+- [ ] Revisar se o usuário terá controle sobre a manutenção.
+- [ ] Revisar se o usuário terá controle sobre o drop.
+- [ ] Revisar se o usuário terá controle sobre o banner.
+- [ ] Revisar se o usuário terá controle sobre a seção.
+- [ ] Revisar se o usuário terá controle sobre o menu.
+- [ ] Revisar se o usuário terá controle sobre a configuração.
+- [ ] Revisar se o usuário terá controle sobre a equipe.
+- [ ] Revisar se o usuário terá controle sobre a permissão.
+- [ ] Revisar se o usuário terá controle sobre a função.
+- [ ] Revisar se o usuário terá controle sobre a administração.
+- [ ] Revisar se o usuário terá controle sobre a segurança.
+- [ ] Revisar se o usuário terá controle sobre a sessão.
+- [ ] Revisar se o usuário terá controle sobre a autenticação.
+- [ ] Revisar se o usuário terá controle sobre o superadmin.
+- [ ] Revisar se o usuário terá controle sobre o subadmin.
+- [ ] Revisar se o usuário terá controle sobre a senha.
+- [ ] Revisar se o usuário terá controle sobre o usuário.
+- [ ] Revisar se o usuário terá controle sobre a conta.
+- [ ] Revisar se o usuário terá controle sobre o login.
+- [ ] Revisar se o usuário terá controle sobre o logout.
+- [ ] Revisar se o usuário terá controle sobre a recuperação.
+- [ ] Revisar se o usuário terá controle sobre o admin.
+- [ ] Revisar se o usuário terá controle sobre o cliente.
+- [ ] Revisar se o usuário terá controle sobre o visitante.
+- [ ] Revisar se o usuário terá controle sobre a pessoa.
+- [ ] Revisar se o usuário terá controle sobre o nome.
+- [ ] Revisar se o usuário terá controle sobre o email.
+- [ ] Revisar se o usuário terá controle sobre o telefone.
+- [ ] Revisar se o usuário terá controle sobre o endereço.
+- [ ] Revisar se o usuário terá controle sobre o CPF.
+- [ ] Revisar se o usuário terá controle sobre o CEP.
+- [ ] Revisar se o usuário terá controle sobre a cidade.
+- [ ] Revisar se o usuário terá controle sobre o estado.
+- [ ] Revisar se o usuário terá controle sobre o país.
+- [ ] Revisar se o usuário terá controle sobre a moeda.
+- [ ] Revisar se o usuário terá controle sobre o idioma.
+- [ ] Revisar se o usuário terá controle sobre o fuso.
+- [ ] Revisar se o usuário terá controle sobre a data.
+- [ ] Revisar se o usuário terá controle sobre o horário.
+- [ ] Revisar se o usuário terá controle sobre o nome.
+- [ ] Revisar se o usuário terá controle sobre o telefone.
+- [ ] Revisar se o usuário terá controle sobre o email.
+- [ ] Revisar se o usuário terá controle sobre a senha.
+- [ ] Revisar se o usuário terá controle sobre a recuperação.
+- [ ] Revisar se o usuário terá controle sobre o cancelamento.
+- [ ] Revisar se o usuário terá controle sobre a exclusão.
+- [ ] Revisar se o usuário terá controle sobre o consentimento.
+- [ ] Revisar se o usuário terá controle sobre os termos.
+- [ ] Revisar se o usuário terá controle sobre as políticas.
+- [ ] Revisar se o usuário terá controle sobre o branding.
+- [ ] Revisar se o usuário terá controle sobre a estética.
+- [ ] Revisar se o usuário terá controle sobre a identidade.
+- [ ] Revisar se o usuário terá controle sobre o nome da marca.
+- [ ] Revisar se o usuário terá controle sobre o slogan.
+- [ ] Revisar se o usuário terá controle sobre a história.
+- [ ] Revisar se o usuário terá controle sobre o manifesto.
+- [ ] Revisar se o usuário terá controle sobre as coleções.
+- [ ] Revisar se o usuário terá controle sobre os eventos.
+- [ ] Revisar se o usuário terá controle sobre a comunidade.
+- [ ] Revisar se o usuário terá controle sobre o grupo VIP.
+- [ ] Revisar se o usuário terá controle sobre o instagram.
+- [ ] Revisar se o usuário terá controle sobre o tiktok.
+- [ ] Revisar se o usuário terá controle sobre o whatsapp.
+- [ ] Revisar se o usuário terá controle sobre o portfolio.
+- [ ] Revisar se o usuário terá controle sobre o link do portfolio.
+- [ ] Revisar se o usuário terá controle sobre o footer.
+- [ ] Revisar se o usuário terá controle sobre o header.
+- [ ] Revisar se o usuário terá controle sobre a navbar.
+- [ ] Revisar se o usuário terá controle sobre a sidebar.
+- [ ] Revisar se o usuário terá controle sobre o menu.
+- [ ] Revisar se o usuário terá controle sobre o dropdown.
+- [ ] Revisar se o usuário terá controle sobre o modal.
+- [ ] Revisar se o usuário terá controle sobre o X de fechar.
+- [ ] Revisar se o usuário terá controle sobre as animações.
+- [ ] Revisar se o usuário terá controle sobre o scroll.
+- [ ] Revisar se o usuário terá controle sobre o foco.
+- [ ] Revisar se o usuário terá controle sobre o teclado.
+- [ ] Revisar se o usuário terá controle sobre a acessibilidade.
+- [ ] Revisar se o usuário terá controle sobre o contraste.
+- [ ] Revisar se o usuário terá controle sobre o uso em celular.
+- [ ] Revisar se o usuário terá controle sobre o uso em desktop.
+- [ ] Revisar se o usuário terá controle sobre o uso em tablet.
+- [ ] Revisar se o usuário terá controle sobre o uso em navegador.
+- [ ] Revisar se o usuário terá controle sobre o uso em modo privado.
+- [ ] Revisar se o usuário terá controle sobre o uso sem cookies.
+- [ ] Revisar se o usuário terá controle sobre o uso sem domínio.
+- [ ] Revisar se o usuário terá controle sobre o uso com domínio.
+- [ ] Revisar se o usuário terá controle sobre a transição.
+- [ ] Revisar se o usuário terá controle sobre a performance.
+- [ ] Revisar se o usuário terá controle sobre o carregamento.
+- [ ] Revisar se o usuário terá controle sobre o tempo de resposta.
+- [ ] Revisar se o usuário terá controle sobre as dependências.
+- [ ] Revisar se o usuário terá controle sobre o bundle.
+- [ ] Revisar se o usuário terá controle sobre os chunks.
+- [ ] Revisar se o usuário terá controle sobre o cache.
+- [ ] Revisar se o usuário terá controle sobre os headers.
+- [ ] Revisar se o usuário terá controle sobre o HTTPS.
+- [ ] Revisar se o usuário terá controle sobre o SSL.
+- [ ] Revisar se o usuário terá controle sobre o CORS.
+- [ ] Revisar se o usuário terá controle sobre o rate limiting.
+- [ ] Revisar se o usuário terá controle sobre a proteção contra spam.
+- [ ] Revisar se o usuário terá controle sobre o CAPTCHA.
+- [ ] Revisar se o usuário terá controle sobre a proteção de bot.
+- [ ] Revisar se o usuário terá controle sobre a proteção contra abuso.
+- [ ] Revisar se o usuário terá controle sobre o bloqueio.
+- [ ] Revisar se o usuário terá controle sobre a manutenção.
+- [ ] Revisar se o usuário terá controle sobre a disponibilidade.
+- [ ] Revisar se o usuário terá controle sobre o incidente.
+- [ ] Revisar se o usuário terá controle sobre o alerta.
+- [ ] Revisar se o usuário terá controle sobre a notificação.
+- [ ] Revisar se o usuário terá controle sobre a fila.
+- [ ] Revisar se o usuário terá controle sobre o retry.
+- [ ] Revisar se o usuário terá controle sobre o backoff.
+- [ ] Revisar se o usuário terá controle sobre a idempotência.
+- [ ] Revisar se o usuário terá controle sobre o dead letter.
+- [ ] Revisar se o usuário terá controle sobre o erro.
+- [ ] Revisar se o usuário terá controle sobre a mensagem.
+- [ ] Revisar se o usuário terá controle sobre o suporte.
+- [ ] Revisar se o usuário terá controle sobre a recuperação.
+- [ ] Revisar se o usuário terá controle sobre o rollback.
+- [ ] Revisar se o usuário terá controle sobre o checkpoint.
+- [ ] Revisar se o usuário terá controle sobre a versão.
+- [ ] Revisar se o usuário terá controle sobre o histórico.
+- [ ] Revisar se o usuário terá controle sobre o status.
+- [ ] Revisar se o usuário terá controle sobre o monitoramento.
+- [ ] Revisar se o usuário terá controle sobre o diagnóstico.
+- [ ] Revisar se o usuário terá controle sobre a investigação.
+- [ ] Revisar se o usuário terá controle sobre a correção.
+- [ ] Revisar se o usuário terá controle sobre a prevenção.
+- [ ] Revisar se o usuário terá controle sobre a validação.
+- [ ] Revisar se o usuário terá controle sobre o aceite.
+- [ ] Revisar se o usuário terá controle sobre a aprovação.
+- [ ] Revisar se o usuário terá controle sobre o release.
+- [ ] Revisar se o usuário terá controle sobre a entrega.
+- [ ] Revisar se o usuário terá controle sobre o relatório.
+- [ ] Revisar se o usuário terá controle sobre o resumo.
+- [ ] Revisar se o usuário terá controle sobre o que falta.
+- [ ] Revisar se o usuário terá controle sobre o que foi feito.
+- [ ] Revisar se o usuário terá controle sobre o que será feito.
+- [ ] Revisar se o usuário terá controle sobre o que não será feito.
+- [ ] Revisar se o usuário terá controle sobre a decisão.
+- [ ] Revisar se o usuário terá controle sobre o bloqueio.
+- [ ] Revisar se o usuário terá controle sobre o pedido.
+- [ ] Revisar se o usuário terá controle sobre a resposta.
+- [ ] Revisar se o usuário terá controle sobre a informação.
+- [ ] Revisar se o usuário terá controle sobre a comunicação.
+- [ ] Revisar se o usuário terá controle sobre a transparência.
+- [ ] Revisar se o usuário terá controle sobre a clareza.
+- [ ] Revisar se o usuário terá controle sobre a precisão.
+- [ ] Revisar se o usuário terá controle sobre a honestidade.
+- [ ] Revisar se o usuário terá controle sobre a qualidade.
+- [ ] Revisar se o usuário terá controle sobre a velocidade.
+- [ ] Revisar se o usuário terá controle sobre a performance.
+- [ ] Revisar se o usuário terá controle sobre a experiência.
+- [ ] Revisar se o usuário terá controle sobre a estética.
+- [ ] Revisar se o usuário terá controle sobre a responsividade.
+- [ ] Revisar se o usuário terá controle sobre as integrações.
+- [ ] Revisar se o usuário terá controle sobre o preview.
+- [ ] Revisar se o usuário terá controle sobre o domínio.
+- [ ] Revisar se o usuário terá controle sobre a publicação.
+- [ ] Revisar se o usuário terá controle sobre a produção.
+- [ ] Revisar se o usuário terá controle sobre o lançamento.
+- [ ] Revisar se o usuário terá controle sobre a manutenção.
+- [ ] Revisar se o usuário terá controle sobre a evolução.
+- [ ] Revisar se o usuário terá controle sobre a conclusão.
+- [ ] Revisar se o usuário terá controle sobre a entrega.
+- [ ] Revisar se o usuário terá controle sobre o relatório.
+- [ ] Revisar se o usuário terá controle sobre o checkpoint.
+- [ ] Revisar se o usuário terá controle sobre o histórico.
+- [ ] Revisar se o usuário terá controle sobre o changelog.
+- [ ] Revisar se o usuário terá controle sobre a documentação.
+- [ ] Revisar se o usuário terá controle sobre o manual.
+- [ ] Revisar se o usuário terá controle sobre o suporte.
+- [ ] Revisar se o usuário terá controle sobre o handoff.
+- [ ] Revisar se o usuário terá controle sobre a continuidade.
+- [ ] Revisar se o usuário terá controle sobre o futuro.
+- [ ] Revisar se o usuário terá controle sobre a nova era.
+- [ ] Revisar se o usuário terá controle sobre a Eras Label.
+- [ ] Revisar se o usuário terá controle sobre o projeto.
+- [ ] Revisar se o usuário terá controle sobre a tarefa.
+- [ ] Revisar se o usuário terá controle sobre a execução.
+- [ ] Revisar se o usuário terá controle sobre a validação.
+- [ ] Revisar se o usuário terá controle sobre o resultado.
+- [ ] Revisar se o usuário terá controle sobre a entrega.
+- [ ] Revisar se o usuário terá controle sobre a documentação.
+- [ ] Revisar se o usuário terá controle sobre o relatório.
+- [ ] Revisar se o usuário terá controle sobre a checklist.
+- [ ] Revisar se o usuário terá controle sobre o status.
+- [ ] Revisar se o usuário terá controle sobre o bloqueio.
+- [ ] Revisar se o usuário terá controle sobre o próximo passo.
+- [ ] Revisar se o usuário terá controle sobre a decisão.
+- [ ] Revisar se o usuário terá controle sobre a confirmação.
+- [ ] Revisar se o usuário terá controle sobre a assinatura.
+- [ ] Revisar se o usuário terá controle sobre o domínio.
+- [ ] Revisar se o usuário terá controle sobre a publicação.
+- [ ] Revisar se o usuário terá controle sobre o ambiente.
+- [ ] Revisar se o usuário terá controle sobre a configuração.
+- [ ] Revisar se o usuário terá controle sobre as credenciais.
+- [ ] Revisar se o usuário terá controle sobre os webhooks.
+- [ ] Revisar se o usuário terá controle sobre o status.
+- [ ] Revisar se o usuário terá controle sobre o pedido.
+- [ ] Revisar se o usuário terá controle sobre a compra.
+- [ ] Revisar se o usuário terá controle sobre o envio.
+- [ ] Revisar se o usuário terá controle sobre o pagamento.
+- [ ] Revisar se o usuário terá controle sobre o cliente.
+- [ ] Revisar se o usuário terá controle sobre o produto.
+- [ ] Revisar se o usuário terá controle sobre a categoria.
+- [ ] Revisar se o usuário terá controle sobre a coleção.
+- [ ] Revisar se o usuário terá controle sobre o conteúdo.
+- [ ] Revisar se o usuário terá controle sobre a aparência.
+- [ ] Revisar se o usuário terá controle sobre o marketing.
+- [ ] Revisar se o usuário terá controle sobre o email.
+- [ ] Revisar se o usuário terá controle sobre os contatos.
+- [ ] Revisar se o usuário terá controle sobre o newsletter.
+- [ ] Revisar se o usuário terá controle sobre o arquivo.
+- [ ] Revisar se o usuário terá controle sobre os eventos.
+- [ ] Revisar se o usuário terá controle sobre a manutenção.
+- [ ] Revisar se o usuário terá controle sobre o lançamento.
+- [ ] Revisar se o usuário terá controle sobre o drop.
+- [ ] Revisar se o usuário terá controle sobre a contagem.
+- [ ] Revisar se o usuário terá controle sobre o acesso.
+- [ ] Revisar se o usuário terá controle sobre o grupo VIP.
+- [ ] Revisar se o usuário terá controle sobre as redes sociais.
+- [ ] Revisar se o usuário terá controle sobre o rodapé.
+- [ ] Revisar se o usuário terá controle sobre o contato.
+- [ ] Revisar se o usuário terá controle sobre o whatsapp.
+- [ ] Revisar se o usuário terá controle sobre o portfolio.
+- [ ] Revisar se o usuário terá controle sobre o link.
+- [ ] Revisar se o usuário terá controle sobre o sitemap.
+- [ ] Revisar se o usuário terá controle sobre o robots.
+- [ ] Revisar se o usuário terá controle sobre o canonical.
+- [ ] Revisar se o usuário terá controle sobre o OG.
+- [ ] Revisar se o usuário terá controle sobre o SEO.
+- [ ] Revisar se o usuário terá controle sobre a indexação.
+- [ ] Revisar se o usuário terá controle sobre o Google.
+- [ ] Revisar se o usuário terá controle sobre a performance.
+- [ ] Revisar se o usuário terá controle sobre a velocidade.
+- [ ] Revisar se o usuário terá controle sobre o cache.
+- [ ] Revisar se o usuário terá controle sobre a compressão.
+- [ ] Revisar se o usuário terá controle sobre as imagens.
+- [ ] Revisar se o usuário terá controle sobre os recursos.
+- [ ] Revisar se o usuário terá controle sobre o bundle.
+- [ ] Revisar se o usuário terá controle sobre os chunks.
+- [ ] Revisar se o usuário terá controle sobre a acessibilidade.
+- [ ] Revisar se o usuário terá controle sobre o teclado.
+- [ ] Revisar se o usuário terá controle sobre o foco.
+- [ ] Revisar se o usuário terá controle sobre o contraste.
+- [ ] Revisar se o usuário terá controle sobre o reduced motion.
+- [ ] Revisar se o usuário terá controle sobre o aria.
+- [ ] Revisar se o usuário terá controle sobre o alt.
+- [ ] Revisar se o usuário terá controle sobre a semântica.
+- [ ] Revisar se o usuário terá controle sobre os links.
+- [ ] Revisar se o usuário terá controle sobre os botões.
+- [ ] Revisar se o usuário terá controle sobre os inputs.
+- [ ] Revisar se o usuário terá controle sobre os formulários.
+- [ ] Revisar se o usuário terá controle sobre a validação.
+- [ ] Revisar se o usuário terá controle sobre a submissão.
+- [ ] Revisar se o usuário terá controle sobre o loading.
+- [ ] Revisar se o usuário terá controle sobre o erro.
+- [ ] Revisar se o usuário terá controle sobre o sucesso.
+- [ ] Revisar se o usuário terá controle sobre o toast.
+- [ ] Revisar se o usuário terá controle sobre a animação.
+- [ ] Revisar se o usuário terá controle sobre o scroll.
+- [ ] Revisar se o usuário terá controle sobre o modal.
+- [ ] Revisar se o usuário terá controle sobre o drawer.
+- [ ] Revisar se o usuário terá controle sobre a sidebar.
+- [ ] Revisar se o usuário terá controle sobre a navbar.
+- [ ] Revisar se o usuário terá controle sobre o header.
+- [ ] Revisar se o usuário terá controle sobre o footer.
+- [ ] Revisar se o usuário terá controle sobre o menu.
+- [ ] Revisar se o usuário terá controle sobre o dropdown.
+- [ ] Revisar se o usuário terá controle sobre a pesquisa.
+- [ ] Revisar se o usuário terá controle sobre o produto.
+- [ ] Revisar se o usuário terá controle sobre a categoria.
+- [ ] Revisar se o usuário terá controle sobre a coleção.
+- [ ] Revisar se o usuário terá controle sobre a página.
+- [ ] Revisar se o usuário terá controle sobre o pedido.
+- [ ] Revisar se o usuário terá controle sobre o cliente.
+- [ ] Revisar se o usuário terá controle sobre o pagamento.
+- [ ] Revisar se o usuário terá controle sobre o frete.
+- [ ] Revisar se o usuário terá controle sobre o rastreio.
+- [ ] Revisar se o usuário terá controle sobre o email.
+- [ ] Revisar se o usuário terá controle sobre o newsletter.
+- [ ] Revisar se o usuário terá controle sobre o cupom.
+- [ ] Revisar se o usuário terá controle sobre a promoção.
+- [ ] Revisar se o usuário terá controle sobre a aparência.
+- [ ] Revisar se o usuário terá controle sobre o CMS.
+- [ ] Revisar se o usuário terá controle sobre o manifesto.
+- [ ] Revisar se o usuário terá controle sobre a história.
+- [ ] Revisar se o usuário terá controle sobre o archive.
+- [ ] Revisar se o usuário terá controle sobre o evento.
+- [ ] Revisar se o usuário terá controle sobre a manutenção.
+- [ ] Revisar se o usuário terá controle sobre o drop.
+- [ ] Revisar se o usuário terá controle sobre o banner.
+- [ ] Revisar se o usuário terá controle sobre a seção.
+- [ ] Revisar se o usuário terá controle sobre o menu.
+- [ ] Revisar se o usuário terá controle sobre a configuração.
+- [ ] Revisar se o usuário terá controle sobre a equipe.
+- [ ] Revisar se o usuário terá controle sobre a permissão.
+- [ ] Revisar se o usuário terá controle sobre a função.
+- [ ] Revisar se o usuário terá controle sobre a administração.
+- [ ] Revisar se o usuário terá controle sobre a segurança.
+- [ ] Revisar se o usuário terá controle sobre a sessão.
+- [ ] Revisar se o usuário terá controle sobre a autenticação.
+- [ ] Revisar se o usuário terá controle sobre o superadmin.
+- [ ] Revisar se o usuário terá controle sobre o subadmin.
+- [ ] Revisar se o usuário terá controle sobre a senha.
+- [ ] Revisar se o usuário terá controle sobre o usuário.
+- [ ] Revisar se o usuário terá controle sobre o usuário.
+- [ ] Revisar se o usuário terá controle sobre a conta.
+- [ ] Revisar se o usuário terá controle sobre o login.
+- [ ] Revisar se o usuário terá controle sobre o logout.
+- [ ] Revisar se o usuário terá controle sobre a recuperação.
+- [ ] Revisar se o usuário terá controle sobre o admin.
+- [ ] Revisar se o usuário terá controle sobre o cliente.
+- [ ] Revisar se o usuário terá controle sobre o visitante.
+- [ ] Revisar se o usuário terá controle sobre a pessoa.
+- [ ] Revisar se o usuário terá controle sobre o nome.
+- [ ] Revisar se o usuário terá controle sobre o email.
+- [ ] Revisar se o usuário terá controle sobre o telefone.
+- [ ] Revisar se o usuário terá controle sobre o endereço.
+- [ ] Revisar se o usuário terá controle sobre o CPF.
+- [ ] Revisar se o usuário terá controle sobre o CEP.
+- [ ] Revisar se o usuário terá controle sobre a cidade.
+- [ ] Revisar se o usuário terá controle sobre o estado.
+- [ ] Revisar se o usuário terá controle sobre o país.
+- [ ] Revisar se o usuário terá controle sobre a moeda.
+- [ ] Revisar se o usuário terá controle sobre o idioma.
+- [ ] Revisar se o usuário terá controle sobre o fuso.
+- [ ] Revisar se o usuário terá controle sobre a data.
+- [ ] Revisar se o usuário terá controle sobre o horário.
+- [ ] Revisar se o usuário terá controle sobre o nome.
+- [ ] Revisar se o usuário terá controle sobre o telefone.
+- [ ] Revisar se o usuário terá controle sobre o email.
+- [ ] Revisar se o usuário terá controle sobre a senha.
+- [ ] Revisar se o usuário terá controle sobre a recuperação.
+- [ ] Revisar se o usuário terá controle sobre o cancelamento.
+- [ ] Revisar se o usuário terá controle sobre a exclusão.
+- [ ] Revisar se o usuário terá controle sobre o consentimento.
+- [ ] Revisar se o usuário terá controle sobre os termos.
+- [ ] Revisar se o usuário terá controle sobre as políticas.
+- [ ] Revisar se o usuário terá controle sobre o branding.
+- [ ] Revisar se o usuário terá controle sobre a estética.
+- [ ] Revisar se o usuário terá controle sobre a identidade.
+- [ ] Revisar se o usuário terá controle sobre o nome da marca.
+- [ ] Revisar se o usuário terá controle sobre o slogan.
+- [ ] Revisar se o usuário terá controle sobre a história.
+- [ ] Revisar se o usuário terá controle sobre o manifesto.
+- [ ] Revisar se o usuário terá controle sobre as coleções.
+- [ ] Revisar se o usuário terá controle sobre os eventos.
+- [ ] Revisar se o usuário terá controle sobre a comunidade.
+- [ ] Revisar se o usuário terá controle sobre o grupo VIP.
+- [ ] Revisar se o usuário terá controle sobre o instagram.
+- [ ] Revisar se o usuário terá controle sobre o tiktok.
+- [ ] Revisar se o usuário terá controle sobre o whatsapp.
+- [ ] Revisar se o usuário terá controle sobre o portfolio.
+- [ ] Revisar se o usuário terá controle sobre o link do portfolio.
+- [ ] Revisar se o usuário terá controle sobre o footer.
+- [ ] Revisar se o usuário terá controle sobre o header.
+- [ ] Revisar se o usuário terá controle sobre a navbar.
+- [ ] Revisar se o usuário terá controle sobre a sidebar.
+- [ ] Revisar se o usuário terá controle sobre o menu.
+- [ ] Revisar se o usuário terá controle sobre o dropdown.
+- [ ] Revisar se o usuário terá controle sobre o modal.
+- [ ] Revisar se o usuário terá controle sobre o X de fechar.
+- [ ] Revisar se o usuário terá controle sobre as animações.
+- [ ] Revisar se o usuário terá controle sobre o scroll.
+- [ ] Revisar se o usuário terá controle sobre o foco.
+- [ ] Revisar se o usuário terá controle sobre o teclado.
+- [ ] Revisar se o usuário terá controle sobre a acessibilidade.
+- [ ] Revisar se o usuário terá controle sobre o contraste.
+- [ ] Revisar se o usuário terá controle sobre o uso em celular.
+- [ ] Revisar se o usuário terá controle sobre o uso em desktop.
+- [ ] Revisar se o usuário terá controle sobre o uso em tablet.
+- [ ] Revisar se o usuário terá controle sobre o uso em navegador.
+- [ ] Revisar se o usuário terá controle sobre o uso em modo privado.
+- [ ] Revisar se o usuário terá controle sobre o uso sem cookies.
+- [ ] Revisar se o usuário terá controle sobre o uso sem domínio.
+- [ ] Revisar se o usuário terá controle sobre o uso com domínio.
+- [ ] Revisar se o usuário terá controle sobre a transição.
+- [ ] Revisar se o usuário terá controle sobre a performance.
+- [ ] Revisar se o usuário terá controle sobre o carregamento.
+- [ ] Revisar se o usuário terá controle sobre o tempo de resposta.
+- [ ] Revisar se o usuário terá controle sobre as dependências.
+- [ ] Revisar se o usuário terá controle sobre o bundle.
+- [ ] Revisar se o usuário terá controle sobre os chunks.
+- [ ] Revisar se o usuário terá controle sobre o cache.
+- [ ] Revisar se o usuário terá controle sobre os headers.
+- [ ] Revisar se o usuário terá controle sobre o HTTPS.
+- [ ] Revisar se o usuário terá controle sobre o SSL.
+- [ ] Revisar se o usuário terá controle sobre o CORS.
+- [ ] Revisar se o usuário terá controle sobre o rate limiting.
+- [ ] Revisar se o usuário terá controle sobre a proteção contra spam.
+- [ ] Revisar se o usuário terá controle sobre o CAPTCHA.
+- [ ] Revisar se o usuário terá controle sobre a proteção de bot.
+- [ ] Revisar se o usuário terá controle sobre a proteção contra abuso.
+- [ ] Revisar se o usuário terá controle sobre o bloqueio.
+- [ ] Revisar se o usuário terá controle sobre a manutenção.
+- [ ] Revisar se o usuário terá controle sobre a disponibilidade.
+- [ ] Revisar se o usuário terá controle sobre o incidente.
+- [ ] Revisar se o usuário terá controle sobre o alerta.
+- [ ] Revisar se o usuário terá controle sobre a notificação.
+- [ ] Revisar se o usuário terá controle sobre a fila.
+- [ ] Revisar se o usuário terá controle sobre o retry.
+- [ ] Revisar se o usuário terá controle sobre o backoff.
+- [ ] Revisar se o usuário terá controle sobre a idempotência.
+- [ ] Revisar se o usuário terá controle sobre o dead letter.
+- [ ] Revisar se o usuário terá controle sobre o erro.
+- [ ] Revisar se o usuário terá controle sobre a mensagem.
+- [ ] Revisar se o usuário terá controle sobre o suporte.
+- [ ] Revisar se o usuário terá controle sobre a recuperação.
+- [ ] Revisar se o usuário terá controle sobre o rollback.
+- [ ] Revisar se o usuário terá controle sobre o checkpoint.
+- [ ] Revisar se o usuário terá controle sobre a versão.
+- [ ] Revisar se o usuário terá controle sobre o histórico.
+- [ ] Revisar se o usuário terá controle sobre o status.
+- [ ] Revisar se o usuário terá controle sobre o monitoramento.
+- [ ] Revisar se o usuário terá controle sobre o diagnóstico.
+- [ ] Revisar se o usuário terá controle sobre a investigação.
+- [ ] Revisar se o usuário terá controle sobre a correção.
+- [ ] Revisar se o usuário terá controle sobre a prevenção.
+- [ ] Revisar se o usuário terá controle sobre a validação.
+- [ ] Revisar se o usuário terá controle sobre o aceite.
+- [ ] Revisar se o usuário terá controle sobre a aprovação.
+- [ ] Revisar se o usuário terá controle sobre o release.
+- [ ] Revisar se o usuário terá controle sobre a entrega.
+- [ ] Revisar se o usuário terá controle sobre o relatório.
+- [ ] Revisar se o usuário terá controle sobre o resumo.
+- [ ] Revisar se o usuário terá controle sobre o que falta.
+- [ ] Revisar se o usuário terá controle sobre o que foi feito.
+- [ ] Revisar se o usuário terá controle sobre o que será feito.
+- [ ] Revisar se o usuário terá controle sobre o que não será feito.
+- [ ] Revisar se o usuário terá controle sobre a decisão.
+- [ ] Revisar se o usuário terá controle sobre o bloqueio.
+- [ ] Revisar se o usuário terá controle sobre o pedido.
+- [ ] Revisar se o usuário terá controle sobre a resposta.
+- [ ] Revisar se o usuário terá controle sobre a informação.
+- [ ] Revisar se o usuário terá controle sobre a comunicação.
+- [ ] Revisar se o usuário terá controle sobre a transparência.
+- [ ] Revisar se o usuário terá controle sobre a clareza.
+- [ ] Revisar se o usuário terá controle sobre a precisão.
+- [ ] Revisar se o usuário terá controle sobre a honestidade.
+- [ ] Revisar se o usuário terá controle sobre a qualidade.
+- [ ] Revisar se o usuário terá controle sobre a velocidade.
+- [ ] Revisar se o usuário terá controle sobre a performance.
+- [ ] Revisar se o usuário terá controle sobre a experiência.
+- [ ] Revisar se o usuário terá controle sobre a estética.
+- [ ] Revisar se o usuário terá controle sobre a responsividade.
+- [ ] Revisar se o usuário terá controle sobre as integrações.
+- [ ] Revisar se o usuário terá controle sobre o preview.
+- [ ] Revisar se o usuário terá controle sobre o domínio.
+- [ ] Revisar se o usuário terá controle sobre a publicação.
+- [ ] Revisar se o usuário terá controle sobre a produção.
+- [ ] Revisar se o usuário terá controle sobre o lançamento.
+- [ ] Revisar se o usuário terá controle sobre a manutenção.
+- [ ] Revisar se o usuário terá controle sobre a evolução.
+- [ ] Revisar se o usuário terá controle sobre a conclusão.
+- [ ] Revisar se o usuário terá controle sobre a entrega.
+- [ ] Revisar se o usuário terá controle sobre o relatório.
+- [ ] Revisar se o usuário terá controle sobre o checkpoint.
+- [ ] Revisar se o usuário terá controle sobre o histórico.
+- [ ] Revisar se o usuário terá controle sobre o changelog.
+- [ ] Revisar se o usuário terá controle sobre o manual.
+- [ ] Revisar se o usuário terá controle sobre o suporte.
+- [ ] Revisar se o usuário terá controle sobre o handoff.
+- [ ] Revisar se o usuário terá controle sobre a continuidade.
+- [ ] Revisar se o usuário terá controle sobre o futuro.
+- [ ] Revisar se o usuário terá controle sobre a nova era.
+- [ ] Revisar se o usuário terá controle sobre a Eras Label.
+- [ ] Revisar se o usuário terá controle sobre o projeto.
+- [ ] Revisar se o usuário terá controle sobre a tarefa.
+- [ ] Revisar se o usuário terá controle sobre a execução.
+- [ ] Revisar se o usuário terá controle sobre a validação.
+- [ ] Revisar se o usuário terá controle sobre o resultado.
+- [ ] Revisar se o usuário terá controle sobre a entrega.
+- [ ] Revisar se o usuário terá controle sobre a documentação.
+- [ ] Revisar se o usuário terá controle sobre o relatório.
+- [ ] Revisar se o usuário terá controle sobre a checklist.
+- [ ] Revisar se o usuário terá controle sobre o status.
+- [ ] Revisar se o usuário terá controle sobre o bloqueio.
+- [ ] Revisar se o usuário terá controle sobre o próximo passo.
+- [ ] Revisar se o usuário terá controle sobre a decisão.
+- [ ] Revisar se o usuário terá controle sobre a confirmação.
+- [ ] Revisar se o usuário terá controle sobre a assinatura.
+- [ ] Revisar se o usuário terá controle sobre o domínio.
+- [ ] Revisar se o usuário terá controle sobre a publicação.
+- [ ] Revisar se o usuário terá controle sobre o ambiente.
+- [ ] Revisar se o usuário terá controle sobre a configuração.
+- [ ] Revisar se o usuário terá controle sobre as credenciais.
+- [ ] Revisar se o usuário terá controle sobre os webhooks.
+- [ ] Revisar se o usuário terá controle sobre o status.
+- [ ] Revisar se o usuário terá controle sobre o pedido.
+- [ ] Revisar se o usuário terá controle sobre a compra.
+- [ ] Revisar se o usuário terá controle sobre o envio.
+- [ ] Revisar se o usuário terá controle sobre o pagamento.
+- [ ] Revisar se o usuário terá controle sobre o cliente.
+- [ ] Revisar se o usuário terá controle sobre o produto.
+- [ ] Revisar se o usuário terá controle sobre a categoria.
+- [ ] Revisar se o usuário terá controle sobre a coleção.
+- [ ] Revisar se o usuário terá controle sobre o conteúdo.
+- [ ] Revisar se o usuário terá controle sobre a aparência.
+- [ ] Revisar se o usuário terá controle sobre o marketing.
+- [ ] Revisar se o usuário terá controle sobre o email.
+- [ ] Revisar se o usuário terá controle sobre os contatos.
+- [ ] Revisar se o usuário terá controle sobre o newsletter.
+- [ ] Revisar se o usuário terá controle sobre o arquivo.
+- [ ] Revisar se o usuário terá controle sobre os eventos.
+- [ ] Revisar se o usuário terá controle sobre a manutenção.
+- [ ] Revisar se o usuário terá controle sobre o lançamento.
+- [ ] Revisar se o usuário terá controle sobre o drop.
+- [ ] Revisar se o usuário terá controle sobre a contagem.
+- [ ] Revisar se o usuário terá controle sobre o acesso.
+- [ ] Revisar se o usuário terá controle sobre o grupo VIP.
+- [ ] Revisar se o usuário terá controle sobre as redes sociais.
+- [ ] Revisar se o usuário terá controle sobre o rodapé.
+- [ ] Revisar se o usuário terá controle sobre o contato.
+- [ ] Revisar se o usuário terá controle sobre o whatsapp.
+- [ ] Revisar se o usuário terá controle sobre o portfolio.
+- [ ] Revisar se o usuário terá controle sobre o link.
+- [ ] Revisar se o usuário terá controle sobre o sitemap.
+- [ ] Revisar se o usuário terá controle sobre o robots.
+- [ ] Revisar se o usuário terá controle sobre o canonical.
+- [ ] Revisar se o usuário terá controle sobre o OG.
+- [ ] Revisar se o usuário terá controle sobre o SEO.
+- [ ] Revisar se o usuário terá controle sobre a indexação.
+- [ ] Revisar se o usuário terá controle sobre o Google.
+- [ ] Revisar se o usuário terá controle sobre a performance.
+- [ ] Revisar se o usuário terá controle sobre a velocidade.
+- [ ] Revisar se o usuário terá controle sobre o cache.
+- [ ] Revisar se o usuário terá controle sobre a compressão.
+- [ ] Revisar se o usuário terá controle sobre as imagens.
+- [ ] Revisar se o usuário terá controle sobre os recursos.
+- [ ] Revisar se o usuário terá controle sobre o bundle.
+- [ ] Revisar se o usuário terá controle sobre os chunks.
+- [ ] Revisar se o usuário terá controle sobre a acessibilidade.
+- [ ] Revisar se o usuário terá controle sobre o teclado.
+- [ ] Revis

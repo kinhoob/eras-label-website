@@ -156,7 +156,7 @@ export default function CatalogViewPage() {
             <span className="catalog-kicker">{searchQuery ? "Resultados da pesquisa" : filterType === "category" ? "Categoria" : filterType === "collection" ? "Coleção" : "Catálogo"}</span>
             <h1>{title}</h1>
             <p className="catalog-result-summary">
-              {isLoading ? "A carregar a era..." : `${displayProducts.length} ${displayProducts.length === 1 ? "peça disponível" : "peças disponíveis"}`}
+              {isLoading ? "A carregar produtos..." : `${displayProducts.length} ${displayProducts.length === 1 ? "peça disponível" : "peças disponíveis"}`}
             </p>
           </div>
           {filterType !== "all" && <Link className="catalog-back-link" href="/catalog">Ver todos os produtos ↗</Link>}
@@ -246,7 +246,7 @@ export default function CatalogViewPage() {
 
           <section className="catalog-page-products" aria-live="polite">
             {isLoading ? (
-              <div className="catalog-state-message"><span className="catalog-state-spinner" /> A carregar a era...</div>
+              <div className="catalog-state-message"><span className="catalog-state-spinner" /> A carregar produtos...</div>
             ) : displayProducts.length === 0 ? (
               <div className="catalog-state-message">
                 <h3>Nenhum produto encontrado nesta seleção</h3>

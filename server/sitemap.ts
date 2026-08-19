@@ -49,11 +49,12 @@ Sitemap: https://www.eraslabel.com/sitemap.xml
 
       // Buscar produtos ativos do banco de dados para indexação de e-commerce
       const database = await getDb();
-      if (!database) {
-        return res.status(500).send("Base de dados indisponível para gerar o sitemap.");
-      }
-      const activeProducts = await database.select().from(products).where(eq(products.status, "published"));
-      const activeCategories = await database.select().from(categories);
+      // O preview pode ser validado sem banco conectado. Nesse caso, ainda
+      // entregamos as páginas estáticas e deixamos produtos/categorias vazios.
+      const activeProducts = database
+        ? await database.select().from(products).where(eq(products.status, "published"))
+        : [];
+      const activeCategories = database ? await database.select().from(categories) : [];
 
       let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
       xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;

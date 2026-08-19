@@ -33,7 +33,7 @@ function RouteLoading() {
     <main className="min-h-screen bg-[#f6f3ee] text-[#23221e] flex items-center justify-center px-6">
       <div className="text-center" role="status" aria-live="polite">
         <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-[#dfd7cc] border-t-[#c95139]" aria-hidden="true" />
-        <p className="text-xs font-bold uppercase tracking-[0.24em]">A carregar a sua era</p>
+        <p className="text-xs font-bold uppercase tracking-[0.24em]">A carregar a página</p>
       </div>
     </main>
   );
@@ -60,6 +60,7 @@ function Router() {
         <Route path="/category/:slug" component={CatalogViewPage} />
         <Route path="/collection/:slug" component={CatalogViewPage} />
         <Route path="/catalog" component={CatalogViewPage} />
+        <Route path="/produtos" component={CatalogViewPage} />
         <Route path="/produto/:slug" component={ProductPage} />
         <Route path="/auth" component={Auth} />
         <Route path="/admin" component={Admin} />

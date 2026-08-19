@@ -4,7 +4,7 @@ import { ArrowRight, Loader2, Minus, Plus, ShoppingBag, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
-import { loadCart, saveCart } from "@/lib/cart-storage";
+import { loadCart, pruneCart, saveCart } from "@/lib/cart-storage";
 import { getCartItemCount } from "@/lib/cart";
 import { removeCartLine, updateCartLineQuantity } from "@/lib/cart-operations";
 import { saveCheckoutDraft } from "@/lib/checkout-draft";
@@ -40,7 +40,9 @@ export default function PublicCartDrawer() {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"pix" | "credit_card">("pix");
   const [selectedShippingId, setSelectedShippingId] = useState("");
 
-  const { data: commercialConfig } = trpc.catalog.getConfig.useQuery(undefined, { enabled: !location.startsWith("/admin") });
+  const publicQueriesEnabled = !location.startsWith("/admin") && !location.startsWith("/auth");
+  const { data: commercialConfig } = trpc.catalog.getConfig.useQuery(undefined, { enabled: publicQueriesEnabled });
+  const { data: catalogProducts, isLoading: catalogProductsLoading, isError: catalogProductsError } = trpc.catalog.list.useQuery(undefined, { enabled: publicQueriesEnabled });
   const pixDiscountPercent = commercialConfig?.pixDiscountPercent ?? 5;
   const freeShippingThreshold = commercialConfig?.freeShippingThreshold ?? 350;
   const subtotal = useMemo(() => cart.reduce((sum, item) => sum + Number(item.price || 0) * item.quantity, 0), [cart]);
@@ -100,6 +102,16 @@ export default function PublicCartDrawer() {
   // Removido o useEffect que disparava saveCart e dispatchEvent em loop a cada mudança de cart.
   // A persistência agora ocorre diretamente nas funções de mutação (changeQuantity, remove, etc.)
   // para evitar o erro de Maximum update depth exceeded.
+
+  useEffect(() => {
+    if (!publicQueriesEnabled || catalogProductsLoading || catalogProductsError || !catalogProducts) return;
+    const availableProductIds = catalogProducts.map((product: { id: number }) => Number(product.id));
+    const nextCart = pruneCart(cart, availableProductIds);
+    if (nextCart.length === cart.length) return;
+    setCart(nextCart);
+    saveCart(nextCart);
+    window.setTimeout(() => window.dispatchEvent(new Event("eras-cart-updated")), 0);
+  }, [cart, catalogProducts, catalogProductsError, catalogProductsLoading, publicQueriesEnabled]);
 
   useEffect(() => {
     if (!isOpen) return;

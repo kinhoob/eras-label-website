@@ -33,6 +33,11 @@ export function loadCart<T>(storage?: StorageLike): T[] {
   }
 }
 
+export function pruneCart<T extends { id: number }>(cart: T[], availableProductIds: Iterable<number>): T[] {
+  const availableIds = new Set(availableProductIds);
+  return cart.filter((line) => availableIds.has(line.id));
+}
+
 export function saveCart<T>(cart: T[], storage?: StorageLike) {
   const target = getStorage(storage);
   if (!target) return;
