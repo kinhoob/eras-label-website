@@ -985,3 +985,4 @@
 - [x] Persistir e exibir o motivo detalhado das recusas de pagamento no painel administrativo e histórico de falhas de pedidos.
 - [x] Auditar e validar o fluxo de aprovação automática de pagamentos via Pix (criação, QR Code, webhook e polling de status).
 - [x] Configurar e documentar webhooks do Mercado Pago para atualização automática de pagamentos pendentes aprovados.
+- [x] Configurar credenciais de produção do Mercado Pago (AccessToken e PublicKey) com segurança.
