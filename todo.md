@@ -946,9 +946,9 @@
 
 - [x] Eliminar definitivamente qualquer rotina de criação automática de produtos de teste e limpar a tabela products no banco de dados.
 
-- [ ] Exibir subtotal, descontos aplicados, frete e total final nos detalhes de pedidos do painel administrativo.
+- [x] Exibir subtotal, descontos aplicados, frete e total final nos detalhes de pedidos do painel administrativo.
 
-- [ ] Implementar hover interativo e tooltip detalhado no gráfico de vendas e visitas do painel administrativo.
+- [x] Implementar hover interativo e tooltip detalhado no gráfico de vendas e visitas do painel administrativo.
 
 - [x] Implementar hover interativo e tooltip detalhado no gráfico de vendas e visitas do painel administrativo.
 
@@ -965,7 +965,7 @@
 
 - [x] Limpeza completa do banco de dados removendo todos os produtos, variações, pedidos, itens de pedidos, clientes fictícios, cupons de teste, promoções, carrinhos abandonados e histórico de e-mails/testes, preservando apenas configurações, administradores e estrutura da aplicação.
 
-- [ ] Importar os produtos reais a partir do CSV da Nuvemshop (`tiendanube-5887838-17871641601727955173772670370.csv`), mapeando colunas, preços, variações, estoque, coleções e imagens reais.
+- [x] Importar os produtos reais a partir do CSV da Nuvemshop (`tiendanube-5887838-17871641601727955173772670370.csv`), mapeando colunas, preços, variações, estoque, coleções e imagens reais.
 
 - [x] Importar os produtos reais a partir do CSV da Nuvemshop (`tiendanube-5887838-17871641601727955173772670370.csv`), mapeando colunas, preços, variações, estoque, coleções e imagens reais.
 
@@ -975,9 +975,9 @@
 
 - [x] Corrigir o erro de endpoint HTML ao guardar cupons no painel administrativo.
 - [x] Corrigir o erro `bin_not_found` e falhas de pagamento no Pix e cartão na integração com o Mercado Pago, garantindo tratamento robusto de tokens de cartão, dados do pagador e credenciais de produção/sandbox.
-- [ ] Adicionar campo `interestFreeInstallments` na tabela `commercial_config` e migração correspondente.
-- [ ] Atualizar o painel administrativo de configurações comerciais para permitir definir o número máximo de parcelas sem juros (ex: 3).
-- [ ] Atualizar o cálculo de parcelamento e juros no checkout e no backend para aplicar juros apenas a partir da parcela seguinte ao limite sem juros configurado.
+- [x] Adicionar campo `interestFreeInstallments` na tabela `commercial_config` e migração correspondente.
+- [x] Atualizar o painel administrativo de configurações comerciais para permitir definir o número máximo de parcelas sem juros (ex: 3).
+- [x] Atualizar o cálculo de parcelamento e juros no checkout e no backend para aplicar juros apenas a partir da parcela seguinte ao limite sem juros configurado.
 - [x] Executar testes Vitest e build de produção.
 - [x] Configurar parcelas sem juros (até 3x por padrão, configurável no painel) e juros compostos a partir da parcela seguinte no checkout e cálculo de parcelamento.
 - [x] Corrigir a sincronização de status de pagamento aprovado do Mercado Pago (cartão e Pix) para atualizar automaticamente o pedido no painel admin e no acompanhamento do cliente.
@@ -987,3 +987,4 @@
 - [x] Configurar e documentar webhooks do Mercado Pago para atualização automática de pagamentos pendentes aprovados.
 - [x] Configurar credenciais de produção do Mercado Pago (AccessToken e PublicKey) com segurança.
 - [x] Executar auditoria técnica completa de pagamentos do Mercado Pago (Pix, crédito 3x sem juros, parcelas com juros, débito, webhooks, tratamento de erros e limpeza de código).
+- [ ] Auditar e configurar integralmente a integração com o Melhor Envio (cotação com PAC, Sedex, Jadlog Econômico, Jadlog Rápido e Loggi, geração de etiquetas e rastreio).
