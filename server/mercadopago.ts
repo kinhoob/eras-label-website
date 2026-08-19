@@ -76,6 +76,9 @@ export function getMercadoPagoErrorMessage(data: any, status: number) {
   if (rawMessage.includes("communication_error")) {
     return "O Mercado Pago não conseguiu comunicar com o meio de pagamento. No sandbox, confirme que a conta vendedora tem uma chave Pix registada e que o MP_ACCESS_TOKEN é a credencial APP_USR dessa mesma conta.";
   }
+  if (rawMessage.includes("bin_not_found")) {
+    return "O BIN do cartão não foi reconhecido pelo Mercado Pago. Utilize um cartão de teste válido do Mercado Pago (ex: cartão Mastercard ou Visa de teste do ambiente sandbox).";
+  }
   return rawMessage || `Erro ao processar pagamento no Mercado Pago (HTTP ${status}).`;
 }
 

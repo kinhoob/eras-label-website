@@ -974,3 +974,4 @@
 - [x] Corrigir o cupom de frete grátis para zerar corretamente o frete no checkout, resumo e criação do pedido.
 
 - [x] Corrigir o erro de endpoint HTML ao guardar cupons no painel administrativo.
+- [x] Corrigir o erro `bin_not_found` e falhas de pagamento no Pix e cartão na integração com o Mercado Pago, garantindo tratamento robusto de tokens de cartão, dados do pagador e credenciais de produção/sandbox.

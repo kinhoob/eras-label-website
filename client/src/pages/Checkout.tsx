@@ -120,9 +120,9 @@ async function tokenizeCard(fields: CheckoutFields, publicKey?: string): Promise
   ]);
   if (!token?.id) throw new Error("Não foi possível validar o cartão. Confirme os dados e tente novamente.");
 
-  const paymentMethodId = inferPaymentMethodId(cardNumber);
+  const paymentMethodId = (token as any).payment_method_id || (token as any).issuer_id || inferPaymentMethodId(cardNumber);
   if (!paymentMethodId) throw new Error("Não foi possível identificar a bandeira do cartão.");
-  return { cardToken: token.id, paymentMethodId };
+  return { cardToken: token.id, paymentMethodId: String(paymentMethodId) };
 }
 
 function readInitialCart() {
