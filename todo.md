@@ -989,4 +989,5 @@
 - [x] Executar auditoria técnica completa de pagamentos do Mercado Pago (Pix, crédito 3x sem juros, parcelas com juros, débito, webhooks, tratamento de erros e limpeza de código).
 - [x] Auditar e configurar integralmente a integração com o Melhor Envio (cotação com PAC, Sedex, Jadlog Econômico, Jadlog Rápido e Loggi, geração de etiquetas e rastreio).
 - [x] Corrigir e validar a autenticação do Melhor Envio e adicionar campos para configurar token e ambiente no painel administrativo.
-- [ ] Configurar endpoint público de webhook do Melhor Envio para passar na validação de teste 404.
+- [x] Configurar endpoint público de webhook do Melhor Envio para passar na validação de teste 404.
+- [ ] Verificar a resolução de domínio e publicação para que o endpoint de webhook responda com 200 no domínio público.
