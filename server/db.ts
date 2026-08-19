@@ -1604,6 +1604,7 @@ export async function listPromotions() {
 }
 
 export async function createPromotion(data: {
+  id?: number;
   name: string;
   discountType?: string;
   scopeType?: string;
@@ -1638,7 +1639,11 @@ export async function createPromotion(data: {
     customBadgeText: data.customBadgeText || null,
     status: data.status || "active",
   };
-  if (!db) return { id: 1, ...values };
+  if (!db) return { id: data.id || 1, ...values };
+  if (data.id) {
+    await db.update(promotions).set(values as any).where(eq(promotions.id, data.id));
+    return { id: data.id, ...values };
+  }
   const res = await db.insert(promotions).values(values as any);
   return { id: Number(res[0].insertId), ...values };
 }

@@ -957,3 +957,5 @@
 - [x] Redesenhar a tela de cupons inspirada na Nuvemshop com tipos de desconto, escopo de aplicação, limites e histórico.
 
 - [x] Adicionar e validar a regra de cupom exclusivo para a primeira compra no painel de cupons e no checkout.
+
+- [ ] Corrigir a responsividade do editor de promoções no desktop para garantir visibilidade completa do cartão e scroll interno adequado.
