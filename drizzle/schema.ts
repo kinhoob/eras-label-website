@@ -100,6 +100,8 @@ export const coupons = mysqlTable("coupons", {
   promoType: varchar("promoType", { length: 30 }).default("standard").notNull(),
   /** JSON com regras adicionais (ex: faixas de desconto progressivo, IDs de produtos elegíveis) */
   promoRules: json("promoRules"),
+  /** Se 1, restringe o uso apenas para a primeira compra do cliente (por e-mail) */
+  isFirstPurchaseOnly: int("isFirstPurchaseOnly").default(0).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

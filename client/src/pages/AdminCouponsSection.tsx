@@ -16,7 +16,7 @@ type CouponForm = {
   validUntil: string;
   active: number;
   applyScope: "all" | "categories" | "products";
-  customerLimit: "unlimited" | "first_purchase";
+  isFirstPurchaseOnly: number;
   allowStacking: number;
 };
 
@@ -30,7 +30,7 @@ const emptyCoupon: CouponForm = {
   validUntil: "",
   active: 1,
   applyScope: "all",
-  customerLimit: "unlimited",
+  isFirstPurchaseOnly: 0,
   allowStacking: 0,
 };
 
@@ -96,7 +96,7 @@ export function AdminCouponsSection() {
             validUntil: coupon.validUntil ? new Date(coupon.validUntil).toISOString().slice(0, 16) : "",
             active: coupon.active,
             applyScope: (coupon as any).applyScope || "all",
-            customerLimit: (coupon as any).customerLimit || "unlimited",
+            isFirstPurchaseOnly: Number(coupon.isFirstPurchaseOnly ?? 0),
             allowStacking: Number((coupon as any).allowStacking || 0),
           }
         : { ...emptyCoupon }
@@ -454,15 +454,15 @@ export function AdminCouponsSection() {
                     />
                   </label>
                   <div style={{ display: "grid", gap: "0.4rem" }}>
-                    <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "#4a443e" }}>Acúmulo de Ofertas</span>
+                    <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "#4a443e" }}>Restrição por Cliente</span>
                     <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.8rem", color: "#444", marginTop: "0.5rem", cursor: "pointer" }}>
                       <input 
                         type="checkbox" 
-                        checked={editing.allowStacking === 1} 
-                        onChange={(event) => update("allowStacking", event.target.checked ? 1 : 0)} 
+                        checked={editing.isFirstPurchaseOnly === 1} 
+                        onChange={(event) => update("isFirstPurchaseOnly", event.target.checked ? 1 : 0)} 
                         style={{ accentColor: "#b22222", width: "16px", height: "16px" }}
                       />
-                      <span>Permitir acumular com promoções</span>
+                      <span>Apenas para primeira compra do cliente</span>
                     </label>
                   </div>
                 </div>

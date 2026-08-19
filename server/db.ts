@@ -263,15 +263,24 @@ export async function listResendEmailLogs(options?: { search?: string; status?: 
   return query.orderBy(sortOrder).limit(100);
 }
 
-export async function validateCoupon(code: string, subtotal: number) {
+export async function validateCoupon(code: string, subtotal: number, customerEmail?: string) {
   const db = await getDb();
-  if (!db) return code.trim().toUpperCase() === "ERAS10" ? { valid: true, discount: subtotal * 0.1, code: "ERAS10" } : { valid: false, discount: 0, code };
-  const result = await db.select().from(coupons).where(eq(coupons.code, code.trim().toUpperCase())).limit(1);
+  const normalizedCode = code.trim().toUpperCase();
+  if (!db) return normalizedCode === "ERAS10" ? { valid: true, discount: subtotal * 0.1, code: "ERAS10" } : { valid: false, discount: 0, code };
+  const result = await db.select().from(coupons).where(eq(coupons.code, normalizedCode)).limit(1);
   const coupon = result[0];
-  if (!coupon && code.trim().toUpperCase() === "ERAS10") return { valid: true, discount: subtotal * 0.1, code: "ERAS10" };
+  if (!coupon && normalizedCode === "ERAS10") return { valid: true, discount: subtotal * 0.1, code: "ERAS10" };
   if (!coupon || !coupon.active || (coupon.usageLimit !== null && coupon.timesUsed >= coupon.usageLimit)) return { valid: false, discount: 0, code };
   if (coupon.validUntil && coupon.validUntil.getTime() < Date.now()) return { valid: false, discount: 0, code };
   if (coupon.minPurchase && subtotal < Number(coupon.minPurchase)) return { valid: false, discount: 0, code };
+
+  if (coupon.isFirstPurchaseOnly === 1 && customerEmail) {
+    const priorOrders = await db.select({ id: orders.id }).from(orders).where(eq(orders.customerEmail, customerEmail.trim().toLowerCase())).limit(1);
+    if (priorOrders.length > 0) {
+      return { valid: false, discount: 0, code: coupon.code, message: "Este cupom é válido apenas para a primeira compra." };
+    }
+  }
+
   const discount = coupon.discountPercent ? subtotal * Number(coupon.discountPercent) / 100 : 0;
   return { valid: true, discount, code: coupon.code };
 }
@@ -1482,6 +1491,7 @@ export async function saveCouponData(data: {
   minPurchase?: number;
   validUntil?: string | null;
   active?: number;
+  isFirstPurchaseOnly?: number;
 }) {
   const db = await getDb();
   const code = data.code.trim().toUpperCase();
@@ -1493,6 +1503,7 @@ export async function saveCouponData(data: {
     minPurchase: (data.minPurchase ?? 0).toFixed(2),
     validUntil: data.validUntil ? new Date(data.validUntil) : null,
     active: data.active ?? 1,
+    isFirstPurchaseOnly: data.isFirstPurchaseOnly ?? 0,
   };
   if (!db) return { ...values, id: data.id ?? 0, timesUsed: 0, createdAt: new Date() };
   if (data.id) {

@@ -1,0 +1,1 @@
+ALTER TABLE `coupons` ADD `isFirstPurchaseOnly` int DEFAULT 0 NOT NULL;

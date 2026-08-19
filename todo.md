@@ -955,3 +955,5 @@
 - [x] Adicionar filtros Hoje e Ontem e corrigir a persistência e exibição do intervalo personalizado no gráfico de visitas e pedidos.
 
 - [x] Redesenhar a tela de cupons inspirada na Nuvemshop com tipos de desconto, escopo de aplicação, limites e histórico.
+
+- [x] Adicionar e validar a regra de cupom exclusivo para a primeira compra no painel de cupons e no checkout.

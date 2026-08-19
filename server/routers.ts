@@ -270,7 +270,7 @@ export const appRouter = router({
     list: adminProcedure.query(() => listNewsletterSubscribers()),
   }),
   coupons: router({
-    validate: publicProcedure.input(z.object({ code: z.string().min(2), subtotal: z.number().nonnegative() })).query(({ input }) => validateCoupon(input.code, input.subtotal)),
+    validate: publicProcedure.input(z.object({ code: z.string().min(2), subtotal: z.number().nonnegative(), customerEmail: z.string().email().optional() })).query(({ input }) => validateCoupon(input.code, input.subtotal, input.customerEmail)),
     adminList: adminProcedure.query(() => listAdminCoupons()),
     save: adminProcedure.input(z.object({
       id: z.number().int().positive().optional(),
@@ -280,6 +280,7 @@ export const appRouter = router({
       minPurchase: z.number().nonnegative().optional(),
       validUntil: z.string().datetime().nullable().optional(),
       active: z.number().int().min(0).max(1).optional(),
+      isFirstPurchaseOnly: z.number().int().min(0).max(1).optional(),
     })).mutation(({ input }) => saveCouponData(input)),
     toggle: adminProcedure.input(z.object({ id: z.number().int().positive(), active: z.number().int().min(0).max(1) })).mutation(({ input }) => toggleCouponActive(input.id, input.active)),
     remove: adminProcedure.input(z.object({ id: z.number().int().positive() })).mutation(({ input }) => deleteCouponData(input.id)),
