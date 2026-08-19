@@ -362,8 +362,12 @@ export default function AdminSalesSection() {
                 <p style={{ fontSize: "0.85rem", marginBottom: "4px" }}><strong>Método:</strong> {selectedOrder.paymentMethod?.toUpperCase()}</p>
                 <p style={{ fontSize: "0.85rem", marginBottom: "4px" }}><strong>Status Pagamento:</strong> {selectedOrder.paymentStatus}</p>
                 <p style={{ fontSize: "0.85rem", marginBottom: "4px" }}><strong>Método de Entrega:</strong> {selectedOrder.shippingService || selectedOrder.shippingMethod}</p>
+                <p style={{ fontSize: "0.85rem", marginBottom: "4px" }}><strong>Subtotal Produtos:</strong> R$ {Number(selectedOrder.subtotal || selectedOrder.items?.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0) || 0).toFixed(2)}</p>
+                {Number(selectedOrder.discount || 0) > 0 && (
+                  <p style={{ fontSize: "0.85rem", marginBottom: "4px", color: "#b22222" }}><strong>Descontos / Cupão:</strong> - R$ {Number(selectedOrder.discount || 0).toFixed(2)}</p>
+                )}
                 <p style={{ fontSize: "0.85rem", marginBottom: "4px" }}><strong>Frete:</strong> R$ {Number(selectedOrder.shippingCost || 0).toFixed(2)}</p>
-                <p style={{ fontSize: "0.85rem" }}><strong>Total do Pedido:</strong> R$ {Number(selectedOrder.total || 0).toFixed(2)}</p>
+                <p style={{ fontSize: "0.95rem", fontWeight: 700, borderTop: "1px solid var(--border)", paddingTop: "6px", marginTop: "4px" }}><strong>Total Final Pago:</strong> R$ {Number(selectedOrder.total || 0).toFixed(2)}</p>
               </div>
             </div>
 

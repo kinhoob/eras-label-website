@@ -932,6 +932,7 @@
 
 - [x] Transferir 'próximo drop & acesso à loja' e 'trancar site' exclusivamente para a aba 'Página em construção' e remover da aba Aparência
 - [x] Reorganizar a aba 'Página em construção' em cards modernos e responsivos para desktop e mobile
+- [x] Exibir subtotal, descontos, frete e total final nos detalhes de pedidos do painel administrativo
 - [x] Executar testes, build de produção e salvar checkpoint
 
 - [x] Adicionar uma animação bonita com a mensagem de agradecimento no estado pós-compra
@@ -939,3 +940,5 @@
 - [x] Executar build de produção e salvar checkpoint
 
 - [x] Eliminar definitivamente qualquer rotina de criação automática de produtos de teste e limpar a tabela products no banco de dados.
+
+- [ ] Exibir subtotal, descontos aplicados, frete e total final nos detalhes de pedidos do painel administrativo.
