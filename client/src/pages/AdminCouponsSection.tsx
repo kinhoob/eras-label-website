@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { Check, Copy, Edit3, Eye, EyeOff, Plus, Search, Tag, Trash2, X, Save } from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { Check, Copy, Edit3, Eye, EyeOff, Plus, Search, Tag, Trash2, X, Save, ShieldCheck, History, Percent, DollarSign, Truck } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,30 +8,40 @@ import { trpc } from "@/lib/trpc";
 type CouponForm = {
   id?: number;
   code: string;
+  discountType: "percent" | "fixed" | "free_shipping";
   discountPercent: number;
+  fixedAmount: number;
   usageLimit: number | null;
   minPurchase: number;
   validUntil: string;
   active: number;
+  applyScope: "all" | "categories" | "products";
+  customerLimit: "unlimited" | "first_purchase";
+  allowStacking: number;
 };
 
 const emptyCoupon: CouponForm = {
   code: "",
+  discountType: "percent",
   discountPercent: 10,
+  fixedAmount: 20,
   usageLimit: null,
   minPurchase: 0,
   validUntil: "",
   active: 1,
+  applyScope: "all",
+  customerLimit: "unlimited",
+  allowStacking: 0,
 };
 
 /**
- * Componente AdminCouponsSection: Gerenciamento limpo e unificado de cupons de desconto
- * da Eras Label, com barra de pesquisa superior, botão de criação único e modal editor refinado.
+ * Componente AdminCouponsSection: Gestão profissional de cupons e descontos da Eras Label,
+ * com abas e blocos dedicados para tipo de desconto, aplicação, limites de uso, status e histórico.
  */
 export function AdminCouponsSection() {
   const utils = trpc.useUtils();
   const couponsQuery = trpc.coupons.adminList.useQuery();
-  
+
   const saveMutation = trpc.coupons.save.useMutation({
     onSuccess: async () => {
       toast.success("Cupom guardado com sucesso.");
@@ -63,7 +73,6 @@ export function AdminCouponsSection() {
 
   const coupons = couponsQuery.data ?? [];
 
-  // Filtra cupons com base na pesquisa por código e estado
   const filtered = useMemo(() => {
     return coupons.filter((coupon) => {
       const matchesQuery = coupon.code.toLowerCase().includes(query.trim().toLowerCase());
@@ -79,16 +88,21 @@ export function AdminCouponsSection() {
         ? {
             id: coupon.id,
             code: coupon.code,
-            discountPercent: Number(coupon.discountPercent),
+            discountType: (coupon as any).discountType || "percent",
+            discountPercent: Number(coupon.discountPercent || 10),
+            fixedAmount: Number((coupon as any).fixedAmount || 20),
             usageLimit: coupon.usageLimit,
             minPurchase: Number(coupon.minPurchase ?? 0),
             validUntil: coupon.validUntil ? new Date(coupon.validUntil).toISOString().slice(0, 16) : "",
             active: coupon.active,
+            applyScope: (coupon as any).applyScope || "all",
+            customerLimit: (coupon as any).customerLimit || "unlimited",
+            allowStacking: Number((coupon as any).allowStacking || 0),
           }
         : { ...emptyCoupon }
     );
 
-  const update = (key: keyof CouponForm, value: string | number | null) =>
+  const update = (key: keyof CouponForm, value: any) =>
     setEditing((current) => (current ? { ...current, [key]: value } : current));
 
   const save = () => {
@@ -102,12 +116,11 @@ export function AdminCouponsSection() {
 
   return (
     <section className="admin-content admin-editorial-page admin-coupons-page">
-      {/* Cabeçalho unificado com título e botão de ação principal */}
       <div className="admin-editorial-hero" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
         <div>
-          <span className="section-kicker">GESTÃO DE VENDAS · CUPONS</span>
-          <h2 className="content-title">Cupons de Desconto</h2>
-          <p className="content-subtitle">Crie códigos promocionais, defina regras e acompanhe a utilização em tempo real.</p>
+          <span className="section-kicker">GESTÃO DE VENDAS · DESCONTOS</span>
+          <h2 className="content-title">Cupons e Promoções</h2>
+          <p className="content-subtitle">Crie códigos com regras avançadas de frete grátis, descontos progressivos e limites por cliente.</p>
         </div>
         <Button 
           onClick={() => startEdit()} 
@@ -117,7 +130,6 @@ export function AdminCouponsSection() {
         </Button>
       </div>
 
-      {/* Barra de Pesquisa e Filtros */}
       <div 
         className="content-toolbar admin-editorial-toolbar" 
         style={{ 
@@ -148,7 +160,7 @@ export function AdminCouponsSection() {
             className="inventory-category-filter"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as any)}
-            style={{ padding: "0.5rem 0.75rem", height: "40px", borderRadius: "8px", border: "1px solid #dcd6ce", background: "#fff", fontSize: "0.85rem", color: "#333" }}
+            style={{ height: "40px", padding: "0 0.75rem", borderRadius: "8px", borderColor: "#dcd6ce", background: "#fff", fontSize: "0.85rem" }}
           >
             <option value="all">Todos os estados</option>
             <option value="active">Apenas ativos</option>
@@ -157,7 +169,6 @@ export function AdminCouponsSection() {
         </div>
       </div>
 
-      {/* Listagem de cupons em Cards */}
       {couponsQuery.isLoading ? (
         <div className="admin-panel admin-empty-state" style={{ padding: "3rem", textAlign: "center", background: "#fff", borderRadius: "10px", border: "1px solid #eae5de" }}>
           <span className="admin-loading-mark" /> A carregar cupons...
@@ -178,7 +189,7 @@ export function AdminCouponsSection() {
           )}
         </div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "1.25rem" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "1.25rem" }}>
           {filtered.map((coupon) => (
             <div 
               key={coupon.id} 
@@ -218,11 +229,16 @@ export function AdminCouponsSection() {
                   </span>
                 </div>
 
-                <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#b22222", marginBottom: "0.75rem" }}>
-                  {Number(coupon.discountPercent).toLocaleString("pt-BR")}% OFF
+                <div style={{ fontSize: "1.4rem", fontWeight: 700, color: "#b22222", marginBottom: "0.75rem" }}>
+                  {((coupon as any).discountType === "fixed")
+                    ? Number((coupon as any).fixedAmount || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) + " OFF"
+                    : ((coupon as any).discountType === "free_shipping")
+                    ? "Frete Grátis"
+                    : Number(coupon.discountPercent).toLocaleString("pt-BR") + "% OFF"}
                 </div>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem", fontSize: "0.85rem", color: "#555", marginBottom: "1.25rem" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem", fontSize: "0.825rem", color: "#555", marginBottom: "1.25rem" }}>
+                  <div>Escopo: <strong>{((coupon as any).applyScope === "categories") ? "Categorias específicas" : ((coupon as any).applyScope === "products") ? "Produtos específicos" : "Toda a loja"}</strong></div>
                   <div>Compra mínima: <strong>{Number(coupon.minPurchase ?? 0) > 0 ? Number(coupon.minPurchase).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "Sem mínimo"}</strong></div>
                   <div>Utilizações: <strong>{coupon.timesUsed ?? 0} {coupon.usageLimit ? `/ ${coupon.usageLimit}` : "(ilimitado)"}</strong></div>
                   <div>Validade: <strong>{coupon.validUntil ? new Date(coupon.validUntil).toLocaleDateString("pt-BR") : "Indeterminada"}</strong></div>
@@ -267,16 +283,16 @@ export function AdminCouponsSection() {
         </div>
       )}
 
-      {/* Modal de Criação / Edição (Editor de Oferta) redesenhado na estética Eras */}
+      {/* Editor de Oferta Completo (Estilo Nuvemshop com identidade Eras) */}
       {editing && (
         <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(20, 18, 16, 0.65)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
-          <div style={{ background: "#fffdfa", borderRadius: "16px", border: "1px solid #dcd6ce", width: "100%", maxWidth: "520px", boxShadow: "0 24px 64px rgba(20, 18, 16, 0.25)", overflow: "hidden", animation: "modalAppear 0.25s cubic-bezier(0.23, 1, 0.32, 1)" }}>
+          <div style={{ background: "#fffdfa", borderRadius: "16px", border: "1px solid #dcd6ce", width: "100%", maxWidth: "780px", maxHeight: "90vh", boxShadow: "0 24px 64px rgba(20, 18, 16, 0.25)", overflow: "hidden", display: "flex", flexDirection: "column", animation: "modalAppear 0.25s cubic-bezier(0.23, 1, 0.32, 1)" }}>
             
-            {/* Cabeçalho do modal */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "between", padding: "1.25rem 1.5rem", borderBottom: "1px solid #eae5de", background: "#fbf9f6" }}>
+            {/* Cabeçalho */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1.25rem 1.75rem", borderBottom: "1px solid #eae5de", background: "#fbf9f6" }}>
               <div>
-                <span style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.15em", color: "#b22222", textTransform: "uppercase" }}>Editor de Oferta</span>
-                <h3 style={{ fontSize: "1.2rem", fontWeight: 600, color: "#1a1816", fontFamily: "Georgia, serif", margin: "0.1rem 0 0" }}>{editing.id ? "Editar Cupom" : "Novo Cupom Promocional"}</h3>
+                <span style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.15em", color: "#b22222", textTransform: "uppercase" }}>Editor de Oferta Avançado</span>
+                <h3 style={{ fontSize: "1.25rem", fontWeight: 600, color: "#1a1816", fontFamily: "Georgia, serif", margin: "0.1rem 0 0" }}>{editing.id ? `Editar: ${editing.code}` : "Criar Novo Cupom"}</h3>
               </div>
               <button 
                 type="button" 
@@ -288,81 +304,216 @@ export function AdminCouponsSection() {
               </button>
             </div>
 
-            {/* Corpo do formulário */}
-            <div style={{ padding: "1.5rem", display: "grid", gap: "1.1rem", maxHeight: "75vh", overflowY: "auto" }}>
-              <label style={{ display: "grid", gap: "0.4rem", fontSize: "0.8rem", fontWeight: 600, color: "#4a443e" }}>
-                <span>Código do Cupom</span>
-                <Input 
-                  value={editing.code} 
-                  onChange={(event) => update("code", event.target.value.toUpperCase())} 
-                  placeholder="Ex: ERAS10" 
-                  style={{ height: "42px", borderRadius: "8px", borderColor: "#dcd6ce", background: "#fff" }}
-                />
-              </label>
+            {/* Layout de colunas estilo Nuvemshop */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 280px", overflowY: "auto", flex: 1, background: "#faf8f5" }}>
+              
+              {/* Coluna Esquerda: Configurações principais */}
+              <div style={{ padding: "1.75rem", display: "grid", gap: "1.25rem", background: "#fffdfa", borderRight: "1px solid #eae5de" }}>
+                
+                {/* Código do Cupom */}
+                <label style={{ display: "grid", gap: "0.4rem", fontSize: "0.825rem", fontWeight: 600, color: "#4a443e" }}>
+                  <span>Código do Cupom</span>
+                  <Input 
+                    value={editing.code} 
+                    onChange={(event) => update("code", event.target.value.toUpperCase())} 
+                    placeholder="Ex: ERAS10 ou 100FRETE" 
+                    style={{ height: "42px", borderRadius: "8px", borderColor: "#dcd6ce", background: "#fff", fontFamily: "monospace", fontWeight: 700, fontSize: "1rem" }}
+                  />
+                  <small style={{ fontWeight: 400, color: "#777", fontSize: "0.75rem" }}>Este é o código que o seu cliente deverá inserir no momento da compra.</small>
+                </label>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                <label style={{ display: "grid", gap: "0.4rem", fontSize: "0.8rem", fontWeight: 600, color: "#4a443e" }}>
-                  <span>Desconto (%)</span>
-                  <Input 
-                    type="number" 
-                    min="0.01" 
-                    max="100" 
-                    step="0.01" 
-                    value={editing.discountPercent} 
-                    onChange={(event) => update("discountPercent", Number(event.target.value))} 
-                    style={{ height: "42px", borderRadius: "8px", borderColor: "#dcd6ce", background: "#fff" }}
+                {/* Tipo de Desconto */}
+                <div style={{ display: "grid", gap: "0.4rem" }}>
+                  <span style={{ fontSize: "0.825rem", fontWeight: 600, color: "#4a443e" }}>Tipo de Desconto</span>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.5rem" }}>
+                    {[
+                      { id: "percent", label: "Porcentagem", icon: Percent },
+                      { id: "fixed", label: "Valor Fixo", icon: DollarSign },
+                      { id: "free_shipping", label: "Frete Grátis", icon: Truck },
+                    ].map(({ id, label, icon: Icon }) => (
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={() => update("discountType", id)}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "0.4rem",
+                          padding: "0.6rem 0.5rem",
+                          borderRadius: "8px",
+                          border: editing.discountType === id ? "2px solid #b22222" : "1px solid #dcd6ce",
+                          background: editing.discountType === id ? "#faf5f5" : "#fff",
+                          color: editing.discountType === id ? "#b22222" : "#444",
+                          fontSize: "0.8rem",
+                          fontWeight: 600,
+                          cursor: "pointer",
+                          transition: "all 0.15s"
+                        }}
+                      >
+                        <Icon size={14} /> {label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {editing.discountType === "percent" && (
+                    <label style={{ display: "grid", gap: "0.4rem", fontSize: "0.8rem", fontWeight: 600, color: "#4a443e", marginTop: "0.5rem" }}>
+                      <span>Desconto (%)</span>
+                      <Input 
+                        type="number" 
+                        min="0.01" 
+                        max="100" 
+                        step="0.01" 
+                        value={editing.discountPercent} 
+                        onChange={(event) => update("discountPercent", Number(event.target.value))} 
+                        style={{ height: "40px", borderRadius: "8px", borderColor: "#dcd6ce", background: "#fff" }}
+                      />
+                    </label>
+                  )}
+
+                  {editing.discountType === "fixed" && (
+                    <label style={{ display: "grid", gap: "0.4rem", fontSize: "0.8rem", fontWeight: 600, color: "#4a443e", marginTop: "0.5rem" }}>
+                      <span>Valor do Desconto (R$)</span>
+                      <Input 
+                        type="number" 
+                        min="1" 
+                        step="0.01" 
+                        value={editing.fixedAmount} 
+                        onChange={(event) => update("fixedAmount", Number(event.target.value))} 
+                        style={{ height: "40px", borderRadius: "8px", borderColor: "#dcd6ce", background: "#fff" }}
+                      />
+                    </label>
+                  )}
+                </div>
+
+                {/* Aplicar a */}
+                <div style={{ display: "grid", gap: "0.4rem" }}>
+                  <span style={{ fontSize: "0.825rem", fontWeight: 600, color: "#4a443e" }}>Aplicar a</span>
+                  <div style={{ display: "flex", gap: "0.5rem" }}>
+                    {[
+                      { id: "all", label: "Toda a loja" },
+                      { id: "categories", label: "Categorias" },
+                      { id: "products", label: "Produtos" },
+                    ].map(({ id, label }) => (
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={() => update("applyScope", id)}
+                        style={{
+                          flex: 1,
+                          padding: "0.5rem",
+                          borderRadius: "8px",
+                          border: editing.applyScope === id ? "2px solid #b22222" : "1px solid #dcd6ce",
+                          background: editing.applyScope === id ? "#faf5f5" : "#fff",
+                          color: editing.applyScope === id ? "#b22222" : "#444",
+                          fontSize: "0.8rem",
+                          fontWeight: 600,
+                          cursor: "pointer",
+                        }}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Limites e Condições */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                  <label style={{ display: "grid", gap: "0.4rem", fontSize: "0.8rem", fontWeight: 600, color: "#4a443e" }}>
+                    <span>Compra Mínima (R$)</span>
+                    <Input 
+                      type="number" 
+                      min="0" 
+                      step="0.01" 
+                      value={editing.minPurchase} 
+                      onChange={(event) => update("minPurchase", Number(event.target.value))} 
+                      style={{ height: "40px", borderRadius: "8px", borderColor: "#dcd6ce", background: "#fff" }}
+                    />
+                  </label>
+                  <label style={{ display: "grid", gap: "0.4rem", fontSize: "0.8rem", fontWeight: 600, color: "#4a443e" }}>
+                    <span>Limite de Usos Totais</span>
+                    <Input 
+                      type="number" 
+                      min="1" 
+                      value={editing.usageLimit ?? ""} 
+                      onChange={(event) => update("usageLimit", event.target.value ? Number(event.target.value) : null)} 
+                      placeholder="Ilimitado" 
+                      style={{ height: "40px", borderRadius: "8px", borderColor: "#dcd6ce", background: "#fff" }}
+                    />
+                  </label>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                  <label style={{ display: "grid", gap: "0.4rem", fontSize: "0.8rem", fontWeight: 600, color: "#4a443e" }}>
+                    <span>Validade Limite</span>
+                    <Input 
+                      type="datetime-local" 
+                      value={editing.validUntil} 
+                      onChange={(event) => update("validUntil", event.target.value)} 
+                      style={{ height: "40px", borderRadius: "8px", borderColor: "#dcd6ce", background: "#fff" }}
+                    />
+                  </label>
+                  <div style={{ display: "grid", gap: "0.4rem" }}>
+                    <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "#4a443e" }}>Acúmulo de Ofertas</span>
+                    <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.8rem", color: "#444", marginTop: "0.5rem", cursor: "pointer" }}>
+                      <input 
+                        type="checkbox" 
+                        checked={editing.allowStacking === 1} 
+                        onChange={(event) => update("allowStacking", event.target.checked ? 1 : 0)} 
+                        style={{ accentColor: "#b22222", width: "16px", height: "16px" }}
+                      />
+                      <span>Permitir acumular com promoções</span>
+                    </label>
+                  </div>
+                </div>
+
+                <label style={{ display: "flex", alignItems: "center", gap: "0.75rem", cursor: "pointer", background: "#faf5f5", padding: "0.75rem 1rem", borderRadius: "8px", border: "1px solid #f2d6d6" }}>
+                  <input 
+                    type="checkbox" 
+                    checked={editing.active === 1} 
+                    onChange={(event) => update("active", event.target.checked ? 1 : 0)} 
+                    style={{ width: "18px", height: "18px", accentColor: "#b22222", cursor: "pointer" }} 
                   />
+                  <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#b22222" }}>Ativar cupom imediatamente após guardar</span>
                 </label>
-                <label style={{ display: "grid", gap: "0.4rem", fontSize: "0.8rem", fontWeight: 600, color: "#4a443e" }}>
-                  <span>Limite de Usos</span>
-                  <Input 
-                    type="number" 
-                    min="1" 
-                    value={editing.usageLimit ?? ""} 
-                    onChange={(event) => update("usageLimit", event.target.value ? Number(event.target.value) : null)} 
-                    placeholder="Ilimitado" 
-                    style={{ height: "42px", borderRadius: "8px", borderColor: "#dcd6ce", background: "#fff" }}
-                  />
-                </label>
+
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                <label style={{ display: "grid", gap: "0.4rem", fontSize: "0.8rem", fontWeight: 600, color: "#4a443e" }}>
-                  <span>Valor Mínimo (R$)</span>
-                  <Input 
-                    type="number" 
-                    min="0" 
-                    step="0.01" 
-                    value={editing.minPurchase} 
-                    onChange={(event) => update("minPurchase", Number(event.target.value))} 
-                    style={{ height: "42px", borderRadius: "8px", borderColor: "#dcd6ce", background: "#fff" }}
-                  />
-                </label>
-                <label style={{ display: "grid", gap: "0.4rem", fontSize: "0.8rem", fontWeight: 600, color: "#4a443e" }}>
-                  <span>Validade Limite</span>
-                  <Input 
-                    type="datetime-local" 
-                    value={editing.validUntil} 
-                    onChange={(event) => update("validUntil", event.target.value)} 
-                    style={{ height: "42px", borderRadius: "8px", borderColor: "#dcd6ce", background: "#fff" }}
-                  />
-                </label>
+              {/* Coluna Direita: Histórico e Status estilo Nuvemshop */}
+              <div style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1.25rem", background: "#fbf9f6" }}>
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.85rem", fontWeight: 700, color: "#111", marginBottom: "0.75rem" }}>
+                    <History size={15} color="#b22222" /> Histórico do Cupom
+                  </div>
+                  <div style={{ display: "grid", gap: "0.75rem", fontSize: "0.775rem", color: "#555" }}>
+                    <div style={{ background: "#fff", padding: "0.65rem 0.85rem", borderRadius: "8px", border: "1px solid #eae5de" }}>
+                      <strong style={{ color: "#222", display: "block" }}>Cupom criado</strong>
+                      <span style={{ color: "#777" }}>Por Administrador · Hoje</span>
+                    </div>
+                    {editing.id && (
+                      <div style={{ background: "#fff", padding: "0.65rem 0.85rem", borderRadius: "8px", border: "1px solid #eae5de" }}>
+                        <strong style={{ color: "#222", display: "block" }}>Última atualização</strong>
+                        <span style={{ color: "#777" }}>Status: {editing.active ? "Ativo" : "Desativado"}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div style={{ background: "#fff", padding: "1rem", borderRadius: "10px", border: "1px solid #eae5de", marginTop: "auto" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.8rem", fontWeight: 700, color: "#b22222", marginBottom: "0.3rem" }}>
+                    <ShieldCheck size={15} /> Padrão Eras Label
+                  </div>
+                  <p style={{ fontSize: "0.75rem", color: "#666", lineHeight: 1.4, margin: 0 }}>
+                    Os cupons são validados em tempo real no checkout transparente do Mercado Pago, respeitando regras de frete e valor mínimo.
+                  </p>
+                </div>
               </div>
 
-              <label style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginTop: "0.5rem", cursor: "pointer", background: "#fbf9f6", padding: "0.75rem 1rem", borderRadius: "8px", border: "1px solid #eae5de" }}>
-                <input 
-                  type="checkbox" 
-                  checked={editing.active === 1} 
-                  onChange={(event) => update("active", event.target.checked ? 1 : 0)} 
-                  style={{ width: "18px", height: "18px", accentColor: "#b22222", cursor: "pointer" }} 
-                />
-                <span style={{ fontSize: "0.85rem", fontWeight: 500, color: "#2c2622" }}>Ativar cupom imediatamente após guardar</span>
-              </label>
             </div>
 
             {/* Rodapé do modal */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1.25rem 1.5rem", borderTop: "1px solid #eae5de", background: "#fbf9f6", gap: "1rem" }}>
-              <span style={{ fontSize: "0.725rem", color: "#777", lineHeight: 1.4 }}>Regras oficiais da Eras Label.</span>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1.25rem 1.75rem", borderTop: "1px solid #eae5de", background: "#fbf9f6", gap: "1rem" }}>
+              <span style={{ fontSize: "0.725rem", color: "#777", lineHeight: 1.4 }}>Regras oficiais de desconto.</span>
               <div style={{ display: "flex", gap: "0.75rem" }}>
                 <Button variant="outline" onClick={() => setEditing(null)} style={{ height: "40px", borderRadius: "8px" }}>Cancelar</Button>
                 <Button 
