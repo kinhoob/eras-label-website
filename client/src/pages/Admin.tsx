@@ -385,7 +385,7 @@ function EmailMarketingSection() {
 
 type AdminVariation = { id?: number; size: string; stock: number };
 type ProductVisibility = "visible" | "unlisted" | "hidden";
-type AdminProductOption = { id: number; name: string; collection: string; category: string; subcategory?: string | null; sku?: string | null; slug?: string | null; visibility?: ProductVisibility; categoryIds?: number[]; price: string; stock: number; variations: AdminVariation[]; status: string; images: string[] };
+type AdminProductOption = { id: number; name: string; collection: string; category: string; subcategory?: string | null; sku?: string | null; slug?: string | null; visibility?: ProductVisibility; categoryIds?: number[]; price: string; pixPrice: string; promotionalPrice: number | null; stock: number; variations: AdminVariation[]; status: string; images: string[] };
 
 function normalizeProductVisibility(value: unknown): ProductVisibility {
   return value === "unlisted" || value === "hidden" ? value : "visible";
@@ -832,6 +832,8 @@ export default function Admin() {
       visibility: normalizeProductVisibility(product.visibility),
       categoryIds: Array.isArray(product.categoryIds) ? product.categoryIds.map(Number) : [],
       price: Number(product.price).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }),
+      pixPrice: Number(product.pixPrice ?? product.price).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }),
+      promotionalPrice: product.promotionalPrice !== null && product.promotionalPrice !== undefined ? Number(product.promotionalPrice) : null,
       stock: Number(product.totalStock ?? variations.reduce((total, variation) => total + variation.stock, 0)),
       variations,
       status: product.status === "active" ? "Publicado" : product.status === "soldout" ? "Esgotado" : "Rascunho",
@@ -1105,7 +1107,7 @@ export default function Admin() {
             <div><span className="section-kicker">CATÁLOGO</span><h2 className="content-title">Produtos</h2><p>Cadastre e edite os dados completos das peças, incluindo SKU, categoria, imagens e preços.</p>{selectedProductCategory && <div className="product-category-filter-chip"><Tag size={13} /><span>Categoria: <strong>{selectedProductCategory.name}</strong></span><button type="button" onClick={() => setProductCategoryFilter(null)} aria-label="Remover filtro de categoria">×</button></div>}</div>
             <Button onClick={() => {
               setEditorMode("product");
-              setEditingProduct({ name: "", collection: "PARADOX COLLECTION", category: "Camisetas", subcategory: null, sku: "", slug: "", visibility: "visible", categoryIds: [], price: 154.90, pixPrice: 147.15, description: "Peça de vestuário streetwear com acabamento premium.", status: "Publicado", variations: [] });
+              setEditingProduct({ name: "", collection: "PARADOX COLLECTION", category: "Camisetas", subcategory: null, sku: "", slug: "", visibility: "visible", categoryIds: [], price: 154.90, pixPrice: 147.15, promotionalPrice: null, description: "Peça de vestuário streetwear com acabamento premium.", status: "Publicado", variations: [] });
               setProductImages([]);
             }}><Plus size={16} /> Novo produto</Button>
           </div>
@@ -1128,7 +1130,9 @@ export default function Admin() {
               <button className="table-more" aria-label={`Editar produto ${product.name}`} title="Editar produto" onClick={() => {
                 setEditorMode("product");
                 const numericPrice = Number(product.price.replace(/[^0-9,]/g, "").replace(",", ".")) || 0;
-                setEditingProduct({ id: product.id, name: product.name, collection: product.collection, category: product.category, subcategory: product.subcategory ?? null, sku: product.sku ?? "", slug: product.slug ?? "", visibility: product.visibility ?? "visible", categoryIds: product.categoryIds ?? [], price: numericPrice, pixPrice: numericPrice, description: "Peça de vestuário streetwear com acabamento premium.", status: product.status, variations: product.variations.map((variation) => ({ size: variation.size, stock: variation.stock })) });
+                const numericPix = Number(product.pixPrice?.replace(/[^0-9,]/g, "").replace(",", ".")) || numericPrice;
+                const numericPromo = product.promotionalPrice !== null && product.promotionalPrice !== undefined ? Number(String(product.promotionalPrice).replace(/[^0-9,]/g, "").replace(",", ".")) : null;
+                setEditingProduct({ id: product.id, name: product.name, collection: product.collection, category: product.category, subcategory: product.subcategory ?? null, sku: product.sku ?? "", slug: product.slug ?? "", visibility: product.visibility ?? "visible", categoryIds: product.categoryIds ?? [], price: numericPrice, pixPrice: numericPix, promotionalPrice: Number.isNaN(numericPromo) ? null : numericPromo, description: "Peça de vestuário streetwear com acabamento premium.", status: product.status, variations: product.variations.map((variation) => ({ size: variation.size, stock: variation.stock })) });
                 setProductImages(product.images);
               }}><Pencil size={16} /></button>
               <button className="table-more" aria-label={`Duplicar produto ${product.name}`} title="Duplicar produto" disabled={duplicateProductMutation.isPending} onClick={() => {
@@ -1244,6 +1248,11 @@ export default function Admin() {
                   <div className="editor-field">
                     <label>Preço PIX (R$)</label>
                     <Input type="number" value={editingProduct.pixPrice} onChange={(e) => setEditingProduct({ ...editingProduct, pixPrice: parseFloat(e.target.value) || 0 })} />
+                  </div>
+                  <div className="editor-field">
+                    <label>Preço promocional (R$) <span style={{ fontSize: '11px', color: '#b22222', fontWeight: 600 }}>(Opcional)</span></label>
+                    <Input type="number" value={editingProduct.promotionalPrice ?? ""} onChange={(e) => setEditingProduct({ ...editingProduct, promotionalPrice: e.target.value ? parseFloat(e.target.value) : null })} placeholder="Ex.: 129.90" />
+                    <small className="editor-help">Se preenchido, ativa o selo de promoção e o preço anterior riscado.</small>
                   </div>
                   <div className="editor-field">
                     <label>Status</label>

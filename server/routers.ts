@@ -561,6 +561,7 @@ export const appRouter = router({
       sku: z.string().trim().max(100).nullable().optional(),
       price: z.number().positive(),
       pixPrice: z.number().positive(),
+      promotionalPrice: z.number().positive().nullable().optional(),
       description: z.string(),
       images: z.array(z.string()),
       status: z.enum(["Publicado", "Rascunho", "Esgotado"]),

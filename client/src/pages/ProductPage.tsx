@@ -164,10 +164,12 @@ export default function ProductPage() {
   }
   if (isError || !product) return <NotFound />;
 
-  const price = Number(product.price) || 0;
-  const pixPrice = Number(product.pixPrice ?? price) || price;
-  const pixSavings = Math.max(0, price - pixPrice);
-  const installments = price / 2;
+  const normalPrice = Number(product.price) || 0;
+  const promoPrice = product.promotionalPrice !== null && product.promotionalPrice !== undefined && Number(product.promotionalPrice) > 0 ? Number(product.promotionalPrice) : null;
+  const effectivePrice = promoPrice !== null ? promoPrice : normalPrice;
+  const pixPrice = Number(product.pixPrice ?? effectivePrice) || effectivePrice;
+  const pixSavings = Math.max(0, effectivePrice - pixPrice);
+  const installments = effectivePrice / 2;
 
   const handleAddToCart = () => {
     if (isAdding) return;
@@ -193,7 +195,7 @@ export default function ProductPage() {
               name: product.name,
               size: chosenSize,
               quantity: 1,
-              price,
+              price: effectivePrice,
               image: images[0] || productImageFallback,
               alt: product.name,
             },
@@ -307,9 +309,21 @@ export default function ProductPage() {
               <h1 id="product-title" className="product-title font-display">
                 {product.name}
               </h1>
+              {promoPrice !== null && (
+                <div style={{ display: 'inline-flex', alignItems: 'center', background: '#b22222', color: '#fff', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', padding: '0.2rem 0.5rem', borderRadius: '4px', marginBottom: '0.5rem', letterSpacing: '0.08em' }}>
+                  PROMOÇÃO · {Math.round((1 - promoPrice / normalPrice) * 100)}% OFF
+                </div>
+              )}
               <div className="product-price-block">
                 <div>
-                  <p className="product-price">{formatPrice(price)}</p>
+                  {promoPrice !== null ? (
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem', flexWrap: 'wrap' }}>
+                      <p className="product-price" style={{ color: '#b22222', margin: 0 }}>{formatPrice(promoPrice)}</p>
+                      <span style={{ fontSize: '1rem', textDecoration: 'line-through', color: '#888', fontWeight: 500 }}>{formatPrice(normalPrice)}</span>
+                    </div>
+                  ) : (
+                    <p className="product-price">{formatPrice(normalPrice)}</p>
+                  )}
                   <p className="product-pix-price">{formatPrice(pixPrice)} com Pix</p>
                 </div>
                 <p className="product-installments">2× de {formatPrice(installments)} sem juros</p>

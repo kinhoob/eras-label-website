@@ -353,6 +353,7 @@ export async function duplicateProductData(productId: number) {
     sku: sourceSku ? `${sourceSku}-COPY-${suffix}` : null,
     price: Number(source.price),
     pixPrice: Number(source.pixPrice),
+    promotionalPrice: source.promotionalPrice !== null && source.promotionalPrice !== undefined ? Number(source.promotionalPrice) : null,
     description: source.description ?? "",
     images: Array.isArray(source.images) ? source.images : [],
     status: source.status === "active" ? "Publicado" : source.status === "soldout" ? "Esgotado" : "Rascunho",
@@ -656,6 +657,7 @@ export async function saveProductData(data: {
   category: string;
   price: number;
   pixPrice: number;
+  promotionalPrice?: number | null;
   description: string;
   images: string[];
   status: string;
@@ -702,6 +704,7 @@ export async function saveProductData(data: {
       sku: data.sku?.trim() || null,
       price: String(data.price),
       pixPrice: String(data.pixPrice),
+      promotionalPrice: data.promotionalPrice !== undefined && data.promotionalPrice !== null && !Number.isNaN(data.promotionalPrice) ? String(data.promotionalPrice) : null,
       description: data.description,
       images: data.images as any,
       status: statusDb as any,
@@ -717,6 +720,7 @@ export async function saveProductData(data: {
       sku: data.sku?.trim() || null,
       price: String(data.price),
       pixPrice: String(data.pixPrice),
+      promotionalPrice: data.promotionalPrice !== undefined && data.promotionalPrice !== null && !Number.isNaN(data.promotionalPrice) ? String(data.promotionalPrice) : null,
       description: data.description,
       images: data.images as any,
       status: statusDb as any,

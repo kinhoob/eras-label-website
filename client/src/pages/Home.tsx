@@ -61,6 +61,7 @@ type Product = {
   color: string;
   price: number;
   pixPrice: number;
+  promotionalPrice?: number | null;
   image: string;
   fallbackImage?: string;
   alt: string;
@@ -217,7 +218,7 @@ function inferProductColor(name: string) {
   return knownColors.find(([token]) => normalized.includes(token))?.[1] ?? "Neutro";
 }
 
-function mapCatalogProduct(row: { id: number; slug?: string | null; name: string; collection: string; category: string; categoryNames?: string[]; categoryIds?: number[]; color?: string | null; price: unknown; pixPrice: unknown; description: string | null; images: unknown; status: string; createdAt?: string | Date | null; variations?: Array<{ size: string; stock: number | null }> }): Product {
+function mapCatalogProduct(row: { id: number; slug?: string | null; name: string; collection: string; category: string; categoryNames?: string[]; categoryIds?: number[]; color?: string | null; price: unknown; pixPrice: unknown; promotionalPrice?: unknown; description: string | null; images: unknown; status: string; createdAt?: string | Date | null; variations?: Array<{ size: string; stock: number | null }> }): Product {
   const images = Array.isArray(row.images) ? row.images.filter((image): image is string => typeof image === "string") : [];
   const fallbackImage = fallbackProducts.find((product) => product.id === row.id)?.image || editorialImage;
   const category = row.category?.trim() || "Sem categoria";
@@ -237,6 +238,7 @@ function mapCatalogProduct(row: { id: number; slug?: string | null; name: string
     color: row.color?.trim() || inferProductColor(row.name),
     price: Number(row.price),
     pixPrice: Number(row.pixPrice),
+    promotionalPrice: row.promotionalPrice !== null && row.promotionalPrice !== undefined ? Number(row.promotionalPrice) : null,
     image: images[0] || fallbackImage,
     fallbackImage,
     alt: row.name,
@@ -1072,6 +1074,11 @@ export default function Home() {
                           event.currentTarget.src = product.fallbackImage;
                         }} />
                         {product.stock === 0 && <span className="soldout-tag">ESGOTADO</span>}
+                        {product.promotionalPrice !== null && product.promotionalPrice !== undefined && product.promotionalPrice > 0 && (
+                          <span style={{ position: 'absolute', top: '12px', left: '12px', background: '#b22222', color: '#fff', fontSize: '10px', fontWeight: 700, padding: '0.2rem 0.45rem', borderRadius: '3px', textTransform: 'uppercase', zIndex: 2, letterSpacing: '0.08em' }}>
+                            {Math.round((1 - product.promotionalPrice / product.price) * 100)}% OFF
+                          </span>
+                        )}
                         <span className="quick-view-label">VISUALIZAÇÃO RÁPIDA</span>
                         <span className="product-arrow"><ArrowRight size={15} /></span>
                       </button>
@@ -1080,7 +1087,22 @@ export default function Home() {
                           <a href={`/produto/${product.slug || product.id}`} className="product-name-link" onClick={(event) => { event.preventDefault(); playClick(soundsOn); window.location.href = `/produto/${product.slug || product.id}`; }}>{product.name}</a>
                           <p className="product-collection">{product.collection}</p>
                         </div>
-                        <div className="product-price"><strong>{formatPrice(product.price)}</strong><span>{formatPrice(product.pixPrice)} NO PIX</span></div>
+                        <div className="product-price">
+                          {product.promotionalPrice !== null && product.promotionalPrice !== undefined && product.promotionalPrice > 0 ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.1rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                <strong style={{ color: '#b22222' }}>{formatPrice(product.promotionalPrice)}</strong>
+                                <span style={{ textDecoration: 'line-through', color: '#888', fontSize: '0.8rem', fontWeight: 500 }}>{formatPrice(product.price)}</span>
+                              </div>
+                              <span>{formatPrice(product.pixPrice)} NO PIX</span>
+                            </div>
+                          ) : (
+                            <>
+                              <strong>{formatPrice(product.price)}</strong>
+                              <span>{formatPrice(product.pixPrice)} NO PIX</span>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </article>
                   );

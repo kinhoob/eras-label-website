@@ -28,6 +28,7 @@ export const products = mysqlTable("products", {
   sku: varchar("sku", { length: 100 }),
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   pixPrice: decimal("pixPrice", { precision: 10, scale: 2 }).notNull(),
+  promotionalPrice: decimal("promotionalPrice", { precision: 10, scale: 2 }),
   description: text("description"),
   images: json("images").notNull(),
   status: varchar("status", { length: 50 }).default("Publicado").notNull(),
