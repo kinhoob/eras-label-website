@@ -32,3 +32,18 @@ describe("Eras visual motion system", () => {
     expect(stylesheet).toContain("width: min(360px, 92vw)");
   });
 });
+
+describe("Eras checkout mobile layout", () => {
+  const stylesheet = readFileSync(resolve(process.cwd(), "client/src/index.css"), "utf8");
+
+  it("keeps the full checkout bag summary visible on mobile", () => {
+    expect(stylesheet).toContain(".checkout-page-summary {");
+    expect(stylesheet).toContain("min-height: fit-content !important");
+    expect(stylesheet).toContain("max-height: none !important");
+    expect(stylesheet).toContain("overflow: visible !important");
+    expect(stylesheet).toContain(".checkout-summary-lines {");
+    expect(stylesheet).toContain("overflow-x: hidden !important");
+    expect(stylesheet).toContain("@media (max-width: 540px)");
+    expect(stylesheet).toContain("grid-template-columns: 48px minmax(0, 1fr) auto !important");
+  });
+});

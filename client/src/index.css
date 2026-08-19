@@ -10594,3 +10594,105 @@ h1, h2, h3, .heading-editorial {
     padding: 16px !important;
   }
 }
+
+/* ============================================================================
+   CHECKOUT MOBILE — RESUMO DA SACOLA EXPANDIDO
+   Mantém todos os itens, cupão e totais visíveis como uma secção completa no
+   fluxo mobile, em vez de deixar o conteúdo reduzido a uma faixa compacta.
+   ============================================================================ */
+@media (max-width: 980px) {
+  /* O layout passa a empilhar formulário e resumo sem permitir compressão
+     vertical do aside dentro do modal de checkout. */
+  .checkout-modal-shell .checkout-page-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+
+  /* O resumo permanece no topo, ocupa toda a largura disponível e deixa de
+     ter altura máxima/scroll próprio, permitindo que o cliente veja a sacola
+     completa antes de continuar para os dados pessoais. */
+  .checkout-page-summary {
+    display: block !important;
+    position: static !important;
+    order: -1 !important;
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: fit-content !important;
+    max-height: none !important;
+    overflow: visible !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  /* A lista de produtos deixa de ficar confinada a uma pequena janela interna;
+     a rolagem, quando necessária, ocorre apenas no fluxo geral do checkout. */
+  .checkout-summary-lines {
+    display: grid !important;
+    max-height: none !important;
+    overflow: visible !important;
+    min-height: 0 !important;
+  }
+}
+
+@media (max-width: 540px) {
+  /* Reduzimos apenas o tamanho dos elementos para preservar conforto visual
+     sem sacrificar o nome, tamanho, preço e controlos de cada produto. */
+  .checkout-page-summary {
+    padding: 18px !important;
+    border-radius: 18px !important;
+  }
+
+  .checkout-summary-line {
+    grid-template-columns: 48px minmax(0, 1fr) auto !important;
+    gap: 9px !important;
+    padding: 13px 0 !important;
+  }
+
+  .checkout-summary-line img {
+    width: 48px !important;
+    height: 62px !important;
+    border-radius: 8px !important;
+  }
+
+  .checkout-summary-line > div:nth-child(2) {
+    display: grid !important;
+    min-width: 0 !important;
+    gap: 4px !important;
+  }
+
+  .checkout-summary-line strong {
+    overflow: visible !important;
+    white-space: normal !important;
+    line-height: 1.25 !important;
+  }
+
+  .checkout-summary-actions {
+    grid-auto-flow: column !important;
+    grid-template-columns: repeat(3, 32px) !important;
+    gap: 4px !important;
+  }
+
+  .checkout-summary-actions button {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  /* O campo de cupão e o botão mantêm-se na mesma linha quando há espaço e
+     podem adaptar-se sem criar scroll horizontal em telemóveis estreitos. */
+  .checkout-coupon-row {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: stretch !important;
+  }
+
+  .checkout-coupon-row input,
+  .checkout-coupon-row button {
+    min-width: 0 !important;
+    min-height: 44px !important;
+  }
+}

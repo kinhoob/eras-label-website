@@ -906,3 +906,8 @@
 - [x] Validar menu lateral, navbar, overlay, foco e bloqueio de interação em desktop e mobile
 - [x] Executar testes automatizados e build após a correção
 - [x] Salvar checkpoint da correção do menu lateral
+
+- [x] Corrigir o resumo da sacola no checkout mobile para exibir os itens e totais numa secção completa
+- [x] Validar o resumo da sacola em mobile e desktop sem cortar conteúdo nem criar scroll horizontal
+- [x] Executar testes automatizados e build após a correção do checkout mobile
+- [x] Salvar checkpoint da melhoria do resumo da sacola mobile
