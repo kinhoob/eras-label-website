@@ -934,6 +934,11 @@
 - [x] Reorganizar a aba 'Página em construção' em cards modernos e responsivos para desktop e mobile
 - [x] Exibir subtotal, descontos, frete e total final nos detalhes de pedidos do painel administrativo
 - [x] Executar testes, build de produção e salvar checkpoint
+- [x] Implementar notificações no painel administrativo para novas vendas e pedidos com estado 'Por embalar'
+- [x] Adicionar contador de não lidas no sino do cabeçalho, marcação de leitura e clique para abrir o pedido correspondente
+- [x] Executar testes Vitest, build de produção e salvar checkpoint
+
+
 
 - [x] Adicionar uma animação bonita com a mensagem de agradecimento no estado pós-compra
 - [x] Criar testes e validar responsividade em desktop e mobile para a nova mensagem animada

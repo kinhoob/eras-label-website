@@ -29,6 +29,7 @@ import {
   getAdminAnalytics,
   getCategoryRevenueMetrics,
   getLowStockAlerts,
+  markAllNotificationsAsRead,
   listInventoryAuditLogs,
   logInventoryAudit,
   listAdminUsers,
@@ -454,6 +455,10 @@ export const appRouter = router({
     }),
     markAsRead: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
       await markNotificationAsRead(input.id);
+      return { success: true };
+    }),
+    markAllAsRead: protectedProcedure.mutation(async ({ ctx }) => {
+      await markAllNotificationsAsRead(ctx.user.id, ctx.user.role);
       return { success: true };
     }),
   }),

@@ -2454,12 +2454,26 @@ function AdminSettingsSection({ onNavigate }: { onNavigate: (label: string) => v
 // Componente do Centro de Notificações Flutuante no Cabeçalho Admin (Apenas Pedidos e Alertas Reais com Leitura Marcada)
 function AdminNotificationsDropdown({ onNavigate }: { onNavigate: (tab: string) => void }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [readIds, setReadIds] = useState<string[]>([]);
-  const { data: orders = [] } = trpc.admin.listOrders.useQuery();
+  const utils = trpc.useUtils();
+  const { data: notifications = [] } = trpc.notifications.list.useQuery(undefined, {
+    refetchInterval: 5000,
+  });
 
-  const recentOrders = orders.filter((o: any) => o.status === "pending" || o.status === "paid" || o.status === "processing").slice(0, 5);
-  const unreadOrders = recentOrders.filter((o: any) => !readIds.includes(`order-${o.id}`));
-  const totalCount = unreadOrders.length;
+  const markAsReadMutation = trpc.notifications.markAsRead.useMutation({
+    onSuccess: () => {
+      utils.notifications.list.invalidate();
+    },
+  });
+
+  const markAllAsReadMutation = trpc.notifications.markAllAsRead.useMutation({
+    onSuccess: () => {
+      utils.notifications.list.invalidate();
+      toast.success("Todas as notificações foram marcadas como lidas.");
+    },
+  });
+
+  const unreadList = notifications.filter((n: any) => !n.isRead);
+  const totalCount = unreadList.length;
 
   return (
     <div style={{ position: "relative" }}>
@@ -2506,7 +2520,7 @@ function AdminNotificationsDropdown({ onNavigate }: { onNavigate: (tab: string) 
           position: "absolute",
           right: 0,
           top: "44px",
-          width: "340px",
+          width: "360px",
           background: "#fff",
           borderRadius: "10px",
           boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
@@ -2516,91 +2530,80 @@ function AdminNotificationsDropdown({ onNavigate }: { onNavigate: (tab: string) 
         }}>
           <div style={{ padding: "0.85rem 1rem", borderBottom: "1px solid #eee", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#faf9f6" }}>
             <div>
-              <strong style={{ fontSize: "0.9rem", color: "#111" }}>Notificações do Sistema</strong>
+              <strong style={{ fontSize: "0.9rem", color: "#111" }}>Notificações (Vendas & Encomendas)</strong>
               {totalCount > 0 && (
-                <span style={{ marginLeft: "0.5rem", fontSize: "0.75rem", background: "#111", color: "#fff", padding: "0.15rem 0.45rem", borderRadius: "4px", fontWeight: 600 }}>
-                  {totalCount}
+                <span style={{ marginLeft: "0.5rem", fontSize: "0.75rem", background: "#b22222", color: "#fff", padding: "0.15rem 0.45rem", borderRadius: "4px", fontWeight: 600 }}>
+                  {totalCount} novas
                 </span>
               )}
             </div>
             {totalCount > 0 && (
               <button
                 type="button"
-                onClick={() => {
-                  const allOrderIds = recentOrders.map((o: any) => `order-${o.id}`);
-                  setReadIds(Array.from(new Set([...readIds, ...allOrderIds])));
-                  toast.success("Todas as notificações foram limpas.");
-                }}
+                onClick={() => markAllAsReadMutation.mutate()}
                 style={{ background: "transparent", border: "none", color: "#b22222", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer", textDecoration: "underline" }}
               >
-                Limpar tudo
+                Marcar todas como lidas
               </button>
             )}
           </div>
 
-          <div style={{ maxHeight: "320px", overflowY: "auto", padding: "0.5rem 0" }}>
-            {totalCount === 0 ? (
+          <div style={{ maxHeight: "340px", overflowY: "auto", padding: "0.5rem 0" }}>
+            {notifications.length === 0 ? (
               <div style={{ padding: "2rem 1rem", textAlign: "center", color: "#666", fontSize: "0.85rem" }}>
                 <Check size={24} style={{ color: "#2e7d32", margin: "0 auto 0.5rem" }} />
                 <strong>Tudo em ordem!</strong>
-                <p style={{ margin: "0.2rem 0 0" }}>Não há novos alertas de stock ou encomendas pendentes.</p>
+                <p style={{ margin: "0.2rem 0 0" }}>As novas vendas e pedidos 'Por embalar' aparecerão aqui em tempo real.</p>
               </div>
             ) : (
-              <>
-                {recentOrders.length > 0 && (
-                  <div style={{ padding: "0.25rem 0.75rem", fontSize: "0.75rem", fontWeight: 700, color: "#666", letterSpacing: "0.05em" }}>
-                    ENCOMENDAS RECENTES ({recentOrders.length})
+              notifications.map((notif: any) => (
+                <button
+                  key={notif.id}
+                  onClick={() => {
+                    if (!notif.isRead) {
+                      markAsReadMutation.mutate({ id: notif.id });
+                    }
+                    setIsOpen(false);
+                    onNavigate("Vendas");
+                  }}
+                  style={{
+                    display: "block",
+                    width: "100%",
+                    textAlign: "left",
+                    padding: "0.65rem 1rem",
+                    background: notif.isRead ? "transparent" : "#fdf2f2",
+                    border: "none",
+                    borderBottom: "1px solid #f5f5f5",
+                    cursor: "pointer",
+                    transition: "background 0.15s"
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "#fdfbf7"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = notif.isRead ? "transparent" : "#fdf2f2"}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", fontWeight: 600, color: "#111" }}>
+                    <span>{notif.title}</span>
+                    {!notif.isRead && (
+                      <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#b22222", display: "inline-block" }} />
+                    )}
                   </div>
-                )}
-                {recentOrders.map((order: any) => {
-                  const keyId = `order-${order.id}`;
-                  const isRead = readIds.includes(keyId);
-                  if (isRead) return null;
-                  return (
-                    <button
-                      key={order.id}
-                      onClick={() => {
-                        setReadIds((prev) => [...prev, keyId]);
-                        setIsOpen(false);
-                        onNavigate("Vendas");
-                      }}
-                      style={{
-                        display: "block",
-                        width: "100%",
-                        textAlign: "left",
-                        padding: "0.6rem 1rem",
-                        background: "transparent",
-                        border: "none",
-                        borderBottom: "1px solid #f5f5f5",
-                        cursor: "pointer",
-                        transition: "background 0.15s"
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = "#fdfbf7"}
-                      onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
-                    >
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", fontWeight: 600, color: "#111" }}>
-                        <span>Pedido #{order.id}</span>
-                        <span style={{ color: "#b22222" }}>R$ {Number(order.total || 0).toFixed(2)}</span>
-                      </div>
-                      <div style={{ fontSize: "0.75rem", color: "#666", marginTop: "0.1rem" }}>
-                        Cliente: {order.customerName || "Consumidor"} • Status: {order.status}
-                      </div>
-                    </button>
-                  );
-                })}
-
-
-              </>
+                  <div style={{ fontSize: "0.75rem", color: "#555", marginTop: "0.2rem", lineHeight: "1.3" }}>
+                    {notif.message}
+                  </div>
+                  <div style={{ fontSize: "0.65rem", color: "#888", marginTop: "0.2rem" }}>
+                    {new Date(notif.createdAt).toLocaleString("pt-BR")}
+                  </div>
+                </button>
+              ))
             )}
           </div>
 
           <div style={{ padding: "0.6rem 1rem", borderTop: "1px solid #eee", background: "#faf9f6", textAlign: "center" }}>
             <button
               type="button"
-              onClick={() => { setIsOpen(false); onNavigate("Estatísticas"); }}
+              onClick={() => { setIsOpen(false); onNavigate("Vendas"); }}
               style={{ background: "transparent", border: "none", color: "#111", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer" }}
             >
-              Ver relatório de desempenho completo →
+              Gerenciar vendas e pedidos →
             </button>
           </div>
         </div>

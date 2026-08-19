@@ -515,6 +515,33 @@ export async function markNotificationAsRead(id: number) {
   await db.update(notifications).set({ isRead: 1 }).where(eq(notifications.id, id));
 }
 
+export async function markAllNotificationsAsRead(userId?: number, role?: string) {
+  const db = await getDb();
+  if (!db) return;
+  if (role === "admin") {
+    await db.update(notifications).set({ isRead: 1 }).where(or(eq(notifications.targetRole, "admin"), eq(notifications.targetRole, "all")));
+  } else if (userId) {
+    await db.update(notifications).set({ isRead: 1 }).where(or(eq(notifications.userId, userId), eq(notifications.targetRole, "customer"), eq(notifications.targetRole, "all")));
+  }
+}
+
+export async function createNotificationDeduped(data: InsertNotification & { orderId?: number; type?: string }) {
+  const db = await getDb();
+  if (!db) return;
+  // Evitar duplicar notificação idêntica para o mesmo pedido e tipo
+  if (data.orderId && data.type) {
+    const existing = await db
+      .select()
+      .from(notifications)
+      .where(and(eq(notifications.orderId, data.orderId), eq(notifications.type, data.type)))
+      .limit(1);
+    if (existing.length > 0) {
+      return;
+    }
+  }
+  await db.insert(notifications).values(data);
+}
+
 export async function saveCommercialConfig(config: CommercialConfig) {
   const normalized: CommercialConfig = {
     pixDiscountPercent: Math.min(100, Math.max(0, Number(config.pixDiscountPercent))),
@@ -1554,3 +1581,5 @@ export async function restoreCollection(id: number) {
   await db.update(collections).set({ active: 1 }).where(eq(collections.id, id));
   return { success: true };
 }
+
+
