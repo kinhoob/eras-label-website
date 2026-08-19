@@ -937,3 +937,5 @@
 - [x] Adicionar uma animação bonita com a mensagem de agradecimento no estado pós-compra
 - [x] Criar testes e validar responsividade em desktop e mobile para a nova mensagem animada
 - [x] Executar build de produção e salvar checkpoint
+
+- [x] Eliminar definitivamente qualquer rotina de criação automática de produtos de teste e limpar a tabela products no banco de dados.
