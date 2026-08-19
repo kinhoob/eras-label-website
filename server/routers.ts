@@ -283,6 +283,8 @@ export const appRouter = router({
       validUntil: z.string().datetime().nullable().optional(),
       active: z.number().int().min(0).max(1).optional(),
       isFirstPurchaseOnly: z.number().int().min(0).max(1).optional(),
+      applyScope: z.string().optional(),
+      allowStacking: z.number().int().min(0).max(1).optional(),
     })).mutation(({ input }) => saveCouponData(input)),
     toggle: adminProcedure.input(z.object({ id: z.number().int().positive(), active: z.number().int().min(0).max(1) })).mutation(({ input }) => toggleCouponActive(input.id, input.active)),
     remove: adminProcedure.input(z.object({ id: z.number().int().positive() })).mutation(({ input }) => deleteCouponData(input.id)),

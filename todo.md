@@ -972,3 +972,5 @@
 - [x] Remover permanentemente todos os produtos de teste e executar a importação corrigida do CSV da Nuvemshop, garantindo que nenhum dado fictício permaneça.
 
 - [x] Corrigir o cupom de frete grátis para zerar corretamente o frete no checkout, resumo e criação do pedido.
+
+- [x] Corrigir o erro de endpoint HTML ao guardar cupons no painel administrativo.
