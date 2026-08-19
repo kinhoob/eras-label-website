@@ -962,3 +962,5 @@
 - [x] Corrigir a responsividade do editor de promoções no desktop para garantir visibilidade completa do cartão e scroll interno adequado.
 
 
+
+- [x] Limpeza completa do banco de dados removendo todos os produtos, variações, pedidos, itens de pedidos, clientes fictícios, cupons de teste, promoções, carrinhos abandonados e histórico de e-mails/testes, preservando apenas configurações, administradores e estrutura da aplicação.
