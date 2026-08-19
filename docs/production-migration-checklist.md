@@ -24,6 +24,7 @@ Antes de publicar em produção no painel de gestão, certifique-se de configura
 | :--- | :--- | :--- |
 | **Mercado Pago** | `MP_ACCESS_TOKEN` | Token de produção (`APP_USR-...`) obtido no painel de aplicações do Mercado Pago. |
 | **Mercado Pago** | `MP_PUBLIC_KEY` | Chave pública de produção para tokenização de cartões no frontend. |
+| **Mercado Pago** | `MP_WEBHOOK_SECRET` | Chave secreta do webhook (Painel MP > Suas integrações > Webhooks). Obrigatória: sem ela todas as notificações são rejeitadas com 401. |
 | **Melhor Envio** | `MELHOR_ENVIO_TOKEN` | Token de API de produção gerado no painel do Melhor Envio (ambiente produtivo). |
 | **Melhor Envio** | `MELHOR_ENVIO_CLIENT_ID` | Client ID da aplicação OAuth2 cadastrada no painel do Melhor Envio. |
 | **Melhor Envio** | `MELHOR_ENVIO_CLIENT_SECRET` | Client Secret correspondente para troca de códigos de autorização. |
