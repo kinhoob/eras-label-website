@@ -79,6 +79,48 @@ export function getMercadoPagoErrorMessage(data: any, status: number) {
   if (rawMessage.includes("bin_not_found")) {
     return "O BIN do cartão não foi reconhecido pelo Mercado Pago. Utilize um cartão de teste válido do Mercado Pago (ex: cartão Mastercard ou Visa de teste do ambiente sandbox).";
   }
+
+  // Mapeamento de recusas e códigos de erro detalhados do Mercado Pago
+  const statusDetail = String(data?.status_detail || "").toLowerCase();
+  const errorCode = String(data?.error || "").toLowerCase();
+
+  if (statusDetail === "cc_rejected_bad_filled_date" || hasCauseCode(301)) {
+    return "A data de validade do cartão está incorreta. Verifique o mês e o ano informados.";
+  }
+  if (statusDetail === "cc_rejected_bad_filled_other" || hasCauseCode(302)) {
+    return "Alguns dados do cartão foram preenchidos incorretamente. Verifique o número e os dados informados.";
+  }
+  if (statusDetail === "cc_rejected_bad_filled_security_code" || hasCauseCode(303)) {
+    return "O código de segurança (CVV) do cartão está incorreto. Verifique os 3 ou 4 dígitos no verso do cartão.";
+  }
+  if (statusDetail === "cc_rejected_call_for_authorize" || hasCauseCode(109)) {
+    return "O pagamento com cartão exigiu autorização prévia do banco emissor. Entre em contato com o seu banco para autorizar a transação.";
+  }
+  if (statusDetail === "cc_rejected_card_disabled" || hasCauseCode(150)) {
+    return "O cartão informado está desativado ou bloqueado. Utilize outro cartão ou entre em contato com o seu banco.";
+  }
+  if (statusDetail === "cc_rejected_card_error" || hasCauseCode(300)) {
+    return "Não foi possível processar o pagamento com este cartão. Verifique os dados ou utilize outro cartão.";
+  }
+  if (statusDetail === "cc_rejected_duplicated_payment" || hasCauseCode(205)) {
+    return "Já existe um pagamento idêntico processado recentemente com este cartão.";
+  }
+  if (statusDetail === "cc_rejected_high_risk" || hasCauseCode(206)) {
+    return "O pagamento foi recusado por motivos de segurança. Recomendamos utilizar outro cartão ou pagar via Pix.";
+  }
+  if (statusDetail === "cc_rejected_insufficient_amount" || hasCauseCode(107)) {
+    return "O cartão não possui saldo ou limite suficiente para concluir esta compra.";
+  }
+  if (statusDetail === "cc_rejected_invalid_installments" || hasCauseCode(126)) {
+    return "O número de parcelas escolhido não é suportado por este cartão ou banco emissor.";
+  }
+  if (statusDetail === "cc_rejected_max_attempts" || hasCauseCode(207)) {
+    return "Você atingiu o limite de tentativas permitidas com este cartão. Utilize outro cartão ou método de pagamento.";
+  }
+  if (statusDetail === "cc_rejected_other_reason" || errorCode.includes("rejected")) {
+    return "O pagamento com cartão foi recusado pelo banco emissor. Verifique o limite ou utilize outro cartão de crédito.";
+  }
+
   return rawMessage || `Erro ao processar pagamento no Mercado Pago (HTTP ${status}).`;
 }
 

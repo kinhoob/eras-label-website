@@ -981,3 +981,4 @@
 - [ ] Executar testes Vitest e build de produção.
 - [x] Configurar parcelas sem juros (até 3x por padrão, configurável no painel) e juros compostos a partir da parcela seguinte no checkout e cálculo de parcelamento.
 - [x] Corrigir a sincronização de status de pagamento aprovado do Mercado Pago (cartão e Pix) para atualizar automaticamente o pedido no painel admin e no acompanhamento do cliente.
+- [x] Adicionar mensagens claras e amigáveis de recusa de cartão de crédito no checkout (ex: limite insuficiente, cartão expirado, dados incorretos, recusa do emissor).

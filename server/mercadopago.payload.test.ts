@@ -75,4 +75,24 @@ describe("Mercado Pago payment payload", () => {
 
     vi.unstubAllGlobals();
   });
+
+  it("mapeia recusa por saldo insuficiente para mensagem amigável", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 400,
+      json: async () => ({
+        error: "bad_request",
+        message: "Rejected by insufficient amount",
+        status_detail: "cc_rejected_insufficient_amount",
+        cause: [{ code: 107, description: "Insufficient amount" }],
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(createMercadoPagoPayment(baseParams)).rejects.toThrow(
+      "não possui saldo ou limite suficiente",
+    );
+
+    vi.unstubAllGlobals();
+  });
 });
