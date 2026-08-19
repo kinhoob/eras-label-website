@@ -303,3 +303,27 @@ export const siteMessages = mysqlTable("site_messages", {
 
 export type SiteMessage = typeof siteMessages.$inferSelect;
 export type InsertSiteMessage = typeof siteMessages.$inferInsert;
+
+
+export const promotions = mysqlTable("promotions", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  discountType: varchar("discountType", { length: 50 }).notNull().default("buy_x_get_y"), // "buy_x_get_y", "price_discount", "cross_selling", "progressive", "cart_discount"
+  scopeType: varchar("scopeType", { length: 50 }).notNull().default("store"), // "store", "categories", "products"
+  scopeIds: text("scopeIds"), // JSON or comma-separated IDs
+  allowPromotionalPrice: int("allowPromotionalPrice").notNull().default(0),
+  combinableWithPrice: int("combinableWithPrice").notNull().default(0),
+  combinableWithShipping: int("combinableWithShipping").notNull().default(0),
+  combinableWithCart: int("combinableWithCart").notNull().default(0),
+  combinableWithApps: int("combinableWithApps").notNull().default(0),
+  dateLimitType: varchar("dateLimitType", { length: 20 }).notNull().default("unlimited"), // "unlimited", "period"
+  startDate: timestamp("startDate"),
+  endDate: timestamp("endDate"),
+  customBadgeEnabled: int("customBadgeEnabled").notNull().default(0),
+  customBadgeText: varchar("customBadgeText", { length: 50 }),
+  status: varchar("status", { length: 20 }).notNull().default("active"), // "active", "inactive"
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Promotion = typeof promotions.$inferSelect;
+export type InsertPromotion = typeof promotions.$inferInsert;

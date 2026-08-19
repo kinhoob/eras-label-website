@@ -91,6 +91,7 @@ export function buildAdminNavGroups(isSuperAdmin: boolean): AdminNavGroup[] {
         { label: "Newsletter", icon: "marketing" },
         { label: "E-mails (Resend)", icon: "marketing" },
         { label: "Cupons", icon: "coupon" },
+        { label: "Promoções", icon: "coupon" },
       ],
     },
     {

@@ -23,6 +23,7 @@ import {
   customMenus,
   collections,
   shipments,
+  promotions,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 import { collectCollectionRecipients } from "./marketing-audience";
@@ -1583,3 +1584,64 @@ export async function restoreCollection(id: number) {
 }
 
 
+
+// ==================== PROMOTIONS (PROMOÇÕES) ====================
+export async function listPromotions() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(promotions).orderBy(desc(promotions.createdAt)).limit(100);
+}
+
+export async function createPromotion(data: {
+  name: string;
+  discountType?: string;
+  scopeType?: string;
+  scopeIds?: string | null;
+  allowPromotionalPrice?: number;
+  combinableWithPrice?: number;
+  combinableWithShipping?: number;
+  combinableWithCart?: number;
+  combinableWithApps?: number;
+  dateLimitType?: string;
+  startDate?: string | null;
+  endDate?: string | null;
+  customBadgeEnabled?: number;
+  customBadgeText?: string | null;
+  status?: string;
+}) {
+  const db = await getDb();
+  const values = {
+    name: data.name,
+    discountType: data.discountType || "buy_x_get_y",
+    scopeType: data.scopeType || "store",
+    scopeIds: data.scopeIds || null,
+    allowPromotionalPrice: data.allowPromotionalPrice ? 1 : 0,
+    combinableWithPrice: data.combinableWithPrice ? 1 : 0,
+    combinableWithShipping: data.combinableWithShipping ? 1 : 0,
+    combinableWithCart: data.combinableWithCart ? 1 : 0,
+    combinableWithApps: data.combinableWithApps ? 1 : 0,
+    dateLimitType: data.dateLimitType || "unlimited",
+    startDate: data.startDate ? new Date(data.startDate) : null,
+    endDate: data.endDate ? new Date(data.endDate) : null,
+    customBadgeEnabled: data.customBadgeEnabled ? 1 : 0,
+    customBadgeText: data.customBadgeText || null,
+    status: data.status || "active",
+  };
+  if (!db) return { id: 1, ...values };
+  const res = await db.insert(promotions).values(values as any);
+  return { id: Number(res[0].insertId), ...values };
+}
+
+export async function togglePromotionStatus(id: number, status: string) {
+  const db = await getDb();
+  if (!db) return { success: true };
+  await db.update(promotions).set({ status }).where(eq(promotions.id, id));
+  return { success: true };
+}
+
+export async function deletePromotion(id: number) {
+  const db = await getDb();
+  if (!db) return { success: true };
+  await db.delete(promotions).where(eq(promotions.id, id));
+  return { success: true };
+}

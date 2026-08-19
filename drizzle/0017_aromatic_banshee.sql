@@ -1,0 +1,20 @@
+CREATE TABLE `promotions` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`name` varchar(255) NOT NULL,
+	`discountType` varchar(50) NOT NULL DEFAULT 'buy_x_get_y',
+	`scopeType` varchar(50) NOT NULL DEFAULT 'store',
+	`scopeIds` text,
+	`allowPromotionalPrice` int NOT NULL DEFAULT 0,
+	`combinableWithPrice` int NOT NULL DEFAULT 0,
+	`combinableWithShipping` int NOT NULL DEFAULT 0,
+	`combinableWithCart` int NOT NULL DEFAULT 0,
+	`combinableWithApps` int NOT NULL DEFAULT 0,
+	`dateLimitType` varchar(20) NOT NULL DEFAULT 'unlimited',
+	`startDate` timestamp,
+	`endDate` timestamp,
+	`customBadgeEnabled` int NOT NULL DEFAULT 0,
+	`customBadgeText` varchar(50),
+	`status` varchar(20) NOT NULL DEFAULT 'active',
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	CONSTRAINT `promotions_id` PRIMARY KEY(`id`)
+);

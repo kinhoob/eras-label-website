@@ -88,6 +88,10 @@ import {
   updateShipmentStatus,
   getExtraShippingDays,
   saveExtraShippingDays,
+  listPromotions,
+  createPromotion,
+  togglePromotionStatus,
+  deletePromotion,
 } from "./db";
 import { adminOrderEmail, newsletterWelcomeEmail, orderConfirmationEmail, paymentConfirmationEmail } from "./email-templates";
 import { ENV } from "./_core/env";
@@ -279,6 +283,29 @@ export const appRouter = router({
     })).mutation(({ input }) => saveCouponData(input)),
     toggle: adminProcedure.input(z.object({ id: z.number().int().positive(), active: z.number().int().min(0).max(1) })).mutation(({ input }) => toggleCouponActive(input.id, input.active)),
     remove: adminProcedure.input(z.object({ id: z.number().int().positive() })).mutation(({ input }) => deleteCouponData(input.id)),
+  }),
+  promotions: router({
+    list: adminProcedure.query(() => listPromotions()),
+    save: adminProcedure.input(z.object({
+      id: z.number().int().positive().optional(),
+      name: z.string().trim().min(2).max(255),
+      discountType: z.string().default("buy_x_get_y"),
+      scopeType: z.string().default("store"),
+      scopeIds: z.string().nullable().optional(),
+      allowPromotionalPrice: z.number().int().min(0).max(1).optional(),
+      combinableWithPrice: z.number().int().min(0).max(1).optional(),
+      combinableWithShipping: z.number().int().min(0).max(1).optional(),
+      combinableWithCart: z.number().int().min(0).max(1).optional(),
+      combinableWithApps: z.number().int().min(0).max(1).optional(),
+      dateLimitType: z.string().default("unlimited"),
+      startDate: z.string().nullable().optional(),
+      endDate: z.string().nullable().optional(),
+      customBadgeEnabled: z.number().int().min(0).max(1).optional(),
+      customBadgeText: z.string().max(50).nullable().optional(),
+      status: z.string().default("active"),
+    })).mutation(({ input }) => createPromotion(input)),
+    toggle: adminProcedure.input(z.object({ id: z.number().int().positive(), status: z.string() })).mutation(({ input }) => togglePromotionStatus(input.id, input.status)),
+    remove: adminProcedure.input(z.object({ id: z.number().int().positive() })).mutation(({ input }) => deletePromotion(input.id)),
   }),
   checkout: router({
     publicConfig: publicProcedure.query(async () => ({ publicKey: ENV.mpPublicKey || null, commercial: await getCommercialConfig() })),
@@ -1336,3 +1363,5 @@ export const appRouter = router({
 });
 
 export type AppRouter = typeof appRouter;
+
+
