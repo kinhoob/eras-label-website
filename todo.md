@@ -917,3 +917,7 @@
 - [x] Melhorar o detalhe expandido do pedido e a responsividade desktop/mobile
 - [x] Criar testes para os estados e dados do histórico de pedidos
 - [x] Executar testes, build e salvar checkpoint da melhoria do histórico
+
+- [x] Limpar automaticamente a sacola após uma compra aprovada, preservando o pedido no histórico
+- [x] Manter a sacola intacta em pagamentos pendentes ou falhados e cobrir os estados com testes
+- [x] Validar a sacola vazia após conclusão em desktop e mobile, executar build e salvar checkpoint

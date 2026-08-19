@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CART_STORAGE_KEY, loadCart, saveCart } from "./cart-storage";
+import { CART_STORAGE_KEY, clearCart, loadCart, saveCart } from "./cart-storage";
 
 function createMemoryStorage() {
   const values = new Map<string, string>();
@@ -18,6 +18,16 @@ describe("cart storage", () => {
 
     expect(storage.getItem(CART_STORAGE_KEY)).toContain('"id":4');
     expect(loadCart(storage)).toEqual(cart);
+  });
+
+  it("clears the persisted cart after a completed order", () => {
+    const storage = createMemoryStorage();
+    saveCart([{ id: 9, quantity: 1 }], storage);
+
+    clearCart(storage);
+
+    expect(loadCart(storage)).toEqual([]);
+    expect(storage.getItem(CART_STORAGE_KEY)).toBe("[]");
   });
 
   it("returns an empty cart for malformed or invalid stored data", () => {

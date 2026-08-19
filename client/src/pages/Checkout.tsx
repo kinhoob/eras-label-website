@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { ArrowRight, Check, Clock3, Loader2, Minus, Plus, ShieldCheck, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
-import { loadCart, saveCart } from "@/lib/cart-storage";
+import { clearCart, loadCart, saveCart } from "@/lib/cart-storage";
 import { clearCheckoutDraft, loadCheckoutDraft, saveCheckoutDraft, type CheckoutPaymentMethod } from "@/lib/checkout-draft";
 import { updateCartLineQuantity, removeCartLine } from "@/lib/cart-operations";
 import { formatCardExpiry, formatCardNumber, formatCpf, hasCheckoutFieldErrors, onlyDigits, validateCheckoutFields, type CheckoutFieldErrors, type CheckoutFields } from "@/lib/checkout-validation";
@@ -367,8 +367,11 @@ export default function CheckoutPage() {
           installmentInterest: selectedPaymentMethod === "credit_card" ? installmentInterest : 0,
           pixData: (result as any).pixData || null,
         });
+        // A sacola só é limpa depois de o backend confirmar a criação do pedido.
+        // O evento sincroniza o contador da navbar e o drawer quando o cliente voltar à loja.
         setCart([]);
-        saveCart([]);
+        clearCart();
+        window.dispatchEvent(new Event("eras-cart-updated"));
         clearCheckoutDraft();
         if (result.paymentStatus === "approved") {
           toast.success(`Pagamento aprovado para o pedido ${result.orderNumber}!`);
