@@ -400,6 +400,16 @@ export default function CheckoutPage() {
           <h1 id="checkout-success-title">{isApproved ? "Pagamento confirmado." : isRejected ? "Pagamento não aprovado." : "Pedido gerado com sucesso."}</h1>
           <p>O pedido <strong>{success.orderNumber}</strong> foi registrado na Eras Label. {isApproved ? "O pagamento foi aprovado." : isRejected ? "O pagamento foi recusado pelo Mercado Pago. Pode tentar novamente." : isPix ? "Escaneie o QR Code Pix ou copie o código para concluir." : "O pagamento está a ser analisado pelo Mercado Pago. Atualizaremos o seu histórico assim que houver confirmação."}</p>
           <span className={`checkout-payment-status checkout-payment-status-${isApproved ? "approved" : isRejected ? "rejected" : "pending"}`}>{isApproved ? "PAGAMENTO APROVADO" : isRejected ? "PAGAMENTO RECUSADO" : "PAGAMENTO PENDENTE"}</span>
+
+          {isApproved && (
+            <section className="checkout-thank-you" aria-label="Mensagem de agradecimento pela compra">
+              <span className="checkout-thank-you-mark" aria-hidden="true"><Check size={18} strokeWidth={2.5} /></span>
+              <div>
+                <span className="checkout-thank-you-kicker">OBRIGADO PELA COMPRA</span>
+                <p>Obrigado pela compra, vamos cuidar de tudo para que seu pedido chegue até você.</p>
+              </div>
+            </section>
+          )}
           
           {!isApproved && isPix && success.pixData?.qr_code && (
             <div className="checkout-pix-box">

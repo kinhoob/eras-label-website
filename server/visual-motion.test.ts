@@ -75,3 +75,24 @@ describe("Eras post-purchase order history cards", () => {
     expect(stylesheet).toContain(".account-page .details-button { justify-content: center; width: 100%;");
   });
 });
+
+
+describe("Eras post-purchase thank-you state", () => {
+  const stylesheet = readFileSync(resolve(process.cwd(), "client/src/index.css"), "utf8");
+  const checkoutPage = readFileSync(resolve(process.cwd(), "client/src/pages/Checkout.tsx"), "utf8");
+
+  it("renders the requested thank-you copy only for an approved payment", () => {
+    expect(checkoutPage).toContain("{isApproved && (");
+    expect(checkoutPage).toContain("Obrigado pela compra, vamos cuidar de tudo para que seu pedido chegue até você.");
+    expect(checkoutPage).toContain("checkout-thank-you");
+  });
+
+  it("provides an editorial entrance animation and a reduced-motion fallback", () => {
+    expect(stylesheet).toContain(".checkout-thank-you {");
+    expect(stylesheet).toContain("animation: eras-thank-you-enter");
+    expect(stylesheet).toContain("@keyframes eras-thank-you-shine");
+    expect(stylesheet).toContain(".checkout-thank-you-mark");
+    expect(stylesheet).toContain("@media (prefers-reduced-motion: reduce)");
+    expect(stylesheet).toContain(".checkout-thank-you::after");
+  });
+});

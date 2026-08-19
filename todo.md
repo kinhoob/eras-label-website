@@ -925,3 +925,11 @@
 - [x] Rastrear a persistência de pedidos na rota de checkout e verificar a listagem na aba Clientes
 - [x] Unificar os dados de clientes e compradores para que cada pedido recém-criado exiba o cliente correspondente
 - [x] Validar a listagem com testes, build e salvar checkpoint
+
+- [ ] Adicionar uma animação editorial suave e a mensagem de agradecimento no estado de compra concluída
+- [ ] Garantir que a confirmação preserve a limpeza da sacola e o acesso ao histórico do pedido
+- [ ] Validar a confirmação em desktop e mobile, executar testes, build e salvar checkpoint
+
+- [x] Adicionar uma animação bonita com a mensagem de agradecimento no estado pós-compra
+- [x] Criar testes e validar responsividade em desktop e mobile para a nova mensagem animada
+- [x] Executar build de produção e salvar checkpoint

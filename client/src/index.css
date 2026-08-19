@@ -11125,3 +11125,111 @@ h1, h2, h3, .heading-editorial {
 @media (max-width: 700px) {
   .account-page .order-delivery-strip { grid-template-columns: 1fr; margin-inline: 1rem; }
 }
+
+
+/* Confirmação pós-compra: bloco editorial que celebra a compra sem interromper o fluxo. */
+.checkout-thank-you {
+  position: relative;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  width: min(100%, 430px);
+  margin: 24px auto 4px;
+  padding: 16px 18px;
+  overflow: hidden;
+  border: 1px solid rgba(178, 34, 34, 0.2);
+  background: linear-gradient(135deg, rgba(178, 34, 34, 0.08), rgba(255, 255, 255, 0.72));
+  text-align: left;
+  animation: eras-thank-you-enter 620ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+/* O brilho percorre o cartão uma única vez, criando uma entrada refinada. */
+.checkout-thank-you::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 -35%;
+  width: 24%;
+  transform: skewX(-18deg);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+  animation: eras-thank-you-shine 1.15s 180ms ease-out both;
+  pointer-events: none;
+}
+
+.checkout-thank-you-mark {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(178, 34, 34, 0.52);
+  border-radius: 50%;
+  color: #b22222;
+  background: #fffaf6;
+  animation: eras-thank-you-mark 540ms 160ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+.checkout-thank-you > div {
+  position: relative;
+  z-index: 1;
+}
+
+.checkout-thank-you-kicker {
+  display: block;
+  margin-bottom: 5px;
+  color: #b22222;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+
+.checkout-thank-you p {
+  margin: 0;
+  max-width: none;
+  color: #4c4741;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+@keyframes eras-thank-you-enter {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes eras-thank-you-shine {
+  from { left: -35%; opacity: 0; }
+  20% { opacity: 1; }
+  to { left: 125%; opacity: 0; }
+}
+
+@keyframes eras-thank-you-mark {
+  from { opacity: 0; transform: scale(0.78) rotate(-8deg); }
+  to { opacity: 1; transform: scale(1) rotate(0); }
+}
+
+@media (max-width: 540px) {
+  .checkout-thank-you {
+    grid-template-columns: 38px minmax(0, 1fr);
+    gap: 11px;
+    margin-top: 20px;
+    padding: 14px;
+  }
+
+  .checkout-thank-you-mark {
+    width: 36px;
+    height: 36px;
+  }
+
+  .checkout-thank-you p {
+    font-size: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .checkout-thank-you,
+  .checkout-thank-you::after,
+  .checkout-thank-you-mark {
+    animation: none;
+  }
+}
