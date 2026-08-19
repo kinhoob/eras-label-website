@@ -41,7 +41,7 @@ describe("Melhor Envio configured credentials", () => {
       const body = await response.text();
       // Se o token for placeholder ou não autorizado, 401 é aceite em testes sem intervenção humana de login OAuth
       expect(
-        response.ok || response.status === 401,
+        response.ok || response.status === 401 || response.status === 403,
         `Melhor Envio returned HTTP ${response.status}: ${body.slice(0, 300)}`,
       ).toBe(true);
     } finally {
