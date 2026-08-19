@@ -968,3 +968,5 @@
 - [ ] Importar os produtos reais a partir do CSV da Nuvemshop (`tiendanube-5887838-17871641601727955173772670370.csv`), mapeando colunas, preços, variações, estoque, coleções e imagens reais.
 
 - [x] Importar os produtos reais a partir do CSV da Nuvemshop (`tiendanube-5887838-17871641601727955173772670370.csv`), mapeando colunas, preços, variações, estoque, coleções e imagens reais.
+
+- [ ] Remover permanentemente todos os produtos de teste e executar a importação corrigida do CSV da Nuvemshop, garantindo que nenhum dado fictício permaneça.
