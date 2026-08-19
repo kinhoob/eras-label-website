@@ -987,4 +987,5 @@
 - [x] Configurar e documentar webhooks do Mercado Pago para atualização automática de pagamentos pendentes aprovados.
 - [x] Configurar credenciais de produção do Mercado Pago (AccessToken e PublicKey) com segurança.
 - [x] Executar auditoria técnica completa de pagamentos do Mercado Pago (Pix, crédito 3x sem juros, parcelas com juros, débito, webhooks, tratamento de erros e limpeza de código).
-- [ ] Auditar e configurar integralmente a integração com o Melhor Envio (cotação com PAC, Sedex, Jadlog Econômico, Jadlog Rápido e Loggi, geração de etiquetas e rastreio).
+- [x] Auditar e configurar integralmente a integração com o Melhor Envio (cotação com PAC, Sedex, Jadlog Econômico, Jadlog Rápido e Loggi, geração de etiquetas e rastreio).
+- [ ] Corrigir e validar a autenticação do Melhor Envio e adicionar campos para configurar token e ambiente no painel administrativo.
