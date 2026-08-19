@@ -984,3 +984,4 @@
 - [x] Adicionar mensagens claras e amigáveis de recusa de cartão de crédito no checkout (ex: limite insuficiente, cartão expirado, dados incorretos, recusa do emissor).
 - [x] Persistir e exibir o motivo detalhado das recusas de pagamento no painel administrativo e histórico de falhas de pedidos.
 - [x] Auditar e validar o fluxo de aprovação automática de pagamentos via Pix (criação, QR Code, webhook e polling de status).
+- [x] Configurar e documentar webhooks do Mercado Pago para atualização automática de pagamentos pendentes aprovados.
