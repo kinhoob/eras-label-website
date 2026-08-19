@@ -951,3 +951,5 @@
 - [ ] Implementar hover interativo e tooltip detalhado no gráfico de vendas e visitas do painel administrativo.
 
 - [x] Implementar hover interativo e tooltip detalhado no gráfico de vendas e visitas do painel administrativo.
+
+- [x] Adicionar filtros Hoje e Ontem e corrigir a persistência e exibição do intervalo personalizado no gráfico de visitas e pedidos.

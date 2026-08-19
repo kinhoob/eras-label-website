@@ -1525,17 +1525,32 @@ type AdminDashboardOrder = {
 
 function AdminDashboardHome({ adminName, adminOrders, adminOrdersLoading, catalogCount, onNavigate }: { adminName: string; adminOrders: AdminDashboardOrder[]; adminOrdersLoading: boolean; catalogCount: number; onNavigate: (label: string) => void }) {
   const [periodDays, setPeriodDays] = useState(7);
-  const [rangeMode, setRangeMode] = useState<"preset" | "custom">("preset");
+  const [rangeMode, setRangeMode] = useState<"preset" | "custom" | "today" | "yesterday">("preset");
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
   const [hoveredChartPoint, setHoveredChartPoint] = useState<any | null>(null);
-  const analyticsInput = useMemo(() => rangeMode === "custom" && customStartDate && customEndDate
-    ? { periodDays: 7, startDate: customStartDate, endDate: customEndDate }
-    : { periodDays }, [rangeMode, customStartDate, customEndDate, periodDays]);
+  const analyticsInput = useMemo(() => {
+    if (rangeMode === "custom" && customStartDate && customEndDate) {
+      return { periodDays: 7, startDate: customStartDate, endDate: customEndDate };
+    }
+    if (rangeMode === "today" && customStartDate) {
+      return { periodDays: 1, startDate: customStartDate, endDate: customEndDate };
+    }
+    if (rangeMode === "yesterday" && customStartDate) {
+      return { periodDays: 1, startDate: customStartDate, endDate: customEndDate };
+    }
+    return { periodDays };
+  }, [rangeMode, customStartDate, customEndDate, periodDays]);
   const { data: analytics, isLoading } = trpc.admin.getAnalytics.useQuery(analyticsInput);
   const summary = analytics?.summary ?? { visits: 0, sales: 0, revenue: 0, averageTicket: 0, conversionRate: 0 };
   const trend = analytics?.salesTrend ?? [];
-  const rangeLabel = rangeMode === "custom" && customStartDate && customEndDate ? `${customStartDate} a ${customEndDate}` : `últimos ${periodDays} dias`;
+  const rangeLabel = rangeMode === "custom" && customStartDate && customEndDate
+    ? `De ${customStartDate.split("-").reverse().join("/")} até ${customEndDate.split("-").reverse().join("/")}`
+    : rangeMode === "today"
+    ? `Hoje (${new Date().toLocaleDateString("pt-BR")})`
+    : rangeMode === "yesterday"
+    ? `Ontem`
+    : `últimos ${periodDays} dias`;
   const orderCounts = {
     awaiting: adminOrders.filter((order) => order.paymentStatus !== "approved").length,
     packing: adminOrders.filter((order) => ["Processando", "Em preparação"].includes(order.status)).length,
@@ -1554,10 +1569,32 @@ function AdminDashboardHome({ adminName, adminOrders, adminOrdersLoading, catalo
       <div className="dashboard-period-toolbar">
         <div><span className="section-kicker">PERÍODO DE ANÁLISE</span><strong>{rangeLabel}</strong></div>
         <div className="analytics-period-picker">
+          <button className={`period-btn ${rangeMode === "today" ? "active" : ""}`} type="button" onClick={() => {
+            setRangeMode("today");
+            const todayStr = new Date().toISOString().split("T")[0];
+            setCustomStartDate(todayStr);
+            setCustomEndDate(todayStr);
+          }}>Hoje</button>
+          <button className={`period-btn ${rangeMode === "yesterday" ? "active" : ""}`} type="button" onClick={() => {
+            setRangeMode("yesterday");
+            const yest = new Date();
+            yest.setDate(yest.getDate() - 1);
+            const yestStr = yest.toISOString().split("T")[0];
+            setCustomStartDate(yestStr);
+            setCustomEndDate(yestStr);
+          }}>Ontem</button>
           {[7, 15, 30].map((days) => <button key={days} className={`period-btn ${rangeMode === "preset" && periodDays === days ? "active" : ""}`} type="button" onClick={() => { setRangeMode("preset"); setPeriodDays(days); }}>{days} dias</button>)}
           <button className={`period-btn ${rangeMode === "custom" ? "active" : ""}`} type="button" onClick={() => setRangeMode("custom")}>Personalizado</button>
         </div>
-        {rangeMode === "custom" && <div className="analytics-custom-range"><label>De <input type="date" value={customStartDate} onChange={(event) => setCustomStartDate(event.target.value)} /></label><label>Até <input type="date" value={customEndDate} onChange={(event) => setCustomEndDate(event.target.value)} /></label></div>}
+        {rangeMode === "custom" && (
+          <div className="analytics-custom-range">
+            <label>De <input type="date" value={customStartDate} onChange={(event) => setCustomStartDate(event.target.value)} /></label>
+            <label>Até <input type="date" value={customEndDate} onChange={(event) => setCustomEndDate(event.target.value)} /></label>
+            {customStartDate && customEndDate && (
+              <span className="custom-range-badge">Exibindo de {customStartDate.split("-").reverse().join("/")} até {customEndDate.split("-").reverse().join("/")}</span>
+            )}
+          </div>
+        )}
       </div>
       <div className="order-status-strip">
         {[{ label: "Por cobrar", value: orderCounts.awaiting, icon: ShoppingCart }, { label: "Por embalar", value: orderCounts.packing, icon: Package }, { label: "Por enviar", value: orderCounts.shipping, icon: ClipboardList }, { label: "Por retirar", value: orderCounts.pickup, icon: Check }].map(({ label, value, icon: Icon }) => <div className="order-status-card" key={label}><span className="order-status-icon"><Icon size={16} /></span><div><strong>{value === 0 ? "Sem pedidos" : value}</strong><span>{label}</span></div></div>)}
