@@ -65,3 +65,12 @@ Admin audit URL: https://3000-i1vmpb2fupe7yq0wcir14-ca512cf4.us1.manus.computer/
 ## Validação mobile — 375px
 
 A captura mobile confirmou que `/produtos` mantém a barra de ordenação, filtros de categoria, tamanho e preço, estado vazio e rodapé sem overflow horizontal visível. O painel administrativo reorganiza os cards de métricas, gráfico, pedidos recentes e orientação em uma coluna legível; os controles do período permanecem acessíveis. O acompanhamento detalhado foi preparado com layout vertical em telas pequenas para evitar cortes no modal.
+
+
+## 2026-08-19 — Teste operacional do Melhor Envio
+
+A credencial renovada foi validada sem expor o token por meio do endpoint leve `/api/v2/me`, que respondeu com sucesso. A cotação real, não destrutiva, foi executada usando a origem configurada e o destino de teste `01001000`, com um volume de 15 × 10 × 20 cm, 0,5 kg e valor segurado de R$ 100,00. A API respondeu HTTP 200.
+
+A resposta bruta retornou quinze serviços, mas o helper da Eras filtrou corretamente para oito opções autorizadas: PAC e SEDEX dos Correios, três serviços Jadlog e três serviços Loggi. Os valores observados nessa cotação foram PAC R$ 37,54 (4–6 dias), SEDEX R$ 76,46 (1–2 dias), Jadlog .Package R$ 34,32 (6–8 dias), Jadlog .Com R$ 72,50 (5–7 dias), Jadlog .Package Centralizado R$ 25,97 (9–11 dias), Loggi Express R$ 24,60 (5–7 dias), Loggi Coleta R$ 35,05 (8–10 dias) e Loggi Ponto R$ 25,13 (8–10 dias). Os valores são específicos para os CEPs, volume e data deste teste e não devem ser tratados como tabela fixa.
+
+Durante a validação foi corrigida a divergência que excluía Loggi do filtro do backend. O teste unitário agora confirma PAC, SEDEX, Jadlog e Loggi, bloqueando Azul Cargo e demais transportadoras não autorizadas. O endpoint público `/api/melhor-envio/webhook` do preview respondeu HTTP 200 com uma requisição de validação sem criar pedido, etiqueta, carrinho ou cobrança. Nenhum domínio oficial foi alterado.

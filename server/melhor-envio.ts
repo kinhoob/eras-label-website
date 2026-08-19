@@ -55,13 +55,14 @@ export async function calculateMelhorEnvioShipping(payload: MelhorEnvioQuotePayl
     ? "https://sandbox.melhorenvio.com.br/api/v2" 
     : "https://www.melhorenvio.com.br/api/v2";
 
-    // A Eras Label utiliza apenas Correios PAC/SEDEX e Jadlog Econômico/Rápido.
+    // A Eras Label utiliza Correios PAC/SEDEX, Jadlog Econômico/Rápido e Loggi.
     const isAllowedShippingOption = (name: string, companyName?: string) => {
       const text = `${name} ${companyName || ""}`.toLowerCase();
       const isCorreios = text.includes("correios") || text.includes("pac") || text.includes("sedex");
       const isJadlog = text.includes("jadlog");
+      const isLoggi = text.includes("loggi");
       if (isCorreios) return text.includes("pac") || text.includes("sedex");
-      return isJadlog;
+      return isJadlog || isLoggi;
     };
 
     if (!token) {

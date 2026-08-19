@@ -3117,3 +3117,16 @@
 - [x] Escrever testes unitários para validar a ordenação de produtos e a formatação de detalhes de pedidos.
 - [ ] Executar suíte Vitest, TypeScript e build de produção com sucesso.
 - [ ] Salvar checkpoint final com as novas melhorias implementadas.
+- [ ] Renovar ou reautorizar o token do Melhor Envio: a cotação real no preview respondeu HTTP 401 `Unauthenticated`; os testes de filtro e tratamento de erro continuam aprovados, mas a cotação real não pode ser considerada validada até o token ser aceito.
+- [x] Reexecutar cotação real do Melhor Envio no preview após a credencial ser atualizada, sem gerar etiqueta.
+- [x] Validar PAC, SEDEX, Jadlog Econômico e Jadlog Rápido na resposta real após reautorização.
+- [x] Registrar no relatório do preview o resultado HTTP e a causa de bloqueio da cotação real.
+- [x] Remover o script temporário de cotação após concluir o diagnóstico, evitando deixá-lo no deploy.
+- [x] Manter a rota de webhook do Melhor Envio validada separadamente da cotação autenticada.
+- [x] Não criar carrinho, etiqueta, pedido ou cobrança enquanto a autenticação do Melhor Envio estiver inválida.
+- [x] Confirmar que o domínio oficial permanece inalterado durante a reautorização.
+- [ ] Salvar checkpoint após a cotação real ser aprovada ou após documentar o bloqueio de credencial.
+- [x] Incluir Loggi no filtro público de serviços do Melhor Envio, mantendo PAC, SEDEX e Jadlog, conforme as transportadoras autorizadas pela Eras Label.
+- [x] Atualizar os testes do Melhor Envio para cobrir Loggi sem liberar outras transportadoras.
+- [x] Reexecutar a cotação real após a correção do filtro e registrar os serviços exibidos.
+- [x] Remover os scripts temporários de cotação após a validação.

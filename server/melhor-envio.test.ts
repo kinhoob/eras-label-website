@@ -54,6 +54,6 @@ describe("Melhor Envio Shipping Integration & Sales", () => {
     );
 
     const quotes = await calculateMelhorEnvioShipping(quotePayload);
-    expect(quotes.map((quote: { id: number }) => quote.id)).toEqual([1, 2, 3]);
+    expect(quotes.map((quote: { id: number }) => quote.id)).toEqual([1, 2, 3, 19]);
   });
 });
