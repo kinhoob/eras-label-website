@@ -11278,3 +11278,48 @@ h1, h2, h3, .heading-editorial {
   border-color: #b22222;
   box-shadow: 0 10px 30px rgba(178, 34, 34, 0.08);
 }
+
+/* Tooltip flutuante e interativo do gráfico de estatísticas */
+.dashboard-chart-panel .dashboard-chart-svg-wrap {
+  position: relative;
+}
+.chart-floating-tooltip {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: var(--eras-card-bg, #fdfbf7);
+  border: 1px solid var(--eras-border, #d8d0c5);
+  border-radius: 8px;
+  padding: 10px 14px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  font-size: 0.82rem;
+  color: var(--eras-text-main, #222);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  z-index: 20;
+  min-width: 160px;
+  animation: fadeInTooltip 0.15s ease-out;
+}
+.chart-floating-tooltip strong {
+  font-family: var(--font-heading, "Playfair Display", serif);
+  font-size: 0.9rem;
+  color: var(--eras-primary, #b22222);
+  border-bottom: 1px solid var(--eras-border, #d8d0c5);
+  padding-bottom: 3px;
+  margin-bottom: 2px;
+}
+.chart-floating-tooltip span {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.chart-x-labels span.active-x-label {
+  color: #b22222;
+  font-weight: 600;
+  text-decoration: underline;
+}
+@keyframes fadeInTooltip {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}

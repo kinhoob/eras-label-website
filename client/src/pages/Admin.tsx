@@ -1528,6 +1528,7 @@ function AdminDashboardHome({ adminName, adminOrders, adminOrdersLoading, catalo
   const [rangeMode, setRangeMode] = useState<"preset" | "custom">("preset");
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
+  const [hoveredChartPoint, setHoveredChartPoint] = useState<any | null>(null);
   const analyticsInput = useMemo(() => rangeMode === "custom" && customStartDate && customEndDate
     ? { periodDays: 7, startDate: customStartDate, endDate: customEndDate }
     : { periodDays }, [rangeMode, customStartDate, customEndDate, periodDays]);
@@ -1620,18 +1621,38 @@ function AdminDashboardHome({ adminName, adminOrders, adminOrdersLoading, catalo
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   />
-                  {/* Pontos de Faturamento */}
+                  {/* Pontos de Faturamento Interativos com Hover */}
                   {trend.map((item: any, i: number) => {
                     const x = (i / (Math.max(1, trend.length - 1))) * 560 + 20;
                     const y = 180 - Math.max(10, ((Number(item.revenue) || 0) / (maxRevenue || 1)) * 160);
+                    const isHovered = hoveredChartPoint && hoveredChartPoint.label === item.label;
                     return (
-                      <circle key={`rev-${i}`} cx={x} cy={y} r="5" fill="#ffffff" stroke="#b22222" strokeWidth="3" />
+                      <g key={`rev-${i}`} style={{ cursor: "pointer" }} onMouseEnter={() => setHoveredChartPoint(item)} onMouseLeave={() => setHoveredChartPoint(null)}>
+                        <circle cx={x} cy={y} r={isHovered ? "8" : "5"} fill={isHovered ? "#b22222" : "#ffffff"} stroke="#b22222" strokeWidth={isHovered ? "3.5" : "3"} />
+                        <circle cx={x} cy={y} r="18" fill="transparent" />
+                      </g>
                     );
                   })}
                 </svg>
+                {hoveredChartPoint && (
+                  <div className="chart-floating-tooltip">
+                    <strong>{hoveredChartPoint.label}</strong>
+                    <span>Faturamento: <b>R$ {Number(hoveredChartPoint.revenue || 0).toFixed(2)}</b></span>
+                    <span>Vendas: <b>{hoveredChartPoint.orders || 0} pedido(s)</b></span>
+                    <span>Visitas: <b>{hoveredChartPoint.visits || 0} visita(s)</b></span>
+                  </div>
+                )}
                 <div className="chart-x-labels">
                   {trend.map((item: any, i: number) => (
-                    <span key={i} title={`R$ ${item.revenue} · ${item.visits} visitas`}>{item.label}</span>
+                    <span
+                      key={i}
+                      className={hoveredChartPoint && hoveredChartPoint.label === item.label ? "active-x-label" : ""}
+                      onMouseEnter={() => setHoveredChartPoint(item)}
+                      onMouseLeave={() => setHoveredChartPoint(null)}
+                      onClick={() => setHoveredChartPoint(item)}
+                    >
+                      {item.label}
+                    </span>
                   ))}
                 </div>
               </div>

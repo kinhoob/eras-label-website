@@ -947,3 +947,7 @@
 - [x] Eliminar definitivamente qualquer rotina de criação automática de produtos de teste e limpar a tabela products no banco de dados.
 
 - [ ] Exibir subtotal, descontos aplicados, frete e total final nos detalhes de pedidos do painel administrativo.
+
+- [ ] Implementar hover interativo e tooltip detalhado no gráfico de vendas e visitas do painel administrativo.
+
+- [x] Implementar hover interativo e tooltip detalhado no gráfico de vendas e visitas do painel administrativo.
