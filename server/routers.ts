@@ -650,6 +650,7 @@ export const appRouter = router({
       pixDiscountPercent: z.number().min(0).max(100),
       freeShippingThreshold: z.number().nonnegative(),
       maxInstallments: z.number().int().min(1).max(24),
+      interestFreeInstallments: z.number().int().min(1).max(24),
       installmentInterestRate: z.number().min(0).max(20),
     })).mutation(async ({ input }) => {
       const saved = await saveCommercialConfig(input);

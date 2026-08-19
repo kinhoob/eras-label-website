@@ -494,7 +494,8 @@ export const DEFAULT_COMMERCIAL_CONFIG = {
   pixDiscountPercent: 5,
   freeShippingThreshold: 350,
   maxInstallments: 12,
-  installmentInterestRate: 0,
+  interestFreeInstallments: 3,
+  installmentInterestRate: 2.99,
 };
 
 export type CommercialConfig = typeof DEFAULT_COMMERCIAL_CONFIG;
@@ -508,6 +509,7 @@ export async function getCommercialConfig(): Promise<CommercialConfig> {
     pixDiscountPercent: Number(saved.pixDiscountPercent ?? DEFAULT_COMMERCIAL_CONFIG.pixDiscountPercent),
     freeShippingThreshold: Number(saved.freeShippingThreshold ?? DEFAULT_COMMERCIAL_CONFIG.freeShippingThreshold),
     maxInstallments: Math.min(24, Math.max(1, Number(saved.maxInstallments ?? DEFAULT_COMMERCIAL_CONFIG.maxInstallments))),
+    interestFreeInstallments: Math.min(24, Math.max(1, Number(saved.interestFreeInstallments ?? DEFAULT_COMMERCIAL_CONFIG.interestFreeInstallments))),
     installmentInterestRate: Math.min(20, Math.max(0, Number(saved.installmentInterestRate ?? DEFAULT_COMMERCIAL_CONFIG.installmentInterestRate))),
   };
 }
@@ -565,11 +567,12 @@ export async function createNotificationDeduped(data: InsertNotification & { ord
   await db.insert(notifications).values(data);
 }
 
-export async function saveCommercialConfig(config: CommercialConfig) {
+export async function saveCommercialConfig(config: Partial<CommercialConfig>) {
   const normalized: CommercialConfig = {
     pixDiscountPercent: Math.min(100, Math.max(0, Number(config.pixDiscountPercent))),
     freeShippingThreshold: Math.max(0, Number(config.freeShippingThreshold)),
     maxInstallments: Math.min(24, Math.max(1, Math.round(Number(config.maxInstallments)))),
+    interestFreeInstallments: Math.min(24, Math.max(1, Math.round(Number(config.interestFreeInstallments ?? 3)))),
     installmentInterestRate: Math.min(20, Math.max(0, Number(config.installmentInterestRate))),
   };
   const db = await getDb();

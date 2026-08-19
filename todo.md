@@ -975,3 +975,8 @@
 
 - [x] Corrigir o erro de endpoint HTML ao guardar cupons no painel administrativo.
 - [x] Corrigir o erro `bin_not_found` e falhas de pagamento no Pix e cartão na integração com o Mercado Pago, garantindo tratamento robusto de tokens de cartão, dados do pagador e credenciais de produção/sandbox.
+- [ ] Adicionar campo `interestFreeInstallments` na tabela `commercial_config` e migração correspondente.
+- [ ] Atualizar o painel administrativo de configurações comerciais para permitir definir o número máximo de parcelas sem juros (ex: 3).
+- [ ] Atualizar o cálculo de parcelamento e juros no checkout e no backend para aplicar juros apenas a partir da parcela seguinte ao limite sem juros configurado.
+- [ ] Executar testes Vitest e build de produção.
+- [x] Configurar parcelas sem juros (até 3x por padrão, configurável no painel) e juros compostos a partir da parcela seguinte no checkout e cálculo de parcelamento.

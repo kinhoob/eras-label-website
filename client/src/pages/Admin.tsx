@@ -671,7 +671,8 @@ export default function Admin() {
   const [pixDiscountPercent, setPixDiscountPercent] = useState<number>(5);
   const [freeShippingThreshold, setFreeShippingThreshold] = useState<number>(350);
   const [maxInstallments, setMaxInstallments] = useState<number>(12);
-  const [installmentInterestRate, setInstallmentInterestRate] = useState<number>(0);
+  const [interestFreeInstallments, setInterestFreeInstallments] = useState<number>(3);
+  const [installmentInterestRate, setInstallmentInterestRate] = useState<number>(2.99);
 
   // Sincronizar quando o dado carregar
   useEffect(() => {
@@ -679,7 +680,8 @@ export default function Admin() {
       setPixDiscountPercent(commercialConfig.pixDiscountPercent);
       setFreeShippingThreshold(commercialConfig.freeShippingThreshold);
       setMaxInstallments(commercialConfig.maxInstallments ?? 12);
-      setInstallmentInterestRate(commercialConfig.installmentInterestRate ?? 0);
+      setInterestFreeInstallments(commercialConfig.interestFreeInstallments ?? 3);
+      setInstallmentInterestRate(commercialConfig.installmentInterestRate ?? 2.99);
     }
   }, [commercialConfig]);
   useEffect(() => {
@@ -1434,7 +1436,7 @@ export default function Admin() {
           </section>
         )}
         {active === "Aparência" && <section className="admin-content appearance-workspace"><div className="content-toolbar"><div><span className="section-kicker">EDITOR DA LOJA</span><h2 className="content-title">Aparência da loja</h2><p className="content-subtitle">Organize a Home, os banners, a comunicação e as regras comerciais num único espaço de edição.</p></div><Button onClick={() => {
-          saveConfigMutation.mutate({ pixDiscountPercent: Number(pixDiscountPercent), freeShippingThreshold: Number(freeShippingThreshold), maxInstallments: Number(maxInstallments), installmentInterestRate: Number(installmentInterestRate) }, { onSuccess: () => setAppearanceSaved(true), onError: () => toast.error("Erro ao guardar configurações comerciais.") });
+          saveConfigMutation.mutate({ pixDiscountPercent: Number(pixDiscountPercent), freeShippingThreshold: Number(freeShippingThreshold), maxInstallments: Number(maxInstallments), interestFreeInstallments: Number(interestFreeInstallments), installmentInterestRate: Number(installmentInterestRate) }, { onSuccess: () => setAppearanceSaved(true), onError: () => toast.error("Erro ao guardar configurações comerciais.") });
           saveHomeContentMutation.mutate({ banners: homeBanners, highlights: homeHighlights, productSections: homeProductSections, vipBanner: homeVipBanner, sectionTitles: homeSectionTitles }, { onSuccess: () => { void utils.catalog.getHomeContent.invalidate(); setAppearanceSaved(true); toast.success("Home, banners e bloco VIP guardados."); }, onError: () => toast.error("Erro ao guardar o conteúdo da Home.") });
           if (storefrontConfigDraft) {
             saveStorefrontConfigMutation.mutate(storefrontConfigDraft, { onSuccess: (result) => { setStorefrontConfigDraft(result.config); void utils.catalog.getStorefrontConfig.invalidate(); setAppearanceSaved(true); }, onError: () => toast.error("Erro ao guardar as configurações públicas da loja.") });

@@ -7,15 +7,16 @@ describe("installment calculator", () => {
     expect(calculateInstallmentAmount(100, 1)).toBe(100);
   });
 
-  it("applies compound monthly interest transparently", () => {
-    expect(calculateInstallmentTotal(100, 2, 10)).toBeCloseTo(121);
-    expect(calculateInstallmentAmount(100, 2)).toBe(50);
+  it("keeps installments within interest-free window without interest", () => {
+    expect(calculateInstallmentTotal(100, 3, 10, 3)).toBe(100);
+    expect(calculateInstallmentTotal(100, 4, 10, 3)).toBeCloseTo(110);
   });
 
-  it("builds bounded installment options with interest values", () => {
-    const options = buildInstallmentOptions(200, 30, 1);
+  it("builds bounded installment options with interest-free threshold", () => {
+    const options = buildInstallmentOptions(200, 30, 1, 3);
     expect(options).toHaveLength(24);
     expect(options[0]).toMatchObject({ installments: 1, total: 200, amount: 200, interest: 0 });
-    expect(options[2].interest).toBeGreaterThan(0);
+    expect(options[2]).toMatchObject({ installments: 3, total: 200, interest: 0, isInterestFree: true });
+    expect(options[3].interest).toBeGreaterThan(0);
   });
 });

@@ -166,6 +166,7 @@ export default function CheckoutPage() {
   const pixDiscountPercent = commercialConfig?.pixDiscountPercent ?? 5;
   const freeShippingThreshold = commercialConfig?.freeShippingThreshold ?? 350;
   const maxInstallments = Math.max(1, commercialConfig?.maxInstallments ?? 12);
+  const interestFreeInstallments = Math.max(1, commercialConfig?.interestFreeInstallments ?? 3);
   const installmentInterestRate = Math.max(0, commercialConfig?.installmentInterestRate ?? 0);
   const subtotal = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.quantity, 0), [cart]);
   const couponValidationQuery = trpc.coupons.validate.useQuery({ code: coupon.trim() || "ERAS10", subtotal }, { enabled: false });
@@ -175,7 +176,7 @@ export default function CheckoutPage() {
   const shippingCost = (selectedShippingOption?.free || couponFreeShipping) ? 0 : Number(selectedShippingOption?.cost ?? 0);
   const totalBeforePayment = Math.max(0, subtotal - discount + shippingCost);
   const pixSavings = selectedPaymentMethod === "pix" ? subtotal * (pixDiscountPercent / 100) : 0;
-  const cardTotal = selectedPaymentMethod === "credit_card" ? calculateInstallmentTotal(totalBeforePayment, selectedInstallments, installmentInterestRate) : totalBeforePayment;
+  const cardTotal = selectedPaymentMethod === "credit_card" ? calculateInstallmentTotal(totalBeforePayment, selectedInstallments, installmentInterestRate, interestFreeInstallments) : totalBeforePayment;
   const installmentInterest = Math.max(0, cardTotal - totalBeforePayment);
   const total = Math.max(0, selectedPaymentMethod === "credit_card" ? cardTotal : totalBeforePayment - pixSavings);
 
@@ -568,11 +569,17 @@ export default function CheckoutPage() {
                   <label className="wide checkout-installments-field">Parcelamento
                     <select value={selectedInstallments} onChange={(event) => setSelectedInstallments(Number(event.target.value))} aria-label="Número de parcelas">
                       {Array.from({ length: maxInstallments }, (_, index) => index + 1).map((count) => {
-                        const installmentTotal = calculateInstallmentTotal(totalBeforePayment, count, installmentInterestRate);
-                        return <option key={count} value={count}>{count}x de {formatPrice(calculateInstallmentAmount(installmentTotal, count))}{count > 1 && installmentInterestRate > 0 ? ` · total ${formatPrice(installmentTotal)}` : " sem juros"}</option>;
+                        const isInterestFree = count <= interestFreeInstallments;
+                        const installmentTotal = calculateInstallmentTotal(totalBeforePayment, count, installmentInterestRate, interestFreeInstallments);
+                        const amount = calculateInstallmentAmount(installmentTotal, count);
+                        return (
+                          <option key={count} value={count}>
+                            {count}x de {formatPrice(amount)} {isInterestFree ? "sem juros" : `(${installmentInterestRate.toFixed(2)}% a.m. · total ${formatPrice(installmentTotal)})`}
+                          </option>
+                        );
                       })}
                     </select>
-                    <span className="checkout-installments-note">{installmentInterestRate > 0 ? `Taxa configurada: ${installmentInterestRate.toFixed(2)}% ao mês.` : "Parcelamento sem juros configurado pela loja."}</span>
+                    <span className="checkout-installments-note">Até {interestFreeInstallments}x sem juros (juros de {installmentInterestRate.toFixed(2)}% ao mês a partir de {interestFreeInstallments + 1}x).</span>
                   </label>
                   <p className="checkout-page-helper wide"><ShieldCheck size={15} /> Os dados do cartão são tokenizados pelo Mercado Pago e nunca ficam armazenados na Eras Label.</p>
                 </div>
