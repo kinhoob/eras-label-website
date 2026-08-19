@@ -1396,7 +1396,32 @@ export default function Admin() {
         {active === "Carrinhos Abandonados" && <AdminAbandonedCartsSection />}
         {active === "Pedido Manual" && <AdminManualOrderSection />}
         {active === "Pedidos" && <section className="admin-content"><div className="order-cards"><div className="metric-card"><span>Todos os pedidos</span><strong>{adminOrders.length}</strong></div><div className="metric-card"><span>Aguardando pagamento</span><strong>{adminOrders.filter((order) => order.paymentStatus !== "approved").length}</strong></div><div className="metric-card"><span>Em preparação</span><strong>{adminOrders.filter((order) => ["Processando", "Em preparação"].includes(order.status)).length}</strong></div><div className="metric-card"><span>Enviados</span><strong>{adminOrders.filter((order) => ["Enviado", "Entregue"].includes(order.status)).length}</strong></div></div><div className="admin-panel table-panel">{adminOrdersLoading ? <div className="dashboard-empty-state"><LoaderCircle className="spin" size={18} /> A carregar pedidos...</div> : adminOrders.length === 0 ? <div className="empty-admin" style={{ padding: "3rem", textAlign: "center" }}><ShoppingCart size={30} style={{ color: "#b22222", marginBottom: "0.75rem" }} /><h3>Nenhuma venda registada</h3><p>Quando o primeiro pagamento for confirmado, o pedido aparecerá aqui.</p></div> : <table><thead><tr><th>Pedido</th><th>Cliente</th><th>Data</th><th>Total</th><th>Pagamento</th><th>Status</th><th /></tr></thead><tbody>{adminOrders.map((order) => <tr key={order.id}><td><strong>{order.orderNumber}</strong></td><td>{order.customerName}</td><td>{new Date(order.createdAt).toLocaleString("pt-BR")}</td><td>R$ {Number(order.total).toFixed(2)}</td><td><span className={order.paymentStatus === "approved" ? "stock-ok" : "stock-warning"}>{order.paymentStatus === "approved" ? "Pago" : order.paymentStatus}</span></td><td><span className={`status-pill ${order.status === "Entregue" ? "success" : "warning"}`}>{order.status}</span></td><td><button className="table-more" onClick={() => toast.info(`Detalhes do pedido ${order.orderNumber}`)}><Eye size={17} /></button></td></tr>)}</tbody></table>}</div></section>}
-        {active === "Cupons" && <section className="admin-content"><div className="content-toolbar"><div><span className="section-kicker">DESCONTOS</span><h2 className="content-title">Cupons de desconto</h2></div><Button onClick={() => toast.success("Novo cupom criado.")}><Plus size={16} /> Criar cupom</Button></div><div className="coupon-admin-grid"><div className="admin-panel coupon-admin-card"><div className="coupon-code">ERAS10 <span className="status-pill success">Ativo</span></div><p>10% de desconto para novos inscritos da newsletter.</p><div className="coupon-info"><span>Usos <strong>34 / ilimitado</strong></span><span>Válido até <strong>31 Dez 2026</strong></span></div><button className="coupon-toggle" onClick={() => setCouponActive((value) => !value)}>{couponActive ? "Desativar cupom" : "Ativar cupom"}</button></div><div className="admin-panel coupon-admin-card"><div className="coupon-code">PARADOX20 <span className="status-pill warning">Rascunho</span></div><p>20% no lançamento da coleção Paradox.</p><div className="coupon-info"><span>Usos <strong>0 / 100</strong></span><span>Válido até <strong>14 Ago 2026</strong></span></div><button className="coupon-toggle" onClick={() => toast.success("Cupom publicado.")}>Publicar cupom</button></div></div></section>}
+        {active === "Página em construção" && (
+          <section className="admin-content">
+            <div className="content-toolbar">
+              <div>
+                <span className="section-kicker">EXPERIÊNCIA PÚBLICA</span>
+                <h2 className="content-title">Página em construção &amp; Próximo drop</h2>
+                <p className="content-subtitle">Tranque a loja para visitantes, configure o contador regressivo e edite as mensagens da barra de anúncio.</p>
+              </div>
+              <Button onClick={() => {
+                if (storefrontConfigDraft) {
+                  saveStorefrontConfigMutation.mutate(storefrontConfigDraft, {
+                    onSuccess: (result) => {
+                      setStorefrontConfigDraft(result.config);
+                      void utils.catalog.getStorefrontConfig.invalidate();
+                      toast.success("Configurações da página em construção guardadas.");
+                    },
+                    onError: () => toast.error("Erro ao guardar as configurações."),
+                  });
+                }
+              }}>
+                Guardar alterações
+              </Button>
+            </div>
+            <StorefrontSettingsPanel config={storefrontConfigDraft} onChange={setStorefrontConfigDraft} />
+          </section>
+        )}
         {active === "Aparência" && <section className="admin-content appearance-workspace"><div className="content-toolbar"><div><span className="section-kicker">EDITOR DA LOJA</span><h2 className="content-title">Aparência da loja</h2><p className="content-subtitle">Organize a Home, os banners, a comunicação e as regras comerciais num único espaço de edição.</p></div><Button onClick={() => {
           saveConfigMutation.mutate({ pixDiscountPercent: Number(pixDiscountPercent), freeShippingThreshold: Number(freeShippingThreshold), maxInstallments: Number(maxInstallments), installmentInterestRate: Number(installmentInterestRate) }, { onSuccess: () => setAppearanceSaved(true), onError: () => toast.error("Erro ao guardar configurações comerciais.") });
           saveHomeContentMutation.mutate({ banners: homeBanners, highlights: homeHighlights, productSections: homeProductSections, vipBanner: homeVipBanner, sectionTitles: homeSectionTitles }, { onSuccess: () => { void utils.catalog.getHomeContent.invalidate(); setAppearanceSaved(true); toast.success("Home, banners e bloco VIP guardados."); }, onError: () => toast.error("Erro ao guardar o conteúdo da Home.") });
