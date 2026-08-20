@@ -324,18 +324,29 @@ export default function AdminSalesSection() {
       </div>
 
       <div className="sales-filter-panel admin-panel" aria-label="Filtros de vendas">
-        <div className="sales-search-field">
-          <label htmlFor="sales-search">Pesquisar pedidos</label>
-          <div className="sales-search-input-wrap">
-            <Input id="sales-search" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Número, cliente ou e-mail" />
-            {searchTerm && <button type="button" className="sales-clear-search" onClick={() => setSearchTerm("")} aria-label="Limpar pesquisa"><X size={15} /></button>}
+        <div className="sales-filter-heading">
+          <div>
+            <span>REFINAR VENDAS</span>
+            <strong>{visibleOrders.length} {visibleOrders.length === 1 ? "pedido visível" : "pedidos visíveis"}</strong>
           </div>
+          <span className="sales-filter-hint">Use os filtros para localizar rapidamente um pedido.</span>
         </div>
-        <label className="sales-filter-control"><span>Status do pedido</span><select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}><option value="all">Todos os status</option><option value="Processando">Processando</option><option value="Em preparação">Em preparação</option><option value="Embalado">Embalado</option><option value="Enviado">Enviado</option><option value="Entregue">Entregue</option><option value="Arquivado">Arquivado</option><option value="Cancelado">Cancelado</option></select></label>
-        <label className="sales-filter-control"><span>Pagamento</span><select value={paymentFilter} onChange={(event) => setPaymentFilter(event.target.value)}><option value="all">Todos</option><option value="approved">Aprovado</option><option value="pending">Pendente</option><option value="rejected">Recusado</option></select></label>
-        <label className="sales-filter-control"><span>Período</span><select value={periodFilter} onChange={(event) => setPeriodFilter(event.target.value as "all" | "7" | "30" | "90")}><option value="all">Todo o histórico</option><option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option><option value="90">Últimos 90 dias</option></select></label>
-        <label className="sales-archive-toggle"><input type="checkbox" checked={includeArchived} onChange={(event) => { setIncludeArchived(event.target.checked); setSelectedOrderIds([]); }} /> <span>Mostrar arquivados</span></label>
-        <Button type="button" variant="outline" className="sales-reset-filters" onClick={() => { setSearchTerm(""); setStatusFilter("all"); setPaymentFilter("all"); setPeriodFilter("all"); setLabelFilter("all"); setIncludeArchived(false); }}>Limpar filtros</Button>
+        <div className="sales-filter-grid">
+          <div className="sales-search-field">
+            <label htmlFor="sales-search">Pesquisar pedidos</label>
+            <div className="sales-search-input-wrap">
+              <Input id="sales-search" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Número, cliente ou e-mail" />
+              {searchTerm && <button type="button" className="sales-clear-search" onClick={() => setSearchTerm("")} aria-label="Limpar pesquisa"><X size={15} /></button>}
+            </div>
+          </div>
+          <label className="sales-filter-control"><span>Status do pedido</span><select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}><option value="all">Todos os status</option><option value="Processando">Processando</option><option value="Em preparação">Em preparação</option><option value="Embalado">Embalado</option><option value="Enviado">Enviado</option><option value="Entregue">Entregue</option><option value="Arquivado">Arquivado</option><option value="Cancelado">Cancelado</option></select></label>
+          <label className="sales-filter-control"><span>Pagamento</span><select value={paymentFilter} onChange={(event) => setPaymentFilter(event.target.value)}><option value="all">Todos</option><option value="approved">Aprovado</option><option value="pending">Pendente</option><option value="rejected">Recusado</option></select></label>
+          <label className="sales-filter-control"><span>Período</span><select value={periodFilter} onChange={(event) => setPeriodFilter(event.target.value as "all" | "7" | "30" | "90")}><option value="all">Todo o histórico</option><option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option><option value="90">Últimos 90 dias</option></select></label>
+        </div>
+        <div className="sales-filter-actions">
+          <label className="sales-archive-toggle"><input type="checkbox" checked={includeArchived} onChange={(event) => { setIncludeArchived(event.target.checked); setSelectedOrderIds([]); }} /> <span>Incluir pedidos arquivados</span></label>
+          <Button type="button" variant="outline" className="sales-reset-filters" onClick={() => { setSearchTerm(""); setStatusFilter("all"); setPaymentFilter("all"); setPeriodFilter("all"); setLabelFilter("all"); setIncludeArchived(false); }}>Limpar filtros</Button>
+        </div>
       </div>
 
       {bulkLabelPdfUrl && (
@@ -377,7 +388,7 @@ export default function AdminSalesSection() {
         </div>
       </div>
 
-      <div className="admin-panel table-panel">
+      <div className="admin-panel table-panel sales-orders-table-panel">
         {isLoading ? (
           <p className="editor-description" style={{ padding: "2rem", textAlign: "center" }}>A carregar vendas e dados de entrega...</p>
         ) : visibleOrders.length === 0 ? (
@@ -418,7 +429,7 @@ export default function AdminSalesSection() {
 
                 return (
                   <tr key={order.id}>
-                    <td style={{ textAlign: "center" }}>
+                    <td data-label="Selecionar" style={{ textAlign: "center" }}>
                       <input
                         type="checkbox"
                         checked={selectedOrderIds.includes(order.id)}
@@ -426,25 +437,25 @@ export default function AdminSalesSection() {
                         aria-label={`Selecionar pedido ${order.orderNumber}`}
                       />
                     </td>
-                    <td><strong>{order.orderNumber}</strong></td>
-                    <td>
+                    <td data-label="Pedido"><strong>{order.orderNumber}</strong></td>
+                    <td data-label="Cliente">
                       <div>{order.customerName}</div>
                       <small style={{ color: "var(--muted-foreground)" }}>{order.customerEmail}</small>
                     </td>
-                    <td>
+                    <td data-label="Entrega">
                       <span className="status-pill" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
                         <Truck size={13} /> {shippingLabel}
                       </span>
                       {address.cep && <div style={{ fontSize: "11px", color: "var(--muted-foreground)", marginTop: "2px" }}>CEP: {address.cep}</div>}
                     </td>
-                    <td>
+                    <td data-label="Pagamento">
                       <span className={isPaid ? "stock-ok" : "stock-warning"}>
                         {getPaymentLabel(order.paymentStatus)}
                       </span>
                     </td>
-                    <td><strong>R$ {Number(order.total).toFixed(2)}</strong></td>
-                    <td>{new Date(order.createdAt).toLocaleDateString("pt-BR")}</td>
-                    <td style={{ textAlign: "right", display: "flex", justifyContent: "flex-end", gap: "6px", alignItems: "center" }}>
+                    <td data-label="Total"><strong>R$ {Number(order.total).toFixed(2)}</strong></td>
+                    <td data-label="Data">{new Date(order.createdAt).toLocaleDateString("pt-BR")}</td>
+                    <td data-label="Ações" className="sales-order-actions-cell" style={{ textAlign: "right" }}>
                       <Button variant="outline" size="sm" onClick={() => setSelectedOrder(order)} title="Detalhes & Envio">
                         <Eye size={15} />
                       </Button>

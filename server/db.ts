@@ -1133,26 +1133,37 @@ export function getNextFulfillmentStatus(status: FulfillmentStatus): Fulfillment
   return index >= 0 && index < FULFILLMENT_ORDER.length - 1 ? FULFILLMENT_ORDER[index + 1] : null;
 }
 
+export function getFulfillmentTransitionError(currentStatus: FulfillmentStatus, nextStatus: FulfillmentStatus, paymentStatus?: string | null) {
+  if (currentStatus === "archived" && nextStatus !== "archived") {
+    return "Um pedido arquivado não pode voltar ao fluxo operacional.";
+  }
+
+  // Marcar como enviado é uma decisão operacional explícita do administrador.
+  // Não deve depender de etiqueta, cotação, pagamento ou da etapa visual anterior.
+  if (nextStatus === "shipped") return null;
+
+  const paymentConfirmed = ["approved", "authorized"].includes(String(paymentStatus ?? "").toLowerCase());
+  if (["packed", "archived"].includes(nextStatus) && !paymentConfirmed) {
+    return "Só é possível preparar ou arquivar pedidos com pagamento aprovado.";
+  }
+
+  if (nextStatus !== "pending_packaging" && nextStatus !== currentStatus) {
+    const expectedNext = getNextFulfillmentStatus(currentStatus);
+    if (expectedNext !== nextStatus) return "O pedido deve seguir a sequência: embalar, enviar e arquivar.";
+  }
+
+  return null;
+}
+
 export async function updateOrderFulfillmentStatus(orderId: number, nextStatus: FulfillmentStatus) {
   const db = await getDb();
   if (!db) return undefined;
   const current = await getOrderById(orderId);
   if (!current) return undefined;
-  const paymentConfirmed = ["approved", "authorized"].includes(String(current.paymentStatus ?? "").toLowerCase());
-  if (["packed", "shipped", "archived"].includes(nextStatus) && !paymentConfirmed) {
-    throw new Error("Só é possível preparar ou arquivar pedidos com pagamento aprovado.");
-  }
 
   const currentStatus = (current.fulfillmentStatus || (current.archivedAt ? "archived" : "pending_packaging")) as FulfillmentStatus;
-  if (nextStatus !== "pending_packaging" && nextStatus !== currentStatus) {
-    const expectedNext = getNextFulfillmentStatus(currentStatus);
-    if (expectedNext !== nextStatus) {
-      throw new Error("O pedido deve seguir a sequência: embalar, enviar e arquivar.");
-    }
-  }
-  if (currentStatus === "archived" && nextStatus !== "archived") {
-    throw new Error("Um pedido arquivado não pode voltar ao fluxo operacional.");
-  }
+  const transitionError = getFulfillmentTransitionError(currentStatus, nextStatus, current.paymentStatus);
+  if (transitionError) throw new Error(transitionError);
 
   const statusLabel = nextStatus === "packed" ? "Embalado" : nextStatus === "shipped" ? "Enviado" : nextStatus === "archived" ? "Arquivado" : "Processando";
   await db.update(orders).set({
