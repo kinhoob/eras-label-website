@@ -25,6 +25,6 @@
 - [x] Ajustar tokens, superfícies, textos, bordas, overlays e imagens para contraste adequado no modo noturno
 - [x] Validar o modo noturno em desktop, mobile e páginas públicas sem regressões
 - [x] Cobrir a resolução da preferência de tema com teste unitário, incluindo valores inválidos e fallback para claro
-- [ ] Validar explicitamente o modo noturno ativado no navegador em desktop e mobile, com evidências para Home, catálogo, produto, checkout e conta
-- [ ] Revisar e corrigir contraste e legibilidade de navbar, busca, menus, sacola, cards e formulários no modo noturno ativado
-- [ ] Harmonizar o checkout vazio e o checkout modal com as superfícies escuras, preservando a leitura das áreas de pagamento e resumo
+- [x] Validar explicitamente o modo noturno ativado no navegador em desktop e mobile, com evidências para Home, catálogo, produto, checkout e conta
+- [x] Revisar e corrigir contraste e legibilidade de navbar, busca, menus, sacola, cards e formulários no modo noturno ativado
+- [x] Harmonizar o checkout vazio e o checkout modal com as superfícies escuras, preservando a leitura das áreas de pagamento e resumo
