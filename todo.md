@@ -17,3 +17,7 @@
 - [x] Validar a responsividade mobile da grelha de filtros de Vendas & Entregas após a mudança CSS
 - [x] Executar e registrar testes/regressões após a correção dos filtros de Vendas & Entregas
 - [x] Permitir abrir diretamente a seção Vendas por URL para tornar a validação e o retorno ao painel determinísticos
+- [x] Reestruturar visualmente a seção SHOP para uma grade editorial mais compacta e com hierarquia coerente
+- [x] Ordenar produtos esgotados automaticamente por último em todas as listagens públicas relevantes
+- [x] Permitir cadastrar, ordenar, editar e remover uma quantidade ilimitada de banners no CMS da página inicial
+- [x] Adicionar teste de regressão para garantir que o ordenador do storefront mantenha produtos esgotados no fim em todas as opções de ordenação

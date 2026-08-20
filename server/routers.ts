@@ -889,7 +889,7 @@ export const appRouter = router({
         cta: z.string(),
         targetType: z.enum(["custom", "catalog", "category", "collection"]).optional(),
         targetValue: z.string().max(180).optional(),
-      })).min(1).max(6),
+      })).min(1),
       highlights: z.array(z.object({
         id: z.string().min(1),
         productId: z.number().int().positive(),

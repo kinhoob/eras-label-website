@@ -8,10 +8,31 @@ export type SearchableStorefrontProduct = {
 
 export type StorefrontSearchSort = "newest" | "price-asc" | "price-desc" | "bestselling";
 
-type SortableStorefrontProduct = SearchableStorefrontProduct & {
+type StockAwareStorefrontProduct = {
+  stock?: number | null;
+  status?: string | null;
+  variations?: Array<{ stock?: number | null }> | null;
+};
+
+type SortableStorefrontProduct = SearchableStorefrontProduct & StockAwareStorefrontProduct & {
   price: number;
   createdAt?: string | Date | null;
 };
+
+/** Considera esgotado apenas quando o status ou o estoque total indicam indisponibilidade. */
+export function isStorefrontProductSoldOut(product: StockAwareStorefrontProduct) {
+  if (product.status === "soldout") return true;
+  if (typeof product.stock === "number") return product.stock <= 0;
+  return Array.isArray(product.variations) && product.variations.length > 0 && product.variations.every((variation) => Number(variation.stock ?? 0) <= 0);
+}
+
+/** Mantém a curadoria original, mas desloca itens esgotados para o final de forma estável. */
+export function sortSoldOutLast<T extends StockAwareStorefrontProduct>(products: T[]) {
+  return products
+    .map((product, index) => ({ product, index }))
+    .sort((left, right) => Number(isStorefrontProductSoldOut(left.product)) - Number(isStorefrontProductSoldOut(right.product)) || left.index - right.index)
+    .map(({ product }) => product);
+}
 
 export function normalizeSearchText(value: string) {
   return value
@@ -80,9 +101,8 @@ export function sortStorefrontProducts<T extends SortableStorefrontProduct>(prod
   return products
     .map((product, index) => ({ product, index }))
     .sort((left, right) => {
-      // Produtos esgotados (status === 'soldout' ou estoque total === 0) vão sempre para o final da listagem
-      const leftSoldOut = (left.product as any).status === "soldout" || (Array.isArray((left.product as any).variations) && (left.product as any).variations.every((v: any) => Number(v.stock ?? 0) === 0));
-      const rightSoldOut = (right.product as any).status === "soldout" || (Array.isArray((right.product as any).variations) && (right.product as any).variations.every((v: any) => Number(v.stock ?? 0) === 0));
+      const leftSoldOut = isStorefrontProductSoldOut(left.product);
+      const rightSoldOut = isStorefrontProductSoldOut(right.product);
       if (leftSoldOut && !rightSoldOut) return 1;
       if (!leftSoldOut && rightSoldOut) return -1;
       if (sort === "price-asc") return left.product.price - right.product.price || left.index - right.index;

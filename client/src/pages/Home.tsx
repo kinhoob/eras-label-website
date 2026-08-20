@@ -42,7 +42,7 @@ import { checkoutFlowReducer, initialCheckoutFlowState } from "@/lib/checkout-fl
 import { createOrderSummary, type OrderSummary } from "@/lib/order-summary";
 import { saveCheckoutDraft } from "@/lib/checkout-draft";
 import { filterStorefrontProducts, getStorefrontFilterOptions } from "@/lib/storefront-filters";
-import { getSearchSuggestionText, searchStorefrontProducts, sortStorefrontProducts, type StorefrontSearchSort } from "@/lib/storefront-search";
+import { getSearchSuggestionText, searchStorefrontProducts, sortSoldOutLast, sortStorefrontProducts, type StorefrontSearchSort } from "@/lib/storefront-search";
 import { clearRecentSearches, loadRecentSearches, removeRecentSearch, saveRecentSearch } from "@/lib/recent-searches";
 import OfficialFooter from "@/components/OfficialFooter";
 import { SidebarMenu } from "@/components/SidebarMenu";
@@ -1005,9 +1005,7 @@ export default function Home() {
                 <a className="text-link" href="/catalog" onClick={() => playClick(soundsOn)}>VER SHOP <ArrowRight size={14} /></a>
               </div>
               <div className="product-grid editorial-product-grid home-curated-grid">
-                {section.productIds.slice(0, 8).map((productId) => {
-                  const product = products.find((item) => item.id === productId);
-                  if (!product) return null;
+                {sortSoldOutLast(section.productIds.map((productId) => products.find((item) => item.id === productId)).filter((product): product is Product => Boolean(product))).slice(0, 8).map((product) => {
                   return (
                     <article className="product-card" key={`${section.id}-${product.id}`}>
                       <button className="product-image-button" onClick={() => openProduct(product)} aria-label={`Ver ${product.name}`}>
