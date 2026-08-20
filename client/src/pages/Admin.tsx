@@ -1002,7 +1002,7 @@ export default function Admin() {
   return (
     <div className="admin-shell">
       <aside className={`admin-sidebar ${menuOpen ? "open" : ""}`}>
-        <div className="admin-brand"><Link href="/"><img src="/eras-logo-sticker.webp" alt="Eras Label Admin" style={{ height: "40px", width: "auto", objectFit: "contain", display: "block" }} /></Link><small>ADMIN</small></div>
+        <div className="admin-brand"><Link href="/"><img src="/eras-logo-sticker.webp" alt="Eras Label Admin" style={{ height: "52px", width: "auto", objectFit: "contain", display: "block" }} /></Link><small>ADMIN</small></div>
         <nav className="admin-nav-groups" aria-label="Navegação administrativa">
           {navGroups.map((group) => {
             const isOpen = Boolean(openNavGroups[group.id]);
