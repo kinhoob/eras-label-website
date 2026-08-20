@@ -670,8 +670,24 @@ export default function Admin() {
 
   const [active, setActive] = useState(() => {
     if (typeof window === "undefined") return "Visão geral";
-    const section = new URLSearchParams(window.location.search).get("section");
-    return section === "stats" || section === "estatisticas" ? "Estatísticas" : "Visão geral";
+    const section = new URLSearchParams(window.location.search).get("section")?.trim().toLowerCase();
+    const sectionLabels: Record<string, string> = {
+      stats: "Estatísticas",
+      estatisticas: "Estatísticas",
+      sales: "Vendas",
+      vendas: "Vendas",
+      orders: "Pedidos",
+      pedidos: "Pedidos",
+      clients: "Clientes",
+      clientes: "Clientes",
+      products: "Produtos",
+      produtos: "Produtos",
+      collections: "Coleções",
+      colecoes: "Coleções",
+      inventory: "Inventário",
+      inventario: "Inventário",
+    };
+    return section ? sectionLabels[section] ?? "Visão geral" : "Visão geral";
   });
   const [query, setQuery] = useState("");
   const [productCategoryFilter, setProductCategoryFilter] = useState<number | null>(null);
