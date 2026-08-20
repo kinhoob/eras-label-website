@@ -267,8 +267,8 @@ export default function CatalogViewPage() {
                           <span>Imagem a caminho</span>
                         )}
                         {(product.status === "soldout" || (Array.isArray(product.variations) && product.variations.every((v: any) => Number(v.stock ?? 0) === 0))) && (
-                          <span className="absolute top-3 left-3 bg-[#23221e]/90 text-white text-[10px] tracking-widest uppercase px-2.5 py-1 font-semibold backdrop-blur-sm">
-                            Esgotado
+                          <span className="absolute bottom-3 left-3 bg-[#b22222] text-white text-[10px] tracking-widest uppercase px-2.5 py-1 font-semibold shadow-md z-10">
+                            ESGOTADO
                           </span>
                         )}
                       </Link>
