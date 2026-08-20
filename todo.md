@@ -50,3 +50,11 @@
 - [x] Validar o movimento real durante a rolagem em desktop, mobile e temas claro/escuro
 - [x] Adicionar verificação automatizada reproduzível do parallax em duas posições reais de scroll no desktop e no mobile
 - [x] Registrar evidência verificável do parallax nos temas claro e escuro durante scroll real
+- [x] Adicionar troca suave para a segunda foto dos produtos ao passar o mouse, priorizando a foto do modelo
+- [x] Aplicar o comportamento nos cards da Home e do catálogo com fallback quando não houver segunda imagem
+- [x] Validar teclado, mobile, imagens ausentes, modo escuro e estados de produto esgotado
+- [x] Validar explicitamente cards com segunda foto em produtos esgotados, mantendo selo e CTA bloqueado
+- [x] Validar Home e catálogo com cards esgotados com segunda foto durante hover e focus
+- [x] Confirmar de forma reproduzível que hover/focus não reativa compra ou CTA em produtos esgotados
+- [x] Adicionar verificação reproduzível do comportamento por teclado nos cards com segunda imagem
+- [x] Registrar evidência objetiva para segunda imagem ausente e URL secundária quebrada

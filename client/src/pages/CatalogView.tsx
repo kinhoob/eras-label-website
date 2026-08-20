@@ -7,6 +7,7 @@ import { PageTransitionHandler } from "@/components/PageTransition";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import OfficialFooter from "@/components/OfficialFooter";
+import ProductImageSwap from "@/components/ProductImageSwap";
 
 const catalogImageFallback = "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1200&q=85";
 
@@ -261,9 +262,18 @@ export default function CatalogViewPage() {
                   const imageSrc = images[0] || product.image || catalogImageFallback;
                   return (
                     <article key={product.id} className="catalog-product-card group">
-                      <Link href={`/produto/${product.slug || product.id}`} className="catalog-product-media relative" aria-label={`Ver ${product.name}`}>
+                      <Link href={`/produto/${product.slug || product.id}`} className={`catalog-product-media relative${images[1] ? " has-image-swap" : ""}`} aria-label={`Ver ${product.name}`}>
                         {imageSrc ? (
-                          <img src={imageSrc} alt={product.name} onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = catalogImageFallback; }} />
+                          <ProductImageSwap
+                            primaryImage={imageSrc}
+                            secondaryImage={images[1]}
+                            fallbackImage={catalogImageFallback}
+                            alt={product.name}
+                            onPrimaryError={(event) => {
+                              event.currentTarget.onerror = null;
+                              event.currentTarget.src = catalogImageFallback;
+                            }}
+                          />
                         ) : (
                           <span className="catalog-product-media-placeholder">Imagem a caminho</span>
                         )}

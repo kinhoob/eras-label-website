@@ -45,6 +45,7 @@ import { filterStorefrontProducts, getStorefrontFilterOptions } from "@/lib/stor
 import { getSearchSuggestionText, searchStorefrontProducts, sortSoldOutLast, sortStorefrontProducts, type StorefrontSearchSort } from "@/lib/storefront-search";
 import { clearRecentSearches, loadRecentSearches, removeRecentSearch, saveRecentSearch } from "@/lib/recent-searches";
 import OfficialFooter from "@/components/OfficialFooter";
+import ProductImageSwap from "@/components/ProductImageSwap";
 import { SidebarMenu } from "@/components/SidebarMenu";
 import { getUpcomingPublishedEvents, parseCmsContent } from "@shared/cms";
 
@@ -1064,12 +1065,18 @@ export default function Home() {
                 {sortSoldOutLast(section.productIds.map((productId) => products.find((item) => item.id === productId)).filter((product): product is Product => Boolean(product))).slice(0, 8).map((product) => {
                   return (
                     <article className="product-card" key={`${section.id}-${product.id}`}>
-                      <button className="product-image-button" onClick={() => openProduct(product)} aria-label={`Ver ${product.name}`}>
-                        <img src={product.image} alt={product.alt} onError={(event) => {
-                          if (!product.fallbackImage || event.currentTarget.dataset.fallbackApplied) return;
-                          event.currentTarget.dataset.fallbackApplied = "true";
-                          event.currentTarget.src = product.fallbackImage;
-                        }} />
+                      <button className={`product-image-button${product.images?.[1] ? " has-image-swap" : ""}`} onClick={() => openProduct(product)} aria-label={`Ver ${product.name}`}>
+                        <ProductImageSwap
+                          primaryImage={product.image}
+                          secondaryImage={product.images?.[1]}
+                          fallbackImage={product.fallbackImage}
+                          alt={product.alt}
+                          onPrimaryError={(event) => {
+                            if (!product.fallbackImage || event.currentTarget.dataset.fallbackApplied) return;
+                            event.currentTarget.dataset.fallbackApplied = "true";
+                            event.currentTarget.src = product.fallbackImage;
+                          }}
+                        />
                         {product.stock === 0 && (
                           <span className="absolute bottom-3 left-3 bg-[#b22222] text-white text-[9px] tracking-widest uppercase px-2 py-0.5 font-bold rounded-sm shadow-sm z-10 pointer-events-none">
                             ESGOTADO
