@@ -72,10 +72,20 @@ export default function AdminSalesSection() {
   useEffect(() => {
     if (!selectedOrder) return;
     const address = selectedOrder.address || selectedOrder.shippingAddress || {};
-    setQuoteForm((current) => ({
-      ...current,
+    const itemsCount = Array.isArray(selectedOrder.items) ? selectedOrder.items.reduce((acc: number, item: any) => acc + Number(item.quantity || 1), 0) : 1;
+    // Cálculo realista de dimensões e peso por encomenda (ex: base 20x5x32cm + 300g por peça)
+    const calculatedWeight = Math.max(300, itemsCount * 300);
+    const calculatedWidth = 20;
+    const calculatedHeight = Math.min(25, 5 + Math.floor(itemsCount / 2) * 3);
+    const calculatedLength = 32;
+
+    setQuoteForm({
       cepDestination: String(address.cep || "").replace(/\D/g, ""),
-    }));
+      widthCm: String(calculatedWidth),
+      heightCm: String(calculatedHeight),
+      lengthCm: String(calculatedLength),
+      weightGrams: String(calculatedWeight),
+    });
     setShippingQuotes([]);
     setQuoteStep(1);
   }, [selectedOrder?.id]);
@@ -460,7 +470,7 @@ export default function AdminSalesSection() {
                     {reconcilePaymentMutation.isPending ? "A sincronizar..." : "Sincronizar Mercado Pago"}
                   </Button>
                 )}
-                {selectedOrder.paymentFailureReason && (
+                {selectedOrder.paymentFailureReason && !["approved", "authorized", "paid"].includes(String(selectedOrder.paymentStatus ?? "").toLowerCase()) && (
                   <p style={{ fontSize: "0.85rem", marginBottom: "4px", color: "#b22222", background: "rgba(178,34,34,0.08)", padding: "6px 8px", borderRadius: "4px" }}>
                     <strong>Motivo da Falha / Recusa:</strong> {selectedOrder.paymentFailureReason}
                   </p>
