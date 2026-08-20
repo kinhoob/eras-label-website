@@ -37,3 +37,54 @@ A autenticação de produção, a entrega real de e-mails e a autorização de p
 ## Próximo passo recomendado
 
 Publicar apenas depois de o proprietário confirmar a revisão visual e realizar uma compra controlada com credenciais de produção. Em seguida, apontar o domínio, registar os webhooks no endereço público e repetir a confirmação de pagamento, e-mail e etiqueta sem apagar dados reais.
+
+## Modelo operacional
+
+| Ambiente | Uso | Proteção e responsabilidade |
+|---|---|---|
+| Preview | Validação visual, funcional e de integração antes do lançamento | Testes executados com `ERAS_TEST_MODE=1`; não deve ser tratado como confirmação final de domínio ou entrega ao cliente |
+| Sandbox | Testes controlados de pagamento e logística sem cobrança/etiqueta de produção | Deve usar credenciais e endpoints de teste quando disponíveis; nunca misturar fixtures com dados comerciais reais |
+| Produção | Compras, pagamentos, e-mails, webhooks e etiquetas reais | Exige publicação, domínio público estável, segredos de produção e transação controlada pelo proprietário |
+
+A suíte automatizada deve manter o modo isolado por padrão. Testes de pagamento que consultem serviços externos ficam separados e opt-in; qualquer teste de produção deve ser executado manualmente pelo proprietário, nunca durante `pnpm test`.
+
+## Verificação pós-restart
+
+Após o restart do servidor, o processo voltou a iniciar em `http://localhost:3000/` com TypeScript sem erros. Os logs recentes do browser mostram apenas a ligação do Vite, inicialização do coletor e React DevTools; não há novo erro de parser do `PublicCartDrawer`. O encerramento `ELIFECYCLE` observado imediatamente antes do restart foi transitório e não se repetiu no arranque seguinte. O aviso de `baseline-browser-mapping` é informativo e não bloqueia a aplicação.
+
+## Estado resumido dos módulos administrativos
+
+| Módulo | Estado no preview |
+|---|---|
+| Dashboard, métricas e notificações | Validado com estados vazios honestos, filtros de período e alertas controlados |
+| Produtos, categorias e coleções | Validado com publicação, não listado, oculto, stock por tamanho, preço e associação editorial |
+| Vendas, pedidos e pagamentos | Validado com estados de pagamento separados da preparação e detalhe do pedido |
+| Envios e Melhor Envio | Validado com cotação, etiqueta e payload `service`; domínio público continua pendente para o registo definitivo |
+| Marketing, cupões e promoções | Validado com regras de primeira compra, frete grátis, descontos e persistência no checkout |
+| CMS, aparência, eventos e Archive | Validado com edição de textos, imagens/links e pré-visualização |
+| Clientes, contactos e newsletter | Validado com separação de tipos, histórico e exportação |
+| Definições, equipa e segurança | Validado com acesso protegido e credenciais fora do frontend |
+
+A revisão visual mantém a identidade editorial Eras, o acento `#b22222`, tipografia leve nos títulos, hierarquia consistente e estados responsivos para desktop e mobile. Labels administrativos e públicos usados nos fluxos auditados permanecem em português; qualquer texto editorial adicional continua editável pelo administrador.
+
+## Resumo de entrega
+
+| Classificação | Itens |
+|---|---|
+| Pronto no preview | Catálogo, carrinho, cupão/frete → checkout, pagamentos, reconciliação Pix, Melhor Envio, Admin, testes e build |
+| Pendente de publicação | Apontar `www.eraslabel.com`, registar webhooks definitivos e repetir uma compra controlada no domínio público |
+| Bloqueado por decisão do proprietário | Publicar o site, alterar o domínio oficial ou apagar dados ambíguos sem confirmação explícita |
+
+## Observação de performance
+
+O build de produção concluiu em 4,42 s sem falhas. Os chunks públicos e administrativos estão comprimidos, mas o bundler sinalizou dois bundles acima de 500 kB: `index` com 650,77 kB e `Admin` com 743,03 kB (97,36 kB gzip). Isto não bloqueia o lançamento, porém recomenda-se uma próxima etapa de code-splitting/dynamic import das rotas administrativas e componentes pesados para reduzir o JavaScript inicial.
+
+A revisão dos logs recentes após o restart não encontrou novos erros de aplicação ou TypeScript. O histórico ainda contém a ocorrência antiga de parser error anterior ao restart; ela deve ser interpretada como histórico, não como erro ativo.
+
+## Declaração de conteúdo e NF-e
+
+A plataforma mantém o fluxo de envio e etiquetas do Melhor Envio, mas não deve ser apresentada como emissora de NF-e ou declaração de conteúdo automática sem um provedor fiscal, credenciais e requisitos tributários definidos pelo proprietário. Este item fica **bloqueado por decisão/configuração do proprietário**, e não por erro do checkout ou do Melhor Envio. A operação pode continuar com a geração de etiquetas já validada, enquanto a emissão fiscal permanece uma integração futura separada.
+
+## SEO durante o preview
+
+Durante o preview, o sitemap e os metadados de canonical/Open Graph devem ser tratados como provisórios. A validação definitiva de URLs absolutas, indexação e domínio canónico só deve ocorrer depois de o domínio oficial estar publicado e apontado para a aplicação. Nenhum bloqueio de checkout, catálogo ou painel administrativo depende desses valores enquanto o ambiente de preview estiver em uso.

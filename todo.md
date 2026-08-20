@@ -1042,141 +1042,141 @@
 - [ ] Validar que o modo manutenção não bloqueia o admin.
 - [ ] Validar que o checkout vazio não chama criação de pedido.
 - [ ] Validar que o contador da sacola reflete apenas o localStorage atual.
-- [ ] Validar que o link de portfolio abre `https://kinhoob.github.io/portfolio`.
-- [ ] Verificar que imagens default da Home são somente fallback visual e não produtos persistidos.
-- [ ] Verificar que o catálogo mostra apenas produtos com status público permitido.
-- [ ] Verificar que categorias vazias são tratadas com estado vazio honesto.
-- [ ] Verificar que a busca não cria produtos.
-- [ ] Verificar que o painel de vendas não apresenta pedidos de teste após a limpeza.
+- [x] Validar que o link de portfolio abre `https://kinhoob.github.io/portfolio`.
+- [x] Verificar que imagens default da Home são somente fallback visual e não produtos persistidos.
+- [x] Verificar que o catálogo mostra apenas produtos com status público permitido.
+- [x] Verificar que categorias vazias são tratadas com estado vazio honesto.
+- [x] Verificar que a busca não cria produtos.
+- [x] Verificar que o painel de vendas não apresenta pedidos de teste após a limpeza.
 - [ ] Verificar que o histórico Resend não contém registros fictícios após limpeza autorizada.
-- [ ] Verificar que os alertas antigos não reaparecem depois de marcados como lidos.
-- [ ] Verificar que o Archive permite editar textos, imagens e links pelo CMS.
-- [ ] Verificar que o checkout apresenta resumo completo no mobile.
-- [ ] Verificar que o checkout apresenta resumo completo no desktop.
-- [ ] Verificar que o carrinho mantém a estética Eras em todas as rotas.
-- [ ] Verificar que a navbar não sobrepõe menus ou modais.
-- [ ] Verificar que a barra de anúncio aparece no mobile.
-- [ ] Verificar que o domínio oficial não é necessário para testar Mercado Pago em sandbox.
-- [ ] Verificar que a troca para produção será feita somente após publicação aprovada.
+- [x] Verificar que os alertas antigos não reaparecem depois de marcados como lidos.
+- [x] Verificar que o Archive permite editar textos, imagens e links pelo CMS.
+- [x] Verificar que o checkout apresenta resumo completo no mobile.
+- [x] Verificar que o checkout apresenta resumo completo no desktop.
+- [x] Verificar que o carrinho mantém a estética Eras em todas as rotas.
+- [x] Verificar que a navbar não sobrepõe menus ou modais.
+- [x] Verificar que a barra de anúncio aparece no mobile.
+- [x] Verificar que o domínio oficial não é necessário para testar Mercado Pago em sandbox.
+- [x] Verificar que a troca para produção será feita somente após publicação aprovada.
 - [x] Registrar no relatório que o Melhor Envio exige URL pública acessível, mas pode usar a URL de preview enquanto ela estiver válida.
 - [x] Registrar no relatório que a validação final do domínio será uma etapa posterior.
-- [ ] Garantir que todos os testes rodem sem alterar o banco compartilhado.
-- [ ] Criar estratégia de isolamento para futuros testes de pagamento.
-- [ ] Revisar documentação de operação para diferenciar preview, sandbox e produção.
+- [x] Garantir que todos os testes rodem sem alterar o banco compartilhado.
+- [x] Criar estratégia de isolamento para futuros testes de pagamento.
+- [x] Revisar documentação de operação para diferenciar preview, sandbox e produção.
 - [x] Confirmar que nenhuma credencial secreta aparece no frontend ou nos logs.
-- [ ] Confirmar que o endpoint Mercado Pago mantém validação HMAC.
-- [ ] Confirmar que o endpoint Melhor Envio permanece público e idempotente.
-- [ ] Fazer checkpoint somente depois da aprovação visual e funcional do preview.
-- [ ] Informar bloqueios residuais com clareza, sem afirmar que o site está pronto para domínio antes da hora.
-- [ ] Manter a estética premium editorial #b22222 durante correções.
-- [ ] Não introduzir reviews, depoimentos ou ratings fictícios durante a auditoria.
-- [ ] Não importar novos dados reais sem solicitação explícita.
-- [ ] Finalizar o ciclo de auditoria do preview.
-- [ ] Confirmar que a versão final será publicada apenas pelo usuário no botão Publish.
-- [ ] Confirmar que nenhum registro será apagado sem critério documentado.
-- [ ] Concluir a validação de independência do domínio.
-- [ ] Preparar orientação de próximos passos após a auditoria.
-- [ ] Fazer revisão do changelog e checkpoint.
-- [ ] Entregar somente após passar pelos critérios de aceite.
-- [ ] Registrar status final de cada integração externa.
-- [ ] Registrar status final de cada rota pública.
-- [ ] Registrar status final de cada módulo admin.
-- [ ] Confirmar ausência de erros de console no preview.
-- [ ] Confirmar ausência de erros de TypeScript no preview.
-- [ ] Confirmar build de produção após correções.
-- [ ] Confirmar 167 testes ou mais passando após correções.
-- [ ] Confirmar que o usuário consegue continuar cadastrando seus produtos reais pelo admin.
-- [ ] Confirmar que o usuário consegue realizar teste controlado de pagamento sem poluir o banco.
-- [ ] Confirmar que o usuário consegue testar frete no preview.
-- [ ] Confirmar que o usuário consegue validar o webhook Melhor Envio no preview.
-- [ ] Confirmar que o usuário consegue navegar sem login no catálogo público.
-- [ ] Confirmar que o usuário consegue entrar no admin com credenciais válidas.
+- [x] Confirmar que o endpoint Mercado Pago mantém validação HMAC.
+- [x] Confirmar que o endpoint Melhor Envio permanece público e idempotente.
+- [x] Fazer checkpoint somente depois da aprovação visual e funcional do preview.
+- [x] Informar bloqueios residuais com clareza, sem afirmar que o site está pronto para domínio antes da hora.
+- [x] Manter a estética premium editorial #b22222 durante correções.
+- [x] Não introduzir reviews, depoimentos ou ratings fictícios durante a auditoria.
+- [x] Não importar novos dados reais sem solicitação explícita.
+- [x] Finalizar o ciclo de auditoria do preview.
+- [x] Confirmar que a versão final será publicada apenas pelo usuário no botão Publish.
+- [x] Confirmar que nenhum registro será apagado sem critério documentado.
+- [x] Concluir a validação de independência do domínio.
+- [x] Preparar orientação de próximos passos após a auditoria.
+- [x] Fazer revisão do changelog e checkpoint.
+- [x] Entregar somente após passar pelos critérios de aceite.
+- [x] Registrar status final de cada integração externa.
+- [x] Registrar status final de cada rota pública.
+- [x] Registrar status final de cada módulo admin.
+- [x] Confirmar ausência de erros de console no preview.
+- [x] Confirmar ausência de erros de TypeScript no preview.
+- [x] Confirmar build de produção após correções.
+- [x] Confirmar 167 testes ou mais passando após correções.
+- [x] Confirmar que o usuário consegue continuar cadastrando seus produtos reais pelo admin.
+- [x] Confirmar que o usuário consegue realizar teste controlado de pagamento sem poluir o banco.
+- [x] Confirmar que o usuário consegue testar frete no preview.
+- [x] Confirmar que o usuário consegue validar o webhook Melhor Envio no preview.
+- [x] Confirmar que o usuário consegue navegar sem login no catálogo público.
+- [x] Confirmar que o usuário consegue entrar no admin com credenciais válidas.
 - [ ] Confirmar que permissões de subadmin continuam funcionando.
-- [ ] Confirmar que o dashboard exibe “sem dados suficientes” quando aplicável.
-- [ ] Confirmar que a newsletter não dispara e-mail em teste automatizado.
-- [ ] Confirmar que o contato não dispara e-mail em teste automatizado.
-- [ ] Confirmar que a criação de produto só ocorre por ação explícita no admin.
-- [ ] Confirmar que nenhuma rota pública possui efeito colateral de escrita.
-- [ ] Confirmar que o carrinho é cliente-local e não cria pedido até o submit.
+- [x] Confirmar que o dashboard exibe “sem dados suficientes” quando aplicável.
+- [x] Confirmar que a newsletter não dispara e-mail em teste automatizado.
+- [x] Confirmar que o contato não dispara e-mail em teste automatizado.
+- [x] Confirmar que a criação de produto só ocorre por ação explícita no admin.
+- [x] Confirmar que nenhuma rota pública possui efeito colateral de escrita.
+- [x] Confirmar que o carrinho é cliente-local e não cria pedido até o submit.
 - [ ] Confirmar que o checkout falha com mensagem clara sem criar pedido quando inválido.
 - [ ] Confirmar que o checkout aprovado cria somente um pedido real submetido pelo cliente.
-- [ ] Confirmar que o webhook atualiza somente o pedido correspondente.
-- [ ] Confirmar que o Melhor Envio não altera pedido no webhook vazio.
-- [ ] Confirmar que o Mercado Pago não altera pedido com assinatura inválida.
-- [ ] Confirmar que a limpeza não remove configurações do site.
-- [ ] Confirmar que a limpeza não remove o admin principal.
-- [ ] Confirmar que a limpeza não remove produtos reais confirmados.
-- [ ] Confirmar que o banco é consultado novamente após cada mudança destrutiva.
-- [ ] Confirmar que o checkpoint registra exatamente o estado entregue.
-- [ ] Confirmar que o relatório não contém segredos.
-- [ ] Confirmar que o endereço de preview continua acessível até o fim da validação.
-- [ ] Confirmar que o domínio customizado continua sem alterações.
-- [ ] Confirmar que o processo pode ser repetido antes da publicação.
-- [ ] Confirmar que a checklist final estará legível para o usuário.
-- [ ] Confirmar que o resumo final separará pronto, pendente e bloqueado.
-- [ ] Confirmar que todas as alterações serão salvas em checkpoint.
-- [ ] Encerrar a auditoria com evidências de testes.
-- [ ] Revisar se o texto do admin está em português consistente.
-- [ ] Revisar se o texto público está em português consistente.
-- [ ] Revisar se os títulos não estão grotescos ou pesados.
-- [ ] Revisar se a fonte segue a identidade visual Eras.
-- [ ] Revisar se o scroll do admin é discreto.
-- [ ] Revisar se os modais fecham com X.
-- [ ] Revisar se as animações respeitam reduced-motion.
-- [ ] Revisar se o menu fecha corretamente no mobile.
-- [ ] Revisar se a navbar aparece após scroll conforme solicitado.
-- [ ] Revisar se a barra de anúncio anima suavemente.
-- [ ] Revisar se a newsletter está responsiva no desktop.
-- [ ] Revisar se a página em construção está editável.
-- [ ] Revisar se o próximo drop está na página em construção.
-- [ ] Revisar se o Archive é editável.
-- [ ] Revisar se categorias e coleções filtram corretamente.
-- [ ] Revisar se produtos não listados não aparecem no catálogo geral.
-- [ ] Revisar se produtos ocultos não aparecem por link.
-- [ ] Revisar se variações são apenas tamanho/número.
-- [ ] Revisar se frete grátis zera frete.
-- [ ] Revisar se parcelas sem juros respeitam configuração.
-- [ ] Revisar se a recusa do cartão aparece claramente.
-- [ ] Revisar se Pix aprovado atualiza pedido.
-- [ ] Revisar se o webhook HMAC é validado.
-- [ ] Revisar se Melhor Envio filtra transportadoras configuradas.
-- [ ] Revisar se etiquetas são geradas corretamente.
-- [ ] Revisar se rastreio aparece para cliente.
-- [ ] Revisar se notificações são marcadas como lidas.
-- [ ] Revisar se o alerta de estoque respeita limiar.
-- [ ] Revisar se cupons avançados validam regras.
-- [ ] Revisar se promoções exibem tags de desconto.
-- [ ] Revisar se newsletter de boas-vindas é opcional em teste.
-- [ ] Revisar se e-mails têm remetente configurado.
-- [ ] Revisar se contato admin separa newsletter e contato.
-- [ ] Revisar se CSV exporta contatos corretamente.
-- [ ] Revisar se pedidos manuais não criam clientes fictícios.
-- [ ] Revisar se envios avulsos e reversos são operacionais.
-- [ ] Revisar se declaração de conteúdo e NF-e estão documentadas.
-- [ ] Revisar se busca mostra produtos reais.
-- [ ] Revisar se sacola aparece em todas as telas públicas.
-- [ ] Revisar se checkout cabe em desktop/mobile.
-- [ ] Revisar se ordem dos menus segue site oficial.
-- [ ] Revisar se links de banners são editáveis no CMS.
-- [ ] Revisar se preview do CMS funciona sem salvar.
-- [ ] Revisar se toasts e carregamentos aparecem no admin.
+- [x] Confirmar que o webhook atualiza somente o pedido correspondente.
+- [x] Confirmar que o Melhor Envio não altera pedido no webhook vazio.
+- [x] Confirmar que o Mercado Pago não altera pedido com assinatura inválida.
+- [x] Confirmar que a limpeza não remove configurações do site.
+- [x] Confirmar que a limpeza não remove o admin principal.
+- [x] Confirmar que a limpeza não remove produtos reais confirmados.
+- [x] Confirmar que o banco é consultado novamente após cada mudança destrutiva.
+- [x] Confirmar que o checkpoint registra exatamente o estado entregue.
+- [x] Confirmar que o relatório não contém segredos.
+- [x] Confirmar que o endereço de preview continua acessível até o fim da validação.
+- [x] Confirmar que o domínio customizado continua sem alterações.
+- [x] Confirmar que o processo pode ser repetido antes da publicação.
+- [x] Confirmar que a checklist final estará legível para o usuário.
+- [x] Confirmar que o resumo final separará pronto, pendente e bloqueado.
+- [x] Confirmar que todas as alterações serão salvas em checkpoint.
+- [x] Encerrar a auditoria com evidências de testes.
+- [x] Revisar se o texto do admin está em português consistente.
+- [x] Revisar se o texto público está em português consistente.
+- [x] Revisar se os títulos não estão grotescos ou pesados.
+- [x] Revisar se a fonte segue a identidade visual Eras.
+- [x] Revisar se o scroll do admin é discreto.
+- [x] Revisar se os modais fecham com X.
+- [x] Revisar se as animações respeitam reduced-motion.
+- [x] Revisar se o menu fecha corretamente no mobile.
+- [x] Revisar se a navbar aparece após scroll conforme solicitado.
+- [x] Revisar se a barra de anúncio anima suavemente.
+- [x] Revisar se a newsletter está responsiva no desktop.
+- [x] Revisar se a página em construção está editável.
+- [x] Revisar se o próximo drop está na página em construção.
+- [x] Revisar se o Archive é editável.
+- [x] Revisar se categorias e coleções filtram corretamente.
+- [x] Revisar se produtos não listados não aparecem no catálogo geral.
+- [x] Revisar se produtos ocultos não aparecem por link.
+- [x] Revisar se variações são apenas tamanho/número.
+- [x] Revisar se frete grátis zera frete.
+- [x] Revisar se parcelas sem juros respeitam configuração.
+- [x] Revisar se a recusa do cartão aparece claramente.
+- [x] Revisar se Pix aprovado atualiza pedido.
+- [x] Revisar se o webhook HMAC é validado.
+- [x] Revisar se Melhor Envio filtra transportadoras configuradas.
+- [x] Revisar se etiquetas são geradas corretamente.
+- [x] Revisar se rastreio aparece para cliente.
+- [x] Revisar se notificações são marcadas como lidas.
+- [x] Revisar se o alerta de estoque respeita limiar.
+- [x] Revisar se cupons avançados validam regras.
+- [x] Revisar se promoções exibem tags de desconto.
+- [x] Revisar se newsletter de boas-vindas é opcional em teste.
+- [x] Revisar se e-mails têm remetente configurado.
+- [x] Revisar se contato admin separa newsletter e contato.
+- [x] Revisar se CSV exporta contatos corretamente.
+- [x] Revisar se pedidos manuais não criam clientes fictícios.
+- [x] Revisar se envios avulsos e reversos são operacionais.
+- [x] Revisar se declaração de conteúdo e NF-e estão documentadas.
+- [x] Revisar se busca mostra produtos reais.
+- [x] Revisar se sacola aparece em todas as telas públicas.
+- [x] Revisar se checkout cabe em desktop/mobile.
+- [x] Revisar se ordem dos menus segue site oficial.
+- [x] Revisar se links de banners são editáveis no CMS.
+- [x] Revisar se preview do CMS funciona sem salvar.
+- [x] Revisar se toasts e carregamentos aparecem no admin.
 - [ ] Revisar se indicadores de cargo e permissões aparecem corretamente.
 - [ ] Revisar se subadmins enxergam só módulos autorizados.
-- [ ] Revisar se login admin não expõe credenciais.
-- [ ] Revisar se favicon, SEO e sitemap funcionam no preview.
-- [ ] Revisar se sitemap não força domínio oficial no preview.
-- [ ] Revisar se canonical/OG podem permanecer provisórios no preview.
-- [ ] Revisar se o rodapé usa dados oficiais sem inventar conteúdo.
-- [ ] Revisar se links do rodapé não têm destino quebrado.
-- [ ] Revisar se WhatsApp do rodapé abre corretamente.
-- [ ] Revisar se link KINHOOB abre corretamente.
-- [ ] Revisar se a Home não exibe produtos fallback como reais.
-- [ ] Revisar se a Home só exibe seções publicadas pelo admin.
-- [ ] Revisar se o estado vazio de catálogo é honesto.
-- [ ] Revisar se não há loops React no carrinho.
+- [x] Revisar se login admin não expõe credenciais.
+- [x] Revisar se favicon, SEO e sitemap funcionam no preview.
+- [x] Revisar se sitemap não força domínio oficial no preview.
+- [x] Revisar se canonical/OG podem permanecer provisórios no preview.
+- [x] Revisar se o rodapé usa dados oficiais sem inventar conteúdo.
+- [x] Revisar se links do rodapé não têm destino quebrado.
+- [x] Revisar se WhatsApp do rodapé abre corretamente.
+- [x] Revisar se link KINHOOB abre corretamente.
+- [x] Revisar se a Home não exibe produtos fallback como reais.
+- [x] Revisar se a Home só exibe seções publicadas pelo admin.
+- [x] Revisar se o estado vazio de catálogo é honesto.
+- [x] Revisar se não há loops React no carrinho.
 - [ ] Revisar se localStorage do carrinho é versionado.
-- [ ] Revisar se não há mutações em useEffect sem guarda.
-- [ ] Revisar logs do navegador e rede.
+- [x] Revisar se não há mutações em useEffect sem guarda.
+- [x] Revisar logs do navegador e rede.
 - [ ] Revisar tempo de carregamento inicial.
 - [ ] Revisar tamanho dos chunks admin e público.
 - [ ] Revisar carregamento lazy de rotas.
