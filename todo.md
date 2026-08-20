@@ -3219,3 +3219,5 @@
 - [x] Substituir a logo da Eras Label pela imagem enviada na navbar pública e no painel administrativo, preservando proporções e dimensões dos contentores
 
 - [x] Implementar acesso protegido por palavra-passe na página em construção com editor no painel administrativo
+
+- [x] Alterar o rótulo do botão de acesso VIP da página em construção para "Entrar", mantendo o link de acesso administrativo separado no rodapé

@@ -115,7 +115,7 @@ export default function StorefrontLockedPage({ config }: { config: StorefrontCon
             />
             {error && <p className="mt-3 text-sm font-medium text-[#b22222]" role="alert">{error}</p>}
             <button type="submit" disabled={unlockMutation.isPending} className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 bg-[#24211e] px-5 text-[10px] font-bold uppercase tracking-[0.18em] text-white transition hover:bg-[#b22222] disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b22222] focus-visible:ring-offset-2">
-              {unlockMutation.isPending ? <><LoaderCircle size={15} className="animate-spin" aria-hidden="true" /> A validar…</> : <>{config.maintenance.accessLabel}<ArrowRight size={15} aria-hidden="true" /></>}
+              {unlockMutation.isPending ? <><LoaderCircle size={15} className="animate-spin" aria-hidden="true" /> A validar…</> : <>Entrar<ArrowRight size={15} aria-hidden="true" /></>}
             </button>
           </form>
         ) : (
