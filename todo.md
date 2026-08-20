@@ -3231,3 +3231,4 @@
 - [x] Substituir o favicon do site pelo vetor oficial fornecido (ERAS_Vetor.svg), mantendo a logo horizontal na navbar inalterada
 - [x] Configurar a imagem previewssiteeras.png enviada pelo utilizador como capa Open Graph e Twitter Cards para partilha social
 - [x] Auditar estrutura do projeto para remoção de artefactos do Manus e exportação para hospedagem externa
+- [x] Criar guia completo de publicação na Vercel com domínio da HostGator e análise de custos
