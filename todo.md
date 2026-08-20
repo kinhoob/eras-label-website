@@ -1010,14 +1010,14 @@
 - [x] Corrigir o estado de sessão/localStorage que mostra itens antigos na sacola durante o preview.
 - [x] Reexecutar Vitest, build, screenshots desktop/mobile e validação dos webhooks no preview.
 - [x] Salvar checkpoint após todas as correções do preview.
-- [ ] Entregar relatório final com o que funciona no preview e o que depende apenas do domínio oficial.
+- [x] Entregar relatório final com o que funciona no preview e o que depende apenas do domínio oficial.
 - [x] Atualizar o todo com a decisão de preservar dados reais e excluir somente dados fictícios confirmados.
 - [x] Verificar que não há seed ou fallback de catálogo carregado automaticamente em produção.
 - [x] Verificar que páginas públicas vazias exibem estados claros sem criar registros.
 - [x] Verificar que o link de recuperação de carrinho usa origem dinâmica no preview.
 - [x] Verificar que o webhook Melhor Envio responde 200 no preview e que o Mercado Pago rejeita requisições sem assinatura sem criar pedidos.
 - [x] Verificar que o admin de preview não exibe estatísticas fictícias quando as tabelas estiverem vazias.
-- [ ] Consolidar a lista de pendências de alta prioridade para a próxima etapa.
+- [x] Consolidar a lista de pendências de alta prioridade para a próxima etapa.
 - [x] Finalizar a auditoria sem publicar nem alterar o domínio oficial.
 - [x] Documentar que o domínio será apontado somente após aprovação dos testes no preview.
 - [x] Garantir que nenhum comando de teste de integração escreva dados sem uma flag explícita de teste isolado.
@@ -1025,14 +1025,14 @@
 - [x] Rever todos os fixtures para evitar `teste@example.com`, produtos `teste` e e-mails fictícios fora de testes unitários isolados.
 - [x] Confirmar a contagem final das tabelas após a limpeza autorizada.
 - [x] Confirmar que o checkout real continua disponível no preview com credenciais configuradas.
-- [ ] Confirmar que o admin continua protegido após a limpeza.
-- [ ] Confirmar que os menus e links públicos não apontam para rotas inexistentes.
-- [ ] Confirmar que o domínio oficial permanece apenas como configuração de SEO e não como requisito de navegação do preview.
-- [ ] Executar revisão final de logs para assegurar ausência de criação automática de dados.
-- [ ] Salvar o relatório de auditoria em arquivo do projeto antes do checkpoint final.
-- [ ] Não executar exclusões adicionais sem confirmação explícita do proprietário para produtos e demais dados ambíguos.
+- [x] Confirmar que o admin continua protegido após a limpeza.
+- [x] Confirmar que os menus e links públicos não apontam para rotas inexistentes.
+- [x] Confirmar que o domínio oficial permanece apenas como configuração de SEO e não como requisito de navegação do preview.
+- [x] Executar revisão final de logs para assegurar ausência de criação automática de dados.
+- [x] Salvar o relatório de auditoria em arquivo do projeto antes do checkpoint final.
+- [x] Não executar exclusões adicionais sem confirmação explícita do proprietário para produtos e demais dados ambíguos.
 - [ ] Encerrar a tarefa somente após todos os itens de implementação estarem marcados como concluídos ou explicitamente bloqueados pelo proprietário.
-- [ ] Substituir o item genérico de revisão por critérios verificáveis de aceite no relatório final.
+- [x] Substituir o item genérico de revisão por critérios verificáveis de aceite no relatório final.
 - [ ] Verificar a data de atualização das métricas e seus rótulos no painel.
 - [ ] Verificar que os descontos e fretes exibidos em pedidos reais permanecem íntegros após a limpeza.
 - [ ] Validar que nenhum webhook de teste gera pedido ou e-mail.
@@ -1058,12 +1058,12 @@
 - [ ] Verificar que a barra de anúncio aparece no mobile.
 - [ ] Verificar que o domínio oficial não é necessário para testar Mercado Pago em sandbox.
 - [ ] Verificar que a troca para produção será feita somente após publicação aprovada.
-- [ ] Registrar no relatório que o Melhor Envio exige URL pública acessível, mas pode usar a URL de preview enquanto ela estiver válida.
-- [ ] Registrar no relatório que a validação final do domínio será uma etapa posterior.
+- [x] Registrar no relatório que o Melhor Envio exige URL pública acessível, mas pode usar a URL de preview enquanto ela estiver válida.
+- [x] Registrar no relatório que a validação final do domínio será uma etapa posterior.
 - [ ] Garantir que todos os testes rodem sem alterar o banco compartilhado.
 - [ ] Criar estratégia de isolamento para futuros testes de pagamento.
 - [ ] Revisar documentação de operação para diferenciar preview, sandbox e produção.
-- [ ] Confirmar que nenhuma credencial secreta aparece no frontend ou nos logs.
+- [x] Confirmar que nenhuma credencial secreta aparece no frontend ou nos logs.
 - [ ] Confirmar que o endpoint Mercado Pago mantém validação HMAC.
 - [ ] Confirmar que o endpoint Melhor Envio permanece público e idempotente.
 - [ ] Fazer checkpoint somente depois da aprovação visual e funcional do preview.
