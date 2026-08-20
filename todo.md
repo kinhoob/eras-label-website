@@ -3230,3 +3230,4 @@
 - [x] Otimizar o favicon do site gerando uma versão quadrada e preenchida com a identidade visual da marca para maximizar a legibilidade no separador do browser
 - [x] Substituir o favicon do site pelo vetor oficial fornecido (ERAS_Vetor.svg), mantendo a logo horizontal na navbar inalterada
 - [x] Configurar a imagem previewssiteeras.png enviada pelo utilizador como capa Open Graph e Twitter Cards para partilha social
+- [x] Auditar estrutura do projeto para remoção de artefactos do Manus e exportação para hospedagem externa
