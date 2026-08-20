@@ -3237,3 +3237,4 @@
 - [x] Corrigir e ativar o sistema completo de Web Push e notificações no iPhone para novas vendas e pagamentos aprovados
 - [x] Adicionar filtro 'Todas as Vendas' na gestão de encomendas do painel administrativo com opções de arquivar via seletor e cancelar venda com confirmação e atualização segura
 - [x] Substituir o toast do botão de visualização de pedidos (ícone de olho) por um modal limpo, completo e responsivo contendo todos os detalhes da encomenda, itens, cliente e pagamento
+- [x] Implementar filtros de "Compras Ativas", "Compras Arquivadas" e "Compras Canceladas" na gestão comercial do painel, com ações seguras de excluir, estornar e gerir envios no modal "Detalhes & Envio"
