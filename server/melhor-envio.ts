@@ -104,6 +104,10 @@ export async function calculateMelhorEnvioShipping(payload: MelhorEnvioQuotePayl
  */
 export async function createMelhorEnvioCartItem(orderData: {
   serviceId: number;
+  order: {
+    id?: string;
+    order_number: string;
+  };
   from: {
     name: string;
     phone: string;
@@ -146,6 +150,16 @@ export async function createMelhorEnvioCartItem(orderData: {
     length: number;
     weight: number;
   }>;
+  options?: {
+    platform?: string;
+    reminder?: string;
+    insurance_value?: number;
+    receipt?: boolean;
+    own_hand?: boolean;
+    reverse?: boolean;
+    non_commercial?: boolean;
+    tags?: Array<{ tag: string; url: string | null }>;
+  };
 }) {
   const token = ENV.melhorEnvioToken || process.env.MELHOR_ENVIO_TOKEN || "";
   const isSandbox = process.env.MELHOR_ENVIO_SANDBOX === "true";
@@ -157,10 +171,30 @@ export async function createMelhorEnvioCartItem(orderData: {
     throw new MelhorEnvioApiError("Token do Melhor Envio não configurado", 401, "Configure o token de produção.");
   }
 
-  const { serviceId, ...shipmentPayload } = orderData;
+  const { serviceId, options, ...shipmentPayload } = orderData;
   if (!Number.isInteger(serviceId) || serviceId <= 0) {
     throw new MelhorEnvioApiError("Falha ao adicionar o envio ao carrinho do Melhor Envio", 422, "O serviço de transporte é obrigatório.");
   }
+  if (!shipmentPayload.order?.order_number?.trim()) {
+    throw new MelhorEnvioApiError("Falha ao adicionar o envio ao carrinho do Melhor Envio", 422, "A identificação do pedido é obrigatória.");
+  }
+
+  // O contrato oficial exige service; o fluxo actual também valida uma identificação
+  // explícita do pedido. Mantemos tags para localizar a venda no painel do Melhor Envio.
+  const payloadWithService = {
+    service: serviceId,
+    ...shipmentPayload,
+    options: options ?? {
+      platform: "Eras Label",
+      reminder: `Pedido ${shipmentPayload.order.order_number}`,
+      insurance_value: shipmentPayload.products.reduce((sum, product) => sum + product.unitary_value * product.quantity, 0),
+      receipt: false,
+      own_hand: false,
+      reverse: false,
+      non_commercial: true,
+      tags: [{ tag: shipmentPayload.order.order_number, url: null }],
+    },
+  };
 
   const response = await fetch(`${baseUrl}/me/cart`, {
     method: "POST",
@@ -170,7 +204,7 @@ export async function createMelhorEnvioCartItem(orderData: {
       Authorization: `Bearer ${token}`,
       "User-Agent": "ErasLabelE-commerce (contato@eraslabel.com)",
     },
-    body: JSON.stringify({ service: serviceId, ...shipmentPayload }),
+    body: JSON.stringify(payloadWithService),
   });
 
   const responseText = await response.text();

@@ -485,15 +485,34 @@ export default function Home() {
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   // Preserva o valor exato devolvido pela validação, sem reconstruir um percentual fixo.
   const discount = couponApplied ? couponDiscount : 0;
-
-  const { data: shippingData, isLoading: shippingLoading, refetch: refetchShipping } = trpc.catalog.calculateShipping.useQuery(
-    { cep: shippingCep, subtotal },
-    { enabled: shippingCep.length === 8 }
+  const shippingItems = useMemo(
+    () => cart.map((item) => ({ id: String(item.id), price: Number(item.price), quantity: item.quantity })),
+    [cart],
+  );
+  const shippingQueryInput = useMemo(
+    () => ({ cep: shippingCep, subtotal, items: shippingItems }),
+    [shippingCep, shippingItems, subtotal],
   );
 
-  const shippingCost = shippingData?.free || couponFreeShipping ? 0 : (shippingData?.cost ?? 0);
+  const { data: shippingData, isLoading: shippingLoading, error: shippingError } = trpc.catalog.calculateShipping.useQuery(
+    shippingQueryInput,
+    { enabled: shippingCep.length === 8 && shippingItems.length > 0 }
+  );
+  const shippingOptions = shippingData?.options ?? [];
+  const [selectedShippingId, setSelectedShippingId] = useState("");
+  const activeShippingOption = shippingOptions.find((option) => option.id === selectedShippingId) ?? shippingOptions[0];
+
+  const shippingCost = activeShippingOption?.free || couponFreeShipping ? 0 : Number(activeShippingOption?.cost ?? 0);
   const total = subtotal - discount + shippingCost;
   const checkoutFeedback = getCheckoutFeedback(checkoutStatus, confirmedOrderNumber, checkoutError);
+
+  useEffect(() => {
+    if (!shippingData) {
+      setSelectedShippingId("");
+      return;
+    }
+    setSelectedShippingId((current) => shippingOptions.some((option) => option.id === current) ? current : (shippingOptions[0]?.id ?? ""));
+  }, [shippingData]);
 
   useEffect(() => {
     saveCart(cart);
@@ -642,10 +661,10 @@ export default function Home() {
       couponFreeShipping,
       selectedPaymentMethod,
       shippingCep,
-      shippingMethod: shippingData?.service,
-      shippingOptionId: shippingData?.options?.[0]?.id,
+      shippingMethod: activeShippingOption?.service,
+      shippingOptionId: activeShippingOption?.id,
       shippingCost,
-      shippingDeadline: shippingData?.deadline,
+      shippingDeadline: activeShippingOption?.deadline,
     });
     window.setTimeout(() => window.location.assign("/checkout"), 0);
   }
@@ -1207,11 +1226,19 @@ export default function Home() {
                         <Check size={15} /><span>OK</span>
                       </button>
                     </div>
-                    {shippingLoading && <p className="shipping-info-text">Calculando frete...</p>}
+                    {shippingLoading && <p className="shipping-info-text">Calculando opções de frete reais...</p>}
+                    {shippingError && !shippingLoading && <p className="shipping-info-text error">{shippingError.message || "Não foi possível calcular o frete para este CEP."}</p>}
                     {shippingData && !shippingLoading && (
-                      <p className="shipping-info-text success">
-                        {couponFreeShipping || shippingData.free ? "Frete Grátis" : `Frete: ${formatPrice(shippingData.cost)}`} · Prazo: {shippingData.deadline}
-                      </p>
+                      <div className="shipping-options" role="radiogroup" aria-label="Escolha o método de frete">
+                        <span className="shipping-options-label">Escolha o frete</span>
+                        {shippingOptions.map((option) => (
+                          <label className={`shipping-option ${activeShippingOption?.id === option.id ? "is-selected" : ""}`} key={option.id}>
+                            <input type="radio" name="home-shipping-option" value={option.id} checked={activeShippingOption?.id === option.id} onChange={() => setSelectedShippingId(option.id)} />
+                            <span className="shipping-option-copy"><strong>{option.service}</strong><small>{option.deadline}</small></span>
+                            <strong className="shipping-option-price">{option.free || couponFreeShipping ? "Grátis" : formatPrice(Number(option.cost ?? 0))}</strong>
+                          </label>
+                        ))}
+                      </div>
                     )}
                   </div>
 
@@ -1240,7 +1267,7 @@ export default function Home() {
                   <div className="cart-totals">
                     <div className="cart-total-row"><span>Subtotal</span><strong>{formatPrice(subtotal)}</strong></div>
                     {discount > 0 && <div className="cart-total-row discount"><span>Desconto cupom</span><strong>- {formatPrice(discount)}</strong></div>}
-                    <div className="cart-total-row"><span>Frete</span><strong>{shippingCost === 0 ? "Grátis" : formatPrice(shippingCost)}</strong></div>
+                    <div className="cart-total-row"><span>{activeShippingOption?.service ?? "Frete"}</span><strong>{shippingData ? (shippingCost === 0 ? "Grátis" : formatPrice(shippingCost)) : "A calcular"}</strong></div>
                     {selectedPaymentMethod === "pix" && (
                       <div className="cart-total-row pix-savings">
                         <span>Economia no Pix ({pixDiscountPercent}%)</span>

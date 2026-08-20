@@ -12,7 +12,7 @@ import { createMercadoPagoPayment, getMercadoPagoPayment, searchMercadoPagoPayme
 import { getDb } from "./db";
 import { products, orders } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
-import { MelhorEnvioApiError, createMelhorEnvioCartItem, downloadMelhorEnvioLabelFile, getMelhorEnvioTracking } from "./melhor-envio";
+import { MelhorEnvioApiError, calculateMelhorEnvioShipping, createMelhorEnvioCartItem, downloadMelhorEnvioLabelFile, getMelhorEnvioTracking } from "./melhor-envio";
 import { sendAbandonedCartReminderEmail } from "./resend";
 import {
   getAdminSummary,
@@ -219,33 +219,62 @@ export const appRouter = router({
     calculateShipping: publicProcedure.input(z.object({
       cep: z.string().min(8),
       subtotal: z.number().nonnegative(),
+      items: z.array(z.object({
+        id: z.string().min(1),
+        price: z.number().nonnegative(),
+        quantity: z.number().int().positive(),
+      })).min(1).max(100),
     })).query(async ({ input }) => {
       const config = await getCommercialConfig();
       const cleanCep = input.cep.replace(/\D/g, "");
       if (cleanCep.length !== 8) {
-        throw new Error("CEP inválido");
+        throw new TRPCError({ code: "BAD_REQUEST", message: "CEP inválido." });
       }
-      // Frete grátis se subtotal >= freeShippingThreshold. Ainda devolvemos uma opção
-      // explícita para que o cliente possa visualizá-la e selecioná-la no checkout.
+
+      // O valor acima do limite continua a ser gratuito, mas a opção explícita
+      // mantém o contrato de seleção da sacola e do checkout.
       if (input.subtotal >= config.freeShippingThreshold) {
         const options = [{ id: "free-eras", service: "Frete Grátis Eras", cost: 0, deadline: "3 a 6 dias úteis", free: true }];
         return { ...options[0], options };
       }
-      // Região simulada por CEP (ex: Sudeste mais barato, Norte/Nordeste proporcional).
-      // O formato com options permite que a UI apresente diferentes serviços sem
-      // obrigar o cliente a rolar ou sair da sacola para escolher o frete.
-      const firstDigit = cleanCep.charAt(0);
-      let baseCost = 25.0;
-      if (["0", "1", "2"].includes(firstDigit)) baseCost = 20.0; // SP/RJ/ES
-      else if (["3", "4"].includes(firstDigit)) baseCost = 25.0; // MG/BA/SE
-      else if (["5", "6", "7"].includes(firstDigit)) baseCost = 32.0; // NE/N
-      else baseCost = 28.0; // Sul/CO
-      const options = [
-        { id: "pac", service: "PAC", cost: Math.max(0, baseCost - 4), deadline: "6 a 10 dias úteis", free: false },
-        { id: "sedex", service: "SEDEX", cost: baseCost + 8, deadline: "3 a 6 dias úteis", free: false },
-        { id: "jadlog-economico", service: "Jadlog Econômico", cost: Math.max(0, baseCost - 2), deadline: "5 a 9 dias úteis", free: false },
-        { id: "jadlog-rapido", service: "Jadlog Rápido", cost: baseCost + 4, deadline: "3 a 7 dias úteis", free: false },
-      ];
+
+      const quotePayload = {
+        from: { postal_code: ENV.melhorEnvioCep || "50000000" },
+        to: { postal_code: cleanCep },
+        products: input.items.map((item) => ({
+          id: item.id,
+          width: 15,
+          height: 5,
+          length: 20,
+          weight: Math.max(0.3, item.quantity * 0.3),
+          insurance_value: item.price * item.quantity,
+          quantity: 1,
+        })),
+      };
+
+      let quotes: Array<Record<string, unknown>>;
+      try {
+        quotes = await calculateMelhorEnvioShipping(quotePayload) as Array<Record<string, unknown>>;
+      } catch (error) {
+        throw toMelhorEnvioTrpcError(error, "Não foi possível calcular o frete");
+      }
+
+      const options = quotes.map((quote) => {
+        const company = quote.company as { name?: unknown } | undefined;
+        const price = Number(quote.custom_price ?? quote.price ?? 0);
+        const deliveryRange = quote.delivery_range as { min?: unknown; max?: unknown } | undefined;
+        const deliveryTime = Number(quote.delivery_time ?? quote.delivery ?? 0);
+        const deadline = deliveryRange && Number(deliveryRange.min) > 0 && Number(deliveryRange.max) > 0
+          ? `${Number(deliveryRange.min)} a ${Number(deliveryRange.max)} dias úteis`
+          : deliveryTime > 0 ? `${deliveryTime} dias úteis` : "Prazo informado pelo transportador";
+        const id = String(quote.id ?? quote.service ?? "").trim();
+        const service = String(quote.name ?? company?.name ?? "Transportadora").trim();
+        return { id, service, cost: Number.isFinite(price) ? Math.max(0, price) : 0, deadline, free: false };
+      }).filter((option) => option.id && option.service && option.cost >= 0);
+
+      if (!options.length) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "O Melhor Envio não retornou opções disponíveis para este CEP e carrinho." });
+      }
       return { ...options[0], options };
     }),
   }),
@@ -1048,6 +1077,10 @@ export const appRouter = router({
       try {
         cartResult = await createMelhorEnvioCartItem({
           serviceId: input.serviceId,
+          order: {
+            id: String(order.id),
+            order_number: order.orderNumber,
+          },
         from: {
           name: "Eras Label Oficial",
           phone: "11999999999",

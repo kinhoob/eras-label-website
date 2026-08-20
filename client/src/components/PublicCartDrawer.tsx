@@ -51,11 +51,19 @@ export default function PublicCartDrawer() {
     { code: coupon.trim(), subtotal },
     { enabled: false },
   );
-  const { data: shippingData, isLoading: shippingLoading } = trpc.catalog.calculateShipping.useQuery(
-    { cep: shippingCep, subtotal },
-    { enabled: shippingCep.length === 8 && cart.length > 0 },
+  const shippingItems = useMemo(
+    () => cart.map((item) => ({ id: String(item.id), price: Number(item.price), quantity: item.quantity })),
+    [cart],
   );
-  const shippingOptions = shippingData?.options ?? (shippingData ? [{ id: "default", service: shippingData.service, cost: shippingData.cost, deadline: shippingData.deadline, free: shippingData.free }] : []);
+  const shippingQueryInput = useMemo(
+    () => ({ cep: shippingCep, subtotal, items: shippingItems }),
+    [shippingCep, shippingItems, subtotal],
+  );
+  const { data: shippingData, isLoading: shippingLoading, error: shippingError } = trpc.catalog.calculateShipping.useQuery(
+    shippingQueryInput,
+    { enabled: shippingCep.length === 8 && shippingItems.length > 0 },
+  );
+  const shippingOptions = shippingData?.options ?? [];
   const activeShippingOption = shippingOptions.find((option) => option.id === selectedShippingId) ?? shippingOptions[0];
   // O frete grátis concedido por cupão deve refletir-se no total e no rascunho do checkout.
   const shippingCost = activeShippingOption?.free || couponFreeShipping ? 0 : Number(activeShippingOption?.cost ?? 0);
@@ -274,7 +282,8 @@ export default function PublicCartDrawer() {
                   <Input value={cepInput} onChange={(event) => setCepInput(event.target.value.replace(/\D/g, "").slice(0, 8))} placeholder="Insira seu CEP" maxLength={8} aria-label="CEP para cálculo de frete" />
                   <button type="button" className="coupon-apply-btn cart-inline-confirm" onClick={() => setShippingCep(cepInput)} disabled={cepInput.length !== 8} aria-label="Confirmar CEP"><Check size={15} /><span>OK</span></button>
                 </div>
-                {shippingLoading && <p className="shipping-info-text">Calculando opções de frete...</p>}
+                {shippingLoading && <p className="shipping-info-text">Calculando opções de frete reais...</p>}
+                {shippingError && !shippingLoading && <p className="shipping-info-text error">{shippingError.message || "Não foi possível calcular o frete para este CEP."}</p>}
                 {shippingData && !shippingLoading && <div className="shipping-options" role="radiogroup" aria-label="Escolha o método de frete">
                   <span className="shipping-options-label">Escolha o frete</span>
                   {shippingOptions.map((option) => (

@@ -158,9 +158,18 @@ export default function CheckoutPage() {
   const [fieldErrors, setFieldErrors] = useState<CheckoutFieldErrors>({});
   const [success, setSuccess] = useState<CheckoutSuccess | null>(null);
   const commercialConfigQuery = trpc.catalog.getConfig.useQuery();
+  const shippingItems = useMemo(
+    () => cart.map((item) => ({ id: String(item.id), price: Number(item.price), quantity: item.quantity })),
+    [cart],
+  );
+  const shippingSubtotal = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.quantity, 0), [cart]);
+  const shippingQueryInput = useMemo(
+    () => ({ cep, subtotal: shippingSubtotal, items: shippingItems }),
+    [cep, shippingItems, shippingSubtotal],
+  );
   const shippingQuery = trpc.catalog.calculateShipping.useQuery(
-    { cep, subtotal: cart.reduce((sum, item) => sum + item.price * item.quantity, 0) },
-    { enabled: cep.length === 8 },
+    shippingQueryInput,
+    { enabled: cep.length === 8 && shippingItems.length > 0 },
   );
   const checkoutConfigQuery = trpc.checkout.publicConfig.useQuery();
   const checkoutMutation = trpc.checkout.create.useMutation();

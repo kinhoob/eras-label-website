@@ -3,6 +3,7 @@ import { createMelhorEnvioCartItem, MelhorEnvioApiError } from "./melhor-envio";
 
 const basePayload = {
   serviceId: 7,
+  order: { id: "42", order_number: "ER-2026-0042" },
   from: {
     name: "Eras Label Oficial",
     phone: "11999999999",
@@ -54,10 +55,20 @@ describe("createMelhorEnvioCartItem", () => {
 
     expect(payload.service).toBe(7);
     expect(payload).not.toHaveProperty("serviceId");
+    expect(payload.order).toEqual({ id: "42", order_number: "ER-2026-0042" });
+    expect(payload.options.tags).toEqual([{ tag: "ER-2026-0042", url: null }]);
+    expect(payload.options.insurance_value).toBe(154.9);
   });
 
   it("rejeita um serviço inválido antes de chamar a API", async () => {
     await expect(createMelhorEnvioCartItem({ ...basePayload, serviceId: 0 })).rejects.toMatchObject<Partial<MelhorEnvioApiError>>({
+      status: 422,
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("rejeita pedido sem order_number antes de chamar a API", async () => {
+    await expect(createMelhorEnvioCartItem({ ...basePayload, order: { id: "42", order_number: "" } })).rejects.toMatchObject<Partial<MelhorEnvioApiError>>({
       status: 422,
     });
     expect(fetchMock).not.toHaveBeenCalled();
