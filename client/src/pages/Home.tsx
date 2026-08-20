@@ -106,99 +106,6 @@ const fallbackVipBanner: VipBanner = {
   href: ERAS_VIP_WHATSAPP_URL,
   cta: "ENTRAR NO WHATSAPP",
 };
-const fallbackHighlights: HomeHighlight[] = [
-  { id: "highlight-1", productId: 1, label: "PEÇA-CHAVE" },
-  { id: "highlight-2", productId: 2, label: "MAIS VISTO" },
-  { id: "highlight-3", productId: 5, label: "ARQUIVO" },
-];
-
-const fallbackProducts: Product[] = [
-  {
-    id: 1,
-    name: "T-Shirt Travessia",
-    category: "Camisetas",
-    collection: "PARADOX COLLECTION",
-    color: "Branco",
-    price: 154.9,
-    pixPrice: 147.16,
-    image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1200&q=85",
-    alt: "T-shirt branca numa composição editorial",
-    sizes: ["P", "M", "G", "GG"],
-    stock: 18,
-    detail: "Uma peça sobre o instante em que duas versões da mesma pessoa ocupam o mesmo lugar.",
-  },
-  {
-    id: 2,
-    name: "T-Shirt Dissociação",
-    category: "Camisetas",
-    collection: "PARADOX COLLECTION",
-    color: "Preto",
-    price: 154.9,
-    pixPrice: 147.16,
-    image: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=1200&q=85",
-    alt: "Modelo em t-shirt escura",
-    sizes: ["P", "M", "G", "GG"],
-    stock: 12,
-    detail: "O corpo muda de ritmo. A memória, não.",
-  },
-  {
-    id: 3,
-    name: "T-Shirt Ressonador",
-    category: "Camisetas",
-    collection: "PARADOX COLLECTION",
-    color: "Cinza",
-    price: 152.9,
-    pixPrice: 145.26,
-    image: "https://images.unsplash.com/photo-1523398002811-999ca8dec234?auto=format&fit=crop&w=1200&q=85",
-    alt: "T-shirt de algodão dobrada",
-    sizes: ["P", "M", "G"],
-    stock: 8,
-    detail: "Sintonizada para quem escuta o que ainda não chegou.",
-  },
-  {
-    id: 4,
-    name: "T-Shirt Vórtex Off",
-    category: "Camisetas",
-    collection: "PARADOX COLLECTION",
-    color: "Off-white",
-    price: 165.5,
-    pixPrice: 157.23,
-    image: "https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&fit=crop&w=1200&q=85",
-    alt: "T-shirt em tom off-white",
-    sizes: ["P", "M", "G", "GG"],
-    stock: 6,
-    detail: "Uma espiral de referências, impressa em matéria.",
-  },
-  {
-    id: 5,
-    name: "Boné Lost Between Eras Off",
-    category: "Bonés",
-    collection: "LOST BETWEEN ERAS",
-    color: "Bege",
-    price: 117.5,
-    pixPrice: 111.63,
-    image: "https://images.unsplash.com/photo-1521369909029-2afed882baee?auto=format&fit=crop&w=1200&q=85",
-    alt: "Boné bege com estética de arquivo",
-    sizes: ["Único"],
-    stock: 4,
-    detail: "O manifesto da marca bordado em tom sobre tom.",
-  },
-  {
-    id: 6,
-    name: "Boné Lost Between Eras Marinho",
-    category: "Bonés",
-    collection: "LOST BETWEEN ERAS",
-    color: "Marinho",
-    price: 117.5,
-    pixPrice: 111.63,
-    image: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=1200&q=85",
-    alt: "Boné marinho em fundo neutro",
-    sizes: ["Único"],
-    stock: 0,
-    detail: "Edição de arquivo. Atualmente esgotada.",
-  },
-];
-
 const heroImage = "https://images.unsplash.com/photo-1485230895905-ec40ba36b9bc?auto=format&fit=crop&w=2000&q=90";
 
 function inferProductColor(name: string) {
@@ -220,7 +127,7 @@ function inferProductColor(name: string) {
 
 function mapCatalogProduct(row: { id: number; slug?: string | null; name: string; collection: string; category: string; categoryNames?: string[]; categoryIds?: number[]; color?: string | null; price: unknown; pixPrice: unknown; promotionalPrice?: unknown; description: string | null; images: unknown; status: string; createdAt?: string | Date | null; variations?: Array<{ size: string; stock: number | null }> }): Product {
   const images = Array.isArray(row.images) ? row.images.filter((image): image is string => typeof image === "string") : [];
-  const fallbackImage = fallbackProducts.find((product) => product.id === row.id)?.image || editorialImage;
+  const fallbackImage = editorialImage;
   const category = row.category?.trim() || "Sem categoria";
   const categoryNames = Array.from(new Set([category, ...(row.categoryNames ?? [])].filter(Boolean)));
   const availableVariations = (row.variations ?? []).filter((variation) => Number(variation.stock ?? 0) > 0);

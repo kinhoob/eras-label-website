@@ -992,39 +992,39 @@
 - [x] Configurar endpoint público de webhook do Melhor Envio para passar na validação de teste 404.
 - [x] Verificar a resolução de domínio e publicação para que o endpoint de webhook responda com 200 no domínio público.
 - [x] Garantir que o sistema de preview local funcione integralmente para todos os fluxos de e-commerce e painel administrativo sem depender do domínio eraslabel.com.
-- [ ] Impedir que testes automatizados, seed ou rotas de demonstração criem produtos, pedidos, clientes, cupons, notificações ou e-mails no banco real.
-- [ ] Remover com segurança os registros fictícios identificados no banco de preview, preservando apenas dados reais confirmados pelo proprietário.
-- [ ] Corrigir o painel para exibir métricas vazias e estados honestos quando não houver dados reais suficientes.
-- [ ] Garantir que a URL de preview seja usada para links operacionais gerados durante testes, sem forçar eraslabel.com antes da publicação.
+- [x] Impedir que testes automatizados, seed ou rotas de demonstração criem produtos, pedidos, clientes, cupons, notificações ou e-mails no banco real.
+- [x] Remover com segurança os registros fictícios identificados no banco de preview, preservando apenas dados reais confirmados pelo proprietário.
+- [x] Corrigir o painel para exibir métricas vazias e estados honestos quando não houver dados reais suficientes.
+- [x] Garantir que a URL de preview seja usada para links operacionais gerados durante testes, sem forçar eraslabel.com antes da publicação.
 
-- [ ] Corrigir a criação automática de produtos duplicados e produtos temporários durante a navegação/testes.
-- [ ] Corrigir a persistência de pedidos de teste `teste@example.com` gerados por fluxo de checkout/teste.
-- [ ] Limpar o histórico de e-mails e notificações fictícias do ambiente de preview após a correção de geração.
-- [ ] Validar novamente o catálogo, painel, checkout e integrações no preview após a limpeza.
-- [ ] Registrar testes automatizados que comprovem que os fluxos de teste não gravam dados comerciais no banco real.
-- [ ] Validar responsividade mobile das áreas públicas e administrativas depois das correções.
-- [ ] Validar o editor Archive no painel administrativo e seu reflexo na página pública.
-- [ ] Verificar o link “Desenvolvido por KINHOOB” no rodapé em desktop e mobile.
-- [ ] Confirmar com o proprietário antes de apagar quaisquer produtos que possam ser reais; somente pedidos/e-mails/notificações inequivocamente fictícios podem ser removidos automaticamente.
-- [ ] Auditar e corrigir a origem dos números hardcoded ou dados de demonstração exibidos nas métricas administrativas.
-- [ ] Corrigir o estado de sessão/localStorage que mostra itens antigos na sacola durante o preview.
-- [ ] Reexecutar Vitest, build, screenshots desktop/mobile e validação dos webhooks no preview.
-- [ ] Salvar checkpoint após todas as correções do preview.
+- [x] Corrigir a criação automática de produtos duplicados e produtos temporários durante a navegação/testes.
+- [x] Corrigir a persistência de pedidos de teste `teste@example.com` gerados por fluxo de checkout/teste.
+- [x] Limpar o histórico de e-mails e notificações fictícias do ambiente de preview após a correção de geração.
+- [x] Validar novamente o catálogo, painel, checkout e integrações no preview após a limpeza.
+- [x] Registrar testes automatizados que comprovem que os fluxos de teste não gravam dados comerciais no banco real.
+- [x] Validar responsividade mobile das áreas públicas e administrativas depois das correções.
+- [x] Validar o editor Archive no painel administrativo e seu reflexo na página pública.
+- [x] Verificar o link “Desenvolvido por KINHOOB” no rodapé em desktop e mobile.
+- [x] Confirmar com o proprietário antes de apagar quaisquer produtos que possam ser reais; somente pedidos/e-mails/notificações inequivocamente fictícios podem ser removidos automaticamente.
+- [x] Auditar e corrigir a origem dos números hardcoded ou dados de demonstração exibidos nas métricas administrativas.
+- [x] Corrigir o estado de sessão/localStorage que mostra itens antigos na sacola durante o preview.
+- [x] Reexecutar Vitest, build, screenshots desktop/mobile e validação dos webhooks no preview.
+- [x] Salvar checkpoint após todas as correções do preview.
 - [ ] Entregar relatório final com o que funciona no preview e o que depende apenas do domínio oficial.
-- [ ] Atualizar o todo com a decisão de preservar dados reais e excluir somente dados fictícios confirmados.
-- [ ] Verificar que não há seed ou fallback de catálogo carregado automaticamente em produção.
-- [ ] Verificar que páginas públicas vazias exibem estados claros sem criar registros.
-- [ ] Verificar que o link de recuperação de carrinho usa origem dinâmica no preview.
-- [ ] Verificar que o webhook Melhor Envio responde 200 no preview e que o Mercado Pago rejeita requisições sem assinatura sem criar pedidos.
-- [ ] Verificar que o admin de preview não exibe estatísticas fictícias quando as tabelas estiverem vazias.
+- [x] Atualizar o todo com a decisão de preservar dados reais e excluir somente dados fictícios confirmados.
+- [x] Verificar que não há seed ou fallback de catálogo carregado automaticamente em produção.
+- [x] Verificar que páginas públicas vazias exibem estados claros sem criar registros.
+- [x] Verificar que o link de recuperação de carrinho usa origem dinâmica no preview.
+- [x] Verificar que o webhook Melhor Envio responde 200 no preview e que o Mercado Pago rejeita requisições sem assinatura sem criar pedidos.
+- [x] Verificar que o admin de preview não exibe estatísticas fictícias quando as tabelas estiverem vazias.
 - [ ] Consolidar a lista de pendências de alta prioridade para a próxima etapa.
-- [ ] Finalizar a auditoria sem publicar nem alterar o domínio oficial.
-- [ ] Documentar que o domínio será apontado somente após aprovação dos testes no preview.
-- [ ] Garantir que nenhum comando de teste de integração escreva dados sem uma flag explícita de teste isolado.
-- [ ] Adicionar proteção de ambiente para impedir dados fake em produção.
-- [ ] Rever todos os fixtures para evitar `teste@example.com`, produtos `teste` e e-mails fictícios fora de testes unitários isolados.
-- [ ] Confirmar a contagem final das tabelas após a limpeza autorizada.
-- [ ] Confirmar que o checkout real continua disponível no preview com credenciais configuradas.
+- [x] Finalizar a auditoria sem publicar nem alterar o domínio oficial.
+- [x] Documentar que o domínio será apontado somente após aprovação dos testes no preview.
+- [x] Garantir que nenhum comando de teste de integração escreva dados sem uma flag explícita de teste isolado.
+- [x] Adicionar proteção de ambiente para impedir dados fake em produção.
+- [x] Rever todos os fixtures para evitar `teste@example.com`, produtos `teste` e e-mails fictícios fora de testes unitários isolados.
+- [x] Confirmar a contagem final das tabelas após a limpeza autorizada.
+- [x] Confirmar que o checkout real continua disponível no preview com credenciais configuradas.
 - [ ] Confirmar que o admin continua protegido após a limpeza.
 - [ ] Confirmar que os menus e links públicos não apontam para rotas inexistentes.
 - [ ] Confirmar que o domínio oficial permanece apenas como configuração de SEO e não como requisito de navegação do preview.
@@ -3185,3 +3185,6 @@
 - [x] Melhorar o design do botão “OK” de cupão e frete com estados de carregamento, sucesso e erro
 - [x] Adicionar testes de regressão para transição sacola → checkout com cupão e frete
 - [x] Validar o fluxo em desktop, mobile, Vitest e build de produção
+
+- [ ] Corrigir o formulário de criação de envios para enviar o campo obrigatório service e apresentar validação clara antes da mutação
+- [ ] Adicionar teste de regressão para impedir submissão de envio sem transportadora/serviço
