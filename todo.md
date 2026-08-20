@@ -3233,3 +3233,4 @@
 - [x] Auditar estrutura do projeto para remoção de artefactos do Manus e exportação para hospedagem externa
 - [x] Criar guia completo de publicação na Vercel com domínio da HostGator e análise de custos
 - [x] Atualizar o apple-touch-icon e o favicon com a imagem IMG_0880.PNG fornecida para perfeito funcionamento no iPhone e Safari
+- [x] Configurar sistema robusto de notificações no painel administrativo com alertas em tempo real para novas vendas, pagamentos aprovados e stock baixo compatíveis com PWA no iPhone
