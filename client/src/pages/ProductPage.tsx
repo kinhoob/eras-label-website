@@ -382,8 +382,8 @@ export default function ProductPage() {
                     aria-live="polite"
                     className={`product-add-to-cart ${isAdding ? "is-added" : ""} ${isSoldOut ? "opacity-60 cursor-not-allowed bg-neutral-400 hover:bg-neutral-400" : ""}`}
                   >
-                    {isSoldOut ? "Esgotado" : (isAdding ? <Check size={17} /> : <ShoppingBag size={16} />)}
-                    {isSoldOut ? "Produto Esgotado" : (isAdding ? "Adicionado à sacola" : "Comprar")}
+                    {isSoldOut ? null : (isAdding ? <Check size={17} /> : <ShoppingBag size={16} />)}
+                    {isSoldOut ? "ESGOTADO" : (isAdding ? "Adicionado à sacola" : "Comprar")}
                   </Button>
                 );
               })()}

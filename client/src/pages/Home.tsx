@@ -1016,7 +1016,11 @@ export default function Home() {
                           event.currentTarget.dataset.fallbackApplied = "true";
                           event.currentTarget.src = product.fallbackImage;
                         }} />
-                        {product.stock === 0 && <span className="soldout-tag">ESGOTADO</span>}
+                        {product.stock === 0 && (
+                          <span className="absolute bottom-3 left-3 bg-[#b22222] text-white text-[9px] tracking-widest uppercase px-2 py-0.5 font-bold rounded-sm shadow-sm z-10 pointer-events-none">
+                            ESGOTADO
+                          </span>
+                        )}
                         {product.promotionalPrice !== null && product.promotionalPrice !== undefined && product.promotionalPrice > 0 && (
                           <span style={{ position: 'absolute', top: '12px', left: '12px', background: '#b22222', color: '#fff', fontSize: '10px', fontWeight: 700, padding: '0.2rem 0.45rem', borderRadius: '3px', textTransform: 'uppercase', zIndex: 2, letterSpacing: '0.08em' }}>
                             {Math.round((1 - product.promotionalPrice / product.price) * 100)}% OFF
