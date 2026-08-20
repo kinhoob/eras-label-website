@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createEmptyProductDraft, validateProductDraft } from "./product-editor";
+import { createEmptyProductDraft, getProductDescriptionDraft, validateProductDraft } from "./product-editor";
 
 describe("product editor draft", () => {
   it("starts without commercial text or prices pre-filled", () => {
@@ -13,6 +13,14 @@ describe("product editor draft", () => {
     expect(draft.pixPrice).toBe("");
     expect(draft.promotionalPrice).toBeNull();
     expect(draft.status).toBe("");
+  });
+
+  it("preserves an existing product description when opening the editor", () => {
+    const savedDescription = "Descrição definida pelo administrador para esta peça.";
+
+    expect(getProductDescriptionDraft(savedDescription)).toBe(savedDescription);
+    expect(getProductDescriptionDraft(null)).toBe("");
+    expect(getProductDescriptionDraft(undefined)).toBe("");
   });
 
   it("rejects an empty draft before any backend mutation", () => {

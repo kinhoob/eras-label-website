@@ -54,6 +54,14 @@ export function createEmptyProductDraft(): ProductDraftInput {
  * O backend também valida preços positivos, mas esta camada evita uma chamada
  * desnecessária e mostra ao administrador exatamente o que precisa ser definido.
  */
+/**
+ * Normaliza a descrição carregada do backend para o estado controlado do formulário.
+ * Valores nulos ou inesperados viram uma string vazia, sem inventar conteúdo.
+ */
+export function getProductDescriptionDraft(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
 export function validateProductDraft(draft: ProductDraftInput): string | null {
   const name = String(draft.name ?? "").trim();
   const normalPrice = Number(draft.price);

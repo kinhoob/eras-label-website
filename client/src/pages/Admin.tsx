@@ -56,7 +56,7 @@ import { AdminMenuManager } from "@/pages/AdminMenuManager";
 import { exportToCSV } from "@/lib/csv-export";
 import type { StorefrontConfig } from "../../../shared/storefront";
 import { optimizeProductImage } from "@/lib/image-optimizer";
-import { createEmptyProductDraft, validateProductDraft } from "@/lib/product-editor";
+import { createEmptyProductDraft, getProductDescriptionDraft, validateProductDraft } from "@/lib/product-editor";
 import { buildAdminNavGroups, getAdminNavGroupId, type AdminNavIcon } from "@/lib/admin-navigation";
 import { parseCmsContent, serializeCmsContent, type CmsEventBlock, type CmsStoryBlock } from "@shared/cms";
 
@@ -386,7 +386,7 @@ function EmailMarketingSection() {
 
 type AdminVariation = { id?: number; size: string; stock: number };
 type ProductVisibility = "visible" | "unlisted" | "hidden";
-type AdminProductOption = { id: number; name: string; collection: string; category: string; subcategory?: string | null; sku?: string | null; slug?: string | null; visibility?: ProductVisibility; categoryIds?: number[]; price: string; pixPrice: string; promotionalPrice: number | null; stock: number; variations: AdminVariation[]; status: string; images: string[] };
+type AdminProductOption = { id: number; name: string; collection: string; category: string; subcategory?: string | null; sku?: string | null; slug?: string | null; visibility?: ProductVisibility; categoryIds?: number[]; price: string; pixPrice: string; promotionalPrice: number | null; description?: string | null; stock: number; variations: AdminVariation[]; status: string; images: string[] };
 
 function normalizeProductVisibility(value: unknown): ProductVisibility {
   return value === "unlisted" || value === "hidden" ? value : "visible";
@@ -1135,7 +1135,7 @@ export default function Admin() {
                 const numericPrice = Number(product.price.replace(/[^0-9,]/g, "").replace(",", ".")) || 0;
                 const numericPix = Number(product.pixPrice?.replace(/[^0-9,]/g, "").replace(",", ".")) || numericPrice;
                 const numericPromo = product.promotionalPrice !== null && product.promotionalPrice !== undefined ? Number(String(product.promotionalPrice).replace(/[^0-9,]/g, "").replace(",", ".")) : null;
-                setEditingProduct({ id: product.id, name: product.name, collection: product.collection, category: product.category, subcategory: product.subcategory ?? null, sku: product.sku ?? "", slug: product.slug ?? "", visibility: product.visibility ?? "visible", categoryIds: product.categoryIds ?? [], price: numericPrice, pixPrice: numericPix, promotionalPrice: Number.isNaN(numericPromo) ? null : numericPromo, description: "Peça de vestuário streetwear com acabamento premium.", status: product.status, variations: product.variations.map((variation) => ({ size: variation.size, stock: variation.stock })) });
+                setEditingProduct({ id: product.id, name: product.name, collection: product.collection, category: product.category, subcategory: product.subcategory ?? null, sku: product.sku ?? "", slug: product.slug ?? "", visibility: product.visibility ?? "visible", categoryIds: product.categoryIds ?? [], price: numericPrice, pixPrice: numericPix, promotionalPrice: Number.isNaN(numericPromo) ? null : numericPromo, description: getProductDescriptionDraft(product.description), status: product.status, variations: product.variations.map((variation) => ({ size: variation.size, stock: variation.stock })) });
                 setProductImages(product.images);
               }}><Pencil size={16} /></button>
               <button className="table-more" aria-label={`Duplicar produto ${product.name}`} title="Duplicar produto" disabled={duplicateProductMutation.isPending} onClick={() => {
