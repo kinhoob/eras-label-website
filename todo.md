@@ -3140,3 +3140,12 @@
 - [ ] Validar o pedido afetado no painel e no histórico do cliente após a correção.
 - [ ] Registrar no relatório a causa técnica do status pendente e o resultado da correção.
 - [ ] Salvar checkpoint após a validação do fluxo Pix.
+- [x] Auditar o pedido ER-2026-8088 e o status do Pix no painel e na API do Mercado Pago.
+
+- [ ] Deixar nome, descrição, preço normal, preço Pix e preço promocional vazios ao abrir o cadastro de um novo produto.
+- [ ] Remover defaults comerciais indevidos somente do formulário de novo produto, preservando os dados de produtos já salvos ao editar.
+- [ ] Garantir validação obrigatória de nome e preço antes de criar um produto.
+- [ ] Adicionar testes para impedir a regressão de valores pré-digitados no cadastro.
+- [ ] Validar o formulário no preview em desktop e mobile.
+- [ ] Executar Vitest e build após a correção.
+- [ ] Salvar checkpoint da correção do cadastro de produto.

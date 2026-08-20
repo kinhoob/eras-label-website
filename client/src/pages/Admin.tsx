@@ -56,6 +56,7 @@ import { AdminMenuManager } from "@/pages/AdminMenuManager";
 import { exportToCSV } from "@/lib/csv-export";
 import type { StorefrontConfig } from "../../../shared/storefront";
 import { optimizeProductImage } from "@/lib/image-optimizer";
+import { createEmptyProductDraft, validateProductDraft } from "@/lib/product-editor";
 import { buildAdminNavGroups, getAdminNavGroupId, type AdminNavIcon } from "@/lib/admin-navigation";
 import { parseCmsContent, serializeCmsContent, type CmsEventBlock, type CmsStoryBlock } from "@shared/cms";
 
@@ -1109,7 +1110,7 @@ export default function Admin() {
             <div><span className="section-kicker">CATÁLOGO</span><h2 className="content-title">Produtos</h2><p>Cadastre e edite os dados completos das peças, incluindo SKU, categoria, imagens e preços.</p>{selectedProductCategory && <div className="product-category-filter-chip"><Tag size={13} /><span>Categoria: <strong>{selectedProductCategory.name}</strong></span><button type="button" onClick={() => setProductCategoryFilter(null)} aria-label="Remover filtro de categoria">×</button></div>}</div>
             <Button onClick={() => {
               setEditorMode("product");
-              setEditingProduct({ name: "", collection: "PARADOX COLLECTION", category: "Camisetas", subcategory: null, sku: "", slug: "", visibility: "visible", categoryIds: [], price: 154.90, pixPrice: 147.15, promotionalPrice: null, description: "Peça de vestuário streetwear com acabamento premium.", status: "Publicado", variations: [] });
+              setEditingProduct(createEmptyProductDraft());
               setProductImages([]);
             }}><Plus size={16} /> Novo produto</Button>
           </div>
@@ -1245,11 +1246,11 @@ export default function Admin() {
                   </div>
                   <div className="editor-field">
                     <label>Preço normal (R$)</label>
-                    <Input type="number" value={editingProduct.price} onChange={(e) => setEditingProduct({ ...editingProduct, price: parseFloat(e.target.value) || 0 })} />
+                    <Input type="number" min="0.01" step="0.01" value={editingProduct.price ?? ""} placeholder="Defina o preço normal" onChange={(e) => setEditingProduct({ ...editingProduct, price: e.target.value === "" ? "" : Number(e.target.value) })} />
                   </div>
                   <div className="editor-field">
                     <label>Preço PIX (R$)</label>
-                    <Input type="number" value={editingProduct.pixPrice} onChange={(e) => setEditingProduct({ ...editingProduct, pixPrice: parseFloat(e.target.value) || 0 })} />
+                    <Input type="number" min="0.01" step="0.01" value={editingProduct.pixPrice ?? ""} placeholder="Defina o preço Pix" onChange={(e) => setEditingProduct({ ...editingProduct, pixPrice: e.target.value === "" ? "" : Number(e.target.value) })} />
                   </div>
                   <div className="editor-field">
                     <label>Preço promocional (R$) <span style={{ fontSize: '11px', color: '#b22222', fontWeight: 600 }}>(Opcional)</span></label>
@@ -1258,8 +1259,9 @@ export default function Admin() {
                   </div>
                   <div className="editor-field">
                     <label>Status</label>
-                    <select style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }} value={editingProduct.status} onChange={(e) => setEditingProduct({ ...editingProduct, status: e.target.value })}>
-                      <option value="Publicado">Publicado</option>
+<select style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }} value={editingProduct.status ?? ""} onChange={(e) => setEditingProduct({ ...editingProduct, status: e.target.value })}>
+                       <option value="" disabled>Escolha o status</option>
+                       <option value="Publicado">Publicado</option>
                       <option value="Rascunho">Rascunho</option>
                       <option value="Esgotado">Esgotado</option>
                     </select>
@@ -1383,11 +1385,22 @@ export default function Admin() {
                     });
                     return;
                   }
+                  const validationError = validateProductDraft(editingProduct);
+                  if (validationError) {
+                    toast.error(validationError);
+                    return;
+                  }
+                  const productName = String(editingProduct.name ?? "").trim();
+                  const normalPrice = Number(editingProduct.price);
+                  const pixPrice = Number(editingProduct.pixPrice);
                   saveProductMutation.mutate({
-                    ...editingProduct,
-                    images: productImages,
-                    variations,
-                  }, {
+                     ...editingProduct,
+                     name: productName,
+                     price: normalPrice,
+                     pixPrice,
+                     images: productImages,
+                     variations,
+                   }, {
                     onSuccess: (res) => {
                       void Promise.all([
                         utils.admin.listProducts.invalidate(),
