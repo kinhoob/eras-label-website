@@ -61,6 +61,10 @@
 - [x] Adicionar editor de guia de tamanhos individual por produto no painel administrativo
 - [x] Corrigir a hidratação e a exibição da descrição salva ao editar um produto no painel
 - [x] Validar persistência, reabertura, atualização e apresentação pública de descrição e guia de tamanhos
-- [ ] Exibir evidência verificável do Admin.tsx final com o editor de guia de tamanhos renderizado e conectado ao estado controlado
-- [ ] Executar e registrar validação objetiva no Admin mostrando a descrição salva reaparecendo ao abrir a edição
-- [ ] Validar ponta a ponta salvar guia/descrição, reabrir no Admin e confirmar a atualização na página pública
+- [x] Exibir evidência verificável do Admin.tsx final com o editor de guia de tamanhos renderizado e conectado ao estado controlado
+- [x] Executar e registrar validação objetiva no Admin mostrando a descrição salva reaparecendo ao abrir a edição
+- [x] Validar ponta a ponta salvar guia/descrição, reabrir no Admin e confirmar a atualização na página pública
+- [x] Executar um teste de integração cobrindo a mutation `saveProduct` com `description` e `sizeGuide`, além da leitura pública subsequente do produto salvo
+- [x] Validar o fluxo completo de salvamento no Admin, reabertura e exibição pública das novas medidas e descrição
+- [x] Executar um teste ponta a ponta verificável: editar descrição e guia de tamanhos de um produto real, salvar com sucesso, reabrir o mesmo produto no Admin e confirmar os valores persistidos
+- [x] Validar após o salvamento que a página pública do produto exibe a descrição e a guia atualizadas, registrando evidência objetiva do fluxo completo
