@@ -199,6 +199,7 @@ export async function getMercadoPagoPayment(paymentId: string | number) {
 
   const response = await fetch(`${MP_API_BASE}/v1/payments/${encodeURIComponent(String(paymentId))}`, {
     headers: { Authorization: `Bearer ${accessToken}` },
+    signal: AbortSignal.timeout(20_000),
   });
   const data = (await response.json()) as any;
   if (!response.ok) {
@@ -206,4 +207,36 @@ export async function getMercadoPagoPayment(paymentId: string | number) {
     throw new Error(data.message || data.error || "Não foi possível consultar o pagamento no Mercado Pago.");
   }
   return data;
+}
+
+/**
+ * Procura pagamentos pelo external_reference do pedido. É usado para
+ * conciliação manual no admin quando o webhook foi perdido ou chegou antes
+ * de a chave secreta estar configurada. A operação é somente leitura.
+ */
+export async function searchMercadoPagoPayments(externalReference: string) {
+  const accessToken = ENV.mpAccessToken;
+  if (!accessToken || accessToken.trim() === "") return [];
+
+  const url = new URL(`${MP_API_BASE}/v1/payments/search`);
+  url.searchParams.set("external_reference", externalReference);
+  url.searchParams.set("limit", "20");
+
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    signal: AbortSignal.timeout(20_000),
+  });
+  const data = (await response.json()) as any;
+  if (!response.ok) {
+    console.error("[MercadoPago] Erro ao procurar pagamentos por referência:", data);
+    throw new Error(data.message || data.error || "Não foi possível localizar o pagamento no Mercado Pago.");
+  }
+
+  return (Array.isArray(data?.results) ? data.results : [])
+    .filter((payment: any) => String(payment?.external_reference ?? "") === externalReference)
+    .sort((a: any, b: any) => {
+      const aTime = Date.parse(String(a?.date_last_updated ?? a?.date_created ?? "")) || 0;
+      const bTime = Date.parse(String(b?.date_last_updated ?? b?.date_created ?? "")) || 0;
+      return bTime - aTime;
+    });
 }

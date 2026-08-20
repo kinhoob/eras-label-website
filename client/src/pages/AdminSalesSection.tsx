@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { filterOrdersWithReadyLabels } from "@/lib/order-label-filter";
-import { Download, Eye, FileText, ExternalLink, Truck, Package, LoaderCircle, CreditCard, Users, Check, Minus, Files, X, Clock3, MapPin, ReceiptText } from "lucide-react";
+import { Download, Eye, FileText, ExternalLink, Truck, Package, LoaderCircle, CreditCard, Users, Check, Minus, Files, X, Clock3, MapPin, ReceiptText, RefreshCw } from "lucide-react";
 
 type DeliveryStep = {
   key: string;
@@ -79,6 +79,21 @@ export default function AdminSalesSection() {
   }, [labelFilter, orders, paymentFilter, periodFilter, searchTerm, statusFilter]);
   const visibleOrderIds = visibleOrders.map((order: any) => order.id);
   const visibleSelectedOrderIds = selectedOrderIds.filter((orderId) => visibleOrderIds.includes(orderId));
+
+  const reconcilePaymentMutation = trpc.admin.reconcilePayment.useMutation({
+    onSuccess: (data) => {
+      if (data.order) setSelectedOrder(data.order);
+      void refetch();
+      if (data.success) {
+        toast.success("Pagamento sincronizado: o Mercado Pago confirmou a aprovação.");
+      } else {
+        toast.info(`O Mercado Pago ainda informa o pagamento como ${data.paymentStatus}.`);
+      }
+    },
+    onError: (err) => {
+      toast.error("Não foi possível sincronizar o pagamento: " + err.message);
+    },
+  });
 
   const calculateShippingMutation = trpc.admin.calculateShippingQuote.useMutation({
     onSuccess: (data) => {
@@ -391,6 +406,19 @@ export default function AdminSalesSection() {
                 </h4>
                 <p style={{ fontSize: "0.85rem", marginBottom: "4px" }}><strong>Método:</strong> {selectedOrder.paymentMethod?.toUpperCase()}</p>
                 <p style={{ fontSize: "0.85rem", marginBottom: "4px" }}><strong>Status Pagamento:</strong> {selectedOrder.paymentStatus}</p>
+                {!["approved", "authorized"].includes(String(selectedOrder.paymentStatus ?? "").toLowerCase()) && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={reconcilePaymentMutation.isPending}
+                    onClick={() => reconcilePaymentMutation.mutate({ orderNumber: selectedOrder.orderNumber })}
+                    style={{ display: "inline-flex", alignItems: "center", gap: "6px", margin: "0.35rem 0 0.65rem" }}
+                  >
+                    {reconcilePaymentMutation.isPending ? <LoaderCircle className="spin" size={14} /> : <RefreshCw size={14} />}
+                    {reconcilePaymentMutation.isPending ? "A sincronizar..." : "Sincronizar Mercado Pago"}
+                  </Button>
+                )}
                 {selectedOrder.paymentFailureReason && (
                   <p style={{ fontSize: "0.85rem", marginBottom: "4px", color: "#b22222", background: "rgba(178,34,34,0.08)", padding: "6px 8px", borderRadius: "4px" }}>
                     <strong>Motivo da Falha / Recusa:</strong> {selectedOrder.paymentFailureReason}

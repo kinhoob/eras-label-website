@@ -3130,3 +3130,13 @@
 - [x] Atualizar os testes do Melhor Envio para cobrir Loggi sem liberar outras transportadoras.
 - [x] Reexecutar a cotação real após a correção do filtro e registrar os serviços exibidos.
 - [x] Remover os scripts temporários de cotação após a validação.
+
+- [ ] Auditar o pedido ER-2026-8088 e identificar por que o Pix permanece `pending` com `pending_waiting_transfer` após o pagamento informado pelo cliente.
+- [ ] Confirmar o paymentId/external_reference do pedido e consultar o status real no Mercado Pago sem criar nova cobrança.
+- [ ] Corrigir a conciliação do Pix por webhook ou sincronização quando o Mercado Pago já tiver status aprovado.
+- [ ] Garantir que pedidos pendentes legítimos continuem pendentes até confirmação real.
+- [ ] Garantir idempotência para não duplicar pedido, pagamento, estoque ou e-mail durante a correção.
+- [ ] Adicionar teste de regressão para Pix aprovado, Pix pendente e webhook reenviado.
+- [ ] Validar o pedido afetado no painel e no histórico do cliente após a correção.
+- [ ] Registrar no relatório a causa técnica do status pendente e o resultado da correção.
+- [ ] Salvar checkpoint após a validação do fluxo Pix.

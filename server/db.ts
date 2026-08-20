@@ -934,6 +934,13 @@ export async function getOrderById(orderId: number) {
   return rows[0];
 }
 
+export async function getOrderByNumber(orderNumber: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db.select().from(orders).where(eq(orders.orderNumber, orderNumber.trim())).limit(1);
+  return rows[0];
+}
+
 export async function createOrder(data: typeof orders.$inferInsert) {
   const db = await getDb();
   if (!db) return undefined;
@@ -1006,11 +1013,23 @@ export async function listOrdersByUser(userId: number) {
   return rows.map(normalizeOrderForClient);
 }
 
-export async function updateOrderPaymentStatus(orderNumber: string, paymentStatus: string) {
+export function mapMercadoPagoOrderStatus(paymentStatus: string) {
+  const normalizedStatus = String(paymentStatus).toLowerCase();
+  const isConfirmed = normalizedStatus === "approved" || normalizedStatus === "authorized";
+  const nextStatus = isConfirmed ? "Processando" : normalizedStatus === "in_process" ? "Em análise" : normalizedStatus === "cancelled" || normalizedStatus === "rejected" ? "Pagamento recusado" : "Aguardando pagamento";
+  return { normalizedStatus, nextStatus, isConfirmed };
+}
+
+export async function updateOrderPaymentStatus(orderNumber: string, paymentStatus: string, paymentFailureReason?: string | null) {
   const db = await getDb();
   if (!db) return undefined;
-  const nextStatus = (paymentStatus === "approved" || paymentStatus === "authorized") ? "Processando" : paymentStatus === "in_process" ? "Em análise" : paymentStatus === "cancelled" || paymentStatus === "rejected" ? "Pagamento recusado" : "Aguardando pagamento";
-  await db.update(orders).set({ paymentStatus, status: nextStatus }).where(eq(orders.orderNumber, orderNumber));
+  const { normalizedStatus, nextStatus, isConfirmed } = mapMercadoPagoOrderStatus(paymentStatus);
+  const clearFailureReason = isConfirmed;
+  await db.update(orders).set({
+    paymentStatus: normalizedStatus,
+    status: nextStatus,
+    ...(clearFailureReason ? { paymentFailureReason: null } : paymentFailureReason !== undefined ? { paymentFailureReason } : {}),
+  }).where(eq(orders.orderNumber, orderNumber));
   const updated = await db.select().from(orders).where(eq(orders.orderNumber, orderNumber)).limit(1);
   return updated[0];
 }

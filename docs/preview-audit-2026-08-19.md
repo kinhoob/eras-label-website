@@ -74,3 +74,18 @@ A credencial renovada foi validada sem expor o token por meio do endpoint leve `
 A resposta bruta retornou quinze serviços, mas o helper da Eras filtrou corretamente para oito opções autorizadas: PAC e SEDEX dos Correios, três serviços Jadlog e três serviços Loggi. Os valores observados nessa cotação foram PAC R$ 37,54 (4–6 dias), SEDEX R$ 76,46 (1–2 dias), Jadlog .Package R$ 34,32 (6–8 dias), Jadlog .Com R$ 72,50 (5–7 dias), Jadlog .Package Centralizado R$ 25,97 (9–11 dias), Loggi Express R$ 24,60 (5–7 dias), Loggi Coleta R$ 35,05 (8–10 dias) e Loggi Ponto R$ 25,13 (8–10 dias). Os valores são específicos para os CEPs, volume e data deste teste e não devem ser tratados como tabela fixa.
 
 Durante a validação foi corrigida a divergência que excluía Loggi do filtro do backend. O teste unitário agora confirma PAC, SEDEX, Jadlog e Loggi, bloqueando Azul Cargo e demais transportadoras não autorizadas. O endpoint público `/api/melhor-envio/webhook` do preview respondeu HTTP 200 com uma requisição de validação sem criar pedido, etiqueta, carrinho ou cobrança. Nenhum domínio oficial foi alterado.
+
+## 2026-08-19 — Diagnóstico do Pix ER-2026-8088
+
+A consulta oficial ao Mercado Pago por `external_reference=ER-2026-8088` confirmou `status=approved`, `status_detail=accredited`, com aprovação em `2026-08-19T19:39:16.000-04:00` e última atualização em `2026-08-19T19:39:21.000-04:00`. O pedido local ainda estava `pending`/`pending_waiting_transfer`.
+
+A causa foi a ausência de `MP_WEBHOOK_SECRET` no ambiente. Sem essa chave HMAC, o endpoint `/api/mercadopago/webhook` não consegue validar notificações legítimas e não atualiza o pedido. A chave foi configurada com segurança. O teste `server/mercadopago.webhook-secret.test.ts` passou com 2 testes, cobrindo assinatura válida e rejeição de assinatura incorreta. Nenhuma nova cobrança, etiqueta ou pedido foi criado durante o diagnóstico.
+
+
+A consulta somente leitura ao Mercado Pago encontrou o pagamento `174689540262` com `status=approved` e `status_detail=accredited`, associado corretamente ao `external_reference=ER-2026-8088`. O banco local ainda tinha `paymentStatus=pending`, `status=Aguardando pagamento` e `paymentFailureReason=Status detail: pending_waiting_transfer`.
+
+A causa foi uma falha de conciliação: o pedido foi criado enquanto o pagamento ainda estava pendente e o webhook de aprovação não atualizou esse registro. A chave do webhook foi configurada depois, mas eventos anteriores não são reaplicados automaticamente. A reconciliação controlada atualizou o pedido para `paymentStatus=approved` e `status=Processando`, sem criar nova cobrança, pedido, estoque ou e-mail.
+
+Foi adicionada uma procedure administrativa idempotente `admin.reconcilePayment`, com botão “Sincronizar Mercado Pago” no detalhe do pedido. Ela consulta primeiro o pagamento oficial pelo `external_reference`, mantém pedidos legitimamente pendentes como pendentes e somente marca como processando quando a API retorna `approved` ou `authorized`. O webhook também passou a persistir o `status_detail` e a limpar o motivo provisório quando a aprovação é confirmada.
+
+A suíte direcionada passou com 8 testes e o build de produção foi validado. Os scripts temporários usados para consulta e reconciliação foram removidos após a execução.

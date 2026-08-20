@@ -8,7 +8,7 @@ import { ADMIN_DISPLAY_NAME, getAdminOpenId, validateAdminCredentials } from "./
 import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { storageGetSignedUrl, storagePut } from "./storage";
-import { createMercadoPagoPayment } from "./mercadopago";
+import { createMercadoPagoPayment, getMercadoPagoPayment, searchMercadoPagoPayments } from "./mercadopago";
 import { getDb } from "./db";
 import { products, orders } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
@@ -76,6 +76,7 @@ import {
   createManualOrder,
   listOrdersByUser,
   getOrderById,
+  getOrderByNumber,
   getOrderItems,
   createOrder,
   updateOrderPaymentStatus,
@@ -826,6 +827,50 @@ export const appRouter = router({
     }),
     listOrders: adminProcedure.query(async () => {
       return listOrders();
+    }),
+    reconcilePayment: adminProcedure.input(z.object({
+      orderNumber: z.string().trim().min(3).max(100),
+    })).mutation(async ({ input }) => {
+      const order = await getOrderByNumber(input.orderNumber);
+      if (!order) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Pedido não encontrado para reconciliação." });
+      }
+
+      const currentStatus = String(order.paymentStatus ?? "").toLowerCase();
+      if (currentStatus === "approved" || currentStatus === "authorized") {
+        return { success: true, alreadySynchronized: true, paymentStatus: currentStatus, order };
+      }
+
+      let payment: any = null;
+      const paymentId = String((order as any).paymentId ?? "").trim();
+      if (paymentId) {
+        const directPayment = await getMercadoPagoPayment(paymentId);
+        if (directPayment && (!directPayment.external_reference || String(directPayment.external_reference) === order.orderNumber)) {
+          payment = directPayment;
+        }
+      }
+
+      if (!payment) {
+        const matches = await searchMercadoPagoPayments(order.orderNumber);
+        payment = matches[0] ?? null;
+      }
+
+      if (!payment) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Nenhum pagamento do Mercado Pago foi encontrado para este pedido. Verifique o external_reference antes de tentar novamente." });
+      }
+
+      const paymentStatus = String(payment.status ?? "pending").toLowerCase();
+      const paymentDetail = payment.status_detail ? `${paymentStatus}: ${String(payment.status_detail)}` : null;
+      const updatedOrder = await updateOrderPaymentStatus(order.orderNumber, paymentStatus, paymentDetail);
+
+      return {
+        success: paymentStatus === "approved" || paymentStatus === "authorized",
+        alreadySynchronized: false,
+        paymentStatus,
+        paymentStatusDetail: payment.status_detail ?? null,
+        paymentId: payment.id ? String(payment.id) : null,
+        order: updatedOrder,
+      };
     }),
     listAbandonedCarts: adminProcedure.query(async () => {
       return listAbandonedCarts();
