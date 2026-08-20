@@ -3156,3 +3156,11 @@
 - [x] Garantir que a descrição salva reapareça corretamente ao reabrir o produto.
 - [x] Adicionar teste de regressão para edição e persistência da descrição.
 - [x] Validar a correção no painel em desktop/mobile, executar Vitest e build e salvar checkpoint.
+
+- [ ] Reduzir o tamanho do título na página pública de produto.
+- [ ] Reduzir o tamanho visual das fotos e do swiper na página pública de produto.
+- [ ] Adicionar gaps e margens consistentes entre título, descrição, galeria e recomendações.
+- [ ] Garantir responsividade dos novos espaçamentos e dimensões em desktop e mobile.
+- [ ] Garantir que o editor administrativo mostre a descrição já salva ao abrir um produto existente.
+- [ ] Adicionar teste de regressão para texto salvo no editor e layout compacto da página de produto.
+- [ ] Executar Vitest, build e salvar checkpoint da correção visual e funcional.

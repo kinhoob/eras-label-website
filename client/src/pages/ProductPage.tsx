@@ -25,6 +25,7 @@ import { trpc } from "@/lib/trpc";
 import { loadCart, saveCart } from "@/lib/cart-storage";
 import { toast } from "sonner";
 import type { PublicCartLine } from "@/components/PublicCartDrawer";
+import { getProductDescription, hasSavedProductDescription } from "@/lib/product-content";
 
 const productImageFallback =
   "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1200&q=85";
@@ -389,7 +390,7 @@ export default function ProductPage() {
               </div>
 
               <div className="product-info-accordions">
-                <details open>
+                <details>
                   <summary>
                     <span><CreditCard size={15} aria-hidden="true" /> Meios de pagamento</span>
                     <ChevronDown size={16} aria-hidden="true" />
@@ -403,12 +404,12 @@ export default function ProductPage() {
                   </summary>
                   <p>Escolha o serviço disponível para o seu CEP no carrinho. Enviamos por PAC, SEDEX e Jadlog.</p>
                 </details>
-                <details>
+                <details open={hasSavedProductDescription(product.description)}>
                   <summary>
                     <span><Ruler size={15} aria-hidden="true" /> Detalhes da peça</span>
                     <ChevronDown size={16} aria-hidden="true" />
                   </summary>
-                  <p className="whitespace-pre-line">{product.description || "Uma peça Eras Label pensada para atravessar o tempo presente."}</p>
+                  <p className="whitespace-pre-line">{getProductDescription(product.description)}</p>
                 </details>
               </div>
             </section>
