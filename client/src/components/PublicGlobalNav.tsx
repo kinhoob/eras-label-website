@@ -229,7 +229,7 @@ export default function PublicGlobalNav() {
           </form>
         </div>
 
-        <Link href="/" className="public-global-brand" aria-label="Voltar para a loja Eras Label">ERAS<span>.</span></Link>
+        <Link href="/" className="public-global-brand" aria-label="Voltar para a loja Eras Label"><img src="/eras-logo-sticker.webp" alt="Eras Label" style={{ height: "32px", width: "auto", objectFit: "contain", display: "block" }} /></Link>
 
         <div className="public-global-right-tools">
           <Link href="/account" className="public-global-account" aria-label="Abrir minha conta"><UserRound size={17} strokeWidth={1.7} /></Link>

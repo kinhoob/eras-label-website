@@ -3215,3 +3215,5 @@
 - [ ] Escrever regressões Vitest, validar TypeScript, build e responsividade do dashboard e da secção de vendas.
 
 - [x] Implementar numeração sequencial anual de pedidos no formato ER-AAAA-NNN (ex: ER-2026-001)
+
+- [x] Substituir a logo da Eras Label pela imagem enviada na navbar pública e no painel administrativo, preservando proporções e dimensões dos contentores
