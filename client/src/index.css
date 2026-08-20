@@ -9892,7 +9892,7 @@ body {
   filter: saturate(.92);
 }
 
-.catalog-product-media > span {
+.catalog-product-media-placeholder {
   display: grid;
   width: 100%;
   height: 100%;

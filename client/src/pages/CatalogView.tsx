@@ -257,14 +257,15 @@ export default function CatalogViewPage() {
               <div className="catalog-product-grid">
                 {displayProducts.map((product: any) => {
                   const images = normalizeImages(product.images);
-                  const imageSrc = images[0] || product.image;
+                  // Produtos esgotados continuam a usar a foto real; sem foto cadastrada, usamos apenas um fallback neutro.
+                  const imageSrc = images[0] || product.image || catalogImageFallback;
                   return (
                     <article key={product.id} className="catalog-product-card group">
                       <Link href={`/produto/${product.slug || product.id}`} className="catalog-product-media relative" aria-label={`Ver ${product.name}`}>
                         {imageSrc ? (
                           <img src={imageSrc} alt={product.name} onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = catalogImageFallback; }} />
                         ) : (
-                          <span>Imagem a caminho</span>
+                          <span className="catalog-product-media-placeholder">Imagem a caminho</span>
                         )}
                         {(product.status === "soldout" || (Array.isArray(product.variations) && product.variations.every((v: any) => Number(v.stock ?? 0) === 0))) && (
                           <span className="absolute bottom-3 left-3 bg-[#b22222] text-white text-[9px] tracking-widest uppercase px-2 py-0.5 font-bold rounded-sm shadow-sm z-10 pointer-events-none">
