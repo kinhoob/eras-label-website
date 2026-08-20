@@ -12248,3 +12248,205 @@ html.dark .checkout-thank-you-mark {
   border-color: rgba(247, 242, 235, 0.28);
   color: #b22222;
 }
+
+/* Refinamento ERAS: modo noturno, espaçamento mobile e microinterações públicas */
+html.dark .public-global-nav .public-global-theme-toggle,
+html.dark .public-global-nav .public-global-account,
+html.dark .public-global-nav .public-global-bag,
+html.dark .public-global-nav .public-global-menu-trigger,
+html.dark .public-global-nav .public-global-search button,
+html.dark .public-global-nav .public-global-links a,
+html.dark .public-global-nav .public-global-links button {
+  transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease, transform 180ms ease, opacity 180ms ease;
+}
+html.dark .public-global-nav .public-global-theme-toggle:hover,
+html.dark .public-global-nav .public-global-account:hover,
+html.dark .public-global-nav .public-global-bag:hover,
+html.dark .public-global-nav .public-global-menu-trigger:hover,
+html.dark .public-global-nav .public-global-search button:hover,
+html.dark .public-global-nav .public-global-links a:hover,
+html.dark .public-global-nav .public-global-links button:hover {
+  color: #ef7468;
+  border-color: rgba(239, 116, 104, 0.65);
+  transform: translateY(-1px);
+}
+html.dark .public-global-nav .public-global-theme-toggle:focus-visible,
+html.dark .public-global-nav .public-global-account:focus-visible,
+html.dark .public-global-nav .public-global-bag:focus-visible,
+html.dark .public-global-nav .public-global-menu-trigger:focus-visible,
+html.dark .public-global-nav .public-global-search button:focus-visible,
+html.dark .public-global-nav .public-global-links a:focus-visible,
+html.dark .public-global-nav .public-global-links button:focus-visible {
+  outline: 2px solid #ef7468;
+  outline-offset: 3px;
+}
+html.dark .home-main,
+html.dark .home-main .shop-section,
+html.dark .home-main .community-proof-section,
+html.dark .home-main .home-events-preview,
+html.dark .home-main .newsletter-section {
+  background-color: #151312 !important;
+  color: #f7f1e8;
+}
+html.dark .home-main .home-shop-intro,
+html.dark .home-main .home-product-section,
+html.dark .home-main .home-events-preview,
+html.dark .home-main .newsletter-section {
+  border-color: rgba(244, 236, 226, 0.18);
+}
+html.dark .home-main .shop-section h1,
+html.dark .home-main .shop-section h2,
+html.dark .home-main .shop-section h3,
+html.dark .home-main .community-proof-section h2,
+html.dark .home-main .home-events-preview h2,
+html.dark .home-main .newsletter-section h2,
+html.dark .home-main .home-product-section-description,
+html.dark .home-main .shop-section .section-kicker {
+  color: #f7f1e8;
+}
+html.dark .home-main .shop-section p,
+html.dark .home-main .community-proof-section p,
+html.dark .home-main .home-events-preview p,
+html.dark .home-main .newsletter-section p {
+  color: #b9aea2;
+}
+html.dark .home-main .shop-section .product-card {
+  background: #1d1a18;
+  border-color: rgba(244, 236, 226, 0.14);
+  color: #f7f1e8;
+  transition: border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+}
+html.dark .home-main .shop-section .product-card:hover {
+  border-color: rgba(239, 116, 104, 0.6);
+  transform: translateY(-3px);
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.2);
+}
+html.dark .home-main .shop-section .product-card h3,
+html.dark .home-main .shop-section .product-card strong,
+html.dark .home-main .shop-section .product-card span {
+  color: #f7f1e8;
+}
+html.dark .home-main .shop-section .product-card p,
+html.dark .home-main .shop-section .product-card small {
+  color: #b9aea2;
+}
+html.dark .home-main .home-event-row,
+html.dark .home-main .newsletter-card,
+html.dark .home-main .community-proof-card {
+  background: #1d1a18;
+  border-color: rgba(244, 236, 226, 0.14);
+  color: #f7f1e8;
+}
+@media (max-width: 720px) {
+  .public-global-nav .public-global-right-tools {
+    gap: 14px;
+    padding-inline: 5px;
+  }
+  .public-global-nav .public-global-theme-toggle {
+    margin-right: 5px;
+    flex: 0 0 34px;
+  }
+  .public-global-nav .public-global-account {
+    margin-inline: 1px;
+  }
+  .public-global-nav .public-global-bag {
+    margin-left: 5px;
+    padding-left: 5px;
+  }
+  .public-global-nav .public-global-bag span {
+    letter-spacing: 0.08em;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html.dark .public-global-nav .public-global-theme-toggle,
+  html.dark .public-global-nav .public-global-account,
+  html.dark .public-global-nav .public-global-bag,
+  html.dark .home-main .shop-section .product-card {
+    transition: none;
+  }
+}
+
+/* ERAS dark mode: conta, autenticação e histórico de pedidos */
+html.dark .account-page,
+html.dark .auth-required-page,
+html.dark .account-page .account-main,
+html.dark .auth-required-page .public-page-content {
+  background: #151312 !important;
+  color: #f7f1e8;
+}
+html.dark .account-page .account-welcome,
+html.dark .account-page .order-card,
+html.dark .account-page .empty-orders,
+html.dark .auth-required-page .auth-card {
+  background: #1d1a18;
+  border-color: rgba(244, 236, 226, 0.15);
+  color: #f7f1e8;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.16);
+}
+html.dark .account-page .account-welcome h1,
+html.dark .account-page .section-title-row h2,
+html.dark .account-page .order-num,
+html.dark .account-page .order-total-info strong,
+html.dark .auth-required-page .auth-card h2,
+html.dark .auth-required-page .auth-card p {
+  color: #f7f1e8;
+}
+html.dark .account-page .account-welcome p,
+html.dark .account-page .orders-count,
+html.dark .account-page .order-date,
+html.dark .account-page .order-eyebrow,
+html.dark .account-page .order-items-heading,
+html.dark .account-page .order-info-cell span,
+html.dark .account-page .order-total-info span,
+html.dark .account-page .preview-item span,
+html.dark .account-page .empty-orders p,
+html.dark .auth-required-page .back-home-link {
+  color: #b9aea2;
+}
+html.dark .account-page .section-title-row,
+html.dark .account-page .order-info-cell,
+html.dark .account-page .order-footer,
+html.dark .account-page .order-delivery-strip {
+  border-color: rgba(244, 236, 226, 0.14);
+}
+html.dark .account-page .order-info-cell strong,
+html.dark .account-page .order-delivery-strip strong,
+html.dark .account-page .order-items-heading span:last-child,
+html.dark .account-page .preview-item p {
+  color: #eee6dc;
+}
+html.dark .account-page .orders-refresh-button,
+html.dark .account-page .details-button {
+  border-color: rgba(239, 116, 104, 0.45);
+  color: #ef7468;
+  background: transparent;
+  transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+html.dark .account-page .orders-refresh-button:hover:not(:disabled),
+html.dark .account-page .details-button:hover {
+  background: #b22222;
+  border-color: #b22222;
+  color: #fff8f2;
+  transform: translateY(-1px);
+}
+html.dark .account-page .user-avatar-badge {
+  background: #f7f1e8;
+  color: #151312;
+}
+html.dark .account-page .preview-item-image {
+  background: #28231f;
+  border-color: rgba(244, 236, 226, 0.13);
+}
+html.dark .account-page .order-card:hover {
+  border-color: rgba(239, 116, 104, 0.55);
+  box-shadow: 0 22px 54px rgba(0, 0, 0, 0.22);
+}
+html.dark .auth-required-page .auth-card .primary-button,
+html.dark .account-page .empty-orders .primary-button {
+  background: #b22222;
+  color: #fff8f2;
+}
+html.dark .auth-required-page .auth-card .primary-button:hover,
+html.dark .account-page .empty-orders .primary-button:hover {
+  background: #d33a32;
+}

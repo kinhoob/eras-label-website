@@ -28,3 +28,8 @@
 - [x] Validar explicitamente o modo noturno ativado no navegador em desktop e mobile, com evidências para Home, catálogo, produto, checkout e conta
 - [x] Revisar e corrigir contraste e legibilidade de navbar, busca, menus, sacola, cards e formulários no modo noturno ativado
 - [x] Harmonizar o checkout vazio e o checkout modal com as superfícies escuras, preservando a leitura das áreas de pagamento e resumo
+- [ ] Afastar o botão sol/lua da sacola e dos demais controles na navbar mobile, preservando áreas de toque confortáveis
+- [ ] Corrigir a cascata de cores do modo noturno para manter superfícies, textos e bordas coerentes em todo o storefront
+- [ ] Adicionar estados de hover/focus suaves e visíveis aos controles da navbar e elementos interativos do tema
+- [ ] Revalidar modo noturno em Home, catálogo, produto, checkout, conta, sacola e menu mobile após os ajustes
+- [ ] Ajustar o cartão de boas-vindas, pedidos e rodapé da conta para respeitar o contraste do modo noturno
