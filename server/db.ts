@@ -945,12 +945,40 @@ export async function getOrderByNumber(orderNumber: string) {
   return rows[0];
 }
 
+export async function generateNextOrderNumber(): Promise<string> {
+  const db = await getDb();
+  const year = new Date().getFullYear();
+  const prefix = `ER-${year}-`;
+  if (!db) {
+    return `${prefix}001`;
+  }
+  const allRows = await db.select({ orderNumber: orders.orderNumber }).from(orders);
+  let maxSeq = 0;
+  for (const row of allRows) {
+    const numStr = String(row.orderNumber || "");
+    if (numStr.startsWith(prefix)) {
+      const suffix = numStr.slice(prefix.length);
+      const seq = parseInt(suffix, 10);
+      if (!isNaN(seq) && seq > maxSeq) {
+        maxSeq = seq;
+      }
+    }
+  }
+  const nextSeq = maxSeq + 1;
+  return `${prefix}${String(nextSeq).padStart(3, "0")}`;
+}
+
 export async function createOrder(data: typeof orders.$inferInsert) {
   const db = await getDb();
   if (!db) return undefined;
   
+  const orderNumber = data.orderNumber && /^ER-\d{4}-\d{2,}$/.test(data.orderNumber)
+    ? data.orderNumber
+    : await generateNextOrderNumber();
+  const orderWithSequence = { ...data, orderNumber };
+
   // Validação server-side de estoque e baixa transacional das variações
-  const rawItems = Array.isArray(data.items) ? (data.items as Array<any>) : [];
+  const rawItems = Array.isArray(orderWithSequence.items) ? (orderWithSequence.items as Array<any>) : [];
   for (const item of rawItems) {
     const productId = Number(item.productId);
     const size = String(item.size || "").trim();
@@ -982,9 +1010,9 @@ export async function createOrder(data: typeof orders.$inferInsert) {
     }
   }
 
-  await db.insert(orders).values(data);
-  const created = await db.select().from(orders).where(eq(orders.orderNumber, data.orderNumber)).limit(1);
-  return created[0];
+  await db.insert(orders).values(orderWithSequence);
+  const created = await db.select().from(orders).where(eq(orders.orderNumber, orderWithSequence.orderNumber)).limit(1);
+  return created[0] ? normalizeOrderForClient(created[0]) : undefined;
 }
 
 function normalizeOrderForClient(order: typeof orders.$inferSelect) {

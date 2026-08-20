@@ -3213,3 +3213,5 @@
 - [ ] Adicionar acções operacionais de Embalar, Enviar e Arquivar no detalhe e na listagem de vendas.
 - [ ] Adicionar filtro para incluir ou ocultar pedidos arquivados, mantendo-os fora da lista por defeito.
 - [ ] Escrever regressões Vitest, validar TypeScript, build e responsividade do dashboard e da secção de vendas.
+
+- [x] Implementar numeração sequencial anual de pedidos no formato ER-AAAA-NNN (ex: ER-2026-001)
