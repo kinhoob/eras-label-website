@@ -3226,3 +3226,4 @@
 
 - [x] Auditar a segurança, segredos, autenticação e integrações (Mercado Pago, Melhor Envio, Admin e Acesso VIP)
 - [x] Consolidar relatório de auditoria e prontidão para produção
+- [x] Ajustar o favicon do site para utilizar a imagem da logo adesiva enviada, mantendo o padrão visual e a nitidez em navegadores e dispositivos móveis
