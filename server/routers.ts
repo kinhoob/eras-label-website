@@ -81,7 +81,9 @@ import {
   createOrder,
   updateOrderPaymentStatus,
   updateOrderTracking,
+  updateOrderFulfillmentStatus,
   updateOrderLabelData,
+  recordAnalyticsEvent,
   upsertUser,
   updateUserName,
   listShipments,
@@ -228,6 +230,14 @@ export const appRouter = router({
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
+    }),
+  }),
+  analytics: router({
+    trackVisit: publicProcedure.input(z.object({
+      visitorId: z.string().trim().min(8).max(120),
+      path: z.string().trim().min(1).max(255),
+    })).mutation(async ({ input }) => {
+      return recordAnalyticsEvent({ ...input, eventType: "page_view" });
     }),
   }),
   catalog: router({
@@ -880,10 +890,29 @@ export const appRouter = router({
     listMarketingCollections: adminProcedure.query(async () => {
       return listMarketingCollections();
     }),
-    listOrders: adminProcedure.query(async () => {
-      const currentOrders = await listOrders();
+    listOrders: adminProcedure.input(z.object({
+      includeArchived: z.boolean().default(false),
+    }).optional()).query(async ({ input }) => {
+      const options = { includeArchived: input?.includeArchived ?? false };
+      const currentOrders = await listOrders(options);
       const changed = await reconcileVisibleOrderPayments(currentOrders);
-      return changed ? listOrders() : currentOrders;
+      return changed ? listOrders(options) : currentOrders;
+    }),
+    updateFulfillmentStatus: adminProcedure.input(z.object({
+      orderId: z.number().int().positive(),
+      status: z.enum(["pending_packaging", "packed", "shipped", "archived"]),
+    })).mutation(async ({ input }) => {
+      try {
+        const updated = await updateOrderFulfillmentStatus(input.orderId, input.status);
+        if (!updated) throw new TRPCError({ code: "NOT_FOUND", message: "Pedido não encontrado." });
+        return { success: true, order: updated };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: error instanceof Error ? error.message : "Não foi possível actualizar o estado operacional do pedido.",
+        });
+      }
     }),
     reconcilePayment: adminProcedure.input(z.object({
       orderNumber: z.string().trim().min(3).max(100),

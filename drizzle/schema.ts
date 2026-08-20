@@ -15,6 +15,18 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
+/** Eventos anónimos de navegação usados para métricas reais de visitas no painel. */
+export const analyticsEvents = mysqlTable("analytics_events", {
+  id: int("id").autoincrement().primaryKey(),
+  visitorId: varchar("visitorId", { length: 120 }).notNull(),
+  path: varchar("path", { length: 255 }).notNull(),
+  eventType: varchar("eventType", { length: 40 }).default("page_view").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
+export type InsertAnalyticsEvent = typeof analyticsEvents.$inferInsert;
+
 export const products = mysqlTable("products", {
   id: int("id").autoincrement().primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
@@ -126,6 +138,8 @@ export const orders = mysqlTable("orders", {
   discount: decimal("discount", { precision: 10, scale: 2 }).default("0.00").notNull(),
   total: decimal("total", { precision: 10, scale: 2 }).notNull(),
   status: varchar("status", { length: 50 }).default("pending").notNull(),
+  fulfillmentStatus: varchar("fulfillmentStatus", { length: 30 }).default("pending_packaging").notNull(),
+  archivedAt: timestamp("archivedAt"),
   paymentStatus: varchar("paymentStatus", { length: 50 }).default("pending").notNull(),
   paymentFailureReason: text("paymentFailureReason"),
   trackingCode: varchar("trackingCode", { length: 100 }),

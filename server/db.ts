@@ -1,4 +1,4 @@
-import { eq, desc, asc, like, or, and, sql } from "drizzle-orm";
+import { eq, desc, asc, like, or, and, sql, isNull, ne } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { nanoid } from "nanoid";
 import {
@@ -24,6 +24,7 @@ import {
   collections,
   shipments,
   promotions,
+  analyticsEvents,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 import { collectCollectionRecipients } from "./marketing-audience";
@@ -902,10 +903,12 @@ export async function listCollectionMarketingRecipients(collection: string) {
   return collectCollectionRecipients(collection, collectionProducts, orderRows);
 }
 
-export async function listOrders() {
+export async function listOrders(options: { includeArchived?: boolean } = {}) {
   const db = await getDb();
   if (!db) return [];
-  const rows = await db.select().from(orders).orderBy(desc(orders.id));
+  const rows = options.includeArchived
+    ? await db.select().from(orders).orderBy(desc(orders.id))
+    : await db.select().from(orders).where(isNull(orders.archivedAt)).orderBy(desc(orders.id));
   return rows.map(normalizeOrderForClient);
 }
 
@@ -995,6 +998,8 @@ function normalizeOrderForClient(order: typeof orders.$inferSelect) {
     discount: Number(order.discount),
     total: Number(order.total),
     paymentStatus: order.paymentStatus,
+    fulfillmentStatus: order.fulfillmentStatus || (order.archivedAt ? "archived" : "pending_packaging"),
+    archived: Boolean(order.archivedAt),
     shippingService: order.shippingMethod || "Correios / Logística",
     items: rawItems.map((item) => ({
       id: Number(item.id ?? item.productId ?? 0),
@@ -1038,7 +1043,81 @@ export async function updateOrderPaymentStatus(orderNumber: string, paymentStatu
 export async function updateOrderTracking(orderId: number, trackingCode: string, carrier?: string) {
   const db = await getDb();
   if (!db) return;
-  await db.update(orders).set({ trackingCode, carrier: carrier?.trim() || "Correios / Logística" }).where(eq(orders.id, orderId));
+  await db.update(orders).set({ trackingCode, carrier: carrier?.trim() || "Correios / Logística", fulfillmentStatus: "shipped", status: "Enviado" }).where(eq(orders.id, orderId));
+}
+
+export type FulfillmentStatus = "pending_packaging" | "packed" | "shipped" | "archived";
+
+const FULFILLMENT_ORDER: FulfillmentStatus[] = ["pending_packaging", "packed", "shipped", "archived"];
+
+export function getNextFulfillmentStatus(status: FulfillmentStatus): FulfillmentStatus | null {
+  const index = FULFILLMENT_ORDER.indexOf(status);
+  return index >= 0 && index < FULFILLMENT_ORDER.length - 1 ? FULFILLMENT_ORDER[index + 1] : null;
+}
+
+export async function updateOrderFulfillmentStatus(orderId: number, nextStatus: FulfillmentStatus) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const current = await getOrderById(orderId);
+  if (!current) return undefined;
+  const paymentConfirmed = ["approved", "authorized"].includes(String(current.paymentStatus ?? "").toLowerCase());
+  if (["packed", "shipped", "archived"].includes(nextStatus) && !paymentConfirmed) {
+    throw new Error("Só é possível preparar ou arquivar pedidos com pagamento aprovado.");
+  }
+
+  const currentStatus = (current.fulfillmentStatus || (current.archivedAt ? "archived" : "pending_packaging")) as FulfillmentStatus;
+  if (nextStatus !== "pending_packaging" && nextStatus !== currentStatus) {
+    const expectedNext = getNextFulfillmentStatus(currentStatus);
+    if (expectedNext !== nextStatus) {
+      throw new Error("O pedido deve seguir a sequência: embalar, enviar e arquivar.");
+    }
+  }
+  if (currentStatus === "archived" && nextStatus !== "archived") {
+    throw new Error("Um pedido arquivado não pode voltar ao fluxo operacional.");
+  }
+
+  const statusLabel = nextStatus === "packed" ? "Embalado" : nextStatus === "shipped" ? "Enviado" : nextStatus === "archived" ? "Arquivado" : "Processando";
+  await db.update(orders).set({
+    fulfillmentStatus: nextStatus,
+    status: statusLabel,
+    archivedAt: nextStatus === "archived" ? new Date() : null,
+  }).where(eq(orders.id, orderId));
+  const updated = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
+  return updated[0] ? normalizeOrderForClient(updated[0]) : undefined;
+}
+
+export type AnalyticsRange = {
+  cutoff: number;
+  rangeEnd: number;
+  effectivePeriodDays: number;
+  hasCustomRange: boolean;
+};
+
+export function resolveAnalyticsRange(
+  periodDays = 7,
+  range?: { startAt?: number; endAt?: number },
+  now = Date.now(),
+): AnalyticsRange {
+  const safeNow = Number.isFinite(now) ? now : Date.now();
+  const requestedDays = Number.isFinite(periodDays) ? Math.max(1, Math.floor(periodDays)) : 7;
+  const hasCustomRange = Number.isFinite(range?.startAt) && Number.isFinite(range?.endAt) && (range?.endAt as number) > (range?.startAt as number);
+  const rangeEnd = hasCustomRange ? Math.min(range?.endAt as number, safeNow) : safeNow;
+  const cutoff = hasCustomRange ? (range?.startAt as number) : safeNow - requestedDays * 24 * 60 * 60 * 1000;
+  const effectivePeriodDays = hasCustomRange
+    ? Math.max(1, Math.ceil(Math.max(1, rangeEnd - cutoff) / (24 * 60 * 60 * 1000)))
+    : requestedDays;
+  return { cutoff, rangeEnd, effectivePeriodDays, hasCustomRange };
+}
+
+export async function recordAnalyticsEvent(data: { visitorId: string; path: string; eventType?: string }) {
+  const db = await getDb();
+  if (!db) return { success: false };
+  await db.insert(analyticsEvents).values({
+    visitorId: data.visitorId.trim().slice(0, 120),
+    path: data.path.trim().slice(0, 255) || "/",
+    eventType: data.eventType?.trim().slice(0, 40) || "page_view",
+  });
+  return { success: true };
 }
 
 export async function updateOrderLabelData(orderId: number, data: { shippingOrderId?: string; labelPdfUrl?: string }) {
@@ -1049,11 +1128,7 @@ export async function updateOrderLabelData(orderId: number, data: { shippingOrde
 
 export async function getAdminAnalytics(periodDays: number = 7, range?: { startAt?: number; endAt?: number }) {
   const db = await getDb();
-  const now = Date.now();
-  const hasCustomRange = typeof range?.startAt === "number" && typeof range?.endAt === "number" && range.endAt > range.startAt;
-  const rangeEnd = hasCustomRange ? Math.min(range.endAt as number, now) : now;
-  const effectivePeriodDays = hasCustomRange ? Math.max(1, Math.ceil((rangeEnd - (range.startAt as number)) / (24 * 60 * 60 * 1000))) : periodDays;
-  const cutoff = hasCustomRange ? (range.startAt as number) : now - effectivePeriodDays * 24 * 60 * 60 * 1000;
+  const { cutoff, rangeEnd, effectivePeriodDays } = resolveAnalyticsRange(periodDays, range);
 
   if (!db) {
     return {
@@ -1065,48 +1140,71 @@ export async function getAdminAnalytics(periodDays: number = 7, range?: { startA
   }
 
   const allOrders = await db.select().from(orders);
-  // Filtrar por período se houver timestamp nos pedidos
+  const allVisitEvents = await db.select().from(analyticsEvents);
+  const getTime = (value: unknown) => value ? new Date(value as any).getTime() : 0;
   const filteredOrders = allOrders.filter((o: any) => {
-    const oTime = o.createdAt ? new Date(o.createdAt).getTime() : now;
+    const oTime = getTime(o.createdAt);
     return oTime >= cutoff && oTime <= rangeEnd;
   });
+  const salesOrders = filteredOrders.filter((o: any) => ["approved", "authorized"].includes(String(o.paymentStatus ?? "").trim().toLowerCase()));
+  const filteredVisits = allVisitEvents.filter((event: any) => {
+    const eventTime = getTime(event.createdAt);
+    return event.eventType === "page_view" && eventTime >= cutoff && eventTime <= rangeEnd;
+  });
 
-  const totalRevenue = filteredOrders.reduce((acc, o) => acc + Number(o.total || 0), 0);
-  const totalSales = filteredOrders.length;
+  const totalRevenue = salesOrders.reduce((acc, o) => acc + Number(o.total || 0), 0);
+  const totalSales = salesOrders.length;
   const averageTicket = totalSales > 0 ? totalRevenue / totalSales : 0;
-  // Simular visitas coerentes com as ordens para preencher o gráfico de linhas de visitas vs vendas
-  const visits = totalSales > 0 ? totalSales * 18 + 42 : effectivePeriodDays * 12;
+  const visits = filteredVisits.length;
   const conversionRate = visits > 0 ? Number(((totalSales / visits) * 100).toFixed(2)) : 0;
 
   const prevCutoff = cutoff - effectivePeriodDays * 24 * 60 * 60 * 1000;
   const prevFilteredOrders = allOrders.filter((o: any) => {
-    const oTime = o.createdAt ? new Date(o.createdAt).getTime() : now;
-    return oTime >= prevCutoff && oTime < cutoff;
+    const oTime = getTime(o.createdAt);
+    const paymentStatus = String(o.paymentStatus ?? "").trim().toLowerCase();
+    return oTime >= prevCutoff && oTime < cutoff && ["approved", "authorized"].includes(paymentStatus);
   });
 
-  // Gerar tendência baseada no período escolhido com comparação do período anterior
-  const stepCount = effectivePeriodDays <= 7 ? 7 : effectivePeriodDays <= 30 ? 6 : 8;
+  const stepCount = effectivePeriodDays <= 2 ? effectivePeriodDays : effectivePeriodDays <= 7 ? 7 : effectivePeriodDays <= 30 ? 6 : 8;
+  const bucketDuration = Math.max(1, (rangeEnd - cutoff) / stepCount);
+  const previousBucketDuration = Math.max(1, (cutoff - prevCutoff) / stepCount);
+  const formatLabel = (timestamp: number, index: number) => {
+    if (effectivePeriodDays <= 2) return new Date(timestamp).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+    if (effectivePeriodDays <= 7) return index === stepCount - 1 ? "Hoje" : new Date(timestamp).toLocaleDateString("pt-BR", { weekday: "short" });
+    if (effectivePeriodDays <= 30) return `Semana ${index + 1}`;
+    return `Período ${index + 1}`;
+  };
   const salesTrend = Array.from({ length: stepCount }).map((_, index) => {
-    const stepLabel = effectivePeriodDays <= 7 ? `Há ${6 - index} dias` : effectivePeriodDays <= 30 ? `Semana ${index + 1}` : `Mês ${index + 1}`;
-    const chunkOrders = filteredOrders.filter((_, idx) => idx % stepCount === index);
+    const bucketStart = cutoff + bucketDuration * index;
+    const bucketEnd = index === stepCount - 1 ? rangeEnd + 1 : cutoff + bucketDuration * (index + 1);
+    const previousBucketStart = prevCutoff + previousBucketDuration * index;
+    const previousBucketEnd = index === stepCount - 1 ? cutoff : prevCutoff + previousBucketDuration * (index + 1);
+    const chunkOrders = salesOrders.filter((o: any) => {
+      const time = getTime(o.createdAt);
+      return time >= bucketStart && time < bucketEnd;
+    });
+    const chunkVisits = filteredVisits.filter((event: any) => {
+      const time = getTime(event.createdAt);
+      return time >= bucketStart && time < bucketEnd;
+    }).length;
+    const previousChunkOrders = prevFilteredOrders.filter((o: any) => {
+      const time = getTime(o.createdAt);
+      return time >= previousBucketStart && time < previousBucketEnd;
+    });
     const chunkRev = chunkOrders.reduce((acc, o) => acc + Number(o.total || 0), 0);
-
-    const prevChunkOrders = prevFilteredOrders.filter((_, idx) => idx % stepCount === index);
-    const prevChunkRev = prevChunkOrders.reduce((acc, o) => acc + Number(o.total || 0), 0);
-
-    const chunkVisits = Math.round(chunkOrders.length * 18 + Math.max(5, effectivePeriodDays * 1.5));
+    const previousChunkRev = previousChunkOrders.reduce((acc, o) => acc + Number(o.total || 0), 0);
     return {
-      label: index === stepCount - 1 ? "Atual" : stepLabel,
+      label: formatLabel(bucketStart, index),
       orders: chunkOrders.length,
       revenue: Number(chunkRev.toFixed(2)),
-      prevRevenue: Number(prevChunkRev.toFixed(2)),
+      prevRevenue: Number(previousChunkRev.toFixed(2)),
       visits: chunkVisits,
     };
   });
 
   // Calcular velocidade real de saída por produto com base nos itens dos pedidos filtrados
   const productSalesMap = new Map<number, number>();
-  for (const o of filteredOrders) {
+  for (const o of salesOrders) {
     try {
       const items = typeof o.items === "string" ? JSON.parse(o.items) : (o.items || []);
       for (const item of items) {
@@ -1147,8 +1245,8 @@ export async function getAdminAnalytics(periodDays: number = 7, range?: { startA
     },
     visitorBehavior: {
       totalVisits: visits,
-      categoryViews: Math.round(visits * 0.25),
-      productViews: Math.round(visits * 0.35),
+      categoryViews: filteredVisits.filter((event: any) => /^\/(category|collection)/.test(String(event.path))).length,
+      productViews: filteredVisits.filter((event: any) => /^\/produto\//.test(String(event.path))).length,
     },
     salesTrend,
     topProducts,

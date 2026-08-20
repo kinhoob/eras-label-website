@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
@@ -37,6 +38,26 @@ function RouteLoading() {
       </div>
     </main>
   );
+}
+
+function VisitTracker() {
+  const [location] = useLocation();
+  const trackVisit = trpc.analytics.trackVisit.useMutation();
+
+  useEffect(() => {
+    if (location.startsWith("/admin") || location.startsWith("/auth")) return;
+    try {
+      const storageKey = "eras-label-visitor-id";
+      const existing = window.localStorage.getItem(storageKey);
+      const visitorId = existing || `${crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`}`;
+      if (!existing) window.localStorage.setItem(storageKey, visitorId);
+      trackVisit.mutate({ visitorId, path: location || "/" });
+    } catch {
+      // Analytics não pode bloquear a navegação pública.
+    }
+  }, [location]);
+
+  return null;
 }
 
 function Router() {
@@ -86,6 +107,7 @@ function App() {
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
           <Toaster />
+          <VisitTracker />
           <PublicGlobalNav />
           <PublicCartDrawer />
           <Router />

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { filterOrdersWithReadyLabels } from "@/lib/order-label-filter";
-import { Download, Eye, FileText, ExternalLink, Truck, Package, LoaderCircle, CreditCard, Users, Check, Minus, Files, X, Clock3, MapPin, ReceiptText, RefreshCw } from "lucide-react";
+import { Download, Eye, FileText, ExternalLink, Truck, Package, LoaderCircle, CreditCard, Users, Check, Minus, Files, X, Clock3, MapPin, ReceiptText, RefreshCw, Archive, Send } from "lucide-react";
 
 type DeliveryStep = {
   key: string;
@@ -22,12 +22,28 @@ const DELIVERY_STEPS: DeliveryStep[] = [
   { key: "delivered", label: "Entregue", description: "A entrega foi concluída." },
 ];
 
+function getFulfillmentStatus(order: any): "pending_packaging" | "packed" | "shipped" | "archived" {
+  if (order.fulfillmentStatus === "archived" || order.archivedAt) return "archived";
+  if (order.fulfillmentStatus === "shipped") return "shipped";
+  if (order.fulfillmentStatus === "packed") return "packed";
+  return "pending_packaging";
+}
+
+function getFulfillmentAction(order: any) {
+  const status = getFulfillmentStatus(order);
+  if (status === "pending_packaging") return { next: "packed" as const, label: "Embalar pedido", icon: Package };
+  if (status === "packed") return { next: "shipped" as const, label: "Marcar como enviado", icon: Send };
+  if (status === "shipped") return { next: "archived" as const, label: "Arquivar pedido", icon: Archive };
+  return null;
+}
+
 function getDeliveryStepIndex(order: any) {
   const status = String(order.status ?? "").toLowerCase();
+  const fulfillmentStatus = getFulfillmentStatus(order);
   if (status.includes("cancel") || status.includes("recus")) return -1;
   if (status.includes("entregue")) return 4;
-  if (status.includes("enviado") || order.trackingCode || order.shippingOrderId) return 3;
-  if (status.includes("prepara") || status.includes("process") || status.includes("embalar")) return 2;
+  if (fulfillmentStatus === "archived" || fulfillmentStatus === "shipped" || status.includes("enviado") || order.trackingCode || order.shippingOrderId) return 3;
+  if (fulfillmentStatus === "packed" || status.includes("prepara") || status.includes("process") || status.includes("embalar")) return 2;
   if (["approved", "authorized", "in_process", "paid", "pago"].includes(String(order.paymentStatus ?? "").toLowerCase())) return 1;
   return 0;
 }
@@ -39,7 +55,9 @@ function formatOrderDate(value: unknown) {
 }
 
 export default function AdminSalesSection() {
-  const { data: orders = [], isLoading, refetch } = trpc.admin.listOrders.useQuery();
+  const [includeArchived, setIncludeArchived] = useState(false);
+  const { data: orders = [], isLoading, refetch } = trpc.admin.listOrders.useQuery({ includeArchived });
+  const utils = trpc.useUtils();
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const [shippingQuotes, setShippingQuotes] = useState<any[]>([]);
   const [calculatingShipping, setCalculatingShipping] = useState(false);
@@ -109,6 +127,23 @@ export default function AdminSalesSection() {
   }, [labelFilter, orders, paymentFilter, periodFilter, searchTerm, statusFilter]);
   const visibleOrderIds = visibleOrders.map((order: any) => order.id);
   const visibleSelectedOrderIds = selectedOrderIds.filter((orderId) => visibleOrderIds.includes(orderId));
+
+  const updateFulfillmentMutation = trpc.admin.updateFulfillmentStatus.useMutation({
+    onSuccess: (data) => {
+      setSelectedOrder(data.order);
+      void refetch();
+      void utils.admin.listOrders.invalidate();
+      const labels: Record<string, string> = {
+        packed: "Pedido marcado como embalado.",
+        shipped: "Pedido marcado como enviado.",
+        archived: "Pedido arquivado e removido da lista activa.",
+      };
+      toast.success(labels[data.order.fulfillmentStatus] || "Estado operacional actualizado.");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Não foi possível actualizar o estado do pedido.");
+    },
+  });
 
   const reconcilePaymentMutation = trpc.admin.reconcilePayment.useMutation({
     onSuccess: (data) => {
@@ -296,10 +331,11 @@ export default function AdminSalesSection() {
             {searchTerm && <button type="button" className="sales-clear-search" onClick={() => setSearchTerm("")} aria-label="Limpar pesquisa"><X size={15} /></button>}
           </div>
         </div>
-        <label className="sales-filter-control"><span>Status do pedido</span><select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}><option value="all">Todos os status</option><option value="Processando">Processando</option><option value="Em preparação">Em preparação</option><option value="Enviado">Enviado</option><option value="Entregue">Entregue</option><option value="Cancelado">Cancelado</option></select></label>
+        <label className="sales-filter-control"><span>Status do pedido</span><select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}><option value="all">Todos os status</option><option value="Processando">Processando</option><option value="Em preparação">Em preparação</option><option value="Embalado">Embalado</option><option value="Enviado">Enviado</option><option value="Entregue">Entregue</option><option value="Arquivado">Arquivado</option><option value="Cancelado">Cancelado</option></select></label>
         <label className="sales-filter-control"><span>Pagamento</span><select value={paymentFilter} onChange={(event) => setPaymentFilter(event.target.value)}><option value="all">Todos</option><option value="approved">Aprovado</option><option value="pending">Pendente</option><option value="rejected">Recusado</option></select></label>
         <label className="sales-filter-control"><span>Período</span><select value={periodFilter} onChange={(event) => setPeriodFilter(event.target.value as "all" | "7" | "30" | "90")}><option value="all">Todo o histórico</option><option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option><option value="90">Últimos 90 dias</option></select></label>
-        <Button type="button" variant="outline" className="sales-reset-filters" onClick={() => { setSearchTerm(""); setStatusFilter("all"); setPaymentFilter("all"); setPeriodFilter("all"); setLabelFilter("all"); }}>Limpar filtros</Button>
+        <label className="sales-archive-toggle"><input type="checkbox" checked={includeArchived} onChange={(event) => { setIncludeArchived(event.target.checked); setSelectedOrderIds([]); }} /> <span>Mostrar arquivados</span></label>
+        <Button type="button" variant="outline" className="sales-reset-filters" onClick={() => { setSearchTerm(""); setStatusFilter("all"); setPaymentFilter("all"); setPeriodFilter("all"); setLabelFilter("all"); setIncludeArchived(false); }}>Limpar filtros</Button>
       </div>
 
       {bulkLabelPdfUrl && (
@@ -492,9 +528,28 @@ export default function AdminSalesSection() {
                   <h4 style={{ fontSize: "0.95rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px", marginTop: "0.25rem" }}><Clock3 size={16} /> Status da entrega</h4>
                   <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", marginTop: "0.3rem" }}>Visão consolidada do estado atual do pedido e da logística.</p>
                 </div>
-                <div style={{ textAlign: "right" }}>
+                <div style={{ textAlign: "right", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.45rem" }}>
                   <strong style={{ display: "block", color: "#b22222" }}>{getOrderStatusLabel(selectedOrder.status)}</strong>
                   <small style={{ color: "var(--muted-foreground)" }}>Atualizado em {formatOrderDate(selectedOrder.updatedAt || selectedOrder.createdAt)}</small>
+                  {getFulfillmentAction(selectedOrder) && (
+                    (() => {
+                      const action = getFulfillmentAction(selectedOrder)!;
+                      const ActionIcon = action.icon;
+                      return (
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => updateFulfillmentMutation.mutate({ orderId: selectedOrder.id, status: action.next })}
+                          disabled={updateFulfillmentMutation.isPending || !isPaymentConfirmed(selectedOrder.paymentStatus)}
+                          title={!isPaymentConfirmed(selectedOrder.paymentStatus) ? "O pagamento precisa de estar aprovado antes da operação." : undefined}
+                          style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+                        >
+                          {updateFulfillmentMutation.isPending ? <LoaderCircle className="spin" size={14} /> : <ActionIcon size={14} />}
+                          {updateFulfillmentMutation.isPending ? "A actualizar..." : action.label}
+                        </Button>
+                      );
+                    })()
+                  )}
                 </div>
               </div>
               {getDeliveryStepIndex(selectedOrder) < 0 ? (

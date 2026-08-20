@@ -61,6 +61,17 @@ import { createEmptyProductDraft, getProductDescriptionDraft, validateProductDra
 import { buildAdminNavGroups, getAdminNavGroupId, type AdminNavIcon } from "@/lib/admin-navigation";
 import { parseCmsContent, serializeCmsContent, type CmsEventBlock, type CmsStoryBlock } from "@shared/cms";
 
+function toLocalDateInputValue(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function isValidAnalyticsDateRange(startDate: string, endDate: string) {
+  return Boolean(startDate && endDate && startDate <= endDate);
+}
+
 function getAdminNavIcon(icon: AdminNavIcon) {
   switch (icon) {
     case "analytics": return BarChart3;
@@ -1557,18 +1568,20 @@ function AdminDashboardHome({ adminName, adminOrders, adminOrdersLoading, catalo
   const [customEndDate, setCustomEndDate] = useState("");
   const [hoveredChartPoint, setHoveredChartPoint] = useState<any | null>(null);
   const analyticsInput = useMemo(() => {
-    if (rangeMode === "custom" && customStartDate && customEndDate) {
-      return { periodDays: 7, startDate: customStartDate, endDate: customEndDate };
-    }
-    if (rangeMode === "today" && customStartDate) {
-      return { periodDays: 1, startDate: customStartDate, endDate: customEndDate };
-    }
-    if (rangeMode === "yesterday" && customStartDate) {
+    const hasDateRange = isValidAnalyticsDateRange(customStartDate, customEndDate);
+    if ((rangeMode === "custom" || rangeMode === "today" || rangeMode === "yesterday") && hasDateRange) {
       return { periodDays: 1, startDate: customStartDate, endDate: customEndDate };
     }
     return { periodDays };
   }, [rangeMode, customStartDate, customEndDate, periodDays]);
-  const { data: analytics, isLoading } = trpc.admin.getAnalytics.useQuery(analyticsInput);
+  const analyticsRangeReady = rangeMode !== "custom" || isValidAnalyticsDateRange(customStartDate, customEndDate);
+  const { data: analytics, isLoading } = trpc.admin.getAnalytics.useQuery(analyticsInput, {
+    enabled: analyticsRangeReady,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: "always",
+    refetchOnReconnect: true,
+  });
   const summary = analytics?.summary ?? { visits: 0, sales: 0, revenue: 0, averageTicket: 0, conversionRate: 0 };
   const trend = analytics?.salesTrend ?? [];
   const rangeLabel = rangeMode === "custom" && customStartDate && customEndDate
@@ -1585,6 +1598,7 @@ function AdminDashboardHome({ adminName, adminOrders, adminOrdersLoading, catalo
     pickup: adminOrders.filter((order) => order.status === "Disponível para retirada").length,
   };
   const maxRevenue = Math.max(1, ...trend.map((item: any) => Number(item.revenue) || 0));
+  const maxVisits = Math.max(1, ...trend.map((item: any) => Number(item.visits) || 0));
   const firstName = adminName.split(" ")[0];
 
   return (
@@ -1598,7 +1612,7 @@ function AdminDashboardHome({ adminName, adminOrders, adminOrdersLoading, catalo
         <div className="analytics-period-picker">
           <button className={`period-btn ${rangeMode === "today" ? "active" : ""}`} type="button" onClick={() => {
             setRangeMode("today");
-            const todayStr = new Date().toISOString().split("T")[0];
+            const todayStr = toLocalDateInputValue(new Date());
             setCustomStartDate(todayStr);
             setCustomEndDate(todayStr);
           }}>Hoje</button>
@@ -1606,7 +1620,7 @@ function AdminDashboardHome({ adminName, adminOrders, adminOrdersLoading, catalo
             setRangeMode("yesterday");
             const yest = new Date();
             yest.setDate(yest.getDate() - 1);
-            const yestStr = yest.toISOString().split("T")[0];
+            const yestStr = toLocalDateInputValue(yest);
             setCustomStartDate(yestStr);
             setCustomEndDate(yestStr);
           }}>Ontem</button>
@@ -1673,7 +1687,6 @@ function AdminDashboardHome({ adminName, adminOrders, adminOrdersLoading, catalo
                   {/* Linha de Visitas (escala proporcional menor) */}
                   <path
                     d={trend.reduce((acc: string, item: any, i: number) => {
-                      const maxVisits = Math.max(...trend.map((t: any) => t.visits || 1), 10);
                       const x = (i / (Math.max(1, trend.length - 1))) * 560 + 20;
                       const y = 180 - Math.max(10, ((Number(item.visits) || 0) / maxVisits) * 160);
                       return i === 0 ? `M ${x} ${y}` : `${acc} L ${x} ${y}`;
