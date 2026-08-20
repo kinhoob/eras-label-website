@@ -11395,3 +11395,20 @@ h1, h2, h3, .heading-editorial {
   .side-cart .cart-inline-confirm,
   .public-cart-drawer .cart-inline-confirm { transition: none; }
 }
+
+/* Formulário de cotação do Melhor Envio: quatro campos no desktop e grelha compacta em ecrãs menores. */
+.admin-sales-package-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+@media (max-width: 760px) {
+  .admin-sales-package-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 430px) {
+  .admin-sales-package-grid {
+    grid-template-columns: 1fr;
+  }
+}

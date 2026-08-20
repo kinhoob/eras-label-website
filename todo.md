@@ -3189,8 +3189,13 @@
 - [x] Corrigir o formulário de criação de envios para enviar o campo obrigatório service e apresentar validação clara antes da mutação
 - [x] Adicionar teste de regressão para impedir submissão de envio sem transportadora/serviço
 
-- [ ] Corrigir geração de etiqueta do Melhor Envio para enviar o campo obrigatório order e mostrar erro operacional claro quando o pedido estiver incompleto
-- [ ] Garantir que a sacola exibe as opções e preços reais retornados pela cotação do Melhor Envio para o CEP e itens atuais, sem valor fixo
-- [ ] Adicionar testes de regressão para o payload da etiqueta e para preços variáveis por cotação
-- [ ] Validar cotação, etiqueta, sacola, testes Vitest, build e preview responsivo
+- [x] Corrigir geração de etiqueta do Melhor Envio para enviar o campo obrigatório order e mostrar erro operacional claro quando o pedido estiver incompleto
+- [x] Garantir que a sacola exibe as opções e preços reais retornados pela cotação do Melhor Envio para o CEP e itens atuais, sem valor fixo
+- [x] Adicionar testes de regressão para o payload da etiqueta e para preços variáveis por cotação
+- [x] Validar cotação, etiqueta, sacola, testes Vitest, build e preview responsivo
 - [ ] Rever optimizações de performance e executar os testes finais end-to-end antes do lançamento
+
+- [x] Adicionar inputs de largura, altura, comprimento e peso nas configurações administrativas de frete/envio
+- [x] Atualizar o contrato de cotação do Melhor Envio no router para aceitar e utilizar as dimensões personalizadas do pacote
+- [x] Criar interface passo a passo responsiva no painel admin para cotação e revisão de envio avulso seguindo a referência Nuvemshop
+- [x] Adicionar testes automatizados para validar o cálculo com dimensões personalizadas e garantir build e preview sem erros

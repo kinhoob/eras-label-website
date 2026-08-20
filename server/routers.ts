@@ -117,6 +117,34 @@ export function isValidImageUrl(value: string) {
 
 const imageUrlInput = z.string().refine(isValidImageUrl, "Informe uma URL de imagem válida ou um upload interno do armazenamento.");
 
+const shippingPackageInput = z.object({
+  widthCm: z.number().positive("A largura deve ser maior que zero.").max(200, "A largura não pode ultrapassar 200 cm."),
+  heightCm: z.number().positive("A altura deve ser maior que zero.").max(200, "A altura não pode ultrapassar 200 cm."),
+  lengthCm: z.number().positive("O comprimento deve ser maior que zero.").max(300, "O comprimento não pode ultrapassar 300 cm."),
+  weightGrams: z.number().positive("O peso deve ser maior que zero.").max(30000, "O peso não pode ultrapassar 30 kg."),
+});
+
+type ShippingQuoteLine = { id: string; price: number; quantity: number };
+type ShippingPackage = z.infer<typeof shippingPackageInput>;
+
+export function buildShippingQuoteProducts(items: ShippingQuoteLine[], packageConfig?: ShippingPackage) {
+  const totalQuantity = Math.max(1, items.reduce((sum, item) => sum + item.quantity, 0));
+  const defaultWidth = 15;
+  const defaultHeight = 5;
+  const defaultLength = 20;
+  const defaultUnitWeightKg = 0.3;
+
+  return items.map((item, index) => ({
+    id: item.id || String(index + 1),
+    width: packageConfig?.widthCm ?? defaultWidth,
+    height: packageConfig?.heightCm ?? defaultHeight,
+    length: packageConfig?.lengthCm ?? defaultLength,
+    weight: packageConfig ? Math.max(0.001, packageConfig.weightGrams / 1000 / totalQuantity) : defaultUnitWeightKg,
+    insurance_value: item.price,
+    quantity: item.quantity,
+  }));
+}
+
 function toMelhorEnvioTrpcError(error: unknown, operation: string) {
   if (error instanceof MelhorEnvioApiError && error.isUnauthorized) {
     return new TRPCError({
@@ -224,6 +252,7 @@ export const appRouter = router({
         price: z.number().nonnegative(),
         quantity: z.number().int().positive(),
       })).min(1).max(100),
+      package: shippingPackageInput.optional(),
     })).query(async ({ input }) => {
       const config = await getCommercialConfig();
       const cleanCep = input.cep.replace(/\D/g, "");
@@ -241,15 +270,7 @@ export const appRouter = router({
       const quotePayload = {
         from: { postal_code: ENV.melhorEnvioCep || "50000000" },
         to: { postal_code: cleanCep },
-        products: input.items.map((item) => ({
-          id: item.id,
-          width: 15,
-          height: 5,
-          length: 20,
-          weight: Math.max(0.3, item.quantity * 0.3),
-          insurance_value: item.price * item.quantity,
-          quantity: 1,
-        })),
+        products: buildShippingQuoteProducts(input.items, input.package),
       };
 
       let quotes: Array<Record<string, unknown>>;
@@ -1001,24 +1022,18 @@ export const appRouter = router({
     calculateShippingQuote: adminProcedure.input(z.object({
       cepDestination: z.string().min(8),
       items: z.array(z.object({
-        price: z.number(),
-        quantity: z.number(),
-      })),
+        id: z.string().optional(),
+        price: z.number().nonnegative(),
+        quantity: z.number().int().positive(),
+      })).min(1).max(100),
+      package: shippingPackageInput,
     })).mutation(async ({ input }) => {
       const { calculateMelhorEnvioShipping } = await import("./melhor-envio");
       try {
         const quotes = await calculateMelhorEnvioShipping({
           from: { postal_code: ENV.melhorEnvioCep || "50000000" },
           to: { postal_code: input.cepDestination },
-          products: input.items.map((it, idx) => ({
-            id: String(idx + 1),
-            width: 15,
-            height: 10,
-            length: 20,
-            weight: 0.5 * it.quantity,
-            insurance_value: it.price,
-            quantity: it.quantity,
-          })),
+          products: buildShippingQuoteProducts(input.items.map((item, index) => ({ ...item, id: item.id || String(index + 1) })), input.package),
         });
         return { success: true, quotes };
       } catch (error) {

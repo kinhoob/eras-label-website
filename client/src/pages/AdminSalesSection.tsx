@@ -51,6 +51,14 @@ export default function AdminSalesSection() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [paymentFilter, setPaymentFilter] = useState("all");
   const [periodFilter, setPeriodFilter] = useState<"all" | "7" | "30" | "90">("all");
+  const [quoteStep, setQuoteStep] = useState<1 | 2>(1);
+  const [quoteForm, setQuoteForm] = useState({
+    cepDestination: "",
+    widthCm: "20",
+    heightCm: "5",
+    lengthCm: "32",
+    weightGrams: "500",
+  });
 
   useEffect(() => {
     if (!selectedOrder) return;
@@ -60,6 +68,17 @@ export default function AdminSalesSection() {
       document.body.style.overflow = previousOverflow;
     };
   }, [selectedOrder]);
+
+  useEffect(() => {
+    if (!selectedOrder) return;
+    const address = selectedOrder.address || selectedOrder.shippingAddress || {};
+    setQuoteForm((current) => ({
+      ...current,
+      cepDestination: String(address.cep || "").replace(/\D/g, ""),
+    }));
+    setShippingQuotes([]);
+    setQuoteStep(1);
+  }, [selectedOrder?.id]);
 
   // Um pedido está pronto para download quando já tem um PDF persistido ou
   // um ID de envio que permite obtê-lo no Melhor Envio sob demanda.
@@ -100,6 +119,7 @@ export default function AdminSalesSection() {
     onSuccess: (data) => {
       setCalculatingShipping(false);
       setShippingQuotes(data.quotes || []);
+      setQuoteStep(2);
       toast.success("Cotação obtida com sucesso via Melhor Envio!");
     },
     onError: (err) => {
@@ -114,13 +134,33 @@ export default function AdminSalesSection() {
   });
 
   const handleCotarMelhorEnvio = (order: any) => {
-    const cepDest = order.address?.cep || order.shippingAddress?.cep || "50000000";
+    const numericPackage = {
+      widthCm: Number(quoteForm.widthCm),
+      heightCm: Number(quoteForm.heightCm),
+      lengthCm: Number(quoteForm.lengthCm),
+      weightGrams: Number(quoteForm.weightGrams),
+    };
+    const hasInvalidPackage = Object.values(numericPackage).some((value) => !Number.isFinite(value) || value <= 0);
+    const cleanCep = quoteForm.cepDestination.replace(/\D/g, "");
+
+    if (cleanCep.length !== 8) {
+      toast.error("Informe um CEP de destino válido com 8 dígitos.");
+      return;
+    }
+    if (hasInvalidPackage) {
+      toast.error("Preencha altura, largura, comprimento e peso com valores maiores que zero.");
+      return;
+    }
+
     setCalculatingShipping(true);
+    setShippingQuotes([]);
     calculateShippingMutation.mutate({
-      cepDestination: cepDest.replace(/\D/g, ""),
-      items: order.items.map((item: any) => ({
-        price: item.price,
-        quantity: item.quantity,
+      cepDestination: cleanCep,
+      package: numericPackage,
+      items: order.items.map((item: any, index: number) => ({
+        id: String(item.productId ?? item.id ?? index + 1),
+        price: Number(item.price ?? item.unitPrice ?? 0),
+        quantity: Number(item.quantity ?? 1),
       })),
     });
   };
@@ -507,36 +547,94 @@ export default function AdminSalesSection() {
               </div>
             </div>
 
-            <div style={{ background: "var(--muted)", padding: "1rem", borderRadius: "8px", display: "flex", flexDirection: "column", gap: "10px" }}>
-              <div className="admin-sales-shipping-heading" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ background: "var(--muted)", padding: "1rem", borderRadius: "8px", display: "flex", flexDirection: "column", gap: "14px" }}>
+              <div className="admin-sales-shipping-heading" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem", flexWrap: "wrap" }}>
                 <div>
-                  <h4 style={{ fontSize: "0.9rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
-                    <Truck size={15} /> Integração Melhor Envio (Frete & Etiquetas)
+                  <span className="section-kicker">MELHOR ENVIO</span>
+                  <h4 style={{ fontSize: "1rem", fontWeight: 650, display: "flex", alignItems: "center", gap: "6px", marginTop: "4px" }}>
+                    <Truck size={16} /> Cotar frete e preparar etiqueta
                   </h4>
-                  <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>Cote opções reais de Correios e transportadoras para o CEP do cliente.</p>
+                  <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", marginTop: "4px", maxWidth: "620px" }}>Informe o CEP e as medidas reais da embalagem. O peso é enviado em gramas e convertido para quilogramas no Melhor Envio.</p>
                 </div>
-                <Button onClick={() => handleCotarMelhorEnvio(selectedOrder)} disabled={calculatingShipping}>
-                  {calculatingShipping ? <><LoaderCircle className="spin" size={14} /> A cotar...</> : "Cotar no Melhor Envio"}
-                </Button>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.72rem", color: "var(--muted-foreground)" }} aria-label={`Passo ${quoteStep} de 2`}>
+                  <span style={{ color: quoteStep >= 1 ? "#b22222" : "inherit", fontWeight: 700 }}>01 Dados</span>
+                  <span aria-hidden="true">/</span>
+                  <span style={{ color: quoteStep === 2 ? "#b22222" : "inherit", fontWeight: quoteStep === 2 ? 700 : 500 }}>02 Opções</span>
+                </div>
               </div>
 
-              {shippingQuotes.length > 0 && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "8px" }}>
-                  <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>Opções Disponíveis:</span>
-                  {shippingQuotes.map((q: any) => (
-                    <div key={q.id} className="admin-sales-quote-row" style={{ background: "var(--card)", padding: "8px 12px", borderRadius: "6px", display: "flex", justifyContent: "space-between", alignItems: "center", border: "1px solid var(--border)" }}>
+              {quoteStep === 1 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <div className="admin-sales-shipping-form-card" style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "10px", padding: "14px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+                      <MapPin size={16} color="#b22222" />
                       <div>
-                        <strong>{q.company?.name} — {q.name}</strong>
-                        <div style={{ fontSize: "0.75rem", color: "var(--muted-foreground)" }}>Prazo estimado: {q.delivery_time} dias úteis</div>
+                        <strong style={{ display: "block", fontSize: "0.9rem" }}>Endereço de destino</strong>
+                        <span style={{ fontSize: "0.74rem", color: "var(--muted-foreground)" }}>CEP usado para calcular as modalidades disponíveis.</span>
+                      </div>
+                    </div>
+                    <label style={{ display: "block", fontSize: "0.76rem", fontWeight: 600 }} htmlFor="admin-shipping-cep">CEP de destino</label>
+                    <Input id="admin-shipping-cep" value={quoteForm.cepDestination} onChange={(event) => setQuoteForm((current) => ({ ...current, cepDestination: event.target.value.replace(/\D/g, "").slice(0, 8) }))} placeholder="00000-000" inputMode="numeric" style={{ marginTop: "6px", maxWidth: "320px" }} />
+                  </div>
+
+                  <div className="admin-sales-shipping-form-card" style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "10px", padding: "14px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+                      <Package size={16} color="#b22222" />
+                      <div>
+                        <strong style={{ display: "block", fontSize: "0.9rem" }}>Encomenda</strong>
+                        <span style={{ fontSize: "0.74rem", color: "var(--muted-foreground)" }}>Medidas externas do pacote já fechado, como no fluxo de envio avulso.</span>
+                      </div>
+                    </div>
+                    <div className="admin-sales-package-grid" style={{ display: "grid", gap: "10px" }}>
+                      {[{ key: "heightCm", label: "Altura", unit: "cm" }, { key: "widthCm", label: "Largura", unit: "cm" }, { key: "lengthCm", label: "Comprimento", unit: "cm" }, { key: "weightGrams", label: "Peso", unit: "g" }].map((field) => (
+                        <label key={field.key} style={{ display: "block", fontSize: "0.76rem", fontWeight: 600 }} htmlFor={`admin-shipping-${field.key}`}>
+                          {field.label}
+                          <div style={{ position: "relative", marginTop: "6px" }}>
+                            <Input id={`admin-shipping-${field.key}`} type="number" min="0.01" step="0.01" value={quoteForm[field.key as keyof typeof quoteForm]} onChange={(event) => setQuoteForm((current) => ({ ...current, [field.key]: event.target.value }))} inputMode="decimal" style={{ paddingRight: "32px" }} />
+                            <span style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "0.72rem", color: "var(--muted-foreground)" }}>{field.unit}</span>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                    <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "10px" }}>Use o peso total da encomenda. Para este pedido, o valor declarado calculado é R$ {Number(selectedOrder.subtotal || selectedOrder.total || 0).toFixed(2)}.</p>
+                  </div>
+
+                  <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", flexWrap: "wrap" }}>
+                    <Button onClick={() => handleCotarMelhorEnvio(selectedOrder)} disabled={calculatingShipping}>
+                      {calculatingShipping ? <><LoaderCircle className="spin" size={14} /> A calcular...</> : "Continuar para opções"}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {quoteStep === 2 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+                    <div>
+                      <strong style={{ fontSize: "0.9rem" }}>Modalidades ativas</strong>
+                      <p style={{ fontSize: "0.74rem", color: "var(--muted-foreground)", marginTop: "3px" }}>Escolha uma modalidade para adicionar o pedido ao carrinho do Melhor Envio.</p>
+                    </div>
+                    <Button type="button" size="sm" variant="outline" onClick={() => { setQuoteStep(1); setShippingQuotes([]); }}>Editar pacote</Button>
+                  </div>
+                  <div className="admin-sales-quote-summary" style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "10px", padding: "12px", fontSize: "0.78rem", color: "var(--muted-foreground)" }}>
+                    CEP: <strong style={{ color: "var(--foreground)" }}>{quoteForm.cepDestination}</strong> · Peso: <strong style={{ color: "var(--foreground)" }}>{quoteForm.weightGrams} g</strong> · Dimensões: <strong style={{ color: "var(--foreground)" }}>{quoteForm.heightCm} × {quoteForm.widthCm} × {quoteForm.lengthCm} cm</strong>
+                  </div>
+                  {shippingQuotes.length > 0 ? shippingQuotes.map((q: any) => (
+                    <div key={q.id} className="admin-sales-quote-row" style={{ background: "var(--card)", padding: "12px 14px", borderRadius: "8px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", border: "1px solid var(--border)", flexWrap: "wrap" }}>
+                      <div>
+                        <strong>{q.company?.name || "Transportadora"} — {q.name || q.service}</strong>
+                        <div style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", marginTop: "3px" }}>Entrega estimada: {q.delivery_range ? `${q.delivery_range.min ?? "?"} a ${q.delivery_range.max ?? "?"}` : q.delivery_time ?? "a confirmar"} dias úteis</div>
                       </div>
                       <div className="admin-sales-quote-actions" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <strong>R$ {Number(q.custom_price || q.price).toFixed(2)}</strong>
+                        <strong>R$ {Number(q.custom_price ?? q.price ?? 0).toFixed(2)}</strong>
                         <Button size="sm" onClick={() => handleEmitirEtiqueta(selectedOrder.id, q.id)} disabled={generateLabelMutation.isPending}>
-                          {generateLabelMutation.isPending ? "A gerar..." : "Gerar Etiqueta"}
+                          {generateLabelMutation.isPending ? "A gerar..." : "Gerar etiqueta"}
                         </Button>
                       </div>
                     </div>
-                  ))}
+                  )) : (
+                    <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>Nenhuma modalidade foi devolvida para este pacote e CEP.</p>
+                  )}
                 </div>
               )}
 
