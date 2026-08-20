@@ -6,7 +6,7 @@ export default function NotFound() {
   const [, setLocation] = useLocation();
 
   return (
-    <div className="min-h-screen bg-[#f6f3ee] text-[#23221e] flex flex-col justify-between selection:bg-[#b22222] selection:text-white">
+    <div className="not-found-page min-h-screen bg-[#f6f3ee] text-[#23221e] flex flex-col justify-between selection:bg-[#b22222] selection:text-white">
       {/* Top minimalistic header */}
       <header className="w-full px-6 py-6 border-b border-[#dfd7cc]/60 flex items-center justify-between">
         <a href="/" className="text-xl font-bold tracking-[0.28em] text-[#23221e] flex items-center gap-1.5">
@@ -18,7 +18,7 @@ export default function NotFound() {
       {/* Main content */}
       <main className="flex-1 flex items-center justify-center px-6 py-16">
         <div className="max-w-xl text-center space-y-6">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#f0ece3] border border-[#dfd7cc] text-[#b22222] mb-2 shadow-sm">
+          <div className="not-found-icon inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#f0ece3] border border-[#dfd7cc] text-[#b22222] mb-2 shadow-sm">
             <Compass className="w-7 h-7 animate-pulse" />
           </div>
 
@@ -37,14 +37,14 @@ export default function NotFound() {
           <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
               onClick={() => setLocation("/")}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-3.5 bg-[#23221e] text-[#f6f3ee] hover:bg-[#b22222] text-xs uppercase tracking-[0.24em] font-bold transition-all duration-300 shadow-sm cursor-pointer"
+              className="not-found-primary w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-3.5 bg-[#23221e] text-[#f6f3ee] hover:bg-[#b22222] text-xs uppercase tracking-[0.24em] font-bold transition-all duration-300 shadow-sm cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
               Voltar ao Início
             </button>
             <button
               onClick={() => setLocation("/catalog")}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-3.5 bg-transparent border border-[#23221e]/30 text-[#23221e] hover:border-[#23221e] text-xs uppercase tracking-[0.24em] font-bold transition-all duration-300 cursor-pointer"
+              className="not-found-secondary w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-3.5 bg-transparent border border-[#23221e]/30 text-[#23221e] hover:border-[#23221e] text-xs uppercase tracking-[0.24em] font-bold transition-all duration-300 cursor-pointer"
             >
               Ver Catálogo
             </button>

@@ -11767,3 +11767,484 @@ h1, h2, h3, .heading-editorial {
   .banner-editor-header-actions { width: 100%; justify-content: space-between; }
   .home-editor-banner-actions { grid-column: 1; }
 }
+
+/*
+ * ERAS LABEL — MODO NOTURNO
+ * Esta camada fica no final do arquivo para vencer os overrides editoriais anteriores.
+ * O objetivo é trocar superfícies e contraste sem alterar a geometria da loja.
+ */
+html.dark {
+  color-scheme: dark;
+  --background: oklch(0.16 0.012 65);
+  --foreground: oklch(0.94 0.012 78);
+  --card: oklch(0.205 0.014 65);
+  --card-foreground: oklch(0.94 0.012 78);
+  --popover: oklch(0.205 0.014 65);
+  --popover-foreground: oklch(0.94 0.012 78);
+  --primary: oklch(0.72 0.15 28);
+  --primary-foreground: oklch(0.14 0.01 65);
+  --secondary: oklch(0.27 0.018 65);
+  --secondary-foreground: oklch(0.92 0.012 78);
+  --muted: oklch(0.25 0.016 65);
+  --muted-foreground: oklch(0.68 0.018 75);
+  --accent: oklch(0.67 0.14 28);
+  --accent-foreground: oklch(0.98 0.008 80);
+  --border: oklch(0.34 0.022 65);
+  --input: oklch(0.34 0.022 65);
+  --ring: oklch(0.68 0.14 28);
+}
+
+/* O fundo-base acompanha a preferência antes mesmo de qualquer página pública montar. */
+html.dark body {
+  background: #171514;
+  color: #f1ece4;
+}
+
+/* Superfícies-raiz compartilhadas entre Home, catálogo, produto e páginas editoriais. */
+html.dark .eras-site,
+html.dark .public-page-shell,
+html.dark .public-page-content {
+  background-color: #171514 !important;
+  color: #f1ece4 !important;
+}
+
+/* A navbar mantém o mesmo desenho, mas passa a usar carvão quente e bordas discretas. */
+html.dark .public-global-nav {
+  background: rgba(23, 21, 20, 0.96);
+  border-color: rgba(244, 236, 226, 0.14);
+  color: #f1ece4;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+}
+
+html.dark .public-global-nav a,
+html.dark .public-global-nav button,
+html.dark .public-global-brand {
+  color: #f1ece4;
+}
+
+html.dark .public-global-nav a:hover,
+html.dark .public-global-nav a:focus-visible,
+html.dark .public-global-nav button:hover,
+html.dark .public-global-nav button:focus-visible,
+html.dark .public-global-nav button.is-active,
+html.dark .public-global-nav .is-active {
+  color: #e36a5e;
+}
+
+/* Alternador sol/lua: área de toque ampla, traço fino e microinteração discreta. */
+.public-global-theme-toggle {
+  display: inline-grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 1px solid rgba(178, 34, 34, 0.28);
+  border-radius: 999px;
+  background: transparent;
+  color: #a0423f;
+  cursor: pointer;
+  transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+
+.public-global-theme-toggle:hover,
+.public-global-theme-toggle:focus-visible {
+  border-color: #b22222;
+  background: rgba(178, 34, 34, 0.08);
+  color: #b22222;
+  outline: 0;
+  transform: translateY(-1px);
+}
+
+.public-global-theme-toggle:active { transform: scale(0.95); }
+
+html.dark .public-global-theme-toggle {
+  border-color: rgba(227, 106, 94, 0.42);
+  color: #f0c28b;
+}
+
+html.dark .public-global-theme-toggle:hover,
+html.dark .public-global-theme-toggle:focus-visible {
+  border-color: #e36a5e;
+  background: rgba(227, 106, 94, 0.12);
+  color: #f5d29d;
+}
+
+/* Busca, dropdowns e menus usam uma superfície elevada para manter legibilidade no carvão. */
+html.dark .public-global-search,
+html.dark .public-global-search-results,
+html.dark .public-global-products-menu,
+html.dark .public-global-collections-menu {
+  background: #211e1c;
+  border-color: rgba(244, 236, 226, 0.16);
+  color: #f1ece4;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.38);
+}
+
+html.dark .public-global-search input,
+html.dark .public-global-search input::placeholder,
+html.dark .public-global-search-result,
+html.dark .public-global-search-empty,
+html.dark .public-global-search-hint,
+html.dark .public-global-search-heading,
+html.dark .public-global-products-menu a,
+html.dark .public-global-collections-menu a {
+  color: #e9e0d6;
+}
+
+html.dark .public-global-search-result:hover,
+html.dark .public-global-search-result:focus-visible,
+html.dark .public-global-products-menu a:hover,
+html.dark .public-global-products-menu a:focus-visible,
+html.dark .public-global-collections-menu a:hover,
+html.dark .public-global-collections-menu a:focus-visible {
+  background: rgba(227, 106, 94, 0.12);
+  color: #f0a39a;
+}
+
+html.dark .public-global-search-result small,
+html.dark .public-global-search-heading small,
+html.dark .public-global-products-eyebrow,
+html.dark .public-global-collections-eyebrow,
+html.dark .public-global-products-empty,
+html.dark .public-global-collections-menu a small {
+  color: #b8a79a;
+}
+
+/* A sacola e seus estados internos permanecem legíveis em todas as etapas do checkout. */
+html.dark .public-cart-drawer,
+html.dark .public-cart-empty,
+html.dark .public-cart-content,
+html.dark .public-cart-summary,
+html.dark .shipping-options,
+html.dark .payment-chip {
+  background-color: #211e1c;
+  color: #f1ece4;
+  border-color: rgba(244, 236, 226, 0.16);
+}
+
+html.dark .public-cart-drawer input,
+html.dark .public-cart-drawer select,
+html.dark .public-cart-drawer textarea,
+html.dark .public-cart-drawer button:not(.public-cart-close) {
+  color: #f1ece4;
+  border-color: rgba(244, 236, 226, 0.2);
+}
+
+/* O menu lateral público usa o mesmo carvão e preserva o vermelho como acento de marca. */
+html.dark .lovable-menu-overlay { background: rgba(0, 0, 0, 0.68); }
+html.dark .lovable-menu,
+html.dark .lovable-menu-panel,
+html.dark [class*="lovable-menu"] {
+  background-color: #171514;
+  color: #f1ece4;
+  border-color: rgba(244, 236, 226, 0.14);
+}
+
+html.dark .lovable-menu a,
+html.dark .lovable-menu button,
+html.dark [class*="lovable-menu"] a,
+html.dark [class*="lovable-menu"] button {
+  color: #f1ece4;
+}
+
+html.dark .lovable-menu a:hover,
+html.dark .lovable-menu a:focus-visible,
+html.dark .lovable-menu button:hover,
+html.dark .lovable-menu button:focus-visible {
+  color: #e36a5e;
+}
+
+/* Cards, linhas e campos das páginas públicas ganham contraste sem cobrir fotografias de produto. */
+html.dark .public-page-shell [class*="bg-[#f6f3ee]"],
+html.dark .public-page-shell [class*="bg-[#fbfaf7]"],
+html.dark .public-page-shell [class*="bg-[#fff"],
+html.dark .eras-site [class*="bg-[#f6f3ee]"],
+html.dark .eras-site [class*="bg-[#fbfaf7]"],
+html.dark .eras-site [class*="bg-[#fff"] {
+  background-color: #211e1c !important;
+  color: #f1ece4 !important;
+}
+
+html.dark .public-page-shell input,
+html.dark .public-page-shell select,
+html.dark .public-page-shell textarea,
+html.dark .eras-site input,
+html.dark .eras-site select,
+html.dark .eras-site textarea {
+  background-color: #211e1c;
+  color: #f1ece4;
+  border-color: rgba(244, 236, 226, 0.2);
+}
+
+/* O tom creme claro das imagens e blocos de produto continua intacto; só a moldura muda. */
+html.dark .product-gallery-stage,
+html.dark .product-gallery-thumbnail,
+html.dark .product-card-image,
+html.dark .shop-product-card {
+  background-color: #25211f;
+  border-color: rgba(244, 236, 226, 0.12);
+}
+
+/* Animações curtas e acessíveis para a troca de tema, sem deslocar o layout. */
+html.dark .public-global-nav,
+html.dark .public-page-shell,
+html.dark .eras-site,
+html.dark .public-cart-drawer,
+html.dark .lovable-menu {
+  transition: background-color 240ms ease, color 240ms ease, border-color 240ms ease;
+}
+
+@media (max-width: 620px) {
+  /* Em telas pequenas o botão mantém o mesmo peso visual e uma área de toque confortável. */
+  .public-global-theme-toggle {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Usuários que preferem menos movimento recebem a troca de cores sem transição. */
+  .public-global-theme-toggle,
+  html.dark .public-global-nav,
+  html.dark .public-page-shell,
+  html.dark .eras-site,
+  html.dark .public-cart-drawer,
+  html.dark .lovable-menu {
+    transition: none;
+  }
+}
+
+/* Contraste de páginas públicas com cores tipográficas fixas: o tema noturno deve
+   manter os textos legíveis sem alterar o tratamento das fotografias. */
+html.dark .catalog-page-shell,
+html.dark .catalog-page-shell .catalog-page-main,
+html.dark .catalog-page-shell .catalog-page-header,
+html.dark .catalog-page-shell .catalog-layout,
+html.dark .catalog-page-shell .catalog-filter-sidebar,
+html.dark .catalog-page-shell .catalog-product-copy,
+html.dark .catalog-page-shell .catalog-state-message {
+  color: #f1ece4;
+}
+
+html.dark .catalog-page-shell .catalog-page-header,
+html.dark .catalog-page-shell .catalog-filter-sidebar,
+html.dark .catalog-page-shell .catalog-filter-group,
+html.dark .catalog-page-shell .catalog-state-message {
+  border-color: rgba(244, 236, 226, .18);
+}
+
+html.dark .catalog-page-shell .catalog-page-header h1,
+html.dark .catalog-page-shell .catalog-filter-heading h2,
+html.dark .catalog-page-shell .catalog-product-heading h2,
+html.dark .catalog-page-shell .catalog-product-heading strong,
+html.dark .catalog-page-shell .catalog-state-message h3 {
+  color: #f7f1e8;
+}
+
+html.dark .catalog-page-shell .catalog-result-summary,
+html.dark .catalog-page-shell .catalog-category-links button,
+html.dark .catalog-page-shell .catalog-size-options button,
+html.dark .catalog-page-shell .catalog-product-copy p,
+html.dark .catalog-page-shell .catalog-filter-group small,
+html.dark .catalog-page-shell .catalog-price-fields label span,
+html.dark .catalog-page-shell .catalog-subcategories a {
+  color: #b9aea2;
+}
+
+html.dark .catalog-page-shell .catalog-category-links button:hover,
+html.dark .catalog-page-shell .catalog-size-options button:hover,
+html.dark .catalog-page-shell .catalog-category-links button.is-active,
+html.dark .catalog-page-shell .catalog-size-options button.is-active,
+html.dark .catalog-page-shell .catalog-clear-filters:hover,
+html.dark .catalog-page-shell .catalog-back-link:hover {
+  color: #ef7468;
+}
+
+html.dark .catalog-page-shell .catalog-price-fields input,
+html.dark .catalog-page-shell .catalog-filter-group select {
+  border-color: rgba(244, 236, 226, .22);
+  background: #211e1c;
+  color: #f7f1e8;
+}
+
+html.dark .catalog-page-shell .catalog-price-fields input:focus,
+html.dark .catalog-page-shell .catalog-filter-group select:focus {
+  background: #2a2522;
+}
+
+html.dark .catalog-page-shell .catalog-product-media,
+html.dark .catalog-page-shell .catalog-category-cover {
+  background: #25211f;
+}
+
+html.dark .not-found-page,
+html.dark .not-found-page header,
+html.dark .not-found-page main {
+  background: #151312;
+  color: #f1ece4;
+}
+
+html.dark .not-found-page header {
+  border-color: rgba(244, 236, 226, .18);
+}
+
+html.dark .not-found-page h1,
+html.dark .not-found-page h2,
+html.dark .not-found-page a {
+  color: #f7f1e8;
+}
+
+html.dark .not-found-page p,
+html.dark .not-found-page header span {
+  color: #b9aea2;
+}
+
+html.dark .not-found-page .not-found-icon {
+  background: #211e1c;
+  border-color: rgba(244, 236, 226, .18);
+}
+
+html.dark .not-found-page .not-found-primary {
+  background: #f1ece4;
+  color: #151312;
+}
+
+html.dark .not-found-page .not-found-secondary {
+  border-color: rgba(244, 236, 226, .3);
+  color: #f7f1e8;
+}
+
+/* Checkout: surfaces and readable controls in dark mode */
+html.dark .checkout-page,
+html.dark .checkout-page--modal {
+  background: #141312;
+  color: #f7f2eb;
+}
+
+html.dark .checkout-empty-page,
+html.dark .checkout-modal-shell,
+html.dark .checkout-success-page,
+html.dark .checkout-success-state {
+  background: #1b1917;
+  color: #f7f2eb;
+  border-color: rgba(247, 242, 235, 0.14);
+}
+
+html.dark .checkout-page-header,
+html.dark .checkout-page-main,
+html.dark .checkout-page-summary,
+html.dark .checkout-page-form-section,
+html.dark .checkout-success-order,
+html.dark .checkout-pix-box,
+html.dark .checkout-processing-banner,
+html.dark .checkout-error-banner {
+  border-color: rgba(247, 242, 235, 0.16);
+}
+
+html.dark .checkout-page-header,
+html.dark .checkout-page-summary,
+html.dark .checkout-success-order,
+html.dark .checkout-pix-box {
+  background: #211f1c;
+}
+
+html.dark .checkout-page-intro h1,
+html.dark .checkout-empty-page h1,
+html.dark .checkout-success-page h1,
+html.dark .checkout-success-total strong,
+html.dark .checkout-page-totals .final strong {
+  color: #fffaf3;
+}
+
+html.dark .checkout-page-intro p,
+html.dark .checkout-empty-page p,
+html.dark .checkout-page-helper,
+html.dark .checkout-free-shipping-note,
+html.dark .checkout-success-delivery,
+html.dark .checkout-summary-line span,
+html.dark .checkout-page-totals span,
+html.dark .checkout-success-order-item span,
+html.dark .checkout-success-order-totals span {
+  color: rgba(247, 242, 235, 0.68);
+}
+
+html.dark .checkout-page-fields label,
+html.dark .checkout-form-step,
+html.dark .checkout-summary-line strong,
+html.dark .checkout-page-totals strong,
+html.dark .checkout-success-order-item,
+html.dark .checkout-success-order-heading,
+html.dark .checkout-success-order-totals,
+html.dark .checkout-secure-label {
+  color: #f7f2eb;
+}
+
+html.dark .checkout-page-fields input,
+html.dark .checkout-page-fields select,
+html.dark .checkout-page-fields textarea,
+html.dark .checkout-coupon-row input,
+html.dark .checkout-installments-field select {
+  background: #141312;
+  color: #fffaf3;
+  border-color: rgba(247, 242, 235, 0.22);
+}
+
+html.dark .checkout-page-fields input::placeholder,
+html.dark .checkout-coupon-row input::placeholder {
+  color: rgba(247, 242, 235, 0.42);
+}
+
+html.dark .checkout-page-fields input:focus,
+html.dark .checkout-page-fields select:focus,
+html.dark .checkout-page-fields textarea:focus,
+html.dark .checkout-coupon-row input:focus {
+  border-color: #b22222;
+  box-shadow: 0 0 0 3px rgba(178, 34, 34, 0.2);
+}
+
+html.dark .checkout-modal-close,
+html.dark .checkout-back-link,
+html.dark .checkout-secondary-link,
+html.dark .checkout-continue-button {
+  color: #f7f2eb;
+  border-color: rgba(247, 242, 235, 0.24);
+}
+
+html.dark .checkout-summary-actions button,
+html.dark .checkout-payment-options button,
+html.dark .checkout-inline-confirm {
+  color: #f7f2eb;
+  border-color: rgba(247, 242, 235, 0.2);
+  background: rgba(247, 242, 235, 0.05);
+}
+
+html.dark .checkout-payment-options button[aria-pressed="true"],
+html.dark .checkout-payment-options button.is-active,
+html.dark .checkout-inline-confirm:hover,
+html.dark .checkout-summary-actions button:hover {
+  border-color: #b22222;
+  background: rgba(178, 34, 34, 0.18);
+  color: #fffaf3;
+}
+
+html.dark .checkout-order-item,
+html.dark .checkout-summary-line,
+html.dark .checkout-page-totals > div,
+html.dark .checkout-success-order-heading,
+html.dark .checkout-success-order-items,
+html.dark .checkout-success-order-totals .final {
+  border-color: rgba(247, 242, 235, 0.14);
+}
+
+html.dark .checkout-pix-code,
+html.dark .checkout-pix-ticket-link,
+html.dark .checkout-pix-timer {
+  color: #f7f2eb;
+}
+
+html.dark .checkout-empty-icon,
+html.dark .checkout-success-icon,
+html.dark .checkout-thank-you-mark {
+  border-color: rgba(247, 242, 235, 0.28);
+  color: #b22222;
+}

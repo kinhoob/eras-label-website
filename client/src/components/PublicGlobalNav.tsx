@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { ArrowRight, ChevronDown, Menu, Search, ShoppingBag, UserRound } from "lucide-react";
+import { ArrowRight, ChevronDown, Menu, Moon, Search, ShoppingBag, Sun, UserRound } from "lucide-react";
 import { CART_STORAGE_KEY, loadCart } from "@/lib/cart-storage";
 import { SidebarMenu } from "@/components/SidebarMenu";
 import { trpc } from "@/lib/trpc";
 import { publicCategoryHref, type PublicNavigationCategory } from "@/lib/public-navigation";
 import type { StorefrontConfig } from "../../../shared/storefront";
 import { hasStorefrontAnnouncement } from "../../../shared/storefront-logic";
+import { useTheme } from "@/contexts/ThemeContext";
 
 function GlobalAnnouncementBar({ config }: { config?: StorefrontConfig }) {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -48,6 +49,7 @@ function GlobalAnnouncementBar({ config }: { config?: StorefrontConfig }) {
  */
 export default function PublicGlobalNav() {
   const [location, navigate] = useLocation();
+  const { theme, toggleTheme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -232,6 +234,15 @@ export default function PublicGlobalNav() {
         <Link href="/" className="public-global-brand" aria-label="Voltar para a loja Eras Label"><img src="/eras-logo-sticker.webp" alt="Eras Label" style={{ height: "60px", width: "auto", objectFit: "contain", display: "block" }} /></Link>
 
         <div className="public-global-right-tools">
+          <button
+            type="button"
+            className="public-global-theme-toggle"
+            onClick={() => toggleTheme?.()}
+            aria-label={theme === "dark" ? "Ativar modo claro" : "Ativar modo noturno"}
+            title={theme === "dark" ? "Modo claro" : "Modo noturno"}
+          >
+            {theme === "dark" ? <Sun size={17} strokeWidth={1.7} aria-hidden="true" /> : <Moon size={17} strokeWidth={1.7} aria-hidden="true" />}
+          </button>
           <Link href="/account" className="public-global-account" aria-label="Abrir minha conta"><UserRound size={17} strokeWidth={1.7} /></Link>
           <button type="button" className="public-global-bag" aria-label={`Abrir sacola${cartCount ? ` com ${cartCount} itens` : " vazia"}`} onClick={() => window.dispatchEvent(new Event("eras-open-cart"))}>
             <ShoppingBag size={16} strokeWidth={1.7} />
