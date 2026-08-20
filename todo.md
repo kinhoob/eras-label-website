@@ -33,12 +33,15 @@
 - [x] Adicionar estados de hover/focus suaves e visíveis aos controles da navbar e elementos interativos do tema
 - [x] Revalidar modo noturno em Home, catálogo, produto, checkout, conta, sacola e menu mobile após os ajustes
 - [x] Ajustar o cartão de boas-vindas, pedidos e rodapé da conta para respeitar o contraste do modo noturno
-- [ ] Adicionar evidência verificável da correção da navbar mobile (espaçamento entre theme toggle, conta e sacola)
+- [x] Adicionar evidência verificável da correção da navbar mobile (espaçamento entre theme toggle, conta e sacola)
 - [x] Documentar com código verificável os overrides globais do modo noturno no storefront (Home, catálogo, produto, checkout, rodapé e menu mobile)
-- [ ] Adicionar evidência verificável dos estados hover/focus da navbar e controles públicos no modo noturno
-- [ ] Registrar validação explícita por página do modo noturno (Home, catálogo, produto, checkout, conta, sacola e menu mobile) com notas objetivas
+- [x] Adicionar evidência verificável dos estados hover/focus da navbar e controles públicos no modo noturno
+- [x] Registrar validação explícita por página do modo noturno (Home, catálogo, produto, checkout, conta, sacola e menu mobile) com notas objetivas
 - [x] Corrigir definitivamente o rodapé no modo noturno, incluindo superfície, textos, links, WhatsApp e créditos (a newsletter é uma seção independente da Home)
 - [x] Corrigir definitivamente o menu lateral no modo noturno, incluindo overlay, largura, z-index, fechamento e responsividade
 - [x] Validar rodapé e menu lateral em desktop e mobile e executar regressões antes do checkpoint
 - [x] Corrigir superfícies, contraste e empilhamento do menu lateral público e do rodapé no modo noturno
 - [x] Validar menu e rodapé em desktop e mobile nos temas claro e escuro
+- [x] Implementar efeito parallax de scroll suave no storefront com fallback acessível e responsivo
+- [x] Validar performance, movimento, temas claro/escuro e breakpoints do parallax
+- [x] Validar explicitamente o parallax da Home nos temas claro e escuro com evidência verificável

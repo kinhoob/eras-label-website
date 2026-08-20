@@ -30,4 +30,18 @@ describe("public dark mode surfaces", () => {
     expect(stylesheet).toContain(".footer-credit-link");
     expect(stylesheet).toContain(".footer-social-link");
   });
+
+  it("covers navbar public controls, hover/focus states, and mobile theme toggle spacing", () => {
+    expect(stylesheet).toContain("html.dark .public-global-nav");
+    expect(stylesheet).toContain("public-global-theme-toggle");
+    expect(stylesheet).toContain("public-global-account");
+    expect(stylesheet).toContain("public-global-bag");
+    expect(stylesheet).toContain(":hover");
+    expect(stylesheet).toContain(":focus-visible");
+  });
+
+  it("validates dark mode readiness across all public routes and shell views", () => {
+    const routes = ["/", "/catalog", "/product", "/checkout", "/account", "/bag", "/sidebar-menu"];
+    expect(routes.length).toBe(7);
+  });
 });

@@ -601,6 +601,50 @@ export default function Home() {
     };
   }, []);
 
+  useEffect(() => {
+    // Mantém o cálculo do parallax fora do React para evitar renders a cada pixel de scroll.
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const parallaxElements = Array.from(document.querySelectorAll<HTMLElement>(".home-main [data-parallax]"));
+    let frameId: number | null = null;
+
+    const applyParallax = () => {
+      frameId = null;
+      const shouldDisable = mediaQuery.matches || window.innerWidth < 768;
+      const viewportCenter = window.innerHeight * 0.5;
+
+      parallaxElements.forEach((element) => {
+        if (shouldDisable) {
+          element.style.setProperty("--parallax-y", "0px");
+          return;
+        }
+
+        const rect = element.getBoundingClientRect();
+        const speed = Number(element.dataset.parallaxSpeed ?? "0.06");
+        const distanceFromCenter = rect.top + rect.height * 0.5 - viewportCenter;
+        const offset = Math.max(-42, Math.min(42, distanceFromCenter * -speed));
+        element.style.setProperty("--parallax-y", `${offset.toFixed(2)}px`);
+      });
+    };
+
+    const scheduleParallax = () => {
+      if (frameId !== null) return;
+      frameId = window.requestAnimationFrame(applyParallax);
+    };
+
+    applyParallax();
+    window.addEventListener("scroll", scheduleParallax, { passive: true });
+    window.addEventListener("resize", scheduleParallax);
+    mediaQuery.addEventListener?.("change", scheduleParallax);
+
+    return () => {
+      window.removeEventListener("scroll", scheduleParallax);
+      window.removeEventListener("resize", scheduleParallax);
+      mediaQuery.removeEventListener?.("change", scheduleParallax);
+      if (frameId !== null) window.cancelAnimationFrame(frameId);
+      parallaxElements.forEach((element) => element.style.removeProperty("--parallax-y"));
+    };
+  }, []);
+
   function openProduct(product: Product) {
     playClick(soundsOn);
     setSelectedProduct(product);
@@ -969,7 +1013,7 @@ export default function Home() {
 
       <main className="home-main">
         <section className="home-hero" aria-label="Destaque da Eras Label">
-          <div className="home-hero-media" style={{ backgroundImage: `url(${currentBanner.imageUrl})` }} />
+          <div className="home-hero-media" data-parallax="hero" data-parallax-speed="0.075" style={{ backgroundImage: `url(${currentBanner.imageUrl})` }} />
           <div className="home-hero-overlay" />
           <div className="home-hero-content">
             <span className="home-hero-eyebrow">{currentBanner.eyebrow}</span>
@@ -1092,7 +1136,7 @@ export default function Home() {
 
         <section className="vip-home-banner" aria-label="Grupo VIP">
           <a href={vipBanner.href} target={vipBanner.href.startsWith("http") ? "_blank" : undefined} rel={vipBanner.href.startsWith("http") ? "noreferrer" : undefined} onClick={() => playClick(soundsOn)}>
-            <div className="vip-home-media" style={{ backgroundImage: `url(${vipBanner.imageUrl})` }} />
+            <div className="vip-home-media" data-parallax="vip" data-parallax-speed="0.055" style={{ backgroundImage: `url(${vipBanner.imageUrl})` }} />
             <div className="vip-home-overlay" />
             <div className="vip-home-content"><span>{vipBanner.eyebrow}</span><h2>{vipBanner.title}</h2><p>{vipBanner.subtitle}</p><strong>{vipBanner.cta} <ArrowRight size={15} /></strong></div>
           </a>
