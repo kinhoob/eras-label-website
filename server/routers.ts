@@ -98,6 +98,7 @@ import { adminOrderEmail, newsletterWelcomeEmail, orderConfirmationEmail, paymen
 import { ENV } from "./_core/env";
 import { sendResendEmail } from "./resend";
 import { mergeLabelPdfs } from "./label-pdf";
+import { reconcileVisibleOrderPayments } from "./payment-reconciliation";
 
 const newsletterInput = z.object({
   name: z.string().min(2).max(255),
@@ -502,7 +503,11 @@ export const appRouter = router({
     }),
   }),
   orders: router({
-    myOrders: protectedProcedure.query(async ({ ctx }) => listOrdersByUser(ctx.user.id)),
+    myOrders: protectedProcedure.query(async ({ ctx }) => {
+      const currentOrders = await listOrdersByUser(ctx.user.id);
+      const changed = await reconcileVisibleOrderPayments(currentOrders);
+      return changed ? listOrdersByUser(ctx.user.id) : currentOrders;
+    }),
     trackOrderShipping: publicProcedure.input(z.object({
       trackingCode: z.string().trim().min(3),
     })).query(async ({ input }) => {
@@ -826,7 +831,9 @@ export const appRouter = router({
       return listMarketingCollections();
     }),
     listOrders: adminProcedure.query(async () => {
-      return listOrders();
+      const currentOrders = await listOrders();
+      const changed = await reconcileVisibleOrderPayments(currentOrders);
+      return changed ? listOrders() : currentOrders;
     }),
     reconcilePayment: adminProcedure.input(z.object({
       orderNumber: z.string().trim().min(3).max(100),

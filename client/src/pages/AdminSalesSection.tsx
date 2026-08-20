@@ -1,6 +1,7 @@
 import { createPortal } from "react-dom";
 import { useEffect, useMemo, useState } from "react";
 import { trpc } from "@/lib/trpc";
+import { getOrderStatusLabel, getPaymentLabel, getPaymentTone, isPaymentConfirmed } from "@shared/payment-status";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -277,11 +278,11 @@ export default function AdminSalesSection() {
         </div>
         <div className="metric-card">
           <span>Pagamentos Aprovados</span>
-          <strong className="positive">{orders.filter((o: any) => o.paymentStatus === "approved" || o.payment === "Pago").length}</strong>
+          <strong className="positive">{orders.filter((o: any) => isPaymentConfirmed(o.paymentStatus) || o.payment === "Pago").length}</strong>
         </div>
         <div className="metric-card">
           <span>Aguardando Pagamento</span>
-          <strong className="warning">{orders.filter((o: any) => o.paymentStatus === "pending").length}</strong>
+          <strong className="warning">{orders.filter((o: any) => !isPaymentConfirmed(o.paymentStatus) && !["rejected", "failed", "cancelled"].includes(String(o.paymentStatus ?? "").toLowerCase())).length}</strong>
         </div>
         <div className="metric-card">
           <span>Volume filtrado</span>
@@ -327,7 +328,7 @@ export default function AdminSalesSection() {
               {visibleOrders.map((order: any) => {
                 const address = order.address || order.shippingAddress || {};
                 const shippingLabel = order.shippingService || order.shippingMethod || "Correios / Logística";
-                const isPaid = order.paymentStatus === "approved" || order.payment === "Pago";
+                const isPaid = isPaymentConfirmed(order.paymentStatus) || order.payment === "Pago";
 
                 return (
                   <tr key={order.id}>
@@ -352,7 +353,7 @@ export default function AdminSalesSection() {
                     </td>
                     <td>
                       <span className={isPaid ? "stock-ok" : "stock-warning"}>
-                        {isPaid ? "Pago (Aprovado)" : "Pendente"}
+                        {getPaymentLabel(order.paymentStatus)}
                       </span>
                     </td>
                     <td><strong>R$ {Number(order.total).toFixed(2)}</strong></td>
@@ -405,7 +406,7 @@ export default function AdminSalesSection() {
                   <CreditCard size={15} /> Pagamento e Frete
                 </h4>
                 <p style={{ fontSize: "0.85rem", marginBottom: "4px" }}><strong>Método:</strong> {selectedOrder.paymentMethod?.toUpperCase()}</p>
-                <p style={{ fontSize: "0.85rem", marginBottom: "4px" }}><strong>Status Pagamento:</strong> {selectedOrder.paymentStatus}</p>
+                <p style={{ fontSize: "0.85rem", marginBottom: "4px" }}><strong>Status Pagamento:</strong> <span className={`status-pill ${getPaymentTone(selectedOrder.paymentStatus)}`}>{getPaymentLabel(selectedOrder.paymentStatus)}</span></p>
                 {!["approved", "authorized"].includes(String(selectedOrder.paymentStatus ?? "").toLowerCase()) && (
                   <Button
                     type="button"
@@ -442,7 +443,7 @@ export default function AdminSalesSection() {
                   <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", marginTop: "0.3rem" }}>Visão consolidada do estado atual do pedido e da logística.</p>
                 </div>
                 <div style={{ textAlign: "right" }}>
-                  <strong style={{ display: "block", color: "#b22222" }}>{selectedOrder.status || "Aguardando processamento"}</strong>
+                  <strong style={{ display: "block", color: "#b22222" }}>{getOrderStatusLabel(selectedOrder.status)}</strong>
                   <small style={{ color: "var(--muted-foreground)" }}>Atualizado em {formatOrderDate(selectedOrder.updatedAt || selectedOrder.createdAt)}</small>
                 </div>
               </div>

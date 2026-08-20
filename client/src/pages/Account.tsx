@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
+import { getOrderStatusLabel, getPaymentLabel, getPaymentTone } from "@shared/payment-status";
 import { Package, Truck, CheckCircle2, Clock, ArrowLeft, ExternalLink, ShieldCheck, User as UserIcon, LogOut, Check, X, Box, Copy, RefreshCw, CalendarDays, MapPin, CreditCard, ChevronRight, PackageCheck } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { PageTransitionHandler } from "@/components/PageTransition";
@@ -95,9 +96,8 @@ export default function Account() {
                 {orders.map((order) => {
                   /* Calcula a quantidade total de peças sem alterar os dados reais do pedido. */
                   const itemCount = order.items.reduce((total: number, item: any) => total + Number(item.quantity || 0), 0);
-                  const isPaymentApproved = order.paymentStatus === "approved";
-                  const isPaymentFailed = order.paymentStatus === "failed" || order.paymentStatus === "rejected";
-                  const paymentLabel = isPaymentApproved ? "Pagamento confirmado" : isPaymentFailed ? "Pagamento recusado" : "Pagamento pendente";
+                  const paymentTone = getPaymentTone(order.paymentStatus);
+                  const paymentLabel = getPaymentLabel(order.paymentStatus);
                   const paymentMethodLabel = order.paymentMethod === "credit_card" ? "Cartão de crédito" : "Pix";
                   const orderAddress = order.address as { city?: string; state?: string } | null;
 
@@ -118,10 +118,10 @@ export default function Account() {
                           <span className={`order-status-badge ${String(order.status).toLowerCase()}`}>
                             {order.status === "Enviado" && <Truck size={14} />}
                             {order.status === "Entregue" && <CheckCircle2 size={14} />}
-                            {order.status === "Processando" && <Clock size={14} />}
-                            {order.status}
+                            {["Processando", "Em preparação"].includes(order.status) && <Clock size={14} />}
+                            {getOrderStatusLabel(order.status)}
                           </span>
-                          <span className={`order-payment-badge ${isPaymentApproved ? "approved" : isPaymentFailed ? "failed" : "pending"}`}>
+                          <span className={`order-payment-badge ${paymentTone}`}>
                             <ShieldCheck size={12} /> {paymentLabel}
                           </span>
                         </div>
@@ -257,9 +257,9 @@ export default function Account() {
                 })()}
               </div>
 
-              <div className={`order-payment-detail ${selectedOrder.paymentStatus === "approved" ? "approved" : selectedOrder.paymentStatus === "failed" || selectedOrder.paymentStatus === "rejected" ? "failed" : "pending"}`}>
+              <div className={`order-payment-detail ${getPaymentTone(selectedOrder.paymentStatus)}`}>
                 <ShieldCheck size={17} />
-                <div><strong>{selectedOrder.paymentStatus === "approved" ? "Pagamento confirmado" : selectedOrder.paymentStatus === "failed" || selectedOrder.paymentStatus === "rejected" ? "Pagamento recusado" : "Pagamento pendente"}</strong><span>Via {selectedOrder.paymentMethod === "credit_card" ? "cartão de crédito" : "Pix"}</span></div>
+                <div><strong>{getPaymentLabel(selectedOrder.paymentStatus)}</strong><span>Via {selectedOrder.paymentMethod === "credit_card" ? "cartão de crédito" : "Pix"}</span></div>
               </div>
 
               {/* Informações de Rastreio */}

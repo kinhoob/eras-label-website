@@ -3170,3 +3170,9 @@
 - [x] Garantir que produtos esgotados continuam disponíveis em Todos os produtos, categorias e coleções associadas
 - [x] Adicionar testes de regressão para visibilidade, ordenação e filtros por categoria/coleção
 - [x] Validar a alteração em desktop, mobile, testes Vitest e build de produção
+
+- [x] Corrigir a etiqueta visual que mostra "Processando" quando o pagamento Mercado Pago já está aprovado
+- [x] Reconciliar o pedido Pix mais recente para que o estado aprovado apareça em Orders e no painel administrativo
+- [x] Garantir mapeamento consistente entre status do pagamento Mercado Pago e status exibido do pedido
+- [x] Adicionar testes de regressão para pagamentos aprovados, pendentes e reconciliação Pix
+- [x] Validar Orders, Admin, webhook/consulta do Mercado Pago, Vitest e build
