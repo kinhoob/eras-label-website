@@ -3232,3 +3232,4 @@
 - [x] Configurar a imagem previewssiteeras.png enviada pelo utilizador como capa Open Graph e Twitter Cards para partilha social
 - [x] Auditar estrutura do projeto para remoção de artefactos do Manus e exportação para hospedagem externa
 - [x] Criar guia completo de publicação na Vercel com domínio da HostGator e análise de custos
+- [x] Atualizar o apple-touch-icon e o favicon com a imagem IMG_0880.PNG fornecida para perfeito funcionamento no iPhone e Safari
