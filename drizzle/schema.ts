@@ -142,6 +142,16 @@ export const orders = mysqlTable("orders", {
   archivedAt: timestamp("archivedAt"),
   paymentStatus: varchar("paymentStatus", { length: 50 }).default("pending").notNull(),
   paymentFailureReason: text("paymentFailureReason"),
+  /** ID da cobrança ativa no Mercado Pago; usado para webhook e reconciliação segura. */
+  paymentId: varchar("paymentId", { length: 100 }),
+  /** Data/hora UTC em que o QR Code Pix ativo deixa de ser aceito. */
+  pixExpiresAt: timestamp("pixExpiresAt"),
+  /** Snapshot do QR Code Pix ativo para permitir recuperar o código enquanto válido. */
+  pixQrCode: text("pixQrCode"),
+  pixQrCodeBase64: text("pixQrCodeBase64"),
+  pixTicketUrl: text("pixTicketUrl"),
+  /** Número da cobrança Pix gerada para o mesmo pedido. */
+  pixGeneration: int("pixGeneration").default(0).notNull(),
   trackingCode: varchar("trackingCode", { length: 100 }),
   carrier: varchar("carrier", { length: 100 }),
   shippingOrderId: varchar("shippingOrderId", { length: 100 }),

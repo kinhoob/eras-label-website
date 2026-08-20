@@ -30,7 +30,9 @@ export async function reconcileVisibleOrderPayments(orderList: Array<Record<stri
         }
       }
 
-      if (!payment) {
+      // Depois que existe uma cobrança ativa, não fazemos fallback por external_reference:
+      // a busca pode devolver o PIX anterior e reverter indevidamente o status atual.
+      if (!payment && !paymentId) {
         const matches = await searchMercadoPagoPayments(String(order.orderNumber));
         payment = matches[0] ?? null;
       }
@@ -39,7 +41,7 @@ export async function reconcileVisibleOrderPayments(orderList: Array<Record<stri
       if (!payment || !paymentStatus || paymentStatus === normalizePaymentStatus(order.paymentStatus)) return;
 
       const paymentDetail = payment.status_detail ? `${paymentStatus}: ${String(payment.status_detail)}` : null;
-      await updateOrderPaymentStatus(String(order.orderNumber), paymentStatus, paymentDetail);
+      await updateOrderPaymentStatus(String(order.orderNumber), paymentStatus, paymentDetail, payment?.id ?? null);
       changed = true;
     } catch (error) {
       // Falhas de consulta não podem impedir a página de Orders/Admin de abrir.

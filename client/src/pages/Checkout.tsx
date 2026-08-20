@@ -9,6 +9,7 @@ import { updateCartLineQuantity, removeCartLine } from "@/lib/cart-operations";
 import { formatCardExpiry, formatCardNumber, formatCpf, hasCheckoutFieldErrors, onlyDigits, validateCheckoutFields, type CheckoutFieldErrors, type CheckoutFields } from "@/lib/checkout-validation";
 import { lookupCep, normalizeCep } from "@/lib/cep";
 import { calculateInstallmentAmount, calculateInstallmentTotal } from "@/lib/installment-calculator";
+import { getPixRemainingMs, isPixExpired } from "@shared/pix";
 
  type CheckoutLine = {
   id: number;
@@ -22,6 +23,7 @@ import { calculateInstallmentAmount, calculateInstallmentTotal } from "@/lib/ins
 
 type CheckoutSuccess = {
   orderNumber: string;
+  customerEmail: string;
   items: CheckoutLine[];
   subtotal: number;
   discount: number;
@@ -37,6 +39,8 @@ type CheckoutSuccess = {
     qr_code_base64?: string;
     ticket_url?: string;
   } | null;
+  pixExpiresAt?: string | null;
+  pixGeneration?: number;
 };
 
 function formatPrice(value: number) {
@@ -173,6 +177,9 @@ export default function CheckoutPage() {
   );
   const checkoutConfigQuery = trpc.checkout.publicConfig.useQuery();
   const checkoutMutation = trpc.checkout.create.useMutation();
+  const regeneratePixMutation = trpc.checkout.regeneratePix.useMutation();
+  const [pixNow, setPixNow] = useState(() => Date.now());
+  const [isRegeneratingPix, setIsRegeneratingPix] = useState(false);
 
   const commercialConfig = checkoutConfigQuery.data?.commercial ?? commercialConfigQuery.data;
   const pixDiscountPercent = commercialConfig?.pixDiscountPercent ?? 5;
@@ -210,6 +217,13 @@ export default function CheckoutPage() {
   useEffect(() => {
     saveCart(cart);
   }, [cart]);
+
+  useEffect(() => {
+    if (!success || success.paymentMethod !== "pix" || !success.pixExpiresAt) return;
+    setPixNow(Date.now());
+    const timer = window.setInterval(() => setPixNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [success?.paymentMethod, success?.pixExpiresAt]);
 
   useEffect(() => {
     saveCheckoutDraft({
@@ -258,6 +272,30 @@ export default function CheckoutPage() {
   function removeItem(line: CheckoutLine) {
     setCart((current) => removeCartLine(current, line.id, line.size));
     toast.success("Item removido da sacola", { description: `${line.name} · tamanho ${line.size}` });
+  }
+
+  async function regeneratePix() {
+    if (!success || success.paymentMethod !== "pix" || isRegeneratingPix) return;
+    setIsRegeneratingPix(true);
+    try {
+      const result = await regeneratePixMutation.mutateAsync({
+        orderNumber: success.orderNumber,
+        customerEmail: success.customerEmail,
+      });
+      setSuccess((current) => current ? {
+        ...current,
+        paymentStatus: result.paymentStatus || "pending",
+        pixData: result.pixData || null,
+        pixExpiresAt: result.pixExpiresAt || null,
+        pixGeneration: result.pixGeneration || (current.pixGeneration ?? 1) + 1,
+      } : current);
+      setPixNow(Date.now());
+      toast.success("Novo QR Code Pix gerado", { description: "O código ficará válido por mais 30 minutos." });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível gerar um novo QR Code Pix.");
+    } finally {
+      setIsRegeneratingPix(false);
+    }
   }
 
   function handleFormChange(event: React.FormEvent<HTMLFormElement>) {
@@ -392,6 +430,7 @@ export default function CheckoutPage() {
         setFieldErrors({});
         setSuccess({
           orderNumber: result.orderNumber,
+          customerEmail: fields.customerEmail.trim(),
           items: cart,
           subtotal,
           discount: discount + pixSavings,
@@ -403,6 +442,8 @@ export default function CheckoutPage() {
           installments: selectedPaymentMethod === "credit_card" ? selectedInstallments : undefined,
           installmentInterest: selectedPaymentMethod === "credit_card" ? installmentInterest : 0,
           pixData: (result as any).pixData || null,
+          pixExpiresAt: (result as any).pixExpiresAt || null,
+          pixGeneration: (result as any).pixGeneration || 1,
         });
         // A sacola só é limpa depois de o backend confirmar a criação do pedido.
         // O evento sincroniza o contador da navbar e o drawer quando o cliente voltar à loja.
@@ -426,8 +467,17 @@ export default function CheckoutPage() {
   }
 
   if (status === "success" && success) {
-    const isApproved = success.paymentStatus === "approved";
+    const isApproved = ["approved", "authorized"].includes(success.paymentStatus);
     const isPix = success.paymentMethod === "pix";
+    const pixRemainingMs = getPixRemainingMs(success.pixExpiresAt, pixNow);
+    const pixExpired = !success.pixExpiresAt || isPixExpired(success.pixExpiresAt, pixNow);
+    const pixRemainingMinutes = Math.floor(pixRemainingMs / 60000);
+    const pixRemainingSeconds = Math.floor((pixRemainingMs % 60000) / 1000);
+    const pixImageSrc = success.pixData?.qr_code_base64
+      ? success.pixData.qr_code_base64.startsWith("data:")
+        ? success.pixData.qr_code_base64
+        : `data:image/png;base64,${success.pixData.qr_code_base64}`
+      : null;
     const isRejected = ["rejected", "cancelled", "refunded"].includes(success.paymentStatus);
     return (
       <main className="checkout-page">
@@ -448,21 +498,46 @@ export default function CheckoutPage() {
             </section>
           )}
           
-          {!isApproved && isPix && success.pixData?.qr_code && (
-            <div className="checkout-pix-box">
-              <h3>Pagamento via Pix</h3>
-              <p>Abra o aplicativo do seu banco, leia o QR Code ou copie o código para concluir o pagamento com desconto.</p>
-              <div className="checkout-pix-code">{success.pixData.qr_code}</div>
-              <button
-                type="button"
-                className="primary-button"
-                onClick={() => {
-                  navigator.clipboard.writeText(success.pixData!.qr_code!);
-                  toast.success("Código Pix Copia e Cola copiado para a área de transferência!");
-                }}
-              >
-                COPIAR CÓDIGO PIX
-              </button>
+          {!isApproved && isPix && (success.pixData?.qr_code || success.pixExpiresAt) && (
+            <div className={`checkout-pix-box ${pixExpired ? "is-expired" : ""}`}>
+              <div className="checkout-pix-heading">
+                <div>
+                  <span className="checkout-pix-kicker">PAGAMENTO SEGURO</span>
+                  <h3>Pagamento via Pix</h3>
+                </div>
+                <span className={`checkout-pix-timer ${pixExpired ? "is-expired" : ""}`}>
+                  <Clock3 size={15} />
+                  {pixExpired ? "QR CODE EXPIRADO" : `VÁLIDO POR ${pixRemainingMinutes}:${String(pixRemainingSeconds).padStart(2, "0")}`}
+                </span>
+              </div>
+              {pixExpired ? (
+                <div className="checkout-pix-expired-message">
+                  <strong>Este QR Code Pix expirou.</strong>
+                  <span>Para continuar, gere uma nova cobrança. O novo código terá validade de 30 minutos.</span>
+                  <button type="button" className="primary-button" onClick={regeneratePix} disabled={isRegeneratingPix}>
+                    {isRegeneratingPix ? <><Loader2 size={16} className="animate-spin" /> GERANDO NOVO QR CODE...</> : "GERAR NOVO QR CODE"}
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <p>Leia o QR Code no aplicativo do seu banco ou copie o código Pix para concluir o pagamento.</p>
+                  {pixImageSrc && <img className="checkout-pix-qr" src={pixImageSrc} alt="QR Code para pagamento Pix" />}
+                  {success.pixData?.qr_code && <div className="checkout-pix-code">{success.pixData.qr_code}</div>}
+                  <div className="checkout-pix-actions">
+                    {success.pixData?.qr_code && <button
+                      type="button"
+                      className="primary-button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(success.pixData!.qr_code!);
+                        toast.success("Código Pix Copia e Cola copiado para a área de transferência!");
+                      }}
+                    >
+                      COPIAR CÓDIGO PIX
+                    </button>}
+                    {success.pixData?.ticket_url && <a className="checkout-pix-ticket-link" href={success.pixData.ticket_url} target="_blank" rel="noreferrer">ABRIR COBRANÇA</a>}
+                  </div>
+                </>
+              )}
             </div>
           )}
 

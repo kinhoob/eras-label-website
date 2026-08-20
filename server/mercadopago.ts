@@ -33,6 +33,10 @@ export interface CreatePaymentParams {
     };
   };
   external_reference?: string; // ID do pedido na Eras Label
+  /** Validade da cobrança offline/Pix em formato ISO 8601. */
+  date_of_expiration?: string;
+  /** Chave estável por tentativa de cobrança para impedir duplicações acidentais. */
+  idempotencyKey?: string;
 }
 
 /**
@@ -41,9 +45,10 @@ export interface CreatePaymentParams {
  * regionais do Pix e de outros meios de pagamento.
  */
 export function buildMercadoPagoPaymentPayload(params: CreatePaymentParams) {
+  const { idempotencyKey: _idempotencyKey, ...paymentParams } = params;
   const address = params.payer.address;
   return {
-    ...params,
+    ...paymentParams,
     payer: {
       ...params.payer,
       ...(address ? {
@@ -147,7 +152,8 @@ export async function createMercadoPagoPayment(params: CreatePaymentParams) {
             ticket_url: "https://www.mercadopago.com.br/payments/mock/ticket"
           }
         },
-        external_reference: params.external_reference
+        external_reference: params.external_reference,
+        date_of_expiration: params.date_of_expiration,
       };
     } else {
       // Cartão aprovado no mock
@@ -163,7 +169,7 @@ export async function createMercadoPagoPayment(params: CreatePaymentParams) {
 
   // Requisição real à API do Mercado Pago
   const payload = buildMercadoPagoPaymentPayload(params);
-  const idempotencyKey = `${params.external_reference || "eras-payment"}-v1`;
+  const idempotencyKey = params.idempotencyKey || `${params.external_reference || "eras-payment"}-v1`;
   const response = await fetch(`${MP_API_BASE}/v1/payments`, {
     method: "POST",
     headers: {

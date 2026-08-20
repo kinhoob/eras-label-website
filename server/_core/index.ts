@@ -94,7 +94,7 @@ async function startServer() {
       const paymentDetail = payment?.status_detail ? `${paymentStatus}: ${String(payment.status_detail)}` : null;
       const orderNumber = payment?.external_reference ?? event?.external_reference;
       if (orderNumber) {
-        const updated = await updateOrderPaymentStatus(String(orderNumber), paymentStatus, paymentDetail);
+        const updated = await updateOrderPaymentStatus(String(orderNumber), paymentStatus, paymentDetail, paymentId);
         console.log(`[MercadoPago Webhook] Pedido ${orderNumber} sincronizado: ${paymentStatus}${updated ? "" : " (sem registo local)"}`);
       } else {
         console.warn(`[MercadoPago Webhook] Pagamento ${paymentId} sem external_reference.`);

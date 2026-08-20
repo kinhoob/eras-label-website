@@ -82,6 +82,7 @@ import {
   getOrderByNumber,
   getOrderItems,
   createOrder,
+  updateOrderPixPayment,
   updateOrderPaymentStatus,
   updateOrderTracking,
   updateOrderFulfillmentStatus,
@@ -101,9 +102,25 @@ import {
 } from "./db";
 import { adminOrderEmail, newsletterWelcomeEmail, orderConfirmationEmail, paymentConfirmationEmail } from "./email-templates";
 import { ENV } from "./_core/env";
+import { createPixExpirationDate, isPixExpired, PIX_EXPIRATION_MINUTES } from "../shared/pix";
 import { sendResendEmail } from "./resend";
 import { mergeLabelPdfs } from "./label-pdf";
 import { reconcileVisibleOrderPayments } from "./payment-reconciliation";
+
+function extractPixTransactionData(payment: any) {
+  const transactionData = payment?.point_of_interaction?.transaction_data;
+  if (!transactionData) return null;
+  return {
+    qr_code: typeof transactionData.qr_code === "string" ? transactionData.qr_code : undefined,
+    qr_code_base64: typeof transactionData.qr_code_base64 === "string" ? transactionData.qr_code_base64 : undefined,
+    ticket_url: typeof transactionData.ticket_url === "string" ? transactionData.ticket_url : undefined,
+  };
+}
+
+function getPayerNameParts(customerName: string) {
+  const [firstName, ...lastNameParts] = customerName.trim().split(/\\s+/);
+  return { firstName: firstName || "Cliente", lastName: lastNameParts.join(" ") || "Cliente" };
+}
 
 const newsletterInput = z.object({
   name: z.string().min(2).max(255),
@@ -460,8 +477,8 @@ export const appRouter = router({
       let initialPaymentStatus = "pending";
       let paymentFailureReason: string | null = null;
 
-      const [firstName, ...lastNameParts] = input.customerName.trim().split(" ");
-      const lastName = lastNameParts.join(" ") || "Cliente";
+      const { firstName, lastName } = getPayerNameParts(input.customerName);
+      const pixExpiresAt = input.paymentMethod === "pix" ? createPixExpirationDate() : undefined;
 
       try {
         mpResult = await createMercadoPagoPayment({
@@ -488,6 +505,8 @@ export const appRouter = router({
             },
           },
           external_reference: orderNumber,
+          ...(input.paymentMethod === "pix" && pixExpiresAt ? { date_of_expiration: pixExpiresAt.toISOString() } : {}),
+          idempotencyKey: input.paymentMethod === "pix" ? `${orderNumber}-pix-1` : `${orderNumber}-card-v1`,
         });
 
         if (mpResult?.status) {
@@ -502,6 +521,7 @@ export const appRouter = router({
         throw new TRPCError({ code: "BAD_REQUEST", message: mpError.message || "Erro ao processar pagamento com o Mercado Pago." });
       }
 
+      const pixData = input.paymentMethod === "pix" ? extractPixTransactionData(mpResult) : null;
       const persistedOrder = await createOrder({
         orderNumber,
         userId: ctx.user?.id ?? null,
@@ -519,6 +539,12 @@ export const appRouter = router({
         total: serverTotal.toFixed(2),
         paymentStatus: initialPaymentStatus,
         paymentFailureReason,
+        paymentId: mpResult?.id ? String(mpResult.id) : null,
+        pixExpiresAt: input.paymentMethod === "pix" ? pixExpiresAt : null,
+        pixQrCode: pixData?.qr_code ?? null,
+        pixQrCodeBase64: pixData?.qr_code_base64 ?? null,
+        pixTicketUrl: pixData?.ticket_url ?? null,
+        pixGeneration: input.paymentMethod === "pix" ? 1 : 0,
         status: (initialPaymentStatus === "approved" || initialPaymentStatus === "authorized") ? "Processando" : initialPaymentStatus === "in_process" ? "Em análise" : "Aguardando pagamento",
       });
 
@@ -574,9 +600,101 @@ export const appRouter = router({
         orderNumber,
         orderId: persistedOrder?.id ?? null,
         paymentStatus: initialPaymentStatus,
-        pixData: mpResult?.point_of_interaction?.transaction_data || null,
+        pixData,
+        pixExpiresAt: input.paymentMethod === "pix" && pixExpiresAt ? pixExpiresAt.toISOString() : null,
+        pixGeneration: input.paymentMethod === "pix" ? 1 : 0,
         message: initialPaymentStatus === "approved" ? "Pedido aprovado com sucesso!" : "Pedido gerado! Conclua o pagamento via Pix ou Cartão.",
         ...input,
+      };
+    }),
+    regeneratePix: publicProcedure.input(z.object({
+      orderNumber: z.string().regex(/^ER-\d{4}-\d{4,12}$/),
+      customerEmail: z.string().email(),
+    })).mutation(async ({ input }) => {
+      const current = await getOrderByNumber(input.orderNumber);
+      if (!current || current.customerEmail.toLowerCase() !== input.customerEmail.trim().toLowerCase()) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Não foi possível localizar este pedido." });
+      }
+      if (current.paymentMethod !== "pix") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Este pedido não foi criado com Pix." });
+      }
+      if (["approved", "authorized"].includes(String(current.paymentStatus).toLowerCase())) {
+        throw new TRPCError({ code: "CONFLICT", message: "Este pedido já está pago e não precisa de um novo QR Code." });
+      }
+
+      const failedStatuses = new Set(["rejected", "cancelled", "failed", "cancelled_by_collector"]);
+      const currentStatus = String(current.paymentStatus ?? "").toLowerCase();
+      const expired = !current.pixExpiresAt || isPixExpired(current.pixExpiresAt);
+      if (!expired && !failedStatuses.has(currentStatus) && current.pixQrCode) {
+        return {
+          success: true,
+          orderNumber: current.orderNumber,
+          paymentStatus: current.paymentStatus,
+          pixData: {
+            qr_code: current.pixQrCode,
+            qr_code_base64: current.pixQrCodeBase64 || undefined,
+            ticket_url: current.pixTicketUrl || undefined,
+          },
+          pixExpiresAt: current.pixExpiresAt ? new Date(current.pixExpiresAt).toISOString() : null,
+          pixGeneration: current.pixGeneration ?? 1,
+          regenerated: false,
+          message: `O QR Code atual ainda é válido por ${PIX_EXPIRATION_MINUTES} minutos após a sua geração.`,
+        };
+      }
+
+      const nextGeneration = Math.max(1, Number(current.pixGeneration ?? 0) + 1);
+      const pixExpiresAt = createPixExpirationDate();
+      const shippingAddress = (current.shippingAddress || {}) as Record<string, unknown>;
+      const { firstName, lastName } = getPayerNameParts(current.customerName);
+      const mpResult = await createMercadoPagoPayment({
+        transaction_amount: Number(current.total),
+        description: `Pedido ${current.orderNumber} - Eras Label`,
+        payment_method_id: "pix",
+        payer: {
+          email: current.customerEmail,
+          first_name: firstName,
+          last_name: lastName,
+          identification: { type: "CPF", number: current.customerCpf.replace(/\D/g, "") },
+          address: {
+            zip_code: String(shippingAddress.cep ?? ""),
+            street_name: String(shippingAddress.street ?? ""),
+            street_number: String(shippingAddress.number ?? ""),
+            neighborhood: String(shippingAddress.neighborhood ?? ""),
+            city: String(shippingAddress.city ?? ""),
+            federal_unit: String(shippingAddress.state ?? "").toUpperCase(),
+          },
+        },
+        external_reference: current.orderNumber,
+        date_of_expiration: pixExpiresAt.toISOString(),
+        idempotencyKey: `${current.orderNumber}-pix-${nextGeneration}`,
+      });
+      const pixData = extractPixTransactionData(mpResult);
+      if (!mpResult?.id || !pixData?.qr_code) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "O Mercado Pago não devolveu um QR Code Pix válido. Tente novamente." });
+      }
+
+      const persisted = await updateOrderPixPayment({
+        orderNumber: current.orderNumber,
+        paymentId: String(mpResult.id),
+        pixExpiresAt,
+        pixQrCode: pixData.qr_code,
+        pixQrCodeBase64: pixData.qr_code_base64,
+        pixTicketUrl: pixData.ticket_url,
+        pixGeneration: nextGeneration,
+      });
+      if (!persisted) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "O pedido deixou de estar disponível para regenerar o Pix." });
+      }
+
+      return {
+        success: true,
+        orderNumber: current.orderNumber,
+        paymentStatus: "pending",
+        pixData,
+        pixExpiresAt: pixExpiresAt.toISOString(),
+        pixGeneration: nextGeneration,
+        regenerated: true,
+        message: "Novo QR Code Pix gerado. Ele ficará válido por 30 minutos.",
       };
     }),
   }),

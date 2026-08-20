@@ -945,6 +945,36 @@ export async function getOrderByNumber(orderNumber: string) {
   return rows[0];
 }
 
+export async function updateOrderPixPayment(data: {
+  orderNumber: string;
+  paymentId: string;
+  pixExpiresAt: Date;
+  pixQrCode?: string | null;
+  pixQrCodeBase64?: string | null;
+  pixTicketUrl?: string | null;
+  pixGeneration: number;
+}) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const current = await getOrderByNumber(data.orderNumber);
+  if (!current) return undefined;
+
+  await db.update(orders).set({
+    paymentId: data.paymentId,
+    pixExpiresAt: data.pixExpiresAt,
+    pixQrCode: data.pixQrCode ?? null,
+    pixQrCodeBase64: data.pixQrCodeBase64 ?? null,
+    pixTicketUrl: data.pixTicketUrl ?? null,
+    pixGeneration: data.pixGeneration,
+    paymentStatus: "pending",
+    status: "Aguardando pagamento",
+    paymentFailureReason: null,
+  }).where(eq(orders.orderNumber, data.orderNumber));
+
+  const updated = await db.select().from(orders).where(eq(orders.orderNumber, data.orderNumber)).limit(1);
+  return updated[0] ? normalizeOrderForClient(updated[0]) : undefined;
+}
+
 export async function generateNextOrderNumber(): Promise<string> {
   const db = await getDb();
   const year = new Date().getFullYear();
@@ -1026,6 +1056,14 @@ function normalizeOrderForClient(order: typeof orders.$inferSelect) {
     discount: Number(order.discount),
     total: Number(order.total),
     paymentStatus: order.paymentStatus,
+    paymentId: order.paymentId,
+    pixExpiresAt: order.pixExpiresAt ? new Date(order.pixExpiresAt).toISOString() : null,
+    pixGeneration: order.pixGeneration ?? 0,
+    pixData: order.paymentMethod === "pix" && order.pixQrCode ? {
+      qr_code: order.pixQrCode,
+      qr_code_base64: order.pixQrCodeBase64 || undefined,
+      ticket_url: order.pixTicketUrl || undefined,
+    } : null,
     fulfillmentStatus: order.fulfillmentStatus || (order.archivedAt ? "archived" : "pending_packaging"),
     archived: Boolean(order.archivedAt),
     shippingService: order.shippingMethod || "Correios / Logística",
@@ -1054,14 +1092,26 @@ export function mapMercadoPagoOrderStatus(paymentStatus: string) {
   return { normalizedStatus, nextStatus, isConfirmed };
 }
 
-export async function updateOrderPaymentStatus(orderNumber: string, paymentStatus: string, paymentFailureReason?: string | null) {
+export async function updateOrderPaymentStatus(orderNumber: string, paymentStatus: string, paymentFailureReason?: string | null, paymentId?: string | number | null) {
   const db = await getDb();
   if (!db) return undefined;
+  const current = await getOrderByNumber(orderNumber);
+  if (!current) return undefined;
+
+  // Um pedido pode ter uma nova cobrança Pix depois que a anterior expirar.
+  // Notificações atrasadas da cobrança antiga não podem aprovar a cobrança nova.
+  const incomingPaymentId = String(paymentId ?? "").trim();
+  const activePaymentId = String(current.paymentId ?? "").trim();
+  if (incomingPaymentId && activePaymentId && incomingPaymentId !== activePaymentId) {
+    return current;
+  }
+
   const { normalizedStatus, nextStatus, isConfirmed } = mapMercadoPagoOrderStatus(paymentStatus);
   const clearFailureReason = isConfirmed;
   await db.update(orders).set({
     paymentStatus: normalizedStatus,
     status: nextStatus,
+    ...(incomingPaymentId && !activePaymentId ? { paymentId: incomingPaymentId } : {}),
     ...(clearFailureReason ? { paymentFailureReason: null } : paymentFailureReason !== undefined ? { paymentFailureReason } : {}),
   }).where(eq(orders.orderNumber, orderNumber));
   const updated = await db.select().from(orders).where(eq(orders.orderNumber, orderNumber)).limit(1);
