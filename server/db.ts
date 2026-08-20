@@ -1,4 +1,4 @@
-import { eq, desc, asc, like, or, and, sql, isNull, ne } from "drizzle-orm";
+import { eq, desc, asc, like, or, and, sql, isNull, ne, gte, lte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { nanoid } from "nanoid";
 import {
@@ -1215,48 +1215,94 @@ export async function updateOrderLabelData(orderId: number, data: { shippingOrde
   await db.update(orders).set(data).where(eq(orders.id, orderId));
 }
 
+export function aggregateVariationStock(variations: Array<{ productId: number | null | undefined; stock: number | null | undefined }>) {
+  const stockByProduct = new Map<number, number>();
+  for (const variation of variations) {
+    const productId = Number(variation.productId);
+    if (!productId) continue;
+    stockByProduct.set(productId, (stockByProduct.get(productId) || 0) + Math.max(0, Number(variation.stock) || 0));
+  }
+  return stockByProduct;
+}
+
 export async function getAdminAnalytics(periodDays: number = 7, range?: { startAt?: number; endAt?: number }) {
   const db = await getDb();
-  const { cutoff, rangeEnd, effectivePeriodDays } = resolveAnalyticsRange(periodDays, range);
+  const { cutoff, rangeEnd, effectivePeriodDays, hasCustomRange } = resolveAnalyticsRange(periodDays, range);
+  const emptyAnalytics = {
+    period: { startAt: cutoff, endAt: rangeEnd, days: effectivePeriodDays, custom: hasCustomRange, generatedAt: Date.now() },
+    summary: { visits: 0, pageViews: 0, sales: 0, revenue: 0, grossRevenue: 0, discounts: 0, averageTicket: 0, conversionRate: 0 },
+    comparison: { visits: null, sales: null, revenue: null, averageTicket: null, conversionRate: null },
+    visitorBehavior: { totalVisits: 0, pageViews: 0, homeViews: 0, categoryViews: 0, collectionViews: 0, productViews: 0, cartViews: 0, checkoutViews: 0 },
+    funnel: { visits: 0, productViews: 0, cartViews: 0, checkoutViews: 0, paidOrders: 0 },
+    salesTrend: [],
+    topProducts: [],
+    couponStats: { totalCoupons: 0, activeCoupons: 0, totalUses: 0, discountedOrders: 0, discountAmount: 0, topCoupons: [] },
+  };
+  if (!db) return emptyAnalytics;
 
-  if (!db) {
-    return {
-      summary: { visits: 0, sales: 0, revenue: 0, averageTicket: 0, conversionRate: 0 },
-      visitorBehavior: { totalVisits: 0, categoryViews: 0, productViews: 0 },
-      salesTrend: [],
-      topProducts: [],
-    };
-  }
-
-  const allOrders = await db.select().from(orders);
-  const allVisitEvents = await db.select().from(analyticsEvents);
+  const dayMs = 24 * 60 * 60 * 1000;
   const getTime = (value: unknown) => value ? new Date(value as any).getTime() : 0;
-  const filteredOrders = allOrders.filter((o: any) => {
-    const oTime = getTime(o.createdAt);
-    return oTime >= cutoff && oTime <= rangeEnd;
+  const isPaidOrder = (order: any) => ["approved", "authorized"].includes(String(order.paymentStatus ?? "").trim().toLowerCase());
+  const isCancelledOrder = (order: any) => ["cancelled", "canceled", "estornado", "refunded"].includes(String(order.status ?? "").trim().toLowerCase());
+  const isCountableSale = (order: any) => isPaidOrder(order) && !isCancelledOrder(order);
+  const changePercent = (current: number, previous: number) => previous === 0 ? (current === 0 ? 0 : null) : Number((((current - previous) / previous) * 100).toFixed(2));
+  const sum = (items: any[], key: string) => items.reduce((total, item) => total + Number(item[key] || 0), 0);
+  const uniqueVisitorCount = (events: any[]) => new Set(events.map((event) => String(event.visitorId || "").trim()).filter(Boolean)).size;
+  const previousCutoff = cutoff - effectivePeriodDays * dayMs;
+  const queryStart = new Date(previousCutoff);
+  const queryEnd = new Date(rangeEnd);
+
+  // O painel usa somente os eventos que participam do período atual ou da comparação.
+  // Evitamos carregar o histórico integral de eventos/pedidos a cada abertura da tela,
+  // sem estimar ou fabricar métricas: tudo continua vindo das linhas reais do banco.
+  const [periodOrders, periodVisitEvents, allProducts, allCoupons, allVariations] = await Promise.all([
+    db.select().from(orders).where(and(gte(orders.createdAt, queryStart), lte(orders.createdAt, queryEnd))),
+    db.select().from(analyticsEvents).where(and(gte(analyticsEvents.createdAt, queryStart), lte(analyticsEvents.createdAt, queryEnd))),
+    db.select().from(products),
+    db.select().from(coupons),
+    db.select({ productId: productVariations.productId, stock: productVariations.stock }).from(productVariations),
+  ]);
+  const stockByProduct = aggregateVariationStock(allVariations);
+  const filteredOrders = periodOrders.filter((order: any) => {
+    const createdAt = getTime(order.createdAt);
+    return createdAt >= cutoff && createdAt <= rangeEnd;
   });
-  const salesOrders = filteredOrders.filter((o: any) => ["approved", "authorized"].includes(String(o.paymentStatus ?? "").trim().toLowerCase()));
-  const filteredVisits = allVisitEvents.filter((event: any) => {
-    const eventTime = getTime(event.createdAt);
-    return event.eventType === "page_view" && eventTime >= cutoff && eventTime <= rangeEnd;
+  const salesOrders = filteredOrders.filter(isCountableSale);
+  const filteredVisits = periodVisitEvents.filter((event: any) => {
+    const createdAt = getTime(event.createdAt);
+    return event.eventType === "page_view" && createdAt >= cutoff && createdAt <= rangeEnd;
+  });
+  const previousOrders = periodOrders.filter((order: any) => {
+    const createdAt = getTime(order.createdAt);
+    return createdAt >= previousCutoff && createdAt < cutoff && isCountableSale(order);
+  });
+  const previousVisits = periodVisitEvents.filter((event: any) => {
+    const createdAt = getTime(event.createdAt);
+    return event.eventType === "page_view" && createdAt >= previousCutoff && createdAt < cutoff;
   });
 
-  const totalRevenue = salesOrders.reduce((acc, o) => acc + Number(o.total || 0), 0);
+  const pageViews = filteredVisits.length;
+  const visits = uniqueVisitorCount(filteredVisits);
+  const totalRevenue = sum(salesOrders, "total");
+  const totalDiscounts = sum(salesOrders, "discount");
   const totalSales = salesOrders.length;
   const averageTicket = totalSales > 0 ? totalRevenue / totalSales : 0;
-  const visits = filteredVisits.length;
   const conversionRate = visits > 0 ? Number(((totalSales / visits) * 100).toFixed(2)) : 0;
-
-  const prevCutoff = cutoff - effectivePeriodDays * 24 * 60 * 60 * 1000;
-  const prevFilteredOrders = allOrders.filter((o: any) => {
-    const oTime = getTime(o.createdAt);
-    const paymentStatus = String(o.paymentStatus ?? "").trim().toLowerCase();
-    return oTime >= prevCutoff && oTime < cutoff && ["approved", "authorized"].includes(paymentStatus);
-  });
+  const previousRevenue = sum(previousOrders, "total");
+  const previousSales = previousOrders.length;
+  const previousVisitsCount = uniqueVisitorCount(previousVisits);
+  const previousAverageTicket = previousSales > 0 ? previousRevenue / previousSales : 0;
+  const previousConversionRate = previousVisitsCount > 0 ? Number(((previousSales / previousVisitsCount) * 100).toFixed(2)) : 0;
+  const pathCount = (matcher: (path: string) => boolean) => filteredVisits.filter((event: any) => matcher(String(event.path || ""))).length;
+  const categoryViews = pathCount((path) => path.startsWith("/category") || path.startsWith("/categoria"));
+  const collectionViews = pathCount((path) => path.startsWith("/collection") || path.startsWith("/colecao"));
+  const productViews = pathCount((path) => path.startsWith("/produto") || path.startsWith("/product"));
+  const cartViews = pathCount((path) => path === "/cart" || path === "/sacola" || path.startsWith("/cart/"));
+  const checkoutViews = pathCount((path) => path === "/checkout" || path.startsWith("/checkout/"));
 
   const stepCount = effectivePeriodDays <= 2 ? effectivePeriodDays : effectivePeriodDays <= 7 ? 7 : effectivePeriodDays <= 30 ? 6 : 8;
   const bucketDuration = Math.max(1, (rangeEnd - cutoff) / stepCount);
-  const previousBucketDuration = Math.max(1, (cutoff - prevCutoff) / stepCount);
+  const previousBucketDuration = Math.max(1, (cutoff - previousCutoff) / stepCount);
   const formatLabel = (timestamp: number, index: number) => {
     if (effectivePeriodDays <= 2) return new Date(timestamp).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
     if (effectivePeriodDays <= 7) return index === stepCount - 1 ? "Hoje" : new Date(timestamp).toLocaleDateString("pt-BR", { weekday: "short" });
@@ -1266,79 +1312,101 @@ export async function getAdminAnalytics(periodDays: number = 7, range?: { startA
   const salesTrend = Array.from({ length: stepCount }).map((_, index) => {
     const bucketStart = cutoff + bucketDuration * index;
     const bucketEnd = index === stepCount - 1 ? rangeEnd + 1 : cutoff + bucketDuration * (index + 1);
-    const previousBucketStart = prevCutoff + previousBucketDuration * index;
-    const previousBucketEnd = index === stepCount - 1 ? cutoff : prevCutoff + previousBucketDuration * (index + 1);
-    const chunkOrders = salesOrders.filter((o: any) => {
-      const time = getTime(o.createdAt);
-      return time >= bucketStart && time < bucketEnd;
-    });
-    const chunkVisits = filteredVisits.filter((event: any) => {
-      const time = getTime(event.createdAt);
-      return time >= bucketStart && time < bucketEnd;
-    }).length;
-    const previousChunkOrders = prevFilteredOrders.filter((o: any) => {
-      const time = getTime(o.createdAt);
-      return time >= previousBucketStart && time < previousBucketEnd;
-    });
-    const chunkRev = chunkOrders.reduce((acc, o) => acc + Number(o.total || 0), 0);
-    const previousChunkRev = previousChunkOrders.reduce((acc, o) => acc + Number(o.total || 0), 0);
+    const previousBucketStart = previousCutoff + previousBucketDuration * index;
+    const previousBucketEnd = index === stepCount - 1 ? cutoff : previousCutoff + previousBucketDuration * (index + 1);
+    const currentOrders = salesOrders.filter((order: any) => getTime(order.createdAt) >= bucketStart && getTime(order.createdAt) < bucketEnd);
+    const currentVisits = filteredVisits.filter((event: any) => getTime(event.createdAt) >= bucketStart && getTime(event.createdAt) < bucketEnd);
+    const priorOrders = previousOrders.filter((order: any) => getTime(order.createdAt) >= previousBucketStart && getTime(order.createdAt) < previousBucketEnd);
     return {
       label: formatLabel(bucketStart, index),
-      orders: chunkOrders.length,
-      revenue: Number(chunkRev.toFixed(2)),
-      prevRevenue: Number(previousChunkRev.toFixed(2)),
-      visits: chunkVisits,
+      orders: currentOrders.length,
+      revenue: Number(sum(currentOrders, "total").toFixed(2)),
+      prevRevenue: Number(sum(priorOrders, "total").toFixed(2)),
+      visits: uniqueVisitorCount(currentVisits),
+      pageViews: currentVisits.length,
     };
   });
 
-  // Calcular velocidade real de saída por produto com base nos itens dos pedidos filtrados
-  const productSalesMap = new Map<number, number>();
-  for (const o of salesOrders) {
+  const productSalesMap = new Map<number, { unitsSold: number; revenue: number }>();
+  for (const order of salesOrders) {
     try {
-      const items = typeof o.items === "string" ? JSON.parse(o.items) : (o.items || []);
+      const items = typeof order.items === "string" ? JSON.parse(order.items) : (order.items || []);
       for (const item of items) {
-        const pId = Number(item.productId || item.id || 0);
-        const qty = Number(item.quantity || 1);
-        if (pId > 0) {
-          productSalesMap.set(pId, (productSalesMap.get(pId) || 0) + qty);
-        }
+        const productId = Number(item.productId || item.id || 0);
+        const quantity = Math.max(1, Number(item.quantity || 1));
+        if (!productId) continue;
+        const unitPrice = Number(item.price ?? item.unitPrice ?? 0);
+        const current = productSalesMap.get(productId) || { unitsSold: 0, revenue: 0 };
+        current.unitsSold += quantity;
+        current.revenue += Number(item.total ?? item.lineTotal ?? (unitPrice * quantity));
+        productSalesMap.set(productId, current);
       }
     } catch {
-      // ignore parse error
+      // Itens legados inválidos não podem inventar métricas; são ignorados.
     }
   }
-
-  const allProducts = await db.select().from(products);
-  const topProducts = allProducts.map((p: any) => {
-    const unitsSold = productSalesMap.get(p.id) || 0;
-    // Velocidade diária real no período
-    const velocity = Number((unitsSold / Math.max(1, effectivePeriodDays)).toFixed(2));
+  const topProducts = allProducts.map((product: any) => {
+    const metrics = productSalesMap.get(product.id) || { unitsSold: 0, revenue: 0 };
     return {
-      id: p.id,
-      name: p.name,
-      category: p.category || "Geral",
-      price: Number(p.price || 0),
-      stock: p.stock ?? 10,
-      velocity,
-      unitsSold,
+      id: product.id,
+      name: product.name,
+      category: product.category || "Geral",
+      price: Number(product.price || 0),
+      stock: stockByProduct.get(Number(product.id)) ?? 0,
+      velocity: Number((metrics.unitsSold / Math.max(1, effectivePeriodDays)).toFixed(2)),
+      unitsSold: metrics.unitsSold,
+      revenue: Number(metrics.revenue.toFixed(2)),
     };
-  }).sort((a, b) => b.unitsSold - a.unitsSold).slice(0, 5);
+  }).filter((product) => product.unitsSold > 0).sort((a, b) => b.unitsSold - a.unitsSold).slice(0, 8);
+
+  const discountedOrders = salesOrders.filter((order: any) => Number(order.discount || 0) > 0).length;
+  const topCoupons = allCoupons.filter((coupon: any) => Number(coupon.timesUsed || 0) > 0).map((coupon: any) => ({
+    code: coupon.code,
+    uses: Number(coupon.timesUsed || 0),
+    discountPercent: Number(coupon.discountPercent || 0),
+    active: Number(coupon.active || 0) === 1,
+  })).sort((a, b) => b.uses - a.uses).slice(0, 5);
 
   return {
+    period: { startAt: cutoff, endAt: rangeEnd, days: effectivePeriodDays, custom: hasCustomRange, generatedAt: Date.now() },
     summary: {
       visits,
+      pageViews,
       sales: totalSales,
       revenue: Number(totalRevenue.toFixed(2)),
+      grossRevenue: Number((totalRevenue + totalDiscounts).toFixed(2)),
+      discounts: Number(totalDiscounts.toFixed(2)),
       averageTicket: Number(averageTicket.toFixed(2)),
       conversionRate,
     },
+    comparison: {
+      visits: changePercent(visits, previousVisitsCount),
+      sales: changePercent(totalSales, previousSales),
+      revenue: changePercent(totalRevenue, previousRevenue),
+      averageTicket: changePercent(averageTicket, previousAverageTicket),
+      conversionRate: changePercent(conversionRate, previousConversionRate),
+    },
     visitorBehavior: {
       totalVisits: visits,
-      categoryViews: filteredVisits.filter((event: any) => /^\/(category|collection)/.test(String(event.path))).length,
-      productViews: filteredVisits.filter((event: any) => /^\/produto\//.test(String(event.path))).length,
+      pageViews,
+      homeViews: pathCount((path) => path === "/"),
+      categoryViews,
+      collectionViews,
+      productViews,
+      cartViews,
+      checkoutViews,
     },
+    funnel: { visits, productViews, cartViews, checkoutViews, paidOrders: totalSales },
     salesTrend,
     topProducts,
+    couponStats: {
+      totalCoupons: allCoupons.length,
+      activeCoupons: allCoupons.filter((coupon: any) => Number(coupon.active || 0) === 1).length,
+      totalUses: allCoupons.reduce((total: number, coupon: any) => total + Number(coupon.timesUsed || 0), 0),
+      discountedOrders,
+      discountAmount: Number(totalDiscounts.toFixed(2)),
+      topCoupons,
+    },
   };
 }
 
@@ -1358,50 +1426,62 @@ export async function logInventoryAudit(data: { productId: number; productName: 
 
 export async function getCategoryRevenueMetrics() {
   const db = await getDb();
-  if (!db) {
-    return [
-      { category: "Camisetas", revenue: 142.60, count: 12 },
-      { category: "Calças", revenue: 210.00, count: 8 },
-      { category: "Bonés", revenue: 89.00, count: 6 },
-    ];
+  if (!db) return [];
+
+  const [allOrders, allProducts] = await Promise.all([
+    db.select().from(orders),
+    db.select().from(products),
+  ]);
+  const productCategories = new Map<number, string>();
+  for (const product of allProducts) {
+    productCategories.set(product.id, product.category || "Geral");
   }
 
-  const allProducts = await db.select().from(products);
   const categoryMap: Record<string, { revenue: number; count: number }> = {};
-  
-  for (const p of allProducts) {
-    const cat = p.category || "Geral";
-    if (!categoryMap[cat]) {
-      categoryMap[cat] = { revenue: 0, count: 0 };
+  for (const order of allOrders as any[]) {
+    const paymentStatus = String(order.paymentStatus ?? "").trim().toLowerCase();
+    const orderStatus = String(order.status ?? "").trim().toLowerCase();
+    if (!["approved", "authorized"].includes(paymentStatus)) continue;
+    if (["cancelled", "canceled", "estornado", "refunded"].includes(orderStatus)) continue;
+    let items: Array<Record<string, unknown>> = [];
+    try {
+      const parsed = typeof order.items === "string" ? JSON.parse(order.items) : order.items;
+      if (Array.isArray(parsed)) items = parsed;
+    } catch {
+      continue;
     }
-    categoryMap[cat].count += 1;
-    categoryMap[cat].revenue += Number(p.price || 0) * 2; // estimativa baseada no catálogo
+    for (const item of items) {
+      const productId = Number(item.productId || item.id || 0);
+      const category = productCategories.get(productId) || String(item.category || "Geral");
+      const quantity = Math.max(1, Number(item.quantity || 1));
+      const unitPrice = Number(item.price ?? item.unitPrice ?? 0);
+      const revenue = Number(item.total ?? item.lineTotal ?? (unitPrice * quantity));
+      categoryMap[category] ??= { revenue: 0, count: 0 };
+      categoryMap[category].count += quantity;
+      categoryMap[category].revenue += Number.isFinite(revenue) ? revenue : 0;
+    }
   }
 
-  return Object.entries(categoryMap).map(([category, data]) => ({
-    category,
-    revenue: Number(data.revenue.toFixed(2)),
-    count: data.count,
-  }));
+  return Object.entries(categoryMap)
+    .map(([category, data]) => ({ category, revenue: Number(data.revenue.toFixed(2)), count: data.count }))
+    .sort((a, b) => b.revenue - a.revenue);
 }
 
 export async function getLowStockAlerts() {
   const db = await getDb();
-  if (!db) {
-    return [
-      { id: 1, name: "Camiseta Archive Boxy", stock: 2, sku: "EL-TS-01", category: "Camisetas" },
-      { id: 2, name: "Calça Cargo Paradox", stock: 1, sku: "EL-CP-02", category: "Calças" },
-    ];
-  }
-
-  const allProducts = await db.select().from(products);
-  return allProducts.filter((p: any) => Number(p.stock || 0) < 5).map((p: any) => ({
-    id: p.id,
-    name: p.name,
-    stock: p.stock,
-    sku: p.sku || "",
-    category: p.category || "Geral",
-  }));
+  if (!db) return [];
+  const [allProducts, allVariations] = await Promise.all([
+    db.select().from(products),
+    db.select({ productId: productVariations.productId, stock: productVariations.stock }).from(productVariations),
+  ]);
+  const stockByProduct = aggregateVariationStock(allVariations);
+  return allProducts.map((product: any) => ({
+    id: product.id,
+    name: product.name,
+    stock: stockByProduct.get(Number(product.id)) ?? 0,
+    sku: product.sku || "",
+    category: product.category || "Geral",
+  })).filter((product) => product.stock < 5);
 }
 
 export async function listInventoryAuditLogs(filters?: {

@@ -11,6 +11,7 @@ import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_
 import { storageGetSignedUrl, storagePut } from "./storage";
 import { createMercadoPagoPayment, getMercadoPagoPayment, searchMercadoPagoPayments } from "./mercadopago";
 import { getDb } from "./db";
+import { isGroundedAiSummary } from "./analytics-grounding";
 import { products, orders } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { MelhorEnvioApiError, calculateMelhorEnvioShipping, createMelhorEnvioCartItem, downloadMelhorEnvioLabelFile, getMelhorEnvioTracking } from "./melhor-envio";
@@ -983,10 +984,11 @@ export const appRouter = router({
       startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
       endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
     }).optional()).query(async ({ input }) => {
-      const days = input?.periodDays ?? 7;
+      const requestedDays = input?.periodDays ?? 7;
       const startAt = input?.startDate ? Date.parse(`${input.startDate}T00:00:00.000Z`) : undefined;
       const endAt = input?.endDate ? Date.parse(`${input.endDate}T23:59:59.999Z`) : undefined;
-      const analytics = await getAdminAnalytics(days, { startAt, endAt });
+      const analytics = await getAdminAnalytics(requestedDays, { startAt, endAt });
+      const days = analytics.period.days;
       const lowStockList = await getLowStockAlerts();
 
       // Verificar se há dados suficientes para gerar análise (ex: vendas === 0 e sem histórico relevante)
@@ -1019,13 +1021,37 @@ export const appRouter = router({
             { role: "user", content: prompt },
           ],
         });
-        const summaryText = res.choices[0].message.content || "Resumo indisponível no momento.";
-        return { success: true, summary: summaryText };
+        const summaryText = String(res.choices[0].message.content || "").trim();
+        const groundedNumbers = [
+          0,
+          1,
+          2,
+          days,
+          analytics.summary.visits,
+          analytics.summary.pageViews,
+          analytics.summary.sales,
+          analytics.summary.revenue,
+          analytics.summary.grossRevenue,
+          analytics.summary.discounts,
+          analytics.summary.averageTicket,
+          analytics.summary.conversionRate,
+          ...analytics.topProducts.flatMap((product: any) => [product.stock, product.unitsSold, product.revenue, product.velocity]),
+          ...lowStockList.map((product: any) => product.stock),
+        ];
+        const isGrounded = isGroundedAiSummary(summaryText, groundedNumbers, [analytics.summary.conversionRate]);
+        if (!isGrounded) {
+          console.warn("[AI Summary] Rejected ungrounded response: external benchmark or unsupported number detected.");
+          return {
+            success: true,
+            summary: `A análise automática foi retida porque a resposta gerada incluiu uma referência que não pode ser comprovada pelo banco da loja. No período real de ${days} dias, foram registrados ${analytics.summary.sales} pedidos pagos, receita de R$ ${analytics.summary.revenue.toFixed(2)} e conversão de ${analytics.summary.conversionRate}%.`,
+          };
+        }
+        return { success: true, summary: summaryText || "Resumo indisponível no momento." };
       } catch (err) {
         console.warn("[AI Summary] Failed to generate AI summary:", err);
         return {
           success: true,
-          summary: `Nos últimos ${days} dias, a Eras Label registrou ${analytics.summary.sales} vendas com receita de R$ ${analytics.summary.revenue.toFixed(2)} e taxa de conversão de ${analytics.summary.conversionRate}%. O foco principal continua sendo a curadoria de peças em destaque e o engajamento no grupo VIP.`,
+          summary: `A análise automática está temporariamente indisponível. No período real de ${days} dias, foram registrados ${analytics.summary.sales} pedidos pagos, receita líquida de R$ ${analytics.summary.revenue.toFixed(2)} e conversão de ${analytics.summary.conversionRate}%. Consulte os indicadores acima para a leitura factual do desempenho.`,
         };
       }
     }),

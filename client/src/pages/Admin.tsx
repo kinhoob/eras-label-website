@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
+import type { ReactNode } from "react";
 import { Link } from "wouter";
 import {
   AlertTriangle,
@@ -28,6 +29,7 @@ import {
   Upload,
   Check,
   Download,
+  RefreshCw,
   LockKeyhole,
   LoaderCircle,
   ShieldCheck,
@@ -666,7 +668,11 @@ function AdminLoginScreen() {
 export default function Admin() {
   const { data: authUser, isLoading: authLoading } = trpc.auth.me.useQuery();
 
-  const [active, setActive] = useState("Visão geral");
+  const [active, setActive] = useState(() => {
+    if (typeof window === "undefined") return "Visão geral";
+    const section = new URLSearchParams(window.location.search).get("section");
+    return section === "stats" || section === "estatisticas" ? "Estatísticas" : "Visão geral";
+  });
   const [query, setQuery] = useState("");
   const [productCategoryFilter, setProductCategoryFilter] = useState<number | null>(null);
   const [productsDropdownOpen, setProductsDropdownOpen] = useState(false);
@@ -687,12 +693,16 @@ export default function Admin() {
   const [storefrontPasswordDraft, setStorefrontPasswordDraft] = useState("");
   const [clearStorefrontPassword, setClearStorefrontPassword] = useState(false);
 
+  const isAdmin = authUser?.role === "admin";
+  const needsProducts = isAdmin && ["Visão geral", "Produtos", "Coleções", "Categorias", "Aparência", "Descontos"].includes(active);
+  const needsOrders = isAdmin && ["Visão geral", "Vendas", "Pedidos", "Clientes"].includes(active);
+  const needsCategories = isAdmin && ["Produtos", "Coleções", "Categorias", "Aparência"].includes(active);
   const { data: commercialConfig } = trpc.catalog.getConfig.useQuery();
   const { data: storefrontConfig } = trpc.catalog.getStorefrontConfig.useQuery();
   const { data: homeContent } = trpc.catalog.getHomeContent.useQuery();
-  const { data: catalogProducts, isLoading: catalogProductsLoading, isError: catalogProductsError, refetch: refetchCatalogProducts } = trpc.admin.listProducts.useQuery(undefined, { enabled: authUser?.role === "admin" });
-  const { data: adminOrders = [], isLoading: adminOrdersLoading } = trpc.admin.listOrders.useQuery(undefined, { enabled: authUser?.role === "admin" });
-  const { data: adminCategories = [] } = trpc.admin.listCategories.useQuery(undefined, { enabled: authUser?.role === "admin" });
+  const { data: catalogProducts, isLoading: catalogProductsLoading, isError: catalogProductsError, refetch: refetchCatalogProducts } = trpc.admin.listProducts.useQuery(undefined, { enabled: needsProducts });
+  const { data: adminOrders = [], isLoading: adminOrdersLoading } = trpc.admin.listOrders.useQuery(undefined, { enabled: needsOrders });
+  const { data: adminCategories = [] } = trpc.admin.listCategories.useQuery(undefined, { enabled: needsCategories });
   const utils = trpc.useUtils();
   const [pixDiscountPercent, setPixDiscountPercent] = useState<number>(5);
   const [freeShippingThreshold, setFreeShippingThreshold] = useState<number>(350);
@@ -1778,224 +1788,166 @@ function AdminDashboardHome({ adminName, adminOrders, adminOrdersLoading, catalo
   );
 }
 
-// Componente de Estatísticas Avançadas com Filtros de Período e Exportação CSV
+// Componente de Estatísticas Avançadas com dados reais, filtros de período e comparação.
 function AdminAnalyticsSection() {
   const [periodDays, setPeriodDays] = useState<number>(7);
   const [rangeMode, setRangeMode] = useState<"preset" | "custom">("preset");
+  const [comparisonMode, setComparisonMode] = useState<"none" | "previous">("none");
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
   const analyticsInput = useMemo(() => rangeMode === "custom" && customStartDate && customEndDate
     ? { periodDays: 7, startDate: customStartDate, endDate: customEndDate }
     : { periodDays }, [rangeMode, customStartDate, customEndDate, periodDays]);
-  const { data: analytics, isLoading, refetch } = trpc.admin.getAnalytics.useQuery(analyticsInput);
+  // Mantém a consulta analítica estável e sem retries silenciosos: se o backend falhar,
+  // o painel mostra uma mensagem útil; durante refetches, os dados reais anteriores
+  // continuam visíveis em vez de trocar a página inteira por loading.
+  const {
+    data: analytics,
+    isLoading,
+    isError: analyticsError,
+    error: analyticsQueryError,
+    refetch,
+  } = trpc.admin.getAnalytics.useQuery(analyticsInput, {
+    retry: false,
+    refetchOnWindowFocus: false,
+    staleTime: 15_000,
+  });
+  const {
+    data: aiData,
+    isLoading: aiLoading,
+    isError: aiError,
+    refetch: refetchAi,
+  } = trpc.admin.aiSummary.useQuery(analyticsInput, {
+    enabled: Boolean(analytics),
+    retry: false,
+    refetchOnWindowFocus: false,
+    staleTime: 15_000,
+  });
 
   const exportAnalyticsCSV = () => {
     if (!analytics) return;
     const summary = analytics.summary;
     const headers = ["Métrica", "Valor"];
     const rows = [
-      ["Período (dias)", periodDays],
-      ["Visitas", summary.visits],
-      ["Vendas", summary.sales],
-      ["Receita (R$)", summary.revenue.toFixed(2)],
-      ["Ticket Médio (R$)", summary.averageTicket.toFixed(2)],
-      ["Taxa de Conversão (%)", summary.conversionRate],
+      ["Período (dias)", analytics.period?.days || periodDays],
+      ["Visitantes únicos", summary.visits],
+      ["Visualizações de página", summary.pageViews || 0],
+      ["Vendas pagas", summary.sales],
+      ["Receita líquida (R$)", summary.revenue.toFixed(2)],
+      ["Descontos (R$)", (summary.discounts || 0).toFixed(2)],
+      ["Ticket médio (R$)", summary.averageTicket.toFixed(2)],
+      ["Conversão (%)", summary.conversionRate],
     ];
     const rangeLabel = rangeMode === "custom" && customStartDate && customEndDate ? `${customStartDate}_${customEndDate}` : `${periodDays}dias`;
-    const success = exportToCSV(`estatisticas_eras_label_${rangeLabel}.csv`, headers, rows);
-    if (success) {
-      toast.success("Relatório de estatísticas exportado em CSV com sucesso!");
-    } else {
-      toast.error("Erro ao exportar relatório CSV.");
-    }
+    if (exportToCSV(`estatisticas_eras_label_${rangeLabel}.csv`, headers, rows)) toast.success("Relatório de estatísticas exportado em CSV.");
+    else toast.error("Não foi possível exportar o relatório.");
   };
 
-  if (isLoading) {
-    return (
-      <section className="admin-content">
-        <div className="inventory-state"><LoaderCircle className="spin" size={24} /><strong>Carregando métricas estatísticas...</strong></div>
-      </section>
-    );
+  // O loading só bloqueia a primeira resposta. Se já houver analytics, um refetch
+  // mantém os cards e gráficos visíveis; se houver erro, o admin recebe uma ação clara.
+  if (!analytics && isLoading) {
+    return <section className="admin-content"><div className="inventory-state"><LoaderCircle className="spin" size={24} /><strong>Carregando métricas reais...</strong><span>Estamos a consultar visitas, pedidos pagos e receita no banco da loja.</span></div></section>;
+  }
+  if (!analytics && analyticsError) {
+    return <section className="admin-content"><div className="inventory-state analytics-error-state"><AlertTriangle size={24} /><strong>Não foi possível carregar as estatísticas.</strong><span>{analyticsQueryError?.message || "A consulta ao banco não respondeu corretamente."}</span><Button type="button" onClick={() => void refetch()}><RefreshCw size={15} /> Tentar novamente</Button></div></section>;
   }
 
-  const summary = analytics?.summary || { visits: 0, sales: 0, revenue: 0, averageTicket: 0, conversionRate: 0 };
-  const behavior = analytics?.visitorBehavior || { totalVisits: 0, categoryViews: 0, productViews: 0 };
+  const summary = analytics?.summary || { visits: 0, pageViews: 0, sales: 0, revenue: 0, grossRevenue: 0, discounts: 0, averageTicket: 0, conversionRate: 0 };
+  const behavior = analytics?.visitorBehavior || { totalVisits: 0, pageViews: 0, homeViews: 0, categoryViews: 0, collectionViews: 0, productViews: 0, cartViews: 0, checkoutViews: 0 };
   const trend = analytics?.salesTrend || [];
-
-  const { data: aiData, isLoading: aiLoading, refetch: refetchAi } = trpc.admin.aiSummary.useQuery(analyticsInput);
+  const selectedDays = Number(analytics?.period?.days || periodDays);
 
   return (
     <section className="admin-content">
-      <div className="content-toolbar">
+      <div className="content-toolbar eras-stats-page-heading">
         <div>
           <span className="section-kicker">ANÁLISE DE DADOS E DESEMPENHO</span>
-          <h2 className="content-title">Visão Geral de Estatísticas</h2>
-          <p>Acompanhe o comportamento dos visitantes, faturamento e conversões da Eras Label.</p>
-        </div>
-        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
-          <div className="analytics-period-picker">
-            {[7, 15, 30].map((days) => (
-              <button key={days} className={`period-btn ${rangeMode === "preset" && periodDays === days ? "active" : ""}`} onClick={() => { setRangeMode("preset"); setPeriodDays(days); }} type="button">{days} dias</button>
-            ))}
-            <button className={`period-btn ${rangeMode === "custom" ? "active" : ""}`} onClick={() => setRangeMode("custom")} type="button">Personalizado</button>
-          </div>
-          {rangeMode === "custom" && (
-            <div className="analytics-custom-range">
-              <label>De <input type="date" value={customStartDate} onChange={(event) => setCustomStartDate(event.target.value)} /></label>
-              <label>Até <input type="date" value={customEndDate} onChange={(event) => setCustomEndDate(event.target.value)} /></label>
-            </div>
-          )}
-          <Button variant="outline" onClick={exportAnalyticsCSV}><Download size={15} /> Exportar CSV</Button>
-          <Button variant="outline" onClick={() => void refetch()}>Atualizar</Button>
+          <h2 className="content-title">Visão geral</h2>
+          <p>Dados reais de acessos registrados no storefront e pedidos com pagamento aprovado.</p>
         </div>
       </div>
 
-      <div className="metric-grid" style={{ marginBottom: "1.75rem" }}>
-        <div className="metric-card">
-          <span>Visitas</span>
-          <strong>{summary.visits}</strong>
-          <small className="positive">+12,4% nos últimos 7 dias</small>
+      <div className="eras-stats-shell">
+        <div className="eras-stats-toolbar">
+          <div className="eras-stats-toolbar-heading"><span className="eras-stats-overline">PERÍODO DE ANÁLISE</span><strong>{selectedDays} {selectedDays === 1 ? "dia" : "dias"}</strong></div>
+          <div className="eras-stats-filter-row">
+            <div className="eras-stats-periods" role="group" aria-label="Período da estatística">
+              {[1, 7, 15, 30].map((days) => <button key={days} className={`eras-stats-period-btn ${rangeMode === "preset" && periodDays === days ? "active" : ""}`} onClick={() => { setRangeMode("preset"); setPeriodDays(days); }} type="button">{days === 1 ? "Hoje" : `${days} dias`}</button>)}
+              <button className={`eras-stats-period-btn ${rangeMode === "custom" ? "active" : ""}`} onClick={() => setRangeMode("custom")} type="button">Personalizado</button>
+            </div>
+            {rangeMode === "custom" && <div className="eras-stats-date-range"><label>De <input type="date" value={customStartDate} onChange={(event) => setCustomStartDate(event.target.value)} /></label><label>Até <input type="date" value={customEndDate} onChange={(event) => setCustomEndDate(event.target.value)} /></label>{customStartDate && customEndDate && customStartDate > customEndDate && <span className="eras-stats-filter-error">Intervalo inválido.</span>}</div>}
+            <label className="eras-stats-comparison"><span>Comparação</span><select value={comparisonMode} onChange={(event) => setComparisonMode(event.target.value as "none" | "previous")}><option value="none">Nenhuma</option><option value="previous">Período anterior</option></select></label>
+            <div className="eras-stats-actions"><Button variant="outline" onClick={exportAnalyticsCSV} disabled={!analytics}><Download size={15} /> Exportar</Button><Button variant="outline" onClick={() => void refetch()}><RefreshCw size={15} /> Atualizar</Button></div>
+          </div>
         </div>
-        <div className="metric-card">
-          <span>Vendas</span>
-          <strong>{summary.sales}</strong>
-          <small className="positive">Pedidos confirmados</small>
+        <div className="eras-stats-update-line"><span>Última atualização: {analytics?.period?.generatedAt ? new Date(analytics.period.generatedAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" }) : "—"}</span><span>Visitantes únicos e pedidos pagos; sem estimativas.</span></div>
+
+        <div className="eras-stats-card-grid">
+          <StatsMetricCard icon={<Eye size={18} />} label="Visitas" value={String(summary.visits)} detail={`${summary.pageViews || 0} visualizações de página`} change={comparisonMode === "previous" ? analytics?.comparison?.visits : null} />
+          <StatsMetricCard icon={<ShoppingCart size={18} />} label="Vendas" value={String(summary.sales)} detail="Pedidos com pagamento aprovado" change={comparisonMode === "previous" ? analytics?.comparison?.sales : null} />
+          <StatsMetricCard icon={<BarChart3 size={18} />} label="Receita" value={formatCurrency(summary.revenue)} detail={summary.discounts ? `${formatCurrency(summary.discounts)} em descontos aplicados` : "Receita líquida dos pedidos pagos"} change={comparisonMode === "previous" ? analytics?.comparison?.revenue : null} />
+          <StatsMetricCard icon={<Tag size={18} />} label="Ticket médio" value={formatCurrency(summary.averageTicket)} detail={summary.sales ? "Receita média por pedido pago" : "Sem pedidos pagos no período"} change={comparisonMode === "previous" ? analytics?.comparison?.averageTicket : null} />
         </div>
-        <div className="metric-card">
-          <span>Receita</span>
-          <strong>R$ {summary.revenue.toFixed(2)}</strong>
-          <small className="positive">Faturamento total</small>
+
+        <div className="eras-stats-main-grid">
+          <section className="eras-stats-panel eras-stats-panel-large"><div className="eras-stats-panel-heading"><div><span className="eras-stats-overline">EVOLUÇÃO</span><h3>Receita e vendas</h3></div><MoreHorizontal size={18} aria-hidden="true" /></div>{trend.length ? <StatsRevenueChart trend={trend} /> : <StatsEmptyState message="Ainda não há pedidos pagos suficientes para formar uma série temporal." />}</section>
+          <section className="eras-stats-panel"><div className="eras-stats-panel-heading"><div><span className="eras-stats-overline">TRÁFEGO</span><h3>Visitas no período</h3></div><MoreHorizontal size={18} aria-hidden="true" /></div>{trend.length ? <StatsVisitsChart trend={trend} /> : <StatsEmptyState message="Ainda não há visitas registradas no período selecionado." />}</section>
         </div>
-        <div className="metric-card">
-          <span>Ticket médio</span>
-          <strong>R$ {summary.averageTicket.toFixed(2)}</strong>
-          <small>Por pedido realizado</small>
+
+        <div className="eras-stats-secondary-grid">
+          <section className="eras-stats-panel"><div className="eras-stats-panel-heading"><div><span className="eras-stats-overline">FUNIL DE COMPRA</span><h3>Visitas a vendas</h3></div><strong className="eras-stats-panel-number">{summary.conversionRate.toFixed(2)}%</strong></div><p className="eras-stats-muted">Acompanhe a redução do tráfego até os pedidos com pagamento aprovado.</p><StatsFunnel data={analytics?.funnel} /></section>
+          <section className="eras-stats-panel"><div className="eras-stats-panel-heading"><div><span className="eras-stats-overline">COMPORTAMENTO</span><h3>Atividade dos visitantes</h3></div><MoreHorizontal size={18} aria-hidden="true" /></div><StatsBehaviorList behavior={behavior} /></section>
         </div>
-      </div>
 
-      <div className="admin-dashboard-grid">
-        <section className="admin-panel chart-panel" style={{ gridColumn: "span 2" }}>
-          <div className="panel-heading">
-            <div>
-              <span className="section-kicker">TENDÊNCIA DE VENDAS</span>
-              <h3>Faturamento e Pedidos no Período</h3>
-            </div>
-            <span className="editor-help">Atualizado agora</span>
-          </div>
-          <div className="fake-chart">
-            <div className="chart-axis"><span>R$ 300</span><span>R$ 225</span><span>R$ 150</span><span>R$ 75</span><span>R$ 0</span></div>
-            <div className="chart-bars" style={{ gap: "1.25rem" }}>
-              {trend.map((item: any, index: number) => {
-                const heightPercent = Math.max(10, Math.min(100, (item.revenue / 250) * 100));
-                const prevHeightPercent = Math.max(8, Math.min(100, ((item.prevRevenue ?? 0) / 250) * 100));
-                return (
-                  <div className="chart-bar-wrap" key={index} style={{ alignItems: "center", gap: "0.25rem" }}>
-                    <div style={{ display: "flex", gap: "0.35rem", alignItems: "flex-end", height: "140px" }}>
-                      <div className="chart-bar" style={{ width: "12px", height: `${heightPercent}%`, background: item.revenue > 0 ? "#b22222" : "#e6e2dc" }} title={`Atual: R$ ${item.revenue.toFixed(2)} (${item.orders} pedidos)`} />
-                      <div className="chart-bar" style={{ width: "12px", height: `${prevHeightPercent}%`, background: "#94a3b8", opacity: 0.7 }} title={`Mês Anterior: R$ ${(item.prevRevenue ?? 0).toFixed(2)}`} />
-                    </div>
-                    <span style={{ fontSize: "0.75rem", marginTop: "0.25rem" }}>{item.label}</span>
-                  </div>
-                );
-              })}
-            </div>
-            <div style={{ display: "flex", justifyContent: "center", gap: "1.5rem", marginTop: "0.75rem", fontSize: "0.75rem", color: "#666" }}>
-              <span style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}><span style={{ width: "10px", height: "10px", background: "#b22222", display: "inline-block", borderRadius: "2px" }} /> Período Atual</span>
-              <span style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}><span style={{ width: "10px", height: "10px", background: "#94a3b8", display: "inline-block", borderRadius: "2px" }} /> Mês Anterior</span>
-            </div>
-          </div>
-        </section>
+        <div className="eras-stats-secondary-grid">
+          <section className="eras-stats-panel"><div className="eras-stats-panel-heading"><div><span className="eras-stats-overline">PRODUTOS</span><h3>Mais vendidos</h3></div><span className="eras-stats-caption">Unidades pagas</span></div>{analytics?.topProducts?.length ? <div className="eras-stats-product-list">{analytics.topProducts.map((product: any, index: number) => <div className="eras-stats-product-row" key={product.id}><span className="eras-stats-product-rank">{index + 1}</span><div className="eras-stats-product-name"><strong>{product.name}</strong><span>{product.category} · estoque {product.stock}</span></div><div className="eras-stats-product-value"><strong>{product.unitsSold}</strong><span>{formatCurrency(product.revenue)}</span></div></div>)}</div> : <StatsEmptyState message="Ainda não há produtos vendidos no período selecionado." />}</section>
+          <section className="eras-stats-panel"><div className="eras-stats-panel-heading"><div><span className="eras-stats-overline">CUPONS E DESCONTOS</span><h3>Uso promocional</h3></div><MoreHorizontal size={18} aria-hidden="true" /></div><div className="eras-stats-coupon-summary"><div><strong>{analytics?.couponStats?.totalCoupons || 0}</strong><span>cupons cadastrados</span></div><div><strong>{analytics?.couponStats?.totalUses || 0}</strong><span>usos acumulados</span></div><div><strong>{analytics?.couponStats?.discountedOrders || 0}</strong><span>pedidos com desconto</span></div></div>{analytics?.couponStats?.topCoupons?.length ? <div className="eras-stats-coupon-list">{analytics.couponStats.topCoupons.map((coupon: any) => <div key={coupon.code}><span>{coupon.code}</span><strong>{coupon.uses} usos</strong></div>)}</div> : <StatsEmptyState message="Nenhum cupom foi utilizado no período disponível." compact />}</section>
+        </div>
 
-        <section className="admin-panel">
-          <div className="panel-heading">
-            <div>
-              <span className="section-kicker">COMPORTAMENTO</span>
-              <h3>Atividade dos Visitantes</h3>
-            </div>
-          </div>
-          <div className="mini-orders" style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
-            <div className="mini-order">
-              <div className="order-icon" style={{ background: "#f3e4cb", color: "#a16e34" }}><Eye size={15} /></div>
-              <div><strong>Total de visitas</strong><span>Sessões no storefront</span></div>
-              <strong>{behavior.totalVisits}</strong>
-            </div>
-            <div className="mini-order">
-              <div className="order-icon" style={{ background: "#dce9dc", color: "#507154" }}><Package size={15} /></div>
-              <div><strong>Visualizações de produto</strong><span>Cliques em peças</span></div>
-              <strong>{behavior.productViews}</strong>
-            </div>
-            <div className="mini-order">
-              <div className="order-icon" style={{ background: "#f3d8d1", color: "#b34935" }}><Tag size={15} /></div>
-              <div><strong>Visualizações de categoria</strong><span>Navegação por seções</span></div>
-              <strong>{behavior.categoryViews}</strong>
-            </div>
-          </div>
-        </section>
-
-        <section className="admin-panel" style={{ gridColumn: "span 3" }}>
-          <div className="panel-heading">
-            <div>
-              <span className="section-kicker">CONVERSÃO</span>
-              <h3>Taxa de Conversão de Visitantes em Compradores</h3>
-            </div>
-            <strong>{summary.conversionRate}%</strong>
-          </div>
-          <p style={{ color: "#666", fontSize: "0.82rem", margin: "0.5rem 0 1rem" }}>
-            A taxa de conversão mede a proporção de visitantes que finalizaram uma compra com sucesso na Eras Label. O tráfego orgânico e os links de acesso antecipado mantêm o engajamento elevado.
-          </p>
-          <div style={{ width: "100%", height: "8px", background: "#f0ece6", borderRadius: "99px", overflow: "hidden" }}>
-            <div style={{ width: `${Math.min(100, summary.conversionRate * 20)}%`, height: "100%", background: "#b22222", borderRadius: "99px" }} />
-          </div>
-        </section>
-
-        <section className="admin-panel" style={{ gridColumn: "span 3", background: "linear-gradient(135deg, #fdfbf7 0%, #f4ede2 100%)", border: "1px solid #e2d7c5" }}>
-          <div className="panel-heading">
-            <div>
-              <span className="section-kicker" style={{ color: "#b22222" }}>INTELIGÊNCIA ARTIFICIAL • ERAS INSIGHTS & PREVISÃO</span>
-              <h3 style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <span>Resumo Executivo & Previsão de Ruptura</span>
-              </h3>
-            </div>
-            <Button variant="outline" size="sm" onClick={() => void refetchAi()} disabled={aiLoading} style={{ fontSize: "0.78rem" }}>
-              {aiLoading ? <LoaderCircle className="spin" size={14} /> : "Atualizar Análise"}
-            </Button>
-          </div>
-          {aiLoading ? (
-            <div style={{ padding: "1.5rem", textAlign: "center", color: "#666", fontSize: "0.9rem" }}>
-              <LoaderCircle className="spin" size={20} style={{ margin: "0 auto 0.5rem" }} />
-              Analisando dados reais de vendas e stock com IA...
-            </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              <div style={{ fontSize: "0.9rem", color: "#333", lineHeight: "1.6", whiteSpace: "pre-line", background: "#fff", padding: "1.25rem", borderRadius: "8px", border: "1px solid #e8e0d5" }}>
-                {String(aiData?.summary || "Nenhum resumo gerado.")}
-              </div>
-              {!aiData?.isInsufficientData && (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "0.85rem" }}>
-                  <div style={{ background: "#fff5f5", border: "1px solid #feb2b2", padding: "1rem", borderRadius: "8px" }}>
-                    <div style={{ fontWeight: 600, color: "#9b2c2c", fontSize: "0.85rem", marginBottom: "0.35rem", display: "flex", alignItems: "center", gap: "0.35rem" }}>
-                      <AlertTriangle size={15} /> Alerta de Risco de Ruptura Real
-                    </div>
-                    <p style={{ fontSize: "0.8rem", color: "#742a2a", margin: 0 }}>
-                      Calculado com base estritamente nas unidades vendidas e no ritmo de saída do período. Produtos abaixo de 5 unidades requerem reabastecimento no inventário.
-                    </p>
-                  </div>
-                  <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "1rem", borderRadius: "8px" }}>
-                    <div style={{ fontWeight: 600, color: "#166534", fontSize: "0.85rem", marginBottom: "0.35rem", display: "flex", alignItems: "center", gap: "0.35rem" }}>
-                      <TrendingUp size={15} /> Indicador de Demanda Efetiva
-                    </div>
-                    <p style={{ fontSize: "0.8rem", color: "#14532d", margin: 0 }}>
-                      Derivado diretamente do faturamento e dos pedidos confirmados no intervalo selecionado.
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </section>
+        <section className="eras-stats-panel eras-stats-ai-panel"><div className="eras-stats-panel-heading"><div><span className="eras-stats-overline">ERAS INSIGHTS</span><h3>Análise fundamentada nos dados</h3></div><Button variant="outline" size="sm" onClick={() => void refetchAi()} disabled={aiLoading}>{aiLoading ? <LoaderCircle className="spin" size={14} /> : <RefreshCw size={14} />} Atualizar análise</Button></div>{aiLoading ? <div className="eras-stats-ai-loading"><LoaderCircle className="spin" size={20} /> Analisando os dados reais do período...</div> : aiError ? <div className="eras-stats-ai-copy">Não foi possível gerar a análise agora. Os indicadores acima continuam baseados nos dados reais do período.</div> : <div className="eras-stats-ai-copy">{String(aiData?.summary || "Ainda não há dados suficientes para gerar uma análise fundamentada.")}</div>}</section>
       </div>
     </section>
   );
+}
+
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(value || 0));
+}
+
+// Cartão de métrica com comparação opcional: sem período anterior, nunca exibe variação inventada.
+function StatsMetricCard({ icon, label, value, detail, change }: { icon: ReactNode; label: string; value: string; detail: string; change: number | null | undefined }) {
+  return <article className="eras-stats-card"><div className="eras-stats-card-top"><span className="eras-stats-card-icon">{icon}</span><span className="eras-stats-card-label">{label}</span><MoreHorizontal size={16} aria-hidden="true" /></div><strong className="eras-stats-card-value">{value}</strong><div className="eras-stats-card-bottom"><span>{detail}</span>{change === null || change === undefined ? <span className="eras-stats-no-comparison">Sem comparação</span> : <span className={change >= 0 ? "eras-stats-change positive" : "eras-stats-change negative"}>{change >= 0 ? "↑" : "↓"} {Math.abs(change).toFixed(2)}%</span>}</div></article>;
+}
+
+function StatsEmptyState({ message, compact = false }: { message: string; compact?: boolean }) {
+  return <div className={`eras-stats-empty ${compact ? "compact" : ""}`}><BarChart3 size={compact ? 18 : 24} /><span>{message}</span></div>;
+}
+
+function StatsRevenueChart({ trend }: { trend: any[] }) {
+  const maxValue = Math.max(1, ...trend.map((item) => Math.max(Number(item.revenue || 0), Number(item.prevRevenue || 0))));
+  return <div className="eras-stats-chart"><div className="eras-stats-chart-scale"><span>{formatCurrency(maxValue)}</span><span>{formatCurrency(maxValue / 2)}</span><span>R$ 0,00</span></div><div className="eras-stats-bar-chart">{trend.map((item, index) => <div className="eras-stats-bar-column" key={`${item.label}-${index}`}><div className="eras-stats-bar-track"><div className="eras-stats-bar previous" style={{ height: `${Math.max(2, (Number(item.prevRevenue || 0) / maxValue) * 100)}%` }} title={`Período anterior: ${formatCurrency(item.prevRevenue || 0)}`} /><div className="eras-stats-bar current" style={{ height: `${Math.max(2, (Number(item.revenue || 0) / maxValue) * 100)}%` }} title={`${item.label}: ${formatCurrency(item.revenue || 0)} · ${item.orders || 0} vendas`} /></div><span>{item.label}</span></div>)}</div><div className="eras-stats-legend"><span><i className="current" /> Período atual</span><span><i className="previous" /> Período anterior</span></div></div>;
+}
+
+function StatsVisitsChart({ trend }: { trend: any[] }) {
+  const width = 640;
+  const height = 190;
+  const padding = 22;
+  const maxValue = Math.max(1, ...trend.map((item) => Number(item.visits || 0)));
+  const points = trend.map((item, index) => { const x = padding + (index * (width - padding * 2)) / Math.max(1, trend.length - 1); const y = height - padding - (Number(item.visits || 0) / maxValue) * (height - padding * 2); return { ...item, x, y }; });
+  const path = points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" ");
+  return <div className="eras-stats-line-chart"><svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Evolução de visitantes únicos"><path className="eras-stats-line-area" d={`${path} L ${points[points.length - 1]?.x || padding} ${height - padding} L ${points[0]?.x || padding} ${height - padding} Z`} /><path className="eras-stats-line" d={path} />{points.map((point, index) => <circle key={`${point.label}-${index}`} cx={point.x} cy={point.y} r="4" className="eras-stats-line-point"><title>{`${point.label}: ${point.visits || 0} visitantes únicos`}</title></circle>)}</svg><div className="eras-stats-chart-labels">{trend.map((item, index) => <span key={`${item.label}-${index}`}>{item.label}</span>)}</div></div>;
+}
+
+function StatsFunnel({ data }: { data?: { visits: number; productViews: number; cartViews: number; checkoutViews: number; paidOrders: number } }) {
+  const steps = [{ label: "Visitas", value: data?.visits || 0 }, { label: "Produtos", value: data?.productViews || 0 }, { label: "Sacola", value: data?.cartViews || 0 }, { label: "Checkout", value: data?.checkoutViews || 0 }, { label: "Vendas", value: data?.paidOrders || 0 }];
+  const maxValue = Math.max(1, steps[0].value);
+  return <div className="eras-stats-funnel">{steps.map((step) => <div className="eras-stats-funnel-row" key={step.label}><div className="eras-stats-funnel-label"><span>{step.label}</span><strong>{step.value}</strong></div><div className="eras-stats-funnel-track"><span style={{ width: `${Math.min(100, (step.value / maxValue) * 100)}%` }} /></div></div>)}</div>;
+}
+
+function StatsBehaviorList({ behavior }: { behavior: { totalVisits: number; pageViews?: number; homeViews?: number; categoryViews: number; collectionViews?: number; productViews: number; cartViews?: number; checkoutViews?: number } }) {
+  const entries = [{ label: "Home", value: behavior.homeViews || 0 }, { label: "Produtos", value: behavior.productViews || 0 }, { label: "Categorias", value: behavior.categoryViews || 0 }, { label: "Coleções", value: behavior.collectionViews || 0 }, { label: "Sacola", value: behavior.cartViews || 0 }, { label: "Checkout", value: behavior.checkoutViews || 0 }];
+  const maxValue = Math.max(1, ...entries.map((entry) => entry.value));
+  return <div className="eras-stats-behavior-list">{entries.map((entry) => <div className="eras-stats-behavior-row" key={entry.label}><div><span>{entry.label}</span><strong>{entry.value}</strong></div><div className="eras-stats-behavior-track"><span style={{ width: `${(entry.value / maxValue) * 100}%` }} /></div></div>)}</div>;
 }
 
 // Componente de Histórico de Alterações de Estoque (Auditoria com Filtros e Exportação CSV)
