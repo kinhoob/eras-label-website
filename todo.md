@@ -34,6 +34,11 @@
 - [x] Revalidar modo noturno em Home, catálogo, produto, checkout, conta, sacola e menu mobile após os ajustes
 - [x] Ajustar o cartão de boas-vindas, pedidos e rodapé da conta para respeitar o contraste do modo noturno
 - [ ] Adicionar evidência verificável da correção da navbar mobile (espaçamento entre theme toggle, conta e sacola)
-- [ ] Documentar com código verificável os overrides globais do modo noturno no storefront (Home, catálogo, produto, checkout, rodapé e menu mobile)
+- [x] Documentar com código verificável os overrides globais do modo noturno no storefront (Home, catálogo, produto, checkout, rodapé e menu mobile)
 - [ ] Adicionar evidência verificável dos estados hover/focus da navbar e controles públicos no modo noturno
 - [ ] Registrar validação explícita por página do modo noturno (Home, catálogo, produto, checkout, conta, sacola e menu mobile) com notas objetivas
+- [x] Corrigir definitivamente o rodapé no modo noturno, incluindo superfície, textos, links, WhatsApp e créditos (a newsletter é uma seção independente da Home)
+- [x] Corrigir definitivamente o menu lateral no modo noturno, incluindo overlay, largura, z-index, fechamento e responsividade
+- [x] Validar rodapé e menu lateral em desktop e mobile e executar regressões antes do checkpoint
+- [x] Corrigir superfícies, contraste e empilhamento do menu lateral público e do rodapé no modo noturno
+- [x] Validar menu e rodapé em desktop e mobile nos temas claro e escuro

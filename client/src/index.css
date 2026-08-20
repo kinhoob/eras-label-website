@@ -12450,3 +12450,281 @@ html.dark .auth-required-page .auth-card .primary-button:hover,
 html.dark .account-page .empty-orders .primary-button:hover {
   background: #d33a32;
 }
+
+/* Correção definitiva: menu lateral e rodapé no modo noturno. Estas regras ficam no fim
+   da folha para vencer superfícies claras legadas sem alterar o tema claro. */
+html.dark .lovable-menu-overlay {
+  position: fixed;
+  z-index: 2000;
+  background: rgba(8, 7, 7, .82) !important;
+  backdrop-filter: blur(5px);
+}
+
+html.dark .lovable-side-menu {
+  position: relative;
+  z-index: 2001;
+  background: #171514 !important;
+  color: #f1ece4 !important;
+  border-right: 1px solid rgba(244, 236, 226, .14) !important;
+  box-shadow: 18px 0 48px rgba(0, 0, 0, .28);
+}
+
+html.dark .lovable-side-menu .lovable-menu-header,
+html.dark .lovable-side-menu .lovable-menu-section,
+html.dark .lovable-side-menu .lovable-menu-links {
+  background: transparent !important;
+  color: #f1ece4 !important;
+  border-color: rgba(244, 236, 226, .14) !important;
+}
+
+html.dark .lovable-side-menu .lovable-menu-brand,
+html.dark .lovable-side-menu .lovable-menu-kicker,
+html.dark .lovable-side-menu .lovable-menu-links a,
+html.dark .lovable-side-menu .lovable-menu-sublinks a,
+html.dark .lovable-side-menu .close-button {
+  color: #f1ece4 !important;
+}
+
+html.dark .lovable-side-menu .lovable-menu-brand span,
+html.dark .lovable-side-menu .lovable-menu-kicker {
+  color: #e36a5e !important;
+}
+
+html.dark .lovable-side-menu .lovable-menu-links a:hover,
+html.dark .lovable-side-menu .lovable-menu-links a:focus-visible,
+html.dark .lovable-side-menu .lovable-menu-sublinks a:hover,
+html.dark .lovable-side-menu .lovable-menu-sublinks a:focus-visible,
+html.dark .lovable-side-menu .close-button:hover,
+html.dark .lovable-side-menu .close-button:focus-visible {
+  color: #ef7468 !important;
+  background: rgba(178, 34, 34, .12) !important;
+}
+
+.lovable-side-menu .lovable-menu-links a,
+.lovable-side-menu .lovable-menu-sublinks a,
+.lovable-side-menu .close-button,
+.official-footer a,
+.official-footer .footer-social-link {
+  transition: color 180ms cubic-bezier(.23, 1, .32, 1), background-color 180ms cubic-bezier(.23, 1, .32, 1), transform 180ms cubic-bezier(.23, 1, .32, 1), border-color 180ms cubic-bezier(.23, 1, .32, 1);
+}
+
+.lovable-side-menu .lovable-menu-links a:hover,
+.lovable-side-menu .lovable-menu-sublinks a:hover {
+  transform: translateX(3px);
+}
+
+.official-footer {
+  transition: background-color 240ms ease, color 240ms ease, border-color 240ms ease;
+}
+
+html.dark .official-footer {
+  background: #171514 !important;
+  color: #f1ece4 !important;
+  border-color: rgba(244, 236, 226, .14) !important;
+}
+
+html.dark .official-footer .footer-column strong,
+html.dark .official-footer .footer-bottom,
+html.dark .official-footer .footer-bottom span {
+  color: #f1ece4 !important;
+}
+
+html.dark .official-footer a,
+html.dark .official-footer .footer-social-link,
+html.dark .official-footer .footer-whatsapp-link,
+html.dark .official-footer .footer-credit-link {
+  color: #c8bdb1 !important;
+}
+
+html.dark .official-footer a:hover,
+html.dark .official-footer a:focus-visible,
+html.dark .official-footer .footer-social-link:hover,
+html.dark .official-footer .footer-social-link:focus-visible {
+  color: #ef7468 !important;
+  transform: translateY(-2px);
+}
+
+html.dark .official-footer .footer-vip-link {
+  color: #ef7468 !important;
+}
+
+html.dark .official-footer .footer-bottom {
+  border-color: rgba(244, 236, 226, .14) !important;
+}
+
+@media (max-width: 620px) {
+  .lovable-menu-overlay {
+    align-items: stretch;
+  }
+
+  .lovable-side-menu {
+    width: min(88vw, 360px);
+    max-width: 360px;
+  }
+
+  .lovable-side-menu .lovable-menu-header {
+    padding-inline: 22px;
+  }
+
+  .lovable-side-menu .lovable-menu-links a,
+  .lovable-side-menu .lovable-menu-sublinks a {
+    padding-inline: 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lovable-side-menu .lovable-menu-links a,
+  .lovable-side-menu .lovable-menu-sublinks a,
+  .lovable-side-menu .close-button,
+  .official-footer a,
+  .official-footer .footer-social-link {
+    transition: none;
+  }
+}
+
+/*
+ * Patch final de superfícies públicas no modo noturno.
+ * O menu é um irmão da navbar sticky e precisa de uma camada própria, opaca e
+ * interativa. O rodapé recebe uma superfície explícita para impedir que classes
+ * antigas ou wrappers editoriais deixem vazamentos creme no tema escuro.
+ */
+html.dark .lovable-menu-overlay {
+  z-index: 3200 !important;
+  pointer-events: none;
+  background: rgba(5, 5, 5, 0.84) !important;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* O overlay só captura cliques enquanto está visível; assim o estado fechado não bloqueia a loja. */
+html.dark .lovable-menu-overlay.is-open,
+html.dark .lovable-menu-overlay.is-closing {
+  pointer-events: auto;
+}
+
+/* A posição fixed preserva o drawer em desktop e mobile, inclusive sobre a navbar global. */
+html.dark .lovable-side-menu {
+  position: fixed !important;
+  inset: 0 auto 0 0 !important;
+  z-index: 3201 !important;
+  width: min(380px, 86vw) !important;
+  min-height: 100dvh !important;
+  max-height: 100dvh !important;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: #171514 !important;
+  background-image: none !important;
+  color: #f1ece4 !important;
+  border-right: 1px solid rgba(244, 236, 226, 0.16) !important;
+  box-shadow: 18px 0 52px rgba(0, 0, 0, 0.42) !important;
+  color-scheme: dark;
+}
+
+/* Remove fundos herdados e mantém o carvão uniforme em todos os blocos do drawer. */
+html.dark .lovable-side-menu .lovable-menu-header,
+html.dark .lovable-side-menu .lovable-menu-links,
+html.dark .lovable-side-menu .lovable-menu-section,
+html.dark .lovable-side-menu .lovable-menu-sublinks,
+html.dark .lovable-side-menu .lovable-menu-brand,
+html.dark .lovable-side-menu .lovable-menu-kicker,
+html.dark .lovable-side-menu .close-button {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: #f1ece4 !important;
+  border-color: rgba(244, 236, 226, 0.16) !important;
+}
+
+/* Cobre todos os links e o botão de fechamento com contraste consistente e foco visível. */
+html.dark .lovable-side-menu a,
+html.dark .lovable-side-menu button,
+html.dark .lovable-side-menu .lovable-menu-links a,
+html.dark .lovable-side-menu .lovable-menu-sublinks a {
+  color: #f1ece4 !important;
+  text-shadow: none;
+}
+
+html.dark .lovable-side-menu .lovable-menu-links a:hover,
+html.dark .lovable-side-menu .lovable-menu-links a:focus-visible,
+html.dark .lovable-side-menu .lovable-menu-sublinks a:hover,
+html.dark .lovable-side-menu .lovable-menu-sublinks a:focus-visible,
+html.dark .lovable-side-menu .close-button:hover,
+html.dark .lovable-side-menu .close-button:focus-visible {
+  background: rgba(178, 34, 34, 0.18) !important;
+  color: #ff9a8c !important;
+  outline: none;
+}
+
+html.dark .lovable-side-menu .lovable-menu-brand span,
+html.dark .lovable-side-menu .lovable-menu-kicker {
+  color: #ef7468 !important;
+}
+
+/* Rodapé: superfície, linhas, textos, links, WhatsApp, VIP, créditos e ícones. */
+html.dark .site-footer.official-footer,
+html.dark .official-footer,
+html.dark .public-page-shell .site-footer.official-footer,
+html.dark .eras-site .site-footer.official-footer {
+  background: #171514 !important;
+  background-color: #171514 !important;
+  background-image: none !important;
+  color: #f1ece4 !important;
+  border-color: rgba(244, 236, 226, 0.16) !important;
+  color-scheme: dark;
+}
+
+html.dark .site-footer.official-footer > *,
+html.dark .site-footer.official-footer .footer-grid,
+html.dark .site-footer.official-footer .footer-column,
+html.dark .site-footer.official-footer .footer-contact {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+html.dark .site-footer.official-footer .footer-socials,
+html.dark .site-footer.official-footer .footer-bottom,
+html.dark .site-footer.official-footer .footer-collection-menu {
+  border-color: rgba(244, 236, 226, 0.16) !important;
+}
+
+html.dark .site-footer.official-footer .footer-column strong,
+html.dark .site-footer.official-footer .footer-bottom,
+html.dark .site-footer.official-footer .footer-bottom span {
+  color: #f1ece4 !important;
+}
+
+html.dark .site-footer.official-footer .footer-column a,
+html.dark .site-footer.official-footer .footer-column button,
+html.dark .site-footer.official-footer .footer-social-link,
+html.dark .site-footer.official-footer .footer-whatsapp-link,
+html.dark .site-footer.official-footer .footer-credit-link {
+  color: #c8bdb1 !important;
+}
+
+html.dark .site-footer.official-footer .footer-social-link {
+  background: transparent !important;
+  border-color: rgba(244, 236, 226, 0.22) !important;
+}
+
+html.dark .site-footer.official-footer .footer-vip-link {
+  color: #ef7468 !important;
+}
+
+html.dark .site-footer.official-footer .footer-column a:hover,
+html.dark .site-footer.official-footer .footer-column a:focus-visible,
+html.dark .site-footer.official-footer .footer-column button:hover,
+html.dark .site-footer.official-footer .footer-column button:focus-visible,
+html.dark .site-footer.official-footer .footer-social-link:hover,
+html.dark .site-footer.official-footer .footer-social-link:focus-visible {
+  background: transparent !important;
+  border-color: #b22222 !important;
+  color: #ff9a8c !important;
+  outline: none;
+}
+
+@media (max-width: 620px) {
+  /* No mobile, o drawer ocupa uma largura confortável sem bloquear o botão X. */
+  html.dark .lovable-side-menu {
+    width: min(88vw, 360px) !important;
+    max-width: 360px !important;
+  }
+}
