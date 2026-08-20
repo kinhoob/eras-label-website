@@ -3239,3 +3239,4 @@
 - [x] Substituir o toast do botão de visualização de pedidos (ícone de olho) por um modal limpo, completo e responsivo contendo todos os detalhes da encomenda, itens, cliente e pagamento
 - [x] Implementar filtros de "Compras Ativas", "Compras Arquivadas" e "Compras Canceladas" na gestão comercial do painel, com ações seguras de excluir, estornar e gerir envios no modal "Detalhes & Envio"
 - [x] Refinar tabela de pedidos no painel com seleção em massa de encomendas, botão de três pontos para mudar status (Processando, Em Preparação, Embalado, Enviado) e ícone de olho exclusivo para abrir Detalhes & Envios
+- [x] Corrigir efetivamente a tabela de vendas no painel para exibir o menu de três pontos com ícones de status, estorno e exclusão, além do botão de olho isolado para Detalhes & Envios e barra de ações em massa
