@@ -1487,6 +1487,7 @@ function normalizeStorefrontConfig(value: unknown): StorefrontConfig {
   const saved = (value && typeof value === "object" ? value : {}) as Partial<StorefrontConfig>;
   const announcement = (saved.announcement ?? {}) as Partial<StorefrontConfig["announcement"]> & { text?: unknown; href?: unknown };
   const maintenance = (saved.maintenance ?? {}) as Partial<StorefrontConfig["maintenance"]>;
+  const accessPasswordHash = typeof (saved as Record<string, unknown>).accessPasswordHash === "string" ? (saved as Record<string, unknown>).accessPasswordHash as string : "";
   const drop = (saved.drop ?? {}) as Partial<StorefrontConfig["drop"]>;
   const targetAt = typeof drop.targetAt === "string" && !Number.isNaN(Date.parse(drop.targetAt)) ? drop.targetAt : null;
 
@@ -1504,6 +1505,7 @@ function normalizeStorefrontConfig(value: unknown): StorefrontConfig {
       title: safeStorefrontString(maintenance.title, DEFAULT_STOREFRONT_CONFIG.maintenance.title, 100),
       message: safeStorefrontString(maintenance.message, DEFAULT_STOREFRONT_CONFIG.maintenance.message, 500),
       accessLabel: safeStorefrontString(maintenance.accessLabel, DEFAULT_STOREFRONT_CONFIG.maintenance.accessLabel, 100),
+      passwordConfigured: Boolean(accessPasswordHash),
     },
     drop: {
       enabled: drop.enabled === true && Boolean(targetAt),
@@ -1520,17 +1522,29 @@ export async function getStorefrontConfig(): Promise<StorefrontConfig> {
   return normalizeStorefrontConfig(rows[0]?.content);
 }
 
-export async function saveStorefrontConfig(config: StorefrontConfig): Promise<StorefrontConfig> {
+export async function saveStorefrontConfig(config: StorefrontConfig, accessPasswordHash?: string | null): Promise<StorefrontConfig> {
   const normalized = normalizeStorefrontConfig(config);
   const db = await getDb();
-  if (!db) return normalized;
+  if (!db) return normalizeStorefrontConfig({ ...normalized, ...(accessPasswordHash ? { accessPasswordHash } : {}) });
   const existing = await db.select().from(siteAppearance).where(eq(siteAppearance.sectionKey, "storefront_config")).limit(1);
+  const existingContent = (existing[0]?.content && typeof existing[0].content === "object" ? existing[0].content : {}) as Record<string, unknown>;
+  const currentHash = typeof existingContent.accessPasswordHash === "string" ? existingContent.accessPasswordHash : "";
+  const nextHash = accessPasswordHash === undefined ? currentHash : accessPasswordHash || "";
+  const persisted = { ...normalized, ...(nextHash ? { accessPasswordHash: nextHash } : {}) };
   if (existing[0]) {
-    await db.update(siteAppearance).set({ content: normalized as any }).where(eq(siteAppearance.sectionKey, "storefront_config"));
+    await db.update(siteAppearance).set({ content: persisted as any }).where(eq(siteAppearance.sectionKey, "storefront_config"));
   } else {
-    await db.insert(siteAppearance).values({ sectionKey: "storefront_config", content: normalized as any });
+    await db.insert(siteAppearance).values({ sectionKey: "storefront_config", content: persisted as any });
   }
-  return normalized;
+  return normalizeStorefrontConfig(persisted);
+}
+
+export async function getStorefrontAccessPasswordHash(): Promise<string | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select({ content: siteAppearance.content }).from(siteAppearance).where(eq(siteAppearance.sectionKey, "storefront_config")).limit(1);
+  const content = (rows[0]?.content && typeof rows[0].content === "object" ? rows[0].content : {}) as Record<string, unknown>;
+  return typeof content.accessPasswordHash === "string" && content.accessPasswordHash ? content.accessPasswordHash : null;
 }
 
 

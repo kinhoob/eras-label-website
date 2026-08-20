@@ -449,9 +449,17 @@ function AdminAccessLoading() {
 function StorefrontSettingsPanel({
   config,
   onChange,
+  passwordDraft,
+  onPasswordChange,
+  clearPassword,
+  onClearPasswordChange,
 }: {
   config: StorefrontConfig | null;
   onChange: (config: StorefrontConfig) => void;
+  passwordDraft: string;
+  onPasswordChange: (password: string) => void;
+  clearPassword: boolean;
+  onClearPasswordChange: (clear: boolean) => void;
 }) {
   if (!config) {
     return (
@@ -513,7 +521,10 @@ function StorefrontSettingsPanel({
           <div className="storefront-field-stack">
             <label className="storefront-field"><span>Título da página</span><Input maxLength={100} value={config.maintenance.title} onChange={(event) => updateMaintenance({ title: event.target.value })} placeholder="Página em construção" /></label>
             <label className="storefront-field"><span>Mensagem para clientes</span><textarea maxLength={500} value={config.maintenance.message} onChange={(event) => updateMaintenance({ message: event.target.value })} placeholder="Avise os clientes sobre o próximo drop." /></label>
-            <label className="storefront-field"><span>Texto do acesso administrativo</span><Input maxLength={100} value={config.maintenance.accessLabel} onChange={(event) => updateMaintenance({ accessLabel: event.target.value })} /></label>
+            <label className="storefront-field"><span>Texto do botão de acesso VIP</span><Input maxLength={100} value={config.maintenance.accessLabel} onChange={(event) => updateMaintenance({ accessLabel: event.target.value })} placeholder="Entrar no acesso reservado" /></label>
+            <label className="storefront-field"><span>{config.maintenance.passwordConfigured ? "Alterar palavra-passe VIP" : "Criar palavra-passe VIP"}</span><Input type="password" autoComplete="new-password" minLength={6} maxLength={200} value={passwordDraft} onChange={(event) => { onPasswordChange(event.target.value); if (clearPassword) onClearPasswordChange(false); }} placeholder={config.maintenance.passwordConfigured ? "Deixe vazio para manter a actual" : "Mínimo de 6 caracteres"} /></label>
+            <label className="storefront-password-clear"><input type="checkbox" checked={clearPassword} onChange={(event) => { onClearPasswordChange(event.target.checked); if (event.target.checked) onPasswordChange(""); }} /> <span>Remover a palavra-passe e deixar o acesso sem senha</span></label>
+            <p className="storefront-field-help">A senha é guardada apenas como hash no servidor. Quem tiver o link e esta palavra-passe poderá abrir a loja durante o período do drop.</p>
           </div>
         </article>
 
@@ -673,6 +684,8 @@ export default function Admin() {
   const [homeVipBanner, setHomeVipBanner] = useState<EditableVipBanner>(defaultEditableVipBanner);
   const [homeSectionTitles, setHomeSectionTitles] = useState<EditableHomeSectionTitles>({ highlights: "Destaques", shop: "Produtos da Era", community: "Visto fora do estúdio." });
   const [storefrontConfigDraft, setStorefrontConfigDraft] = useState<StorefrontConfig | null>(null);
+  const [storefrontPasswordDraft, setStorefrontPasswordDraft] = useState("");
+  const [clearStorefrontPassword, setClearStorefrontPassword] = useState(false);
 
   const { data: commercialConfig } = trpc.catalog.getConfig.useQuery();
   const { data: storefrontConfig } = trpc.catalog.getStorefrontConfig.useQuery();
@@ -707,12 +720,27 @@ export default function Admin() {
     }
   }, [homeContent]);
   useEffect(() => {
-    if (storefrontConfig) setStorefrontConfigDraft(storefrontConfig);
+    if (storefrontConfig) {
+      setStorefrontConfigDraft(storefrontConfig);
+      setStorefrontPasswordDraft("");
+      setClearStorefrontPassword(false);
+    }
   }, [storefrontConfig]);
 
   const saveConfigMutation = trpc.admin.saveConfig.useMutation();
   const saveHomeContentMutation = trpc.admin.saveHomeContent.useMutation();
   const saveStorefrontConfigMutation = trpc.admin.saveStorefrontConfig.useMutation();
+  const getStorefrontSavePayload = () => {
+    if (!storefrontConfigDraft) return null;
+    const payload = { ...storefrontConfigDraft } as typeof storefrontConfigDraft & { accessPassword?: string; clearAccessPassword?: boolean };
+    if (storefrontPasswordDraft.trim().length >= 6) payload.accessPassword = storefrontPasswordDraft.trim();
+    if (clearStorefrontPassword) payload.clearAccessPassword = true;
+    return payload;
+  };
+  const resetStorefrontPasswordDraft = () => {
+    setStorefrontPasswordDraft("");
+    setClearStorefrontPassword(false);
+  };
   const [uploading, setUploading] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any | null>(null);
   const [editorMode, setEditorMode] = useState<"product" | "inventory">("product");
@@ -1443,10 +1471,12 @@ export default function Admin() {
                 <p className="content-subtitle">Tranque a loja para visitantes, configure o contador regressivo e edite as mensagens da barra de anúncio.</p>
               </div>
               <Button onClick={() => {
-                if (storefrontConfigDraft) {
-                  saveStorefrontConfigMutation.mutate(storefrontConfigDraft, {
+                const storefrontPayload = getStorefrontSavePayload();
+                if (storefrontPayload) {
+                  saveStorefrontConfigMutation.mutate(storefrontPayload, {
                     onSuccess: (result) => {
                       setStorefrontConfigDraft(result.config);
+                      resetStorefrontPasswordDraft();
                       void utils.catalog.getStorefrontConfig.invalidate();
                       toast.success("Configurações da página em construção guardadas.");
                     },
@@ -1457,14 +1487,15 @@ export default function Admin() {
                 Guardar alterações
               </Button>
             </div>
-            <StorefrontSettingsPanel config={storefrontConfigDraft} onChange={setStorefrontConfigDraft} />
+            <StorefrontSettingsPanel config={storefrontConfigDraft} onChange={setStorefrontConfigDraft} passwordDraft={storefrontPasswordDraft} onPasswordChange={setStorefrontPasswordDraft} clearPassword={clearStorefrontPassword} onClearPasswordChange={setClearStorefrontPassword} />
           </section>
         )}
         {active === "Aparência" && <section className="admin-content appearance-workspace"><div className="content-toolbar"><div><span className="section-kicker">EDITOR DA LOJA</span><h2 className="content-title">Aparência da loja</h2><p className="content-subtitle">Organize a Home, os banners, a comunicação e as regras comerciais num único espaço de edição.</p></div><Button onClick={() => {
           saveConfigMutation.mutate({ pixDiscountPercent: Number(pixDiscountPercent), freeShippingThreshold: Number(freeShippingThreshold), maxInstallments: Number(maxInstallments), interestFreeInstallments: Number(interestFreeInstallments), installmentInterestRate: Number(installmentInterestRate) }, { onSuccess: () => setAppearanceSaved(true), onError: () => toast.error("Erro ao guardar configurações comerciais.") });
           saveHomeContentMutation.mutate({ banners: homeBanners, highlights: homeHighlights, productSections: homeProductSections, vipBanner: homeVipBanner, sectionTitles: homeSectionTitles }, { onSuccess: () => { void utils.catalog.getHomeContent.invalidate(); setAppearanceSaved(true); toast.success("Home, banners e bloco VIP guardados."); }, onError: () => toast.error("Erro ao guardar o conteúdo da Home.") });
-          if (storefrontConfigDraft) {
-            saveStorefrontConfigMutation.mutate(storefrontConfigDraft, { onSuccess: (result) => { setStorefrontConfigDraft(result.config); void utils.catalog.getStorefrontConfig.invalidate(); setAppearanceSaved(true); }, onError: () => toast.error("Erro ao guardar as configurações públicas da loja.") });
+          const storefrontPayload = getStorefrontSavePayload();
+          if (storefrontPayload) {
+            saveStorefrontConfigMutation.mutate(storefrontPayload, { onSuccess: (result) => { setStorefrontConfigDraft(result.config); resetStorefrontPasswordDraft(); void utils.catalog.getStorefrontConfig.invalidate(); setAppearanceSaved(true); }, onError: () => toast.error("Erro ao guardar as configurações públicas da loja.") });
           }
         }}>Guardar alterações</Button></div><div className="appearance-workspace-intro"><div><span className="section-kicker">ERAS LABEL / CMS VISUAL</span><h3>Uma Home construída por eras</h3><p>Use os blocos abaixo para controlar o conteúdo que aparece no storefront. As alterações são guardadas no backend e mantêm os produtos reais selecionados pelo painel.</p></div><div className="appearance-publish-state"><span className={appearanceSaved ? "status-dot is-saved" : "status-dot"} aria-hidden="true" /><div><strong>{appearanceSaved ? "Alterações guardadas" : "Editor pronto"}</strong><small>{appearanceSaved ? "A Home pública está sincronizada." : "Edite os blocos e guarde quando terminar."}</small></div></div></div><div className="appearance-overview-cards"><div><span>Banners activos</span><strong>{homeBanners.length}</strong><small>slides configurados</small></div><div><span>Secções da Home</span><strong>{homeProductSections.length}</strong><small>curadorias editoriais</small></div><div><span>Produtos no catálogo</span><strong>{adminProducts.length}</strong><small>{catalogProductsLoading ? "a carregar dados reais" : "produtos disponíveis"}</small></div><div><span>Barra de anúncio</span><strong>{storefrontConfigDraft?.announcement.messages.length ?? 0}</strong><small>mensagens rotativas</small></div></div><div className="appearance-grid"><div className="admin-panel appearance-panel home-section-titles-panel"><div className="panel-heading"><div><span className="section-kicker">NOMES DA HOME</span><h3>Títulos das secções</h3></div><span className="editor-help">Visíveis na loja</span></div><p className="editor-description">Personalize os nomes que aparecem acima das secções editoriais sem alterar os produtos selecionados.</p><div className="home-section-title-fields"><label className="editor-field"><span>Secção de destaques</span><Input value={homeSectionTitles.highlights} onChange={(event) => setHomeSectionTitles((current) => ({ ...current, highlights: event.target.value }))} placeholder="Destaques" /></label><label className="editor-field"><span>Secção de produtos</span><Input value={homeSectionTitles.shop} onChange={(event) => setHomeSectionTitles((current) => ({ ...current, shop: event.target.value }))} placeholder="Produtos da Era" /></label><label className="editor-field"><span>Secção de comunidade</span><Input value={homeSectionTitles.community} onChange={(event) => setHomeSectionTitles((current) => ({ ...current, community: event.target.value }))} placeholder="Visto fora do estúdio." /></label></div></div><div className="admin-panel appearance-panel"><div className="panel-heading"><div><span className="section-kicker">CONFIGURAÇÕES COMERCIAIS</span><h3>Pix e Frete Grátis</h3></div></div><div className="editor-field"><label>Porcentagem de Desconto no Pix (%)</label><Input type="number" min="0" max="100" value={pixDiscountPercent} onChange={(event) => setPixDiscountPercent(Number(event.target.value))} /></div><div className="editor-field"><label>Valor Mínimo para Frete Grátis (R$)</label><Input type="number" min="0" step="10" value={freeShippingThreshold} onChange={(event) => setFreeShippingThreshold(Number(event.target.value))} /></div><div className="editor-field"><label>Máximo de Parcelas no Cartão</label><Input type="number" min="1" max="24" value={maxInstallments} onChange={(event) => setMaxInstallments(Number(event.target.value))} /></div><div className="editor-field"><label>Juros Mensais no Parcelamento (%)</label><Input type="number" min="0" max="20" step="0.01" value={installmentInterestRate} onChange={(event) => setInstallmentInterestRate(Number(event.target.value))} /><small className="editor-help">Aplicado de forma composta a partir da 2ª parcela.</small></div></div><div className="admin-panel appearance-panel home-editor-panel"><div className="panel-heading"><div><span className="section-kicker">BANNER ROTATIVO</span><h3>Carrossel principal da Home</h3></div><span className="editor-help">{homeBanners.length} slides</span></div>{homeBanners.map((banner, index) => <div className="home-editor-banner" key={banner.id}><div className="home-editor-banner-preview" style={{ backgroundImage: banner.imageUrl ? "url(" + banner.imageUrl + ")" : undefined }}><span>{String(index + 1).padStart(2, "0")}</span></div><div className="home-editor-banner-controls"><label className="image-control-button"><input type="file" accept="image/*" onChange={(event) => handleHomeImageUpload(event, "banner", index)} />{uploading ? "A carregar..." : "Trocar imagem"}</label>{banner.imageUrl && <button type="button" className="image-remove-button" onClick={() => setHomeBanners((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, imageUrl: "" } : item))}><X size={14} /> Remover</button>}</div><div className="home-editor-fields"><Input value={banner.eyebrow} onChange={(event) => setHomeBanners((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, eyebrow: event.target.value } : item))} placeholder="Etiqueta" /><Input value={banner.title} onChange={(event) => setHomeBanners((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, title: event.target.value } : item))} placeholder="Título" /><Input value={banner.subtitle} onChange={(event) => setHomeBanners((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, subtitle: event.target.value } : item))} placeholder="Texto de apoio" /><div className="home-editor-inline"><Input value={banner.cta} onChange={(event) => setHomeBanners((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, cta: event.target.value } : item))} placeholder="CTA" /><select value={banner.targetType === "catalog" ? "catalog" : banner.targetType === "category" ? `category:${banner.targetValue ?? ""}` : "custom"} onChange={(event) => setHomeBanners((current) => current.map((item, itemIndex) => { if (itemIndex !== index) return item; const value = event.target.value; if (value === "catalog") return { ...item, targetType: "catalog" as const, targetValue: "", href: "/catalog" }; if (value.startsWith("category:")) { const slug = value.slice("category:".length); return { ...item, targetType: "category" as const, targetValue: slug, href: `/category/${slug}` }; } return { ...item, targetType: "custom" as const }; }))} aria-label={`Destino do banner ${index + 1}`}><option value="custom">Link personalizado</option><option value="catalog">Todos os produtos</option>{adminCategories.map((category) => <option key={category.id} value={`category:${category.slug}`}>{category.name} · {category.active ? "PUBLICADA" : "NÃO LISTADA"}</option>)}</select>{(!banner.targetType || banner.targetType === "custom") && <Input value={banner.href} onChange={(event) => setHomeBanners((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, href: event.target.value, targetType: "custom" as const } : item))} placeholder="Link personalizado" />}</div></div></div>)}</div><div className="admin-panel appearance-panel home-editor-panel"><div className="panel-heading"><div><span className="section-kicker">DESTAQUES</span><h3>Curadoria da Home</h3></div><span className="editor-help">{homeHighlights.length} cards</span></div><p className="editor-description">Escolha os produtos que aparecem no bloco Destaques e defina a etiqueta exibida sobre cada peça.</p>{catalogProductsLoading && <p className="editor-description">A carregar o catálogo real…</p>}{!catalogProductsLoading && adminProducts.length === 0 && <p className="editor-description">Ainda não existem produtos persistidos no catálogo para selecionar.</p>}{homeHighlights.map((highlight, index) => <div className="highlight-editor-row" key={highlight.id}><span className="highlight-editor-index">{String(index + 1).padStart(2, "0")}</span><select value={highlight.productId} onChange={(event) => setHomeHighlights((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, productId: Number(event.target.value) } : item))} aria-label={`Produto do destaque ${index + 1}`}>{adminProducts.length > 0 ? adminProducts.map((product) => <option key={product.id} value={product.id}>{product.name} · {product.collection}</option>) : <option value={highlight.productId}>Produto não disponível (ID {highlight.productId})</option>}</select><Input value={highlight.label} onChange={(event) => setHomeHighlights((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, label: event.target.value.toUpperCase() } : item))} placeholder="Etiqueta" aria-label={`Etiqueta do destaque ${index + 1}`} /><button type="button" className="highlight-remove-button" onClick={() => setHomeHighlights((current) => current.length > 1 ? current.filter((_, itemIndex) => itemIndex !== index) : current)} aria-label={`Remover destaque ${index + 1}`}>×</button></div>)}<button type="button" className="highlight-add-button" onClick={() => setHomeHighlights((current) => [...current, { id: `highlight-${Date.now()}`, productId: adminProducts[current.length % adminProducts.length].id, label: "NOVA PEÇA" }])} disabled={homeHighlights.length >= 6 || adminProducts.length === 0}><Plus size={15} /> Adicionar destaque</button></div><div className="admin-panel appearance-panel home-editor-panel home-shop-curation-panel"><div className="panel-heading"><div><span className="section-kicker">SHOP DA HOME</span><h3>Secções publicadas</h3></div><span className="editor-help">{homeProductSections.length} secções</span></div><p className="editor-description">A Home mostra apenas os produtos incluídos nestas secções. Crie uma secção, escolha os produtos reais e arraste a ordem pelas setas.</p>{homeProductSections.map((section, index) => (
   <article className="home-shop-section-editor category-curation-editor" key={section.id}>

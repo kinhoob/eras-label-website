@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { parse as parseCookieHeader } from "cookie";
 import { TRPCError } from "@trpc/server";
 import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
@@ -14,6 +15,7 @@ import { products, orders } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { MelhorEnvioApiError, calculateMelhorEnvioShipping, createMelhorEnvioCartItem, downloadMelhorEnvioLabelFile, getMelhorEnvioTracking } from "./melhor-envio";
 import { sendAbandonedCartReminderEmail } from "./resend";
+import { STOREFRONT_ACCESS_COOKIE, createStorefrontAccessToken, hashStorefrontPassword, hasValidStorefrontAccess, verifyStorefrontPassword } from "./storefront-access";
 import {
   getAdminSummary,
   getAdminProducts,
@@ -54,6 +56,7 @@ import {
   getHomeContent,
   saveHomeContent,
   getStorefrontConfig,
+  getStorefrontAccessPasswordHash,
   saveStorefrontConfig,
   listNotifications,
   createNotification,
@@ -247,6 +250,34 @@ export const appRouter = router({
     getConfig: publicProcedure.query(() => getCommercialConfig()),
     getHomeContent: publicProcedure.query(() => getHomeContent()),
     getStorefrontConfig: publicProcedure.query(() => getStorefrontConfig()),
+    getStorefrontAccessStatus: publicProcedure.query(async ({ ctx }) => {
+      const config = await getStorefrontConfig();
+      const passwordHash = await getStorefrontAccessPasswordHash();
+      const cookies = parseCookieHeader(ctx.req.headers.cookie ?? "");
+      const unlocked = !config.maintenance.enabled || hasValidStorefrontAccess(cookies[STOREFRONT_ACCESS_COOKIE], passwordHash);
+      return { locked: config.maintenance.enabled, unlocked, passwordConfigured: Boolean(passwordHash) };
+    }),
+    unlockStorefront: publicProcedure.input(z.object({ password: z.string().min(1).max(200) })).mutation(async ({ input, ctx }) => {
+      const config = await getStorefrontConfig();
+      const passwordHash = await getStorefrontAccessPasswordHash();
+      if (!config.maintenance.enabled) return { unlocked: true };
+      if (!passwordHash || !verifyStorefrontPassword(input.password, passwordHash)) {
+        throw new TRPCError({ code: "UNAUTHORIZED", message: "Palavra-passe inválida." });
+      }
+      const token = createStorefrontAccessToken(passwordHash);
+      ctx.res.cookie(STOREFRONT_ACCESS_COOKIE, token, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: ENV.isProduction,
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        path: "/",
+      });
+      return { unlocked: true };
+    }),
+    lockStorefrontAccess: publicProcedure.mutation(({ ctx }) => {
+      ctx.res.clearCookie(STOREFRONT_ACCESS_COOKIE, { httpOnly: true, sameSite: "lax", secure: ENV.isProduction, path: "/" });
+      return { unlocked: false };
+    }),
     categories: publicProcedure.query(() => listPublicCategories()),
     getCmsPage: publicProcedure.input(z.object({ slug: z.string() })).query(async ({ input }) => {
       return await getCmsPage(input.slug);
@@ -790,13 +821,17 @@ export const appRouter = router({
         message: z.string().trim().min(1).max(500),
         accessLabel: z.string().trim().min(1).max(100),
       }),
+      accessPassword: z.string().trim().min(6).max(200).optional(),
+      clearAccessPassword: z.boolean().optional(),
       drop: z.object({
         enabled: z.boolean(),
         title: z.string().trim().min(1).max(100),
         targetAt: z.string().max(40).nullable(),
       }),
     })).mutation(async ({ input }) => {
-      const saved = await saveStorefrontConfig(input);
+      const { accessPassword, clearAccessPassword, ...config } = input;
+      const passwordHash = clearAccessPassword ? null : accessPassword ? hashStorefrontPassword(accessPassword) : undefined;
+      const saved = await saveStorefrontConfig({ ...config, maintenance: { ...config.maintenance, passwordConfigured: false } }, passwordHash);
       return { success: true, config: saved };
     }),
     listEmailLogs: adminProcedure.input(z.object({

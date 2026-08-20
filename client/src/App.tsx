@@ -64,9 +64,10 @@ function Router() {
   const [location] = useLocation();
   const isAdminOrAuthRoute = location.startsWith("/admin") || location.startsWith("/auth");
   const { data: storefrontConfig, isLoading: storefrontConfigLoading } = trpc.catalog.getStorefrontConfig.useQuery();
+  const { data: storefrontAccessStatus, isLoading: storefrontAccessLoading } = trpc.catalog.getStorefrontAccessStatus.useQuery(undefined, { enabled: !isAdminOrAuthRoute });
 
-  if (!isAdminOrAuthRoute && storefrontConfigLoading) return <RouteLoading />;
-  if (!isAdminOrAuthRoute && storefrontConfig && isStorefrontLocked(storefrontConfig)) {
+  if (!isAdminOrAuthRoute && (storefrontConfigLoading || storefrontAccessLoading)) return <RouteLoading />;
+  if (!isAdminOrAuthRoute && storefrontConfig && isStorefrontLocked(storefrontConfig) && storefrontAccessStatus && !storefrontAccessStatus.unlocked) {
     return <StorefrontLockedPage config={storefrontConfig} />;
   }
 

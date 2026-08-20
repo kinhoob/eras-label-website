@@ -3200,20 +3200,22 @@
 - [x] Criar interface passo a passo responsiva no painel admin para cotação e revisão de envio avulso seguindo a referência Nuvemshop
 - [x] Adicionar testes automatizados para validar o cálculo com dimensões personalizadas e garantir build e preview sem erros
 
-- [ ] Corrigir métricas administrativas para não usar visitas sintéticas e recalcular valores conforme o período seleccionado
-- [ ] Tornar o gráfico de vendas e visitas reactivo a hoje, ontem, 7, 15, 30 dias e intervalo personalizado
-- [ ] Implementar estados operacionais de pedido: por embalar, embalado, enviado e arquivado
-- [ ] Ocultar pedidos arquivados por defeito e criar filtro explícito para mostrar todos os pedidos
-- [ ] Adicionar testes de regressão, executar build e validar o painel em desktop e mobile
+- [x] Corrigir métricas administrativas para não usar visitas sintéticas e recalcular valores conforme o período seleccionado
+- [x] Tornar o gráfico de vendas e visitas reactivo a hoje, ontem, 7, 15, 30 dias e intervalo personalizado
+- [x] Implementar estados operacionais de pedido: por embalar, embalado, enviado e arquivado
+- [x] Ocultar pedidos arquivados por defeito e criar filtro explícito para mostrar todos os pedidos
+- [x] Adicionar testes de regressão, executar build e validar o painel em desktop e mobile
 
 ## Correcções de analytics e ciclo operacional de pedidos — 2026-08-20
-- [ ] Corrigir o recorte temporal do dashboard para hoje, ontem, presets e datas personalizadas sem datas instáveis.
-- [ ] Garantir que visitas reais da tabela analytics_events e pedidos reais da tabela orders actualizam cartões e gráfico após alterações.
-- [ ] Corrigir o mapeamento e a escala das séries de faturamento e visitas no gráfico de linhas com tooltip completo.
-- [ ] Adicionar acções operacionais de Embalar, Enviar e Arquivar no detalhe e na listagem de vendas.
-- [ ] Adicionar filtro para incluir ou ocultar pedidos arquivados, mantendo-os fora da lista por defeito.
-- [ ] Escrever regressões Vitest, validar TypeScript, build e responsividade do dashboard e da secção de vendas.
+- [x] Corrigir o recorte temporal do dashboard para hoje, ontem, presets e datas personalizadas sem datas instáveis.
+- [x] Garantir que visitas reais da tabela analytics_events e pedidos reais da tabela orders actualizam cartões e gráfico após alterações.
+- [x] Corrigir o mapeamento e a escala das séries de faturamento e visitas no gráfico de linhas com tooltip completo.
+- [x] Adicionar acções operacionais de Embalar, Enviar e Arquivar no detalhe e na listagem de vendas.
+- [x] Adicionar filtro para incluir ou ocultar pedidos arquivados, mantendo-os fora da lista por defeito.
+- [x] Escrever regressões Vitest, validar TypeScript, build e responsividade do dashboard e da secção de vendas.
 
 - [x] Implementar numeração sequencial anual de pedidos no formato ER-AAAA-NNN (ex: ER-2026-001)
 
 - [x] Substituir a logo da Eras Label pela imagem enviada na navbar pública e no painel administrativo, preservando proporções e dimensões dos contentores
+
+- [x] Implementar acesso protegido por palavra-passe na página em construção com editor no painel administrativo

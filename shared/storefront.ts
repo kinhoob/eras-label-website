@@ -18,6 +18,7 @@ export type StorefrontConfig = {
     title: string;
     message: string;
     accessLabel: string;
+    passwordConfigured: boolean;
   };
   drop: {
     enabled: boolean;
@@ -42,7 +43,9 @@ export const DEFAULT_STOREFRONT_CONFIG: StorefrontConfig = {
     enabled: false,
     title: "Página em construção",
     message: "Estamos a preparar a próxima era. Volte em breve para descobrir o novo drop.",
-    accessLabel: "Entrar na área administrativa",
+    accessLabel: "Entrar no acesso reservado",
+    passwordConfigured: false,
+
   },
   drop: {
     enabled: false,
