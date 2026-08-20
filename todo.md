@@ -3235,3 +3235,4 @@
 - [x] Atualizar o apple-touch-icon e o favicon com a imagem IMG_0880.PNG fornecida para perfeito funcionamento no iPhone e Safari
 - [x] Configurar sistema robusto de notificações no painel administrativo com alertas em tempo real para novas vendas, pagamentos aprovados e stock baixo compatíveis com PWA no iPhone
 - [x] Corrigir e ativar o sistema completo de Web Push e notificações no iPhone para novas vendas e pagamentos aprovados
+- [x] Adicionar filtro 'Todas as Vendas' na gestão de encomendas do painel administrativo com opções de arquivar via seletor e cancelar venda com confirmação e atualização segura
