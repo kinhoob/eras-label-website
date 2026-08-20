@@ -3221,3 +3221,5 @@
 - [x] Implementar acesso protegido por palavra-passe na página em construção com editor no painel administrativo
 
 - [x] Alterar o rótulo do botão de acesso VIP da página em construção para "Entrar", mantendo o link de acesso administrativo separado no rodapé
+
+- [x] Refinar o design da secção de newsletter na página inicial (redução da escala do título, reorganização do card e espaçamento dos campos)
