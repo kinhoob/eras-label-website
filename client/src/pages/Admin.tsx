@@ -30,6 +30,7 @@ import {
   Check,
   Download,
   RefreshCw,
+  Ruler,
   LockKeyhole,
   LoaderCircle,
   ShieldCheck,
@@ -59,7 +60,7 @@ import { AdminMenuManager } from "@/pages/AdminMenuManager";
 import { exportToCSV } from "@/lib/csv-export";
 import type { StorefrontConfig } from "../../../shared/storefront";
 import { optimizeProductImage } from "@/lib/image-optimizer";
-import { createEmptyProductDraft, getProductDescriptionDraft, validateProductDraft } from "@/lib/product-editor";
+import { createEmptyProductDraft, getProductDescriptionDraft, getProductSizeGuideDraft, validateProductDraft, type ProductSizeGuideRow } from "@/lib/product-editor";
 import { buildAdminNavGroups, getAdminNavGroupId, type AdminNavIcon } from "@/lib/admin-navigation";
 import { parseCmsContent, serializeCmsContent, type CmsEventBlock, type CmsStoryBlock } from "@shared/cms";
 
@@ -400,7 +401,7 @@ function EmailMarketingSection() {
 
 type AdminVariation = { id?: number; size: string; stock: number };
 type ProductVisibility = "visible" | "unlisted" | "hidden";
-type AdminProductOption = { id: number; name: string; collection: string; category: string; subcategory?: string | null; sku?: string | null; slug?: string | null; visibility?: ProductVisibility; categoryIds?: number[]; price: string; pixPrice: string; promotionalPrice: number | null; description?: string | null; stock: number; variations: AdminVariation[]; status: string; images: string[] };
+type AdminProductOption = { id: number; name: string; collection: string; category: string; subcategory?: string | null; sku?: string | null; slug?: string | null; visibility?: ProductVisibility; categoryIds?: number[]; price: string; pixPrice: string; promotionalPrice: number | null; description?: string | null; sizeGuide?: ProductSizeGuideRow[] | null; stock: number; variations: AdminVariation[]; status: string; images: string[] };
 
 function normalizeProductVisibility(value: unknown): ProductVisibility {
   return value === "unlisted" || value === "hidden" ? value : "visible";
@@ -954,6 +955,8 @@ export default function Admin() {
       price: Number(product.price).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }),
       pixPrice: Number(product.pixPrice ?? product.price).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }),
       promotionalPrice: product.promotionalPrice !== null && product.promotionalPrice !== undefined ? Number(product.promotionalPrice) : null,
+      description: getProductDescriptionDraft(product.description),
+      sizeGuide: getProductSizeGuideDraft(product.sizeGuide),
       stock: Number(product.totalStock ?? variations.reduce((total, variation) => total + variation.stock, 0)),
       variations,
       status: product.status === "active" ? "Publicado" : product.status === "soldout" ? "Esgotado" : "Rascunho",
@@ -1087,6 +1090,33 @@ export default function Admin() {
         ...current,
         variations: (current.variations ?? []).map((variation: AdminVariation) => variation.size === size ? { ...variation, stock } : variation),
       };
+    });
+  }
+
+  function addEditingSizeGuideRow() {
+    setEditingProduct((current: any) => {
+      if (!current) return current;
+      const sizeGuide: ProductSizeGuideRow[] = Array.isArray(current.sizeGuide) ? current.sizeGuide : [];
+      return { ...current, sizeGuide: [...sizeGuide, { size: "", width: "", length: "" }] };
+    });
+  }
+
+  function updateEditingSizeGuideRow(index: number, field: keyof ProductSizeGuideRow, value: string) {
+    setEditingProduct((current: any) => {
+      if (!current) return current;
+      const sizeGuide: ProductSizeGuideRow[] = Array.isArray(current.sizeGuide) ? current.sizeGuide : [];
+      return {
+        ...current,
+        sizeGuide: sizeGuide.map((row, rowIndex) => rowIndex === index ? { ...row, [field]: value } : row),
+      };
+    });
+  }
+
+  function removeEditingSizeGuideRow(index: number) {
+    setEditingProduct((current: any) => {
+      if (!current) return current;
+      const sizeGuide: ProductSizeGuideRow[] = Array.isArray(current.sizeGuide) ? current.sizeGuide : [];
+      return { ...current, sizeGuide: sizeGuide.filter((_, rowIndex) => rowIndex !== index) };
     });
   }
 
@@ -1252,7 +1282,7 @@ export default function Admin() {
                 const numericPrice = Number(product.price.replace(/[^0-9,]/g, "").replace(",", ".")) || 0;
                 const numericPix = Number(product.pixPrice?.replace(/[^0-9,]/g, "").replace(",", ".")) || numericPrice;
                 const numericPromo = product.promotionalPrice !== null && product.promotionalPrice !== undefined ? Number(String(product.promotionalPrice).replace(/[^0-9,]/g, "").replace(",", ".")) : null;
-                setEditingProduct({ id: product.id, name: product.name, collection: product.collection, category: product.category, subcategory: product.subcategory ?? null, sku: product.sku ?? "", slug: product.slug ?? "", visibility: product.visibility ?? "visible", categoryIds: product.categoryIds ?? [], price: numericPrice, pixPrice: numericPix, promotionalPrice: Number.isNaN(numericPromo) ? null : numericPromo, description: getProductDescriptionDraft(product.description), status: product.status, variations: product.variations.map((variation) => ({ size: variation.size, stock: variation.stock })) });
+                setEditingProduct({ id: product.id, name: product.name, collection: product.collection, category: product.category, subcategory: product.subcategory ?? null, sku: product.sku ?? "", slug: product.slug ?? "", visibility: product.visibility ?? "visible", categoryIds: product.categoryIds ?? [], price: numericPrice, pixPrice: numericPix, promotionalPrice: Number.isNaN(numericPromo) ? null : numericPromo, description: getProductDescriptionDraft(product.description), sizeGuide: getProductSizeGuideDraft(product.sizeGuide), status: product.status, variations: product.variations.map((variation) => ({ size: variation.size, stock: variation.stock })) });
                 setProductImages(product.images);
               }}><Pencil size={16} /></button>
               <button className="table-more" aria-label={`Duplicar produto ${product.name}`} title="Duplicar produto" disabled={duplicateProductMutation.isPending} onClick={() => {
@@ -1416,6 +1446,40 @@ export default function Admin() {
               </section>
 
               {editorMode === "product" && <>
+                <section className="product-size-guide-editor" aria-labelledby="product-size-guide-title">
+                  <div className="inventory-section-heading">
+                    <div>
+                      <span className="section-kicker">EXPERIÊNCIA DO CLIENTE</span>
+                      <h4 id="product-size-guide-title">Guia de tamanhos desta peça</h4>
+                      <p>Edite a tabela específica deste produto. Use medidas em centímetros ou a nomenclatura que preferir.</p>
+                    </div>
+                    <Button type="button" variant="outline" onClick={addEditingSizeGuideRow}><Plus size={14} /> Adicionar linha</Button>
+                  </div>
+                  {(editingProduct.sizeGuide ?? []).length > 0 ? (
+                    <div className="product-size-guide-table" role="table" aria-label="Guia de tamanhos do produto">
+                      <div className="product-size-guide-row product-size-guide-row--header" role="row">
+                        <span role="columnheader">Tamanho</span>
+                        <span role="columnheader">Largura</span>
+                        <span role="columnheader">Comprimento</span>
+                        <span aria-hidden="true" />
+                      </div>
+                      {(editingProduct.sizeGuide ?? []).map((row: ProductSizeGuideRow, index: number) => (
+                        <div className="product-size-guide-row" role="row" key={`size-guide-${index}`}>
+                          <Input value={row.size} onChange={(event) => updateEditingSizeGuideRow(index, "size", event.target.value)} placeholder="Ex.: M" aria-label={`Tamanho da linha ${index + 1}`} />
+                          <Input value={row.width} onChange={(event) => updateEditingSizeGuideRow(index, "width", event.target.value)} placeholder="Ex.: 54 cm" aria-label={`Largura da linha ${index + 1}`} />
+                          <Input value={row.length} onChange={(event) => updateEditingSizeGuideRow(index, "length", event.target.value)} placeholder="Ex.: 72 cm" aria-label={`Comprimento da linha ${index + 1}`} />
+                          <button type="button" className="product-size-guide-remove" onClick={() => removeEditingSizeGuideRow(index)} aria-label={`Remover linha ${index + 1}`} title="Remover linha"><X size={15} /></button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="product-size-guide-empty">
+                      <Ruler size={18} />
+                      <span>Nenhuma medida personalizada adicionada. Clique em “Adicionar linha” para criar a guia desta peça.</span>
+                    </div>
+                  )}
+                </section>
+
                 <div className="editor-field" style={{ marginTop: '1rem' }}>
                   <label>Descrição do produto</label>
                 <textarea style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', minHeight: '80px' }} value={editingProduct.description} onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })} />
@@ -1517,6 +1581,8 @@ export default function Admin() {
                      pixPrice,
                      images: productImages,
                      variations,
+                     description: String(editingProduct.description ?? ""),
+                     sizeGuide: getProductSizeGuideDraft(editingProduct.sizeGuide),
                    }, {
                     onSuccess: (res) => {
                       void Promise.all([

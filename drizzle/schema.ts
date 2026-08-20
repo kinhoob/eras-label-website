@@ -42,6 +42,8 @@ export const products = mysqlTable("products", {
   pixPrice: decimal("pixPrice", { precision: 10, scale: 2 }).notNull(),
   promotionalPrice: decimal("promotionalPrice", { precision: 10, scale: 2 }),
   description: text("description"),
+  /** Guia de tamanhos personalizada por produto; null usa a referência padrão da categoria. */
+  sizeGuide: json("sizeGuide"),
   images: json("images").notNull(),
   status: varchar("status", { length: 50 }).default("Publicado").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

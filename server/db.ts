@@ -31,6 +31,7 @@ import { collectCollectionRecipients } from "./marketing-audience";
 import { normalizeInventoryVariations, sumInventoryStock } from "../shared/inventory";
 import { normalizeCategoryName, slugifyCategory } from "../shared/categories";
 import { DEFAULT_STOREFRONT_CONFIG, type StorefrontConfig, type StorefrontAnnouncementMessage } from "../shared/storefront";
+import { normalizeProductSizeGuide } from "../shared/product-size-guide";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -415,6 +416,7 @@ export async function duplicateProductData(productId: number) {
     images: Array.isArray(source.images) ? source.images : [],
     status: source.status === "active" ? "Publicado" : source.status === "soldout" ? "Esgotado" : "Rascunho",
     variations: sourceVariations.map((variation) => ({ size: variation.size, stock: Number(variation.stock ?? 0) })),
+    sizeGuide: normalizeProductSizeGuide((source as any).sizeGuide),
   });
 }
 
@@ -727,8 +729,10 @@ export async function saveProductData(data: {
   sku?: string | null;
   subcategory?: string | null;
   variations?: Array<{ size: string; stock: number }>;
+  sizeGuide?: unknown;
 }) {
   const normalizedVariations = normalizeInventoryVariations(data.variations ?? []);
+  const normalizedSizeGuide = normalizeProductSizeGuide(data.sizeGuide);
   const normalizedSlug = slugifyCategory(data.slug?.trim() || data.name);
   const visibility = data.visibility ?? "visible";
   const categoryIds = Array.from(new Set((data.categoryIds ?? []).filter((id) => Number.isInteger(id) && id > 0)));
@@ -741,6 +745,7 @@ export async function saveProductData(data: {
       visibility,
       categoryIds,
       variations: normalizedVariations,
+      sizeGuide: normalizedSizeGuide,
       totalStock: sumInventoryStock(normalizedVariations),
     };
   }
@@ -766,6 +771,7 @@ export async function saveProductData(data: {
       pixPrice: String(data.pixPrice),
       promotionalPrice: data.promotionalPrice !== undefined && data.promotionalPrice !== null && !Number.isNaN(data.promotionalPrice) ? String(data.promotionalPrice) : null,
       description: data.description,
+      sizeGuide: normalizedSizeGuide.length > 0 ? normalizedSizeGuide as any : null,
       images: data.images as any,
       status: statusDb as any,
     }).where(eq(products.id, data.id));
@@ -782,6 +788,7 @@ export async function saveProductData(data: {
       pixPrice: String(data.pixPrice),
       promotionalPrice: data.promotionalPrice !== undefined && data.promotionalPrice !== null && !Number.isNaN(data.promotionalPrice) ? String(data.promotionalPrice) : null,
       description: data.description,
+      sizeGuide: normalizedSizeGuide.length > 0 ? normalizedSizeGuide as any : null,
       images: data.images as any,
       status: statusDb as any,
     });
@@ -814,6 +821,7 @@ export async function saveProductData(data: {
     visibility,
     categoryIds,
     variations: normalizedVariations,
+    sizeGuide: normalizedSizeGuide,
     totalStock: normalizedVariations.reduce((total, variation) => total + variation.stock, 0),
   };
 }

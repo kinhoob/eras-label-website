@@ -12846,3 +12846,168 @@ html.dark .site-footer.official-footer .footer-social-link:focus-visible {
     transform: none;
   }
 }
+
+/* Product size guide editor and storefront table */
+.product-size-guide-editor {
+  margin-top: 1.25rem;
+  padding: 1rem;
+  border: 1px solid color-mix(in srgb, #b22222 22%, var(--border, #ded8d0));
+  border-radius: 0.85rem;
+  background: color-mix(in srgb, var(--card, #fff) 92%, #b22222 8%);
+}
+
+.product-size-guide-editor .inventory-section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.product-size-guide-editor h4 {
+  margin: 0.2rem 0 0.3rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--foreground, #1a1715);
+}
+
+.product-size-guide-editor p {
+  margin: 0;
+  color: var(--muted-foreground, #70685f);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.product-size-guide-table {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.product-size-guide-row {
+  display: grid;
+  grid-template-columns: minmax(88px, 0.7fr) minmax(120px, 1fr) minmax(120px, 1fr) 2rem;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.product-size-guide-row--header {
+  padding: 0 0.65rem 0.2rem;
+  color: var(--muted-foreground, #70685f);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.product-size-guide-row input {
+  min-width: 0;
+}
+
+.product-size-guide-remove {
+  display: inline-flex;
+  width: 2rem;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, #b22222 30%, transparent);
+  border-radius: 0.45rem;
+  color: #b22222;
+  background: transparent;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.product-size-guide-remove:hover,
+.product-size-guide-remove:focus-visible {
+  color: #fff;
+  background: #b22222;
+}
+
+.product-size-guide-remove:active {
+  transform: scale(0.96);
+}
+
+.product-size-guide-empty {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 3.25rem;
+  padding: 0.75rem;
+  border: 1px dashed color-mix(in srgb, #b22222 35%, var(--border, #ded8d0));
+  border-radius: 0.65rem;
+  color: var(--muted-foreground, #70685f);
+  font-size: 0.8rem;
+}
+
+.product-size-guide-public .product-size-guide-scroll {
+  overflow-x: auto;
+  padding: 0.25rem 0 0.4rem;
+}
+
+.product-size-guide-public table {
+  width: 100%;
+  min-width: 360px;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.product-size-guide-public th,
+.product-size-guide-public td {
+  padding: 0.65rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid color-mix(in srgb, var(--border, #ded8d0) 75%, transparent);
+}
+
+.product-size-guide-public th {
+  color: var(--muted-foreground, #70685f);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.product-size-guide-public td:first-child {
+  color: var(--foreground, #1a1715);
+  font-weight: 700;
+}
+
+html.dark .product-size-guide-editor {
+  border-color: rgba(178, 34, 34, 0.5);
+  background: #211d1b;
+}
+
+html.dark .product-size-guide-empty {
+  border-color: rgba(178, 34, 34, 0.55);
+}
+
+@media (max-width: 640px) {
+  .product-size-guide-editor .inventory-section-heading {
+    flex-direction: column;
+  }
+
+  .product-size-guide-editor .inventory-section-heading > button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .product-size-guide-row--header {
+    display: none;
+  }
+
+  .product-size-guide-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.55rem;
+    padding: 0.7rem;
+    border: 1px solid color-mix(in srgb, var(--border, #ded8d0) 75%, transparent);
+    border-radius: 0.65rem;
+  }
+
+  .product-size-guide-row .product-size-guide-remove {
+    justify-self: end;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-size-guide-remove {
+    transition: none;
+  }
+}

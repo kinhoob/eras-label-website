@@ -58,3 +58,9 @@
 - [x] Confirmar de forma reproduzível que hover/focus não reativa compra ou CTA em produtos esgotados
 - [x] Adicionar verificação reproduzível do comportamento por teclado nos cards com segunda imagem
 - [x] Registrar evidência objetiva para segunda imagem ausente e URL secundária quebrada
+- [x] Adicionar editor de guia de tamanhos individual por produto no painel administrativo
+- [x] Corrigir a hidratação e a exibição da descrição salva ao editar um produto no painel
+- [x] Validar persistência, reabertura, atualização e apresentação pública de descrição e guia de tamanhos
+- [ ] Exibir evidência verificável do Admin.tsx final com o editor de guia de tamanhos renderizado e conectado ao estado controlado
+- [ ] Executar e registrar validação objetiva no Admin mostrando a descrição salva reaparecendo ao abrir a edição
+- [ ] Validar ponta a ponta salvar guia/descrição, reabrir no Admin e confirmar a atualização na página pública

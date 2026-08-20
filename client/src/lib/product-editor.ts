@@ -4,6 +4,10 @@
  * O tipo é local ao helper para que a validação permaneça reutilizável sem
  * acoplar o formulário a tipos internos da página administrativa.
  */
+import { normalizeProductSizeGuide, type ProductSizeGuideRow } from "../../../shared/product-size-guide";
+
+export type { ProductSizeGuideRow } from "../../../shared/product-size-guide";
+
 export type ProductDraftInput = {
   name?: string | null;
   collection?: string | null;
@@ -19,6 +23,7 @@ export type ProductDraftInput = {
   description?: string | null;
   status?: string | null;
   variations?: Array<{ size: string; stock: number }>;
+  sizeGuide?: ProductSizeGuideRow[];
 };
 
 /**
@@ -45,6 +50,7 @@ export function createEmptyProductDraft(): ProductDraftInput {
     description: "",
     status: "",
     variations: [],
+    sizeGuide: [],
   };
 }
 
@@ -60,6 +66,11 @@ export function createEmptyProductDraft(): ProductDraftInput {
  */
 export function getProductDescriptionDraft(value: unknown): string {
   return typeof value === "string" ? value : "";
+}
+
+/** Normaliza a tabela persistida antes de colocá-la em inputs controlados. */
+export function getProductSizeGuideDraft(value: unknown): ProductSizeGuideRow[] {
+  return normalizeProductSizeGuide(value);
 }
 
 export function validateProductDraft(draft: ProductDraftInput): string | null {

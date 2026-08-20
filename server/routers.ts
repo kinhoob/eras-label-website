@@ -798,6 +798,11 @@ export const appRouter = router({
         size: z.string().trim().min(1).max(20),
         stock: z.number().int().min(0).max(100000),
       })).max(50).optional(),
+      sizeGuide: z.array(z.object({
+        size: z.string().trim().min(1).max(24),
+        width: z.string().trim().max(48),
+        length: z.string().trim().max(48),
+      })).max(20).optional(),
     })).mutation(async ({ input }) => {
       const saved = await saveProductData(input);
       return {
