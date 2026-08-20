@@ -3178,3 +3178,10 @@
 - [x] Validar Orders, Admin, webhook/consulta do Mercado Pago, Vitest e build
 
 - [x] Tornar a validação externa das credenciais Resend tolerante a indisponibilidade de rede durante testes locais, sem mascarar falhas de configuração
+
+- [x] Preservar no checkout o cupão já validado na sacola sem exigir nova confirmação
+- [x] Preservar no checkout o método de frete já escolhido e validado na sacola
+- [x] Recalcular apenas quando os dados da sacola mudarem ou estiverem inválidos, evitando confirmação duplicada
+- [x] Melhorar o design do botão “OK” de cupão e frete com estados de carregamento, sucesso e erro
+- [x] Adicionar testes de regressão para transição sacola → checkout com cupão e frete
+- [x] Validar o fluxo em desktop, mobile, Vitest e build de produção

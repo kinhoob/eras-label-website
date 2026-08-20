@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
-import { ArrowRight, Loader2, Minus, Plus, ShoppingBag, X } from "lucide-react";
+import { ArrowRight, Check, Loader2, Minus, Plus, ShoppingBag, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
@@ -34,6 +34,7 @@ export default function PublicCartDrawer() {
   const [coupon, setCoupon] = useState("");
   const [couponApplied, setCouponApplied] = useState<boolean | null>(null);
   const [couponDiscount, setCouponDiscount] = useState(0);
+  const [couponFreeShipping, setCouponFreeShipping] = useState(false);
   const [couponLoading, setCouponLoading] = useState(false);
   const [cepInput, setCepInput] = useState("");
   const [shippingCep, setShippingCep] = useState("");
@@ -56,7 +57,8 @@ export default function PublicCartDrawer() {
   );
   const shippingOptions = shippingData?.options ?? (shippingData ? [{ id: "default", service: shippingData.service, cost: shippingData.cost, deadline: shippingData.deadline, free: shippingData.free }] : []);
   const activeShippingOption = shippingOptions.find((option) => option.id === selectedShippingId) ?? shippingOptions[0];
-  const shippingCost = activeShippingOption?.free ? 0 : Number(activeShippingOption?.cost ?? 0);
+  // O frete grátis concedido por cupão deve refletir-se no total e no rascunho do checkout.
+  const shippingCost = activeShippingOption?.free || couponFreeShipping ? 0 : Number(activeShippingOption?.cost ?? 0);
   const total = Math.max(0, subtotal - couponDiscount + shippingCost);
   const cartCount = getCartItemCount(cart);
   const progress = freeShippingThreshold > 0 ? Math.min(100, (subtotal / freeShippingThreshold) * 100) : 100;
@@ -167,18 +169,21 @@ export default function PublicCartDrawer() {
     try {
       const result = await couponValidateQuery.refetch();
       const discount = Number(result.data?.discount ?? 0);
-      if (result.data?.valid && discount > 0) {
+      if (result.data?.valid && (discount > 0 || result.data.freeShipping)) {
         setCouponApplied(true);
         setCouponDiscount(discount);
-        toast.success(`Cupom aplicado: ${formatPrice(discount)} de desconto.`);
+        setCouponFreeShipping(result.data.freeShipping === true);
+        toast.success(result.data.freeShipping === true ? "Cupom aplicado: frete grátis ativado." : `Cupom aplicado: ${formatPrice(discount)} de desconto.`);
       } else {
         setCouponApplied(false);
         setCouponDiscount(0);
+        setCouponFreeShipping(false);
         toast.error("Cupom inválido, expirado ou valor mínimo não atingido.");
       }
     } catch {
       setCouponApplied(false);
       setCouponDiscount(0);
+      setCouponFreeShipping(false);
       toast.error("Erro ao validar o cupom. Tente novamente.");
     } finally {
       setCouponLoading(false);
@@ -186,12 +191,18 @@ export default function PublicCartDrawer() {
   }
 
   function goToCheckout() {
+    // O checkout reutiliza estes valores já confirmados, sem nova validação manual.
     saveCheckoutDraft({
       coupon,
       couponApplied: couponApplied === true,
+      couponDiscount,
+      couponFreeShipping,
       selectedPaymentMethod,
       shippingCep,
       shippingMethod: activeShippingOption?.service,
+      shippingOptionId: activeShippingOption?.id,
+      shippingCost,
+      shippingDeadline: activeShippingOption?.deadline,
     });
     setIsOpen(false);
     window.setTimeout(() => window.location.assign("/checkout"), 0);
@@ -251,17 +262,17 @@ export default function PublicCartDrawer() {
             <div className="cart-footer">
               <div className="coupon-box">
                 <div className="coupon-input-group">
-                  <Input value={coupon} onChange={(event) => { setCoupon(event.target.value); setCouponApplied(null); setCouponDiscount(0); }} placeholder="Insira seu cupom" disabled={couponLoading} aria-label="Código do cupom" />
-                  <button type="button" className="coupon-apply-btn cart-inline-confirm" onClick={() => void applyCoupon()} disabled={couponLoading}>{couponLoading ? <Loader2 size={16} className="spinner-icon" /> : "OK"}</button>
+<Input value={coupon} onChange={(event) => { setCoupon(event.target.value); setCouponApplied(null); setCouponDiscount(0); setCouponFreeShipping(false); }} placeholder="Insira seu cupom" disabled={couponLoading} aria-label="Código do cupom" />
+                    <button type="button" className="coupon-apply-btn cart-inline-confirm" onClick={() => void applyCoupon()} disabled={couponLoading} aria-label={couponLoading ? "Validando cupom" : "Confirmar cupom"}>{couponLoading ? <Loader2 size={16} className="spinner-icon" /> : <><Check size={15} /><span>OK</span></>}</button>
                 </div>
-                {couponApplied === true && <p className="coupon-feedback success">Cupom aplicado com sucesso.</p>}
+                {couponApplied === true && <p className="coupon-feedback success"><Check size={14} /> {couponFreeShipping ? "Frete grátis ativado." : "Cupom aplicado com sucesso."}</p>}
                 {couponApplied === false && <p className="coupon-feedback error">Cupom inválido ou expirado.</p>}
               </div>
 
               <div className="cep-calc-box">
                 <div className="coupon-input-group">
                   <Input value={cepInput} onChange={(event) => setCepInput(event.target.value.replace(/\D/g, "").slice(0, 8))} placeholder="Insira seu CEP" maxLength={8} aria-label="CEP para cálculo de frete" />
-                  <button type="button" className="coupon-apply-btn cart-inline-confirm" onClick={() => setShippingCep(cepInput)} disabled={cepInput.length !== 8}>OK</button>
+                  <button type="button" className="coupon-apply-btn cart-inline-confirm" onClick={() => setShippingCep(cepInput)} disabled={cepInput.length !== 8} aria-label="Confirmar CEP"><Check size={15} /><span>OK</span></button>
                 </div>
                 {shippingLoading && <p className="shipping-info-text">Calculando opções de frete...</p>}
                 {shippingData && !shippingLoading && <div className="shipping-options" role="radiogroup" aria-label="Escolha o método de frete">

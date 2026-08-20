@@ -395,6 +395,8 @@ export default function Home() {
   const [soundsOn, setSoundsOn] = useState(true);
   const [coupon, setCoupon] = useState("");
   const [couponApplied, setCouponApplied] = useState<boolean | null>(null);
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [couponFreeShipping, setCouponFreeShipping] = useState(false);
   const [loading, setLoading] = useState(false);
   const [confirmedOrderSummary, setConfirmedOrderSummary] = useState<OrderSummary | null>(null);
   const [checkoutFlow, setCheckoutFlow] = useReducer(checkoutFlowReducer, initialCheckoutFlowState);
@@ -574,14 +576,15 @@ export default function Home() {
   const activeQuickViewImage = quickViewImages[selectedProductImage] ?? selectedProduct?.image ?? "";
   const cartCount = getCartItemCount(cart);
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const discount = couponApplied ? subtotal * 0.1 : 0;
+  // Preserva o valor exato devolvido pela validação, sem reconstruir um percentual fixo.
+  const discount = couponApplied ? couponDiscount : 0;
 
   const { data: shippingData, isLoading: shippingLoading, refetch: refetchShipping } = trpc.catalog.calculateShipping.useQuery(
     { cep: shippingCep, subtotal },
     { enabled: shippingCep.length === 8 }
   );
 
-  const shippingCost = shippingData?.free ? 0 : (shippingData?.cost ?? 0);
+  const shippingCost = shippingData?.free || couponFreeShipping ? 0 : (shippingData?.cost ?? 0);
   const total = subtotal - discount + shippingCost;
   const checkoutFeedback = getCheckoutFeedback(checkoutStatus, confirmedOrderNumber, checkoutError);
 
@@ -724,11 +727,18 @@ export default function Home() {
 
   function goToCheckout() {
     playClick(soundsOn);
+    // A Home usa o mesmo contrato da sacola global para não perder validações ao abrir o checkout.
     saveCheckoutDraft({
       coupon,
       couponApplied: couponApplied === true,
+      couponDiscount,
+      couponFreeShipping,
       selectedPaymentMethod,
       shippingCep,
+      shippingMethod: shippingData?.service,
+      shippingOptionId: shippingData?.options?.[0]?.id,
+      shippingCost,
+      shippingDeadline: shippingData?.deadline,
     });
     window.setTimeout(() => window.location.assign("/checkout"), 0);
   }
@@ -771,16 +781,23 @@ export default function Home() {
     try {
       const result = await couponValidateQuery.refetch();
       setCouponLoading(false);
-      if (result.data?.valid && result.data.discount > 0) {
+      if (result.data?.valid && (Number(result.data.discount ?? 0) > 0 || result.data.freeShipping)) {
+        const amount = Math.max(0, Number(result.data.discount ?? 0));
         setCouponApplied(true);
-        toast.success(`Cupom ${coupon.trim().toUpperCase()} aplicado: R$ ${result.data.discount.toFixed(2)} de desconto.`);
+        setCouponDiscount(amount);
+        setCouponFreeShipping(result.data.freeShipping === true);
+        toast.success(result.data.freeShipping === true ? "Cupom aplicado: frete grátis ativado." : `Cupom ${coupon.trim().toUpperCase()} aplicado: R$ ${amount.toFixed(2)} de desconto.`);
       } else {
         setCouponApplied(false);
+        setCouponDiscount(0);
+        setCouponFreeShipping(false);
         toast.error("Cupom inválido, expirado ou valor mínimo não atingido.");
       }
     } catch {
       setCouponLoading(false);
       setCouponApplied(false);
+      setCouponDiscount(0);
+      setCouponFreeShipping(false);
       toast.error("Erro ao validar o cupom. Tente novamente.");
     }
   }
@@ -1257,16 +1274,16 @@ export default function Home() {
                     <div className="coupon-input-group">
                       <Input
                         value={coupon}
-                        onChange={(event) => setCoupon(event.target.value)}
-                        placeholder="Cupom (ex: ERAS10)"
+                        onChange={(event) => { setCoupon(event.target.value); setCouponApplied(null); setCouponDiscount(0); setCouponFreeShipping(false); }}
+                        placeholder="Insira seu cupom"
                         disabled={couponLoading}
                         aria-label="Código do cupom"
                       />
-                      <button className="coupon-apply-btn" onClick={applyCoupon} disabled={couponLoading}>
-                        {couponLoading ? <Loader2 size={16} className="spinner-icon" /> : "APLICAR"}
+                      <button type="button" className="coupon-apply-btn cart-inline-confirm" onClick={applyCoupon} disabled={couponLoading} aria-label={couponLoading ? "Validando cupom" : "Confirmar cupom"}>
+                        {couponLoading ? <Loader2 size={16} className="spinner-icon" /> : <><Check size={15} /><span>OK</span></>}
                       </button>
                     </div>
-                    {couponApplied === true && <p className="coupon-feedback success">Cupom ERAS10 aplicado (10% OFF)</p>}
+                    {couponApplied === true && <p className="coupon-feedback success"><Check size={14} /> {couponFreeShipping ? "Frete grátis ativado." : "Cupom aplicado com sucesso."}</p>}
                     {couponApplied === false && <p className="coupon-feedback error">Cupom inválido ou expirado</p>}
                   </div>
 
@@ -1279,14 +1296,14 @@ export default function Home() {
                         maxLength={8}
                         aria-label="CEP para cálculo de frete"
                       />
-                      <button className="coupon-apply-btn" onClick={() => { playClick(soundsOn); setShippingCep(cepInput); }}>
-                        CALCULAR
+                      <button type="button" className="coupon-apply-btn cart-inline-confirm" onClick={() => { playClick(soundsOn); setShippingCep(cepInput); }} disabled={cepInput.length !== 8} aria-label="Confirmar CEP">
+                        <Check size={15} /><span>OK</span>
                       </button>
                     </div>
                     {shippingLoading && <p className="shipping-info-text">Calculando frete...</p>}
                     {shippingData && !shippingLoading && (
                       <p className="shipping-info-text success">
-                        {shippingData.free ? "Frete Grátis" : `Frete: ${formatPrice(shippingData.cost)}`} · Prazo: {shippingData.deadline}
+                        {couponFreeShipping || shippingData.free ? "Frete Grátis" : `Frete: ${formatPrice(shippingData.cost)}`} · Prazo: {shippingData.deadline}
                       </p>
                     )}
                   </div>

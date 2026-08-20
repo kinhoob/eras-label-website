@@ -136,16 +136,19 @@ function createOrderReference() {
 }
 
 export default function CheckoutPage() {
+  // Lemos o rascunho uma única vez para que a transição sacola → checkout seja estável.
+  const [checkoutDraft] = useState(() => loadCheckoutDraft());
   const [cart, setCart] = useState<CheckoutLine[]>(() => readInitialCart());
-  const [coupon, setCoupon] = useState(() => loadCheckoutDraft().coupon ?? "");
-  const [couponApplied, setCouponApplied] = useState(() => loadCheckoutDraft().couponApplied === true);
-  const [couponDiscountRate, setCouponDiscountRate] = useState(10);
-  const [couponFreeShipping, setCouponFreeShipping] = useState(false);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<CheckoutPaymentMethod>(() => loadCheckoutDraft().selectedPaymentMethod ?? "pix");
+  const [coupon, setCoupon] = useState(checkoutDraft.coupon ?? "");
+  const [couponApplied, setCouponApplied] = useState(checkoutDraft.couponApplied === true);
+  const [couponDiscountAmount, setCouponDiscountAmount] = useState(checkoutDraft.couponDiscount ?? 0);
+  const [couponFreeShipping, setCouponFreeShipping] = useState(checkoutDraft.couponFreeShipping === true);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<CheckoutPaymentMethod>(checkoutDraft.selectedPaymentMethod ?? "pix");
   const [selectedInstallments, setSelectedInstallments] = useState(1);
-  const [cep, setCep] = useState(() => loadCheckoutDraft().shippingCep ?? "");
-  const [shippingMethod, setShippingMethod] = useState(() => loadCheckoutDraft().shippingMethod ?? "");
-  const [orderNumber] = useState(() => loadCheckoutDraft().orderNumber || createOrderReference());
+  const [cep, setCep] = useState(checkoutDraft.shippingCep ?? "");
+  const [shippingMethod, setShippingMethod] = useState(checkoutDraft.shippingMethod ?? "");
+  const [shippingOptionId, setShippingOptionId] = useState(checkoutDraft.shippingOptionId ?? "");
+  const [orderNumber] = useState(() => checkoutDraft.orderNumber || createOrderReference());
   const [addressFields, setAddressFields] = useState({ street: "", neighborhood: "", city: "", state: "" });
   const [cepLookupStatus, setCepLookupStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [couponLoading, setCouponLoading] = useState(false);
@@ -170,10 +173,13 @@ export default function CheckoutPage() {
   const installmentInterestRate = Math.max(0, commercialConfig?.installmentInterestRate ?? 0);
   const subtotal = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.quantity, 0), [cart]);
   const couponValidationQuery = trpc.coupons.validate.useQuery({ code: coupon.trim() || "ERAS10", subtotal }, { enabled: false });
-  const discount = couponApplied ? subtotal * (couponDiscountRate / 100) : 0;
+  // Mantemos o valor exato devolvido pelo backend; não reconstruímos o desconto por percentagem.
+  const discount = couponApplied ? Math.max(0, couponDiscountAmount) : 0;
   const shippingOptions = shippingQuery.data?.options ?? (shippingQuery.data ? [{ id: "default", service: shippingQuery.data.service, cost: shippingQuery.data.cost, deadline: shippingQuery.data.deadline, free: shippingQuery.data.free }] : []);
-  const selectedShippingOption = shippingOptions.find((option) => option.service === shippingMethod) ?? shippingOptions[0];
-  const shippingCost = (selectedShippingOption?.free || couponFreeShipping) ? 0 : Number(selectedShippingOption?.cost ?? 0);
+  const selectedShippingOption = shippingOptions.find((option) => option.id === shippingOptionId) ?? shippingOptions.find((option) => option.service === shippingMethod) ?? shippingOptions[0];
+  const normalizedDraftCep = normalizeCep(checkoutDraft.shippingCep ?? "");
+  const hasPersistedShippingQuote = !selectedShippingOption && normalizedDraftCep.length === 8 && normalizeCep(cep) === normalizedDraftCep && checkoutDraft.shippingCost !== undefined;
+  const shippingCost = (selectedShippingOption?.free || couponFreeShipping) ? 0 : Number(selectedShippingOption?.cost ?? (hasPersistedShippingQuote ? checkoutDraft.shippingCost : 0));
   const totalBeforePayment = Math.max(0, subtotal - discount + shippingCost);
   const pixSavings = selectedPaymentMethod === "pix" ? subtotal * (pixDiscountPercent / 100) : 0;
   const cardTotal = selectedPaymentMethod === "credit_card" ? calculateInstallmentTotal(totalBeforePayment, selectedInstallments, installmentInterestRate, interestFreeInstallments) : totalBeforePayment;
@@ -186,7 +192,10 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     if (!shippingOptions.length) return;
-    setShippingMethod((current) => shippingOptions.some((option) => option.service === current) ? current : (shippingOptions[0]?.service ?? ""));
+    const preferredOption = shippingOptions.find((option) => option.id === shippingOptionId) ?? shippingOptions.find((option) => option.service === shippingMethod) ?? shippingOptions[0];
+    if (!preferredOption) return;
+    setShippingOptionId(preferredOption.id);
+    setShippingMethod(preferredOption.service);
   }, [shippingQuery.data]);
 
   useEffect(() => {
@@ -197,12 +206,17 @@ export default function CheckoutPage() {
     saveCheckoutDraft({
       coupon,
       couponApplied,
+      couponDiscount: discount,
+      couponFreeShipping,
       selectedPaymentMethod,
       shippingCep: cep,
-      shippingMethod,
+      shippingMethod: selectedShippingOption?.service ?? shippingMethod,
+      shippingOptionId: selectedShippingOption?.id ?? shippingOptionId,
+      shippingCost,
+      shippingDeadline: selectedShippingOption?.deadline,
       orderNumber,
     });
-  }, [cep, coupon, couponApplied, selectedPaymentMethod, shippingMethod]);
+  }, [cep, coupon, couponApplied, couponFreeShipping, discount, selectedPaymentMethod, selectedShippingOption?.deadline, selectedShippingOption?.id, selectedShippingOption?.service, shippingCost, shippingMethod, shippingOptionId, orderNumber]);
 
   useEffect(() => {
     const normalizedCep = normalizeCep(cep);
@@ -245,7 +259,8 @@ export default function CheckoutPage() {
     if (target.name === "cardExpiry") target.value = formatCardExpiry(target.value);
     if (target.name === "coupon") {
       setCouponApplied(false);
-      setCouponDiscountRate(0);
+      setCouponDiscountAmount(0);
+      setCouponFreeShipping(false);
     }
 
     const fields = readCheckoutFieldsFromForm(event.currentTarget);
@@ -273,24 +288,26 @@ export default function CheckoutPage() {
       if (validation?.valid) {
         if (validation.freeShipping) {
           setCouponFreeShipping(true);
-          setCouponDiscountRate(0);
+          setCouponDiscountAmount(0);
           setCouponApplied(true);
           toast.success(`Cupom ${validation.code} aplicado: Frete Grátis ativado!`);
         } else {
-          const rate = subtotal > 0 ? (Number(validation.discount) / subtotal) * 100 : 0;
+          const amount = Math.max(0, Number(validation.discount ?? 0));
           setCouponFreeShipping(false);
-          setCouponDiscountRate(rate);
+          setCouponDiscountAmount(amount);
           setCouponApplied(true);
-          toast.success(`Cupom ${validation.code} aplicado: ${rate.toFixed(0)}% de desconto.`);
+          toast.success(`Cupom ${validation.code} aplicado: ${formatPrice(amount)} de desconto.`);
         }
       } else {
-        setCouponDiscountRate(0);
+        setCouponDiscountAmount(0);
         setCouponFreeShipping(false);
         setCouponApplied(false);
         toast.error(validation?.message || "Cupom não encontrado, expirado ou incompatível com o subtotal.");
       }
     } catch {
       setCouponApplied(false);
+      setCouponDiscountAmount(0);
+      setCouponFreeShipping(false);
       toast.error("Não foi possível validar o cupom agora.");
     } finally {
       setCouponLoading(false);
@@ -604,9 +621,9 @@ export default function CheckoutPage() {
               </div>
             ))}
           </div>
-          <div className="checkout-coupon-row"><input value={coupon} onChange={(event) => setCoupon(event.target.value)} placeholder="Cupom de desconto" /><button type="button" onClick={applyCoupon} disabled={couponLoading}>{couponLoading ? <Loader2 size={14} className="spinner-icon" /> : "APLICAR"}</button></div>
-          {couponApplied && <p className="checkout-coupon-applied"><Check size={14} /> ERAS10 aplicado</p>}
-          <div className="checkout-page-totals"><div><span>Subtotal</span><strong>{formatPrice(subtotal)}</strong></div>{discount > 0 && <div><span>Desconto</span><strong>- {formatPrice(discount)}</strong></div>}<div><span>Frete</span><strong>{shippingQuery.data?.free ? "Grátis" : shippingQuery.data ? formatPrice(shippingCost) : "A calcular"}</strong></div>{pixSavings > 0 && <div><span>Economia no Pix</span><strong>- {formatPrice(pixSavings)}</strong></div>}{selectedPaymentMethod === "credit_card" && selectedInstallments > 1 && <div><span>Juros ({selectedInstallments}x)</span><strong>+ {formatPrice(installmentInterest)}</strong></div>}<div className="final"><span>{selectedPaymentMethod === "credit_card" ? `${selectedInstallments}x no cartão` : "Total"}</span><strong>{formatPrice(total)}</strong></div></div>
+          <div className="checkout-coupon-row"><input value={coupon} onChange={(event) => { setCoupon(event.target.value); setCouponApplied(false); setCouponDiscountAmount(0); setCouponFreeShipping(false); }} placeholder="Insira seu cupom" aria-label="Código do cupom" /><button type="button" className="checkout-inline-confirm" onClick={applyCoupon} disabled={couponLoading} aria-label={couponLoading ? "Validando cupom" : "Confirmar cupom"}>{couponLoading ? <Loader2 size={14} className="spinner-icon" /> : <><Check size={14} /><span>OK</span></>}</button></div>
+          {couponApplied && <p className="checkout-coupon-applied"><Check size={14} /> {couponFreeShipping ? "Frete grátis ativado" : `${coupon.trim().toUpperCase()} aplicado`}</p>}
+          <div className="checkout-page-totals"><div><span>Subtotal</span><strong>{formatPrice(subtotal)}</strong></div>{discount > 0 && <div><span>Desconto</span><strong>- {formatPrice(discount)}</strong></div>}<div><span>Frete</span><strong>{couponFreeShipping || selectedShippingOption?.free ? "Grátis" : (shippingQuery.data || checkoutDraft.shippingCost !== undefined) ? (shippingCost === 0 ? "Grátis" : formatPrice(shippingCost)) : "A calcular"}</strong></div>{pixSavings > 0 && <div><span>Economia no Pix</span><strong>- {formatPrice(pixSavings)}</strong></div>}{selectedPaymentMethod === "credit_card" && selectedInstallments > 1 && <div><span>Juros ({selectedInstallments}x)</span><strong>+ {formatPrice(installmentInterest)}</strong></div>}<div className="final"><span>{selectedPaymentMethod === "credit_card" ? `${selectedInstallments}x no cartão` : "Total"}</span><strong>{formatPrice(total)}</strong></div></div>
           <p className="checkout-free-shipping-note">{subtotal >= freeShippingThreshold ? "Você conquistou frete grátis." : `Frete grátis a partir de ${formatPrice(freeShippingThreshold)}.`}</p>
         </aside>
       </div>

@@ -11355,3 +11355,43 @@ h1, h2, h3, .heading-editorial {
   from { opacity: 0; transform: translateY(-4px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Confirmação editorial de cupão e frete: compacto, legível e consistente nos dois drawers. */
+.side-cart .cart-inline-confirm,
+.public-cart-drawer .cart-inline-confirm {
+  display: inline-flex;
+  width: auto;
+  min-width: 58px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 12px;
+  border: 1px solid rgba(178, 34, 34, .28);
+  border-radius: 11px;
+  color: #b22222;
+  background: rgba(255, 255, 255, .72);
+  box-shadow: 0 6px 16px rgba(74, 40, 28, .07);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .11em;
+  transition: transform .2s ease, color .2s ease, background-color .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+.side-cart .cart-inline-confirm:hover,
+.side-cart .cart-inline-confirm:focus-visible,
+.public-cart-drawer .cart-inline-confirm:hover,
+.public-cart-drawer .cart-inline-confirm:focus-visible {
+  color: #fff;
+  border-color: #b22222;
+  background: #b22222;
+  box-shadow: 0 10px 22px rgba(178, 34, 34, .2);
+  transform: translateY(-1px);
+}
+.side-cart .cart-inline-confirm:active,
+.public-cart-drawer .cart-inline-confirm:active { transform: translateY(0) scale(.97); }
+.side-cart .cart-inline-confirm:disabled,
+.public-cart-drawer .cart-inline-confirm:disabled { cursor: not-allowed; opacity: .45; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .side-cart .cart-inline-confirm,
+  .public-cart-drawer .cart-inline-confirm { transition: none; }
+}
