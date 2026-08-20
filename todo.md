@@ -3131,24 +3131,24 @@
 - [x] Reexecutar a cotação real após a correção do filtro e registrar os serviços exibidos.
 - [x] Remover os scripts temporários de cotação após a validação.
 
-- [ ] Auditar o pedido ER-2026-8088 e identificar por que o Pix permanece `pending` com `pending_waiting_transfer` após o pagamento informado pelo cliente.
-- [ ] Confirmar o paymentId/external_reference do pedido e consultar o status real no Mercado Pago sem criar nova cobrança.
-- [ ] Corrigir a conciliação do Pix por webhook ou sincronização quando o Mercado Pago já tiver status aprovado.
-- [ ] Garantir que pedidos pendentes legítimos continuem pendentes até confirmação real.
-- [ ] Garantir idempotência para não duplicar pedido, pagamento, estoque ou e-mail durante a correção.
-- [ ] Adicionar teste de regressão para Pix aprovado, Pix pendente e webhook reenviado.
-- [ ] Validar o pedido afetado no painel e no histórico do cliente após a correção.
-- [ ] Registrar no relatório a causa técnica do status pendente e o resultado da correção.
-- [ ] Salvar checkpoint após a validação do fluxo Pix.
+- [x] Auditar o pedido ER-2026-8088 e identificar por que o Pix permanece `pending` com `pending_waiting_transfer` após o pagamento informado pelo cliente.
+- [x] Confirmar o paymentId/external_reference do pedido e consultar o status real no Mercado Pago sem criar nova cobrança.
+- [x] Corrigir a conciliação do Pix por webhook ou sincronização quando o Mercado Pago já tiver status aprovado.
+- [x] Garantir que pedidos pendentes legítimos continuem pendentes até confirmação real.
+- [x] Garantir idempotência para não duplicar pedido, pagamento, estoque ou e-mail durante a correção.
+- [x] Adicionar teste de regressão para Pix aprovado, Pix pendente e webhook reenviado.
+- [x] Validar o pedido afetado no painel e no histórico do cliente após a correção.
+- [x] Registrar no relatório a causa técnica do status pendente e o resultado da correção.
+- [x] Salvar checkpoint após a validação do fluxo Pix.
 - [x] Auditar o pedido ER-2026-8088 e o status do Pix no painel e na API do Mercado Pago.
 
-- [ ] Deixar nome, descrição, preço normal, preço Pix e preço promocional vazios ao abrir o cadastro de um novo produto.
-- [ ] Remover defaults comerciais indevidos somente do formulário de novo produto, preservando os dados de produtos já salvos ao editar.
-- [ ] Garantir validação obrigatória de nome e preço antes de criar um produto.
-- [ ] Adicionar testes para impedir a regressão de valores pré-digitados no cadastro.
-- [ ] Validar o formulário no preview em desktop e mobile.
-- [ ] Executar Vitest e build após a correção.
-- [ ] Salvar checkpoint da correção do cadastro de produto.
+- [x] Deixar nome, descrição, preço normal, preço Pix e preço promocional vazios ao abrir o cadastro de um novo produto.
+- [x] Remover defaults comerciais indevidos somente do formulário de novo produto, preservando os dados de produtos já salvos ao editar.
+- [x] Garantir validação obrigatória de nome e preço antes de criar um produto.
+- [x] Adicionar testes para impedir a regressão de valores pré-digitados no cadastro.
+- [x] Validar o formulário no preview em desktop e mobile.
+- [x] Executar Vitest e build após a correção.
+- [x] Salvar checkpoint da correção do cadastro de produto.
 - [x] Deixar nome, descrição, preços normal e PIX e status totalmente vazios e sem valores pré-digitados no cadastro de novos produtos no painel admin, exigindo preenchimento manual obrigatório.
 
 - [x] Corrigir o binding do campo de descrição no editor de produto para aceitar alterações ao clicar e digitar.
@@ -3157,13 +3157,13 @@
 - [x] Adicionar teste de regressão para edição e persistência da descrição.
 - [x] Validar a correção no painel em desktop/mobile, executar Vitest e build e salvar checkpoint.
 
-- [ ] Reduzir o tamanho do título na página pública de produto.
-- [ ] Reduzir o tamanho visual das fotos e do swiper na página pública de produto.
-- [ ] Adicionar gaps e margens consistentes entre título, descrição, galeria e recomendações.
-- [ ] Garantir responsividade dos novos espaçamentos e dimensões em desktop e mobile.
-- [ ] Garantir que o editor administrativo mostre a descrição já salva ao abrir um produto existente.
-- [ ] Adicionar teste de regressão para texto salvo no editor e layout compacto da página de produto.
-- [ ] Executar Vitest, build e salvar checkpoint da correção visual e funcional.
+- [x] Reduzir o tamanho do título na página pública de produto.
+- [x] Reduzir o tamanho visual das fotos e do swiper na página pública de produto.
+- [x] Adicionar gaps e margens consistentes entre título, descrição, galeria e recomendações.
+- [x] Garantir responsividade dos novos espaçamentos e dimensões em desktop e mobile.
+- [x] Garantir que o editor administrativo mostre a descrição já salva ao abrir um produto existente.
+- [x] Adicionar teste de regressão para texto salvo no editor e layout compacto da página de produto.
+- [x] Executar Vitest, build e salvar checkpoint da correção visual e funcional.
 
 - [x] Manter todos os produtos públicos visíveis no catálogo, incluindo produtos esgotados
 - [x] Ordenar automaticamente produtos esgotados no fim das listagens públicas
