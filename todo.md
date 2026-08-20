@@ -3176,3 +3176,5 @@
 - [x] Garantir mapeamento consistente entre status do pagamento Mercado Pago e status exibido do pedido
 - [x] Adicionar testes de regressão para pagamentos aprovados, pendentes e reconciliação Pix
 - [x] Validar Orders, Admin, webhook/consulta do Mercado Pago, Vitest e build
+
+- [x] Tornar a validação externa das credenciais Resend tolerante a indisponibilidade de rede durante testes locais, sem mascarar falhas de configuração

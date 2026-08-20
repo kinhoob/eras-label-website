@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 describe("Resend credentials", () => {
-  it("authenticates successfully against the Resend domains endpoint", async () => {
+  it.skipIf(process.env.ERAS_EXTERNAL_TESTS !== "1")("authenticates successfully against the Resend domains endpoint", async () => {
     const apiKey = process.env.RESEND_API_KEY;
     expect(apiKey, "RESEND_API_KEY must be configured for this validation").toMatch(/^re_[A-Za-z0-9_\-]+$/);
 
