@@ -3223,3 +3223,6 @@
 - [x] Alterar o rótulo do botão de acesso VIP da página em construção para "Entrar", mantendo o link de acesso administrativo separado no rodapé
 
 - [x] Refinar o design da secção de newsletter na página inicial (redução da escala do título, reorganização do card e espaçamento dos campos)
+
+- [x] Auditar a segurança, segredos, autenticação e integrações (Mercado Pago, Melhor Envio, Admin e Acesso VIP)
+- [x] Consolidar relatório de auditoria e prontidão para produção
