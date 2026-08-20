@@ -1411,7 +1411,8 @@ td { border-top: 1px solid #e1dacf; padding: 15px 17px; color: #6f675e; font-siz
 .footer-collection-menu { display: flex; flex-direction: column; gap: 8px; margin: 9px 0 4px 10px; padding-left: 9px; border-left: 1px solid rgba(37,36,31,.18); }
 .footer-collection-menu a { font-size: 9px; }
 .footer-bottom { grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-top: 20px; border-top: 1px solid rgba(37,36,31,.12); color: #81776c; font-size: 9px; letter-spacing: .12em; }
-@keyframes home-hero-image-in { from { opacity: .4; transform: scale(1.08); } to { opacity: 1; transform: scale(1.02); } }
+/* A entrada anima somente a opacidade; o transform fica livre para o parallax durante e após a entrada. */
+@keyframes home-hero-image-in { from { opacity: .4; } to { opacity: 1; } }
 @keyframes home-hero-content-in { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes dropdown-in { from { opacity: 0; transform: translate(-50%, -7px) scale(.98); } to { opacity: 1; transform: translate(-50%, 0) scale(1); } }
 @keyframes search-panel-in { from { opacity: 0; transform: translateY(-7px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
@@ -1451,7 +1452,10 @@ td { border-top: 1px solid #e1dacf; padding: 15px 17px; color: #6f675e; font-siz
 
 /* Em telas menores, a leitura e a estabilidade têm prioridade sobre a profundidade visual. */
 @media (max-width: 767px) {
-  .home-hero-media, .vip-home-media { transform: none; will-change: auto; }
+  /* No mobile, o deslocamento continua leve para ser perceptível sem causar instabilidade ou zoom excessivo. */
+  .home-hero-media { transform: translate3d(0, var(--parallax-y, 0px), 0) scale(1.025); will-change: transform; }
+  .vip-home-media { transform: translate3d(0, var(--parallax-y, 0px), 0) scale(1.035); will-change: transform; }
+  .vip-home-banner > a:hover .vip-home-media { transform: translate3d(0, var(--parallax-y, 0px), 0) scale(1.055); }
 }
 
 /* Acessibilidade: esta regra vem depois do parallax para garantir prioridade na cascata. */

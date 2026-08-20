@@ -609,19 +609,31 @@ export default function Home() {
 
     const applyParallax = () => {
       frameId = null;
-      const shouldDisable = mediaQuery.matches || window.innerWidth < 768;
+      const isCompactViewport = window.innerWidth < 768;
       const viewportCenter = window.innerHeight * 0.5;
 
       parallaxElements.forEach((element) => {
-        if (shouldDisable) {
+        // O movimento respeita a acessibilidade, mas continua ativo no mobile com amplitude reduzida.
+        if (mediaQuery.matches) {
           element.style.setProperty("--parallax-y", "0px");
           return;
         }
 
-        const rect = element.getBoundingClientRect();
-        const speed = Number(element.dataset.parallaxSpeed ?? "0.06");
-        const distanceFromCenter = rect.top + rect.height * 0.5 - viewportCenter;
-        const offset = Math.max(-42, Math.min(42, distanceFromCenter * -speed));
+        // Usar o pai não transformado impede um feedback visual em que o próprio deslocamento
+        // altera o próximo cálculo e faz a imagem parecer estática ou vibrar.
+        const referenceRect = element.parentElement?.getBoundingClientRect() ?? element.getBoundingClientRect();
+        const desktopSpeed = Number(element.dataset.parallaxSpeed ?? "0.14");
+        const mobileSpeed = Number(element.dataset.parallaxMobileSpeed ?? "0.04");
+        const speed = isCompactViewport ? mobileSpeed : desktopSpeed;
+        const limit = isCompactViewport ? 26 : 88;
+
+        // O hero reage diretamente à distância rolada, deixando a diferença visível desde os
+        // primeiros pixels. O banner VIP usa a posição no viewport para não se mover enquanto
+        // está fora da área visual e entrar suavemente quando o cliente se aproxima dele.
+        const rawOffset = element.dataset.parallax === "hero"
+          ? window.scrollY * speed
+          : (viewportCenter - (referenceRect.top + referenceRect.height * 0.5)) * speed;
+        const offset = Math.max(-limit, Math.min(limit, rawOffset));
         element.style.setProperty("--parallax-y", `${offset.toFixed(2)}px`);
       });
     };
@@ -1013,7 +1025,7 @@ export default function Home() {
 
       <main className="home-main">
         <section className="home-hero" aria-label="Destaque da Eras Label">
-          <div className="home-hero-media" data-parallax="hero" data-parallax-speed="0.075" style={{ backgroundImage: `url(${currentBanner.imageUrl})` }} />
+          <div className="home-hero-media" data-parallax="hero" data-parallax-speed="0.18" data-parallax-mobile-speed="0.045" style={{ backgroundImage: `url(${currentBanner.imageUrl})` }} />
           <div className="home-hero-overlay" />
           <div className="home-hero-content">
             <span className="home-hero-eyebrow">{currentBanner.eyebrow}</span>
@@ -1136,7 +1148,7 @@ export default function Home() {
 
         <section className="vip-home-banner" aria-label="Grupo VIP">
           <a href={vipBanner.href} target={vipBanner.href.startsWith("http") ? "_blank" : undefined} rel={vipBanner.href.startsWith("http") ? "noreferrer" : undefined} onClick={() => playClick(soundsOn)}>
-            <div className="vip-home-media" data-parallax="vip" data-parallax-speed="0.055" style={{ backgroundImage: `url(${vipBanner.imageUrl})` }} />
+            <div className="vip-home-media" data-parallax="vip" data-parallax-speed="0.13" data-parallax-mobile-speed="0.035" style={{ backgroundImage: `url(${vipBanner.imageUrl})` }} />
             <div className="vip-home-overlay" />
             <div className="vip-home-content"><span>{vipBanner.eyebrow}</span><h2>{vipBanner.title}</h2><p>{vipBanner.subtitle}</p><strong>{vipBanner.cta} <ArrowRight size={15} /></strong></div>
           </a>

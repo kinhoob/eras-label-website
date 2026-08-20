@@ -45,3 +45,8 @@
 - [x] Implementar efeito parallax de scroll suave no storefront com fallback acessível e responsivo
 - [x] Validar performance, movimento, temas claro/escuro e breakpoints do parallax
 - [x] Validar explicitamente o parallax da Home nos temas claro e escuro com evidência verificável
+- [x] Corrigir a intensidade e o cálculo do parallax para que o movimento seja perceptível durante a rolagem
+- [x] Ajustar o fallback responsivo para manter uma animação leve e segura no mobile
+- [x] Validar o movimento real durante a rolagem em desktop, mobile e temas claro/escuro
+- [x] Adicionar verificação automatizada reproduzível do parallax em duas posições reais de scroll no desktop e no mobile
+- [x] Registrar evidência verificável do parallax nos temas claro e escuro durante scroll real
