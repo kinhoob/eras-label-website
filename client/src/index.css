@@ -11430,6 +11430,8 @@ h1, h2, h3, .heading-editorial {
 /* Vendas & Entregas — leitura contínua, sem scroll interno e com filtros editoriais. */
 .sales-filter-panel {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
   gap: 1rem;
   padding: 1.15rem 1.2rem 1rem;
   border: 1px solid rgba(178, 34, 34, .14);
@@ -11465,6 +11467,7 @@ h1, h2, h3, .heading-editorial {
 }
 .sales-filter-grid {
   display: grid;
+  min-width: 0;
   grid-template-columns: minmax(260px, 1.65fr) repeat(3, minmax(145px, 1fr));
   gap: .7rem;
   align-items: end;
@@ -11488,6 +11491,8 @@ h1, h2, h3, .heading-editorial {
   background: rgba(255, 255, 255, .78);
 }
 .sales-filter-actions {
+  width: 100%;
+  flex-wrap: wrap;
   padding-top: .15rem;
   border-top: 1px solid rgba(178, 34, 34, .1);
 }

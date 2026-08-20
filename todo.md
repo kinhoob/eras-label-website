@@ -12,3 +12,4 @@
 - [x] Corrigir métricas de estoque por produto para somar variações reais e impedir que o resumo de IA exiba valores undefined
 - [x] Restringir o ERAS INSIGHTS aos dados reais do período e rejeitar benchmarks externos ou números não presentes no dataset analítico
 - [x] Adicionar teste de grounding para impedir que o resumo de IA apresente métricas externas ou projeções não calculadas pelo sistema
+- [ ] Corrigir a grelha responsiva dos filtros de Vendas & Entregas e retirar a sobreposição do botão “Limpar filtros”
