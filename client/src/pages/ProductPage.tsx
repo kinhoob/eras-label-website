@@ -173,7 +173,12 @@ export default function ProductPage() {
   const installments = effectivePrice / 2;
 
   const handleAddToCart = () => {
-    if (isAdding) return;
+    if (!product) return;
+    const isSoldOut = product.status === "soldout" || (Array.isArray(product.variations) && product.variations.every((v: any) => Number(v.stock ?? 0) === 0)) || (selectedVariation && Number(selectedVariation.stock ?? 0) === 0);
+    if (isSoldOut) {
+      toast.error("Produto esgotado", { description: "Este item não possui unidades disponíveis no momento." });
+      return;
+    }
     if (variations.length > 0 && !selectedVariation) {
       toast.error("Escolha um tamanho disponível para continuar.");
       return;
@@ -367,16 +372,21 @@ export default function ProductPage() {
                 </div>
               )}
 
-              <Button
-                type="button"
-                onClick={handleAddToCart}
-                disabled={isAdding}
-                aria-live="polite"
-                className={`product-add-to-cart ${isAdding ? "is-added" : ""}`}
-              >
-                {isAdding ? <Check size={17} /> : <ShoppingBag size={16} />}
-                {isAdding ? "Adicionado à sacola" : "Comprar"}
-              </Button>
+              {(() => {
+                const isSoldOut = product.status === "soldout" || (Array.isArray(product.variations) && product.variations.every((v: any) => Number(v.stock ?? 0) === 0)) || (selectedVariation && Number(selectedVariation.stock ?? 0) === 0);
+                return (
+                  <Button
+                    type="button"
+                    onClick={handleAddToCart}
+                    disabled={isAdding || isSoldOut}
+                    aria-live="polite"
+                    className={`product-add-to-cart ${isAdding ? "is-added" : ""} ${isSoldOut ? "opacity-60 cursor-not-allowed bg-neutral-400 hover:bg-neutral-400" : ""}`}
+                  >
+                    {isSoldOut ? "Esgotado" : (isAdding ? <Check size={17} /> : <ShoppingBag size={16} />)}
+                    {isSoldOut ? "Produto Esgotado" : (isAdding ? "Adicionado à sacola" : "Comprar")}
+                  </Button>
+                );
+              })()}
 
               <div className="product-service-points">
                 <div>
