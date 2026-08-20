@@ -3186,5 +3186,5 @@
 - [x] Adicionar testes de regressão para transição sacola → checkout com cupão e frete
 - [x] Validar o fluxo em desktop, mobile, Vitest e build de produção
 
-- [ ] Corrigir o formulário de criação de envios para enviar o campo obrigatório service e apresentar validação clara antes da mutação
-- [ ] Adicionar teste de regressão para impedir submissão de envio sem transportadora/serviço
+- [x] Corrigir o formulário de criação de envios para enviar o campo obrigatório service e apresentar validação clara antes da mutação
+- [x] Adicionar teste de regressão para impedir submissão de envio sem transportadora/serviço

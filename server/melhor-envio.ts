@@ -157,6 +157,11 @@ export async function createMelhorEnvioCartItem(orderData: {
     throw new MelhorEnvioApiError("Token do Melhor Envio não configurado", 401, "Configure o token de produção.");
   }
 
+  const { serviceId, ...shipmentPayload } = orderData;
+  if (!Number.isInteger(serviceId) || serviceId <= 0) {
+    throw new MelhorEnvioApiError("Falha ao adicionar o envio ao carrinho do Melhor Envio", 422, "O serviço de transporte é obrigatório.");
+  }
+
   const response = await fetch(`${baseUrl}/me/cart`, {
     method: "POST",
     headers: {
@@ -165,7 +170,7 @@ export async function createMelhorEnvioCartItem(orderData: {
       Authorization: `Bearer ${token}`,
       "User-Agent": "ErasLabelE-commerce (contato@eraslabel.com)",
     },
-    body: JSON.stringify(orderData),
+    body: JSON.stringify({ service: serviceId, ...shipmentPayload }),
   });
 
   const responseText = await response.text();
