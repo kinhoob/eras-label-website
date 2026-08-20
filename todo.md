@@ -3229,3 +3229,4 @@
 - [x] Ajustar o favicon do site para utilizar a imagem da logo adesiva enviada, mantendo o padrão visual e a nitidez em navegadores e dispositivos móveis
 - [x] Otimizar o favicon do site gerando uma versão quadrada e preenchida com a identidade visual da marca para maximizar a legibilidade no separador do browser
 - [x] Substituir o favicon do site pelo vetor oficial fornecido (ERAS_Vetor.svg), mantendo a logo horizontal na navbar inalterada
+- [x] Configurar a imagem previewssiteeras.png enviada pelo utilizador como capa Open Graph e Twitter Cards para partilha social
