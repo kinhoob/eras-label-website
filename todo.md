@@ -3151,8 +3151,8 @@
 - [ ] Salvar checkpoint da correção do cadastro de produto.
 - [x] Deixar nome, descrição, preços normal e PIX e status totalmente vazios e sem valores pré-digitados no cadastro de novos produtos no painel admin, exigindo preenchimento manual obrigatório.
 
-- [ ] Corrigir o binding do campo de descrição no editor de produto para aceitar alterações ao clicar e digitar.
-- [ ] Garantir que a descrição alterada seja enviada na mutação de salvar produto.
-- [ ] Garantir que a descrição salva reapareça corretamente ao reabrir o produto.
-- [ ] Adicionar teste de regressão para edição e persistência da descrição.
-- [ ] Validar a correção no painel em desktop/mobile, executar Vitest e build e salvar checkpoint.
+- [x] Corrigir o binding do campo de descrição no editor de produto para aceitar alterações ao clicar e digitar.
+- [x] Garantir que a descrição alterada seja enviada na mutação de salvar produto.
+- [x] Garantir que a descrição salva reapareça corretamente ao reabrir o produto.
+- [x] Adicionar teste de regressão para edição e persistência da descrição.
+- [x] Validar a correção no painel em desktop/mobile, executar Vitest e build e salvar checkpoint.
