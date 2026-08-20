@@ -74,6 +74,28 @@ describe("pesquisa inteligente do storefront", () => {
     expect(products.map((product) => product.id)).toEqual([1, 2, 3]);
   });
 
+  it("mantém produtos esgotados visíveis e coloca-os no fim em qualquer ordenação", () => {
+    const catalogWithSoldOut = [
+      { ...products[0], status: "active", variations: [{ stock: 4 }] },
+      { ...products[1], status: "soldout", variations: [{ stock: 0 }] },
+      { ...products[2], status: "active", variations: [{ stock: 2 }] },
+    ];
+
+    expect(sortStorefrontProducts(catalogWithSoldOut, "price-asc").map((product) => product.id)).toEqual([1, 3, 2]);
+    expect(sortStorefrontProducts(catalogWithSoldOut, "price-desc").map((product) => product.id)).toEqual([3, 1, 2]);
+    expect(sortStorefrontProducts(catalogWithSoldOut, "newest").map((product) => product.id)).toEqual([3, 1, 2]);
+    expect(sortStorefrontProducts(catalogWithSoldOut, "bestselling").map((product) => product.id)).toEqual([3, 1, 2]);
+  });
+
+  it("considera esgotado um produto sem stock em todas as variações, mesmo sem status soldout", () => {
+    const catalogWithZeroStock = [
+      { ...products[0], status: "active", variations: [{ stock: 0 }, { stock: 0 }] },
+      { ...products[1], status: "active", variations: [{ stock: 2 }] },
+    ];
+
+    expect(sortStorefrontProducts(catalogWithZeroStock, "price-asc").map((product) => product.id)).toEqual([2, 1]);
+  });
+
   it("gera texto de sugestão consistente para o dropdown", () => {
     expect(getSearchSuggestionText(products[0])).toBe("T-Shirt Travessia · PARADOX COLLECTION");
   });

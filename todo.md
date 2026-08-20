@@ -3164,3 +3164,9 @@
 - [ ] Garantir que o editor administrativo mostre a descrição já salva ao abrir um produto existente.
 - [ ] Adicionar teste de regressão para texto salvo no editor e layout compacto da página de produto.
 - [ ] Executar Vitest, build e salvar checkpoint da correção visual e funcional.
+
+- [x] Manter todos os produtos públicos visíveis no catálogo, incluindo produtos esgotados
+- [x] Ordenar automaticamente produtos esgotados no fim das listagens públicas
+- [x] Garantir que produtos esgotados continuam disponíveis em Todos os produtos, categorias e coleções associadas
+- [x] Adicionar testes de regressão para visibilidade, ordenação e filtros por categoria/coleção
+- [x] Validar a alteração em desktop, mobile, testes Vitest e build de produção

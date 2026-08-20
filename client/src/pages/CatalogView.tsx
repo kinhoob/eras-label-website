@@ -260,11 +260,16 @@ export default function CatalogViewPage() {
                   const imageSrc = images[0] || product.image;
                   return (
                     <article key={product.id} className="catalog-product-card group">
-                      <Link href={`/produto/${product.slug || product.id}`} className="catalog-product-media" aria-label={`Ver ${product.name}`}>
+                      <Link href={`/produto/${product.slug || product.id}`} className="catalog-product-media relative" aria-label={`Ver ${product.name}`}>
                         {imageSrc ? (
                           <img src={imageSrc} alt={product.name} onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = catalogImageFallback; }} />
                         ) : (
                           <span>Imagem a caminho</span>
+                        )}
+                        {(product.status === "soldout" || (Array.isArray(product.variations) && product.variations.every((v: any) => Number(v.stock ?? 0) === 0))) && (
+                          <span className="absolute top-3 left-3 bg-[#23221e]/90 text-white text-[10px] tracking-widest uppercase px-2.5 py-1 font-semibold backdrop-blur-sm">
+                            Esgotado
+                          </span>
                         )}
                       </Link>
                       <div className="catalog-product-copy">

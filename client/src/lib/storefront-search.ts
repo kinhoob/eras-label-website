@@ -80,6 +80,11 @@ export function sortStorefrontProducts<T extends SortableStorefrontProduct>(prod
   return products
     .map((product, index) => ({ product, index }))
     .sort((left, right) => {
+      // Produtos esgotados (status === 'soldout' ou estoque total === 0) vão sempre para o final da listagem
+      const leftSoldOut = (left.product as any).status === "soldout" || (Array.isArray((left.product as any).variations) && (left.product as any).variations.every((v: any) => Number(v.stock ?? 0) === 0));
+      const rightSoldOut = (right.product as any).status === "soldout" || (Array.isArray((right.product as any).variations) && (right.product as any).variations.every((v: any) => Number(v.stock ?? 0) === 0));
+      if (leftSoldOut && !rightSoldOut) return 1;
+      if (!leftSoldOut && rightSoldOut) return -1;
       if (sort === "price-asc") return left.product.price - right.product.price || left.index - right.index;
       if (sort === "price-desc") return right.product.price - left.product.price || left.index - right.index;
       if (sort === "bestselling") {

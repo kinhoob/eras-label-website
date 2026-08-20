@@ -136,7 +136,8 @@ export async function listProducts(category?: string) {
       categoryProductIds = relationRows.map((row) => Number(row.productId));
     }
   }
-  const baseRows = await db.select().from(products).where(and(eq(products.status, "active"), eq(products.visibility, "visible")));
+  // Inclui produtos com status "active" ou "soldout" para garantir que esgotados apareçam no catálogo público
+  const baseRows = await db.select().from(products).where(and(or(eq(products.status, "active"), eq(products.status, "soldout")), eq(products.visibility, "visible")));
   const rows = resolvedCategory
     ? baseRows.filter((product) => product.category === resolvedCategory || product.subcategory === resolvedCategory || categoryProductIds.includes(product.id))
     : baseRows;
@@ -178,7 +179,7 @@ async function getProductRecordBySlug(slug: string, includeUnlisted: boolean) {
     const productById = await db.select().from(products).where(eq(products.id, idNum)).limit(1);
     if (productById[0]) {
       const p = productById[0];
-      if (p.status === "active" && p.visibility !== "hidden" && (includeUnlisted || p.visibility === "visible")) {
+      if ((p.status === "active" || p.status === "soldout") && p.visibility !== "hidden" && (includeUnlisted || p.visibility === "visible")) {
         const variations = await db.select().from(productVariations).where(eq(productVariations.productId, p.id));
         return { ...p, variations };
       }
@@ -201,7 +202,7 @@ async function getProductRecordBySlug(slug: string, includeUnlisted: boolean) {
     }
   }
 
-  if (!product[0] || product[0].status !== "active" || product[0].visibility === "hidden" || (!includeUnlisted && product[0].visibility !== "visible")) return undefined;
+  if (!product[0] || (product[0].status !== "active" && product[0].status !== "soldout") || product[0].visibility === "hidden" || (!includeUnlisted && product[0].visibility !== "visible")) return undefined;
   const variations = await db.select().from(productVariations).where(eq(productVariations.productId, product[0].id));
   return { ...product[0], variations };
 }
@@ -224,7 +225,7 @@ export async function getPublicProductById(id: number) {
   if (!db) return undefined;
   const product = await db.select().from(products).where(and(
     eq(products.id, id),
-    eq(products.status, "active"),
+    or(eq(products.status, "active"), eq(products.status, "soldout")),
     or(eq(products.visibility, "visible"), eq(products.visibility, "unlisted")),
   )).limit(1);
   if (!product[0]) return undefined;
