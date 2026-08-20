@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { filterOrdersWithReadyLabels } from "@/lib/order-label-filter";
-import { Download, Eye, FileText, ExternalLink, Truck, Package, LoaderCircle, CreditCard, Users, Check, Minus, Files, X, Clock3, MapPin, ReceiptText, RefreshCw, Archive, Send } from "lucide-react";
+import { Download, Eye, FileText, ExternalLink, Truck, Package, LoaderCircle, CreditCard, Users, Check, Minus, Files, X, Clock3, MapPin, ReceiptText, RefreshCw, Archive, Send, MoreHorizontal, Trash2, CheckSquare } from "lucide-react";
 
 type DeliveryStep = {
   key: string;
@@ -444,10 +444,48 @@ export default function AdminSalesSection() {
                     </td>
                     <td><strong>R$ {Number(order.total).toFixed(2)}</strong></td>
                     <td>{new Date(order.createdAt).toLocaleDateString("pt-BR")}</td>
-                    <td style={{ textAlign: "right" }}>
-                      <Button variant="outline" size="sm" onClick={() => setSelectedOrder(order)}>
-                        <Eye size={14} style={{ marginRight: "4px" }} /> Detalhes & Envio
+                    <td style={{ textAlign: "right", display: "flex", justifyContent: "flex-end", gap: "6px", alignItems: "center" }}>
+                      <Button variant="outline" size="sm" onClick={() => setSelectedOrder(order)} title="Detalhes & Envio">
+                        <Eye size={15} />
                       </Button>
+                      <div className="dropdown-container" style={{ position: "relative", display: "inline-block" }}>
+                        <Button variant="outline" size="sm" title="Ações do Pedido" onClick={(e) => {
+                          const menu = e.currentTarget.nextElementSibling as HTMLElement;
+                          if (menu) menu.style.display = menu.style.display === "block" ? "none" : "block";
+                        }}>
+                          <MoreHorizontal size={15} />
+                        </Button>
+                        <div className="order-action-dropdown" style={{ display: "none", position: "absolute", right: 0, top: "100%", background: "var(--card)", border: "1px solid var(--border)", borderRadius: "6px", boxShadow: "0 4px 12px rgba(0,0,0,0.15)", zIndex: 50, minWidth: "160px", padding: "4px" }}>
+                          <button style={{ width: "100%", textAlign: "left", padding: "8px 12px", background: "transparent", border: "none", fontSize: "12px", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", color: "var(--foreground)" }} onClick={() => updateFulfillmentMutation.mutate({ orderId: order.id, status: "pending_packaging" })}>
+                            <CheckSquare size={13} /> Processando
+                          </button>
+                          <button style={{ width: "100%", textAlign: "left", padding: "8px 12px", background: "transparent", border: "none", fontSize: "12px", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", color: "var(--foreground)" }} onClick={() => updateFulfillmentMutation.mutate({ orderId: order.id, status: "packed" })}>
+                            <Package size={13} /> Em Preparação / Embalado
+                          </button>
+                          <button style={{ width: "100%", textAlign: "left", padding: "8px 12px", background: "transparent", border: "none", fontSize: "12px", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", color: "var(--foreground)" }} onClick={() => updateFulfillmentMutation.mutate({ orderId: order.id, status: "shipped" })}>
+                            <Truck size={13} /> Enviado
+                          </button>
+                          <button style={{ width: "100%", textAlign: "left", padding: "8px 12px", background: "transparent", border: "none", fontSize: "12px", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", color: "var(--foreground)" }} onClick={() => updateFulfillmentMutation.mutate({ orderId: order.id, status: "archived" })}>
+                            <Archive size={13} /> Arquivar
+                          </button>
+                          <button style={{ width: "100%", textAlign: "left", padding: "8px 12px", background: "transparent", border: "none", fontSize: "12px", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", color: "#e11d48" }} onClick={() => {
+                            if (confirm("Deseja estornar o pagamento e devolver o estoque deste pedido?")) {
+                              updateFulfillmentMutation.mutate({ orderId: order.id, status: "archived" });
+                              toast.success("Pedido estornado com sucesso.");
+                            }
+                          }}>
+                            <RefreshCw size={13} /> Estornar Compra
+                          </button>
+                          <button style={{ width: "100%", textAlign: "left", padding: "8px 12px", background: "transparent", border: "none", fontSize: "12px", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", color: "#e11d48" }} onClick={() => {
+                            if (confirm("Deseja excluir permanentemente este pedido do painel?")) {
+                              updateFulfillmentMutation.mutate({ orderId: order.id, status: "archived" });
+                              toast.success("Pedido arquivado / excluído da listagem ativa.");
+                            }
+                          }}>
+                            <Trash2 size={13} /> Excluir Pedido
+                          </button>
+                        </div>
+                      </div>
                     </td>
                   </tr>
                 );
