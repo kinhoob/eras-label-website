@@ -60,3 +60,20 @@
 - [x] Registrar evidência objetiva para segunda imagem ausente e URL secundária quebrada
 - [x] Corrigir checkout.create com validação rigorosa server-side (preço, cupom, frete, subtotal, taxa PIX/parcelamento e verificação de clientTotal).
 - [x] Corrigir webhook do Melhor Envio para localizar pedidos por `trackingCode` ou `shippingOrderId` usando `or` do Drizzle e atualizar com `trackingCode`.
+
+- [x] Verificar e corrigir o fail-fast de Mercado Pago em produção no servidor de pagamentos
+- [x] Garantir fail-fast no boot quando MP_ACCESS_TOKEN ou MP_PUBLIC_KEY estiverem ausentes em produção
+- [x] Substituir e validar o webhook unificado do Melhor Envio conforme o contrato enviado
+- [x] Tornar a geração do número ER-AAAA-NNN segura e ignorar orderNumber enviado pelo cliente
+- [x] Alinhar checkout.create ao contrato seguro com cupom, frete reconsultado e clientTotal
+- [x] Atualizar o frontend do checkout para enviar couponCode, shippingOptionId e clientTotal
+- [x] Adicionar ou atualizar testes de regressão para manipulação de total, frete, desconto e orderNumber
+- [ ] Validar a Home e o catálogo com cards esgotados com segunda foto durante hover e focus
+- [ ] Confirmar de forma reproduzível que hover/focus não reativa compra ou CTA em produtos esgotados
+
+> Registo: tarefas extraídas de Pasted_content_04.txt e aplicadas somente nos locais indicados pelo usuário.
+
+> Registo: as duas tarefas anteriores de validação dos cards com segunda foto permanecem pendentes até a validação específica desta rodada.
+
+- [x] Adicionar teste de integração comportamental do checkout.create com preços, frete, cupom, total e orderNumber adulterados
+- [x] Adicionar teste comportamental do mapeamento do webhook Melhor Envio para trackingCode, shippingOrderId e estados de entrega

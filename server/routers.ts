@@ -435,10 +435,10 @@ export const appRouter = router({
       address: z.record(z.string(), z.string()),
       items: z.array(z.object({ productId: z.number(), name: z.string().max(255).optional(), size: z.string(), quantity: z.number().int().positive(), price: z.number().nonnegative() })).min(1),
       subtotal: z.number().nonnegative(),
-      shippingCost: z.number().nonnegative(),
-      shippingMethod: z.string().optional(),
-      discount: z.number().nonnegative(),
-      total: z.number().nonnegative(),
+      shippingMethod: z.string().max(120).optional(),
+      couponCode: z.string().trim().min(2).max(50).optional(),
+      shippingOptionId: z.string().min(1).optional(),
+      clientTotal: z.number().nonnegative(),
       paymentMethod: z.enum(["pix", "credit_card"]).default("pix"),
       cardToken: z.string().optional(),
       paymentMethodId: z.string().min(2).optional(),
@@ -446,26 +446,102 @@ export const appRouter = router({
     })).mutation(async ({ input, ctx }) => {
       const orderNumber = await generateNextOrderNumber();
       const commercialConfig = await getCommercialConfig();
+      const database = await getDb();
+      if (!database) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Não foi possível validar o pedido no banco de dados." });
+      }
 
-      // Recálculo server-side rigoroso dos preços a partir do banco de dados
+      // 1) Preços e disponibilidade exclusivamente do banco.
       let verifiedSubtotal = 0;
-      const verifiedItems = [];
+      const verifiedItems: Array<{ productId: number; name: string; size: string; quantity: number; price: number }> = [];
       for (const item of input.items) {
-        const [dbProd] = await getDb() ? await (await getDb())!.select().from(products).where(eq(products.id, item.productId)).limit(1) : [];
-        const unitPrice = dbProd ? Number(dbProd.price) : Number(item.price);
+        const [dbProd] = await database.select().from(products).where(eq(products.id, item.productId)).limit(1);
+        if (!dbProd) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: `Produto #${item.productId} não encontrado.` });
+        }
+        if (dbProd.status !== "active") {
+          throw new TRPCError({ code: "BAD_REQUEST", message: `Produto "${dbProd.name}" indisponível.` });
+        }
+
+        const regularPrice = Number(dbProd.price);
+        const promotionalPrice = Number(dbProd.promotionalPrice ?? 0);
+        const unitPrice = promotionalPrice > 0 && promotionalPrice < regularPrice ? promotionalPrice : regularPrice;
+        if (!Number.isFinite(unitPrice) || unitPrice < 0) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: `Preço inválido para o produto "${dbProd.name}".` });
+        }
+
         verifiedSubtotal += unitPrice * item.quantity;
         verifiedItems.push({
           ...item,
-          name: dbProd?.name ?? item.name ?? `Produto #${item.productId}`,
+          name: dbProd.name,
           price: unitPrice,
         });
       }
 
-      const verifiedDiscount = Number(input.discount || 0);
-      const verifiedShippingCost = Number(input.shippingCost || 0);
+      // 2) Desconto exclusivamente do cupom validado no servidor.
+      let verifiedDiscount = 0;
+      if (input.couponCode) {
+        const couponResult = await validateCoupon(input.couponCode, verifiedSubtotal, input.customerEmail);
+        if (!couponResult.valid) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Cupom inválido ou expirado." });
+        }
+        verifiedDiscount = Number(couponResult.discount || 0);
+      }
+
+      // 3) Frete sempre reconsultado no Melhor Envio, salvo frete grátis por regra do servidor.
+      let verifiedShippingCost = 0;
+      let shippingMethodLabel = input.shippingMethod ?? "A definir";
+      const freeShippingThreshold = Number(commercialConfig.freeShippingThreshold ?? Number.MAX_SAFE_INTEGER);
+      if (verifiedSubtotal >= freeShippingThreshold) {
+        shippingMethodLabel = "Frete grátis";
+      } else {
+        const cleanCep = String(input.address?.cep || "").replace(/\D/g, "");
+        if (cleanCep.length !== 8) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "CEP inválido para cálculo de frete." });
+        }
+        if (!input.shippingOptionId) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Selecione uma opção de frete." });
+        }
+
+        try {
+          const quoteItems = verifiedItems.map((item, index) => ({
+            id: String(item.productId || index + 1),
+            price: Number(item.price),
+            quantity: Number(item.quantity),
+          }));
+          const productsForQuote = buildShippingQuoteProducts(quoteItems);
+          const quoteResult = await calculateMelhorEnvioShipping({
+            from: { postal_code: String(ENV.melhorEnvioCep || process.env.MELHOR_ENVIO_CEP || "").replace(/\D/g, "") },
+            to: { postal_code: cleanCep },
+            products: productsForQuote,
+          });
+
+          const selected = quoteResult.find((option: any) =>
+            String(option.id) === String(input.shippingOptionId) ||
+            String(option.service_id) === String(input.shippingOptionId) ||
+            String(option.company?.id) === String(input.shippingOptionId),
+          );
+          if (!selected) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "Opção de frete inválida ou expirada. Calcule o frete novamente.",
+            });
+          }
+
+          verifiedShippingCost = Number(selected.custom_price ?? selected.price ?? selected.valor ?? 0);
+          if (!Number.isFinite(verifiedShippingCost) || verifiedShippingCost < 0) {
+            throw new TRPCError({ code: "BAD_REQUEST", message: "Valor de frete inválido retornado pela cotação." });
+          }
+          shippingMethodLabel = selected.name || selected.company?.name || selected.label || input.shippingMethod || "Melhor Envio";
+        } catch (error) {
+          if (error instanceof TRPCError) throw error;
+          throw toMelhorEnvioTrpcError(error, "Falha ao validar frete no checkout");
+        }
+      }
+
+      // 4) Total final calculado exclusivamente no servidor.
       const pixDiscountRate = input.paymentMethod === "pix" ? (commercialConfig.pixDiscountPercent / 100) : 0;
       const pixSavings = verifiedSubtotal * pixDiscountRate;
-      
       const baseTotal = Math.max(0, verifiedSubtotal - verifiedDiscount - pixSavings + verifiedShippingCost);
       const actualInstallments = input.paymentMethod === "credit_card"
         ? Math.min(Math.max(1, input.installments ?? 1), commercialConfig.maxInstallments)
@@ -473,6 +549,14 @@ export const appRouter = router({
       const serverTotal = input.paymentMethod === "credit_card"
         ? baseTotal * Math.pow(1 + commercialConfig.installmentInterestRate / 100, actualInstallments)
         : baseTotal;
+
+      // 5) Rejeitar qualquer divergência entre a prévia do cliente e o cálculo oficial.
+      if (Math.abs(Number(input.clientTotal) - Number(serverTotal.toFixed(2))) > 0.05) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Total inconsistente. Servidor calculou R$ ${serverTotal.toFixed(2)}. Atualize a página e tente novamente.`,
+        });
+      }
 
       // Chamar a API oficial do Mercado Pago para gerar a cobrança Pix ou Cartão Transparente
       let mpResult: any = null;
@@ -532,12 +616,12 @@ export const appRouter = router({
         customerCpf: input.customerCpf.replace(/\D/g, ""),
         phone: input.phone.trim(),
         shippingAddress: input.address,
-        items: input.items.map((item) => ({ ...item, name: item.name ?? `Produto #${item.productId}` })),
-        shippingMethod: input.shippingMethod ?? "Correios PAC",
+        items: verifiedItems,
+        shippingMethod: shippingMethodLabel,
         paymentMethod: input.paymentMethod,
-        subtotal: input.subtotal.toFixed(2),
-        shippingCost: input.shippingCost.toFixed(2),
-        discount: input.discount.toFixed(2),
+        subtotal: verifiedSubtotal.toFixed(2),
+        shippingCost: verifiedShippingCost.toFixed(2),
+        discount: verifiedDiscount.toFixed(2),
         total: serverTotal.toFixed(2),
         paymentStatus: initialPaymentStatus,
         paymentFailureReason,
@@ -548,14 +632,14 @@ export const appRouter = router({
         pixTicketUrl: pixData?.ticket_url ?? null,
         pixGeneration: input.paymentMethod === "pix" ? 1 : 0,
         status: (initialPaymentStatus === "approved" || initialPaymentStatus === "authorized") ? "Processando" : initialPaymentStatus === "in_process" ? "Em análise" : "Aguardando pagamento",
-      });
+      }, orderNumber);
 
       // Disparar notificação estilo Nuvemshop para o Administrador
       try {
         await createNotification({
           targetRole: "admin",
           title: "Novo Pedido Realizado! 🛍️",
-          message: `O cliente ${input.customerName} fez o pedido ${orderNumber} no valor de R$ ${input.total.toFixed(2)} via ${input.paymentMethod === "pix" ? "PIX" : "Cartão"}.`,
+          message: `O cliente ${input.customerName} fez o pedido ${orderNumber} no valor de R$ ${serverTotal.toFixed(2)} via ${input.paymentMethod === "pix" ? "PIX" : "Cartão"}.`,
           type: "new_order",
         });
 
@@ -563,7 +647,7 @@ export const appRouter = router({
           await createNotification({
             targetRole: "admin",
             title: "Pagamento Confirmado! 💳",
-            message: `O pagamento do pedido ${orderNumber} (R$ ${input.total.toFixed(2)}) foi aprovado via Mercado Pago.`,
+            message: `O pagamento do pedido ${orderNumber} (R$ ${serverTotal.toFixed(2)}) foi aprovado via Mercado Pago.`,
             type: "payment_confirmed",
           });
         }
@@ -573,7 +657,7 @@ export const appRouter = router({
             userId: ctx.user.id,
             targetRole: "customer",
             title: "Pedido Realizado com Sucesso!",
-            message: `Recebemos o seu pedido ${orderNumber} no valor de R$ ${input.total.toFixed(2)}. Status do pagamento: ${initialPaymentStatus}.`,
+            message: `Recebemos o seu pedido ${orderNumber} no valor de R$ ${serverTotal.toFixed(2)}. Status do pagamento: ${initialPaymentStatus}.`,
             type: "new_order",
           });
         }
@@ -584,10 +668,12 @@ export const appRouter = router({
       const emailOrder = {
         ...input,
         orderNumber,
-        items: input.items.map(item => ({
-          ...item,
-          name: item.name ?? `Produto #${item.productId}`,
-        })),
+        items: verifiedItems,
+        subtotal: verifiedSubtotal,
+        shippingMethod: shippingMethodLabel,
+        shippingCost: verifiedShippingCost,
+        discount: verifiedDiscount,
+        total: Number(serverTotal.toFixed(2)),
       };
 
       const emailJobs = [

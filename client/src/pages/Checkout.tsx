@@ -133,12 +133,6 @@ function readInitialCart() {
   return loadCart<CheckoutLine[] extends never[] ? never : CheckoutLine>();
 }
 
-function createOrderReference() {
-  const year = new Date().getFullYear();
-  const random = Math.floor(Math.random() * 9000 + 1000);
-  return `ER-${year}-${random}`;
-}
-
 export default function CheckoutPage() {
   // Lemos o rascunho uma única vez para que a transição sacola → checkout seja estável.
   const [checkoutDraft] = useState(() => loadCheckoutDraft());
@@ -152,7 +146,6 @@ export default function CheckoutPage() {
   const [cep, setCep] = useState(checkoutDraft.shippingCep ?? "");
   const [shippingMethod, setShippingMethod] = useState(checkoutDraft.shippingMethod ?? "");
   const [shippingOptionId, setShippingOptionId] = useState(checkoutDraft.shippingOptionId ?? "");
-  const [orderNumber] = useState(() => checkoutDraft.orderNumber || createOrderReference());
   const [addressFields, setAddressFields] = useState({ street: "", neighborhood: "", city: "", state: "" });
   const [cepLookupStatus, setCepLookupStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [couponLoading, setCouponLoading] = useState(false);
@@ -237,9 +230,8 @@ export default function CheckoutPage() {
       shippingOptionId: selectedShippingOption?.id ?? shippingOptionId,
       shippingCost,
       shippingDeadline: selectedShippingOption?.deadline,
-      orderNumber,
     });
-  }, [cep, coupon, couponApplied, couponFreeShipping, discount, selectedPaymentMethod, selectedShippingOption?.deadline, selectedShippingOption?.id, selectedShippingOption?.service, shippingCost, shippingMethod, shippingOptionId, orderNumber]);
+  }, [cep, coupon, couponApplied, couponFreeShipping, discount, selectedPaymentMethod, selectedShippingOption?.deadline, selectedShippingOption?.id, selectedShippingOption?.service, shippingCost, shippingMethod, shippingOptionId]);
 
   useEffect(() => {
     const normalizedCep = normalizeCep(cep);
@@ -414,10 +406,10 @@ export default function CheckoutPage() {
       },
       items: cart.map((item) => ({ productId: item.id, name: item.name, size: item.size, quantity: item.quantity, price: item.price })),
       subtotal,
-      shippingCost,
       shippingMethod: selectedShippingOption?.service,
-      discount: discount + pixSavings,
-      total,
+      couponCode: couponApplied && coupon.trim() ? coupon.trim() : undefined,
+      shippingOptionId: (selectedShippingOption?.id ?? shippingOptionId) || undefined,
+      clientTotal: Number(total.toFixed(2)),
       paymentMethod: selectedPaymentMethod,
       cardToken,
       paymentMethodId,

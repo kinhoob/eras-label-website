@@ -15,6 +15,7 @@ import { eq } from "drizzle-orm";
 import { registerSitemapRoutes } from "../sitemap";
 import { verifyMercadoPagoSignature } from "../mercadopago.signature";
 import { ENV } from "./env";
+import { resolveMelhorEnvioWebhookUpdate } from "../melhor-envio-webhook";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -111,82 +112,41 @@ async function startServer() {
   app.post("/api/melhor-envio/webhook", async (req, res) => {
     try {
       const event = req.body as Record<string, any>;
-      console.log("[Melhor Envio Webhook] Evento recebido:", JSON.stringify(event).slice(0, 500));
+      console.log("[Melhor Envio Webhook] Evento:", JSON.stringify(event).slice(0, 800));
 
-      const trackingCode =
-        event?.data?.tracking ||
-        event?.tracking ||
-        event?.data?.tracking_code ||
-        event?.tracking_code ||
-        null;
+      const { trackingCode, shippingOrderId, newStatus, newFulfillment } = resolveMelhorEnvioWebhookUpdate(event);
 
-      const statusRaw =
-        event?.data?.status ||
-        event?.status ||
-        event?.event ||
-        "";
-
-      const orderIdFromEvent =
-        event?.data?.order_id ||
-        event?.order_id ||
-        event?.data?.id ||
-        null;
-
-      const statusMap: Record<string, string> = {
-        posted: "Em trânsito",
-        "in transit": "Em trânsito",
-        "em trânsito": "Em trânsito",
-        delivered: "Entregue",
-        entregue: "Entregue",
-        undelivered: "Falha na entrega",
-        "falha na entrega": "Falha na entrega",
-        returned: "Devolvido",
-        devolvido: "Devolvido",
-      };
-
-      const normalized = String(statusRaw).toLowerCase();
-      const newStatus = statusMap[normalized] || statusRaw || null;
-
-      if (trackingCode || orderIdFromEvent) {
-        const { getDb } = await import("../db");
-        const { orders } = await import("../../drizzle/schema");
-        const { eq, or } = await import("drizzle-orm");
+      if (trackingCode || shippingOrderId) {
         const db = await getDb();
-
         if (db) {
-          const candidates = await db
-            .select()
-            .from(orders)
-            .where(
-              or(
-                trackingCode ? eq(orders.trackingCode, String(trackingCode)) : undefined as any,
-                orderIdFromEvent ? eq(orders.shippingOrderId, String(orderIdFromEvent)) : undefined as any
-              )
-            )
-            .limit(5);
+          const conditions: any[] = [];
+          if (trackingCode) conditions.push(eq(orders.trackingCode, String(trackingCode)));
+          if (shippingOrderId) conditions.push(eq(orders.shippingOrderId, String(shippingOrderId)));
 
-          for (const order of candidates) {
-            const updatePayload: any = {};
+          const matchingOrders = conditions.length
+            ? await db.select().from(orders).where(or(...conditions)).limit(10)
+            : [];
+
+          for (const order of matchingOrders) {
+            const updatePayload: Record<string, string> = {};
             if (trackingCode) updatePayload.trackingCode = String(trackingCode);
-            if (newStatus) {
-              updatePayload.status = newStatus;
-              if (newStatus === "Em trânsito") updatePayload.fulfillmentStatus = "shipped";
-              if (newStatus === "Entregue") updatePayload.fulfillmentStatus = "shipped";
-            }
+            if (newStatus) updatePayload.status = newStatus;
+            if (newFulfillment) updatePayload.fulfillmentStatus = newFulfillment;
 
             if (Object.keys(updatePayload).length > 0) {
               await db.update(orders).set(updatePayload).where(eq(orders.id, order.id));
+              console.log(`[Melhor Envio Webhook] Pedido ${order.orderNumber} → ${newStatus || "atualizado"}`);
 
               try {
                 const { createNotification } = await import("../db");
                 await createNotification({
                   targetRole: "admin",
-                  title: `Atualização de envio — ${order.orderNumber}`,
+                  title: `Envio atualizado — ${order.orderNumber}`,
                   message: `Status: ${newStatus || "atualizado"}${trackingCode ? ` | Rastreio: ${trackingCode}` : ""}`,
                   type: "shipping_update",
                 });
-              } catch (notifErr) {
-                console.warn("[Melhor Envio Webhook] Falha ao criar notificação:", notifErr);
+              } catch (error) {
+                console.warn("[Melhor Envio Webhook] Notificação falhou:", error);
               }
             }
           }

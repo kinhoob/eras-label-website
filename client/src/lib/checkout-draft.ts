@@ -17,7 +17,6 @@ export type CheckoutDraft = {
   shippingOptionId?: string;
   shippingCost?: number;
   shippingDeadline?: string;
-  orderNumber?: string;
 };
 
 type StorageLike = Pick<Storage, "getItem" | "setItem" | "removeItem">;
@@ -62,7 +61,6 @@ export function loadCheckoutDraft(storage?: StorageLike): Partial<CheckoutDraft>
       ...(shippingOptionId ? { shippingOptionId } : {}),
       ...(shippingCost !== undefined ? { shippingCost } : {}),
       ...(shippingDeadline ? { shippingDeadline } : {}),
-      orderNumber: typeof draft.orderNumber === "string" && /^ER-\d{4}-\d{4,12}$/.test(draft.orderNumber) ? draft.orderNumber : "",
     };
   } catch {
     return {};

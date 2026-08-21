@@ -1025,13 +1025,13 @@ export async function generateNextOrderNumber(): Promise<string> {
   return `${prefix}${String(nextSeq).padStart(3, "0")}`;
 }
 
-export async function createOrder(data: typeof orders.$inferInsert) {
+export async function createOrder(data: typeof orders.$inferInsert, trustedOrderNumber?: string) {
   const db = await getDb();
   if (!db) return undefined;
   
-  const orderNumber = data.orderNumber && /^ER-\d{4}-\d{2,}$/.test(data.orderNumber)
-    ? data.orderNumber
-    : await generateNextOrderNumber();
+  // O número do pedido é sempre definido pelo servidor; nunca confiar no campo orderNumber do payload público.
+  // O segundo argumento só é usado por fluxos internos que já reservaram o número antes de cobrar.
+  const orderNumber = trustedOrderNumber || await generateNextOrderNumber();
   const orderWithSequence = { ...data, orderNumber };
 
   // Validação server-side de estoque e baixa transacional das variações

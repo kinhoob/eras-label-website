@@ -808,9 +808,10 @@ export default function Home() {
       },
       items: cart.map((item) => ({ productId: item.id, name: item.name, size: item.size, quantity: item.quantity, price: item.price })),
       subtotal,
-      shippingCost,
-      discount,
-      total,
+      shippingMethod: activeShippingOption?.service,
+      couponCode: couponApplied && coupon.trim() ? coupon.trim() : undefined,
+      shippingOptionId: activeShippingOption?.id || undefined,
+      clientTotal: Number(total.toFixed(2)),
       paymentMethod: selectedPaymentMethod,
     }, {
       onSuccess: (result) => {
