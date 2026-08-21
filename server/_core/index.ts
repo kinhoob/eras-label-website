@@ -36,6 +36,13 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 }
 
 async function startServer() {
+  if (process.env.NODE_ENV === "production") {
+    if (!process.env.MP_ACCESS_TOKEN?.trim() || !process.env.MP_PUBLIC_KEY?.trim()) {
+      console.error("[FATAL] Credenciais do Mercado Pago ausentes em produção. Abortando inicialização.");
+      process.exit(1);
+    }
+  }
+
   const app = express();
   const server = createServer(app);
   // Configure body parser with larger size limit for file uploads
@@ -53,47 +60,7 @@ async function startServer() {
     })
   );
 
-  // Webhook endpoint para notificações e validação do Melhor Envio com sincronização de status e rastreio
-  app.post("/api/melhor-envio/webhook", async (req, res) => {
-    try {
-      const event = req.body as Record<string, any>;
-      console.log("[Melhor Envio Webhook] Evento recebido:", JSON.stringify(event));
-
-      const trackingCode = event?.tracking || event?.protocol || event?.id;
-      const statusEvent = String(event?.status || event?.event || "").toLowerCase();
-
-      if (trackingCode) {
-        const db = await getDb();
-        if (db) {
-          const matchingOrders = await db.select().from(orders).where(eq(orders.shippingMethod, String(trackingCode))).limit(1);
-          if (matchingOrders.length > 0) {
-            const order = matchingOrders[0];
-            let newFulfillment = order.fulfillmentStatus;
-            let newStatus = order.status;
-
-            if (statusEvent.includes("posted") || statusEvent.includes("shipped") || statusEvent.includes("enviado")) {
-              newFulfillment = "shipped";
-              newStatus = "Enviado";
-            } else if (statusEvent.includes("delivered") || statusEvent.includes("entregue")) {
-              newFulfillment = "shipped";
-              newStatus = "Entregue";
-            }
-
-            await db.update(orders).set({
-              fulfillmentStatus: newFulfillment,
-              status: newStatus,
-            }).where(eq(orders.id, order.id));
-            console.log(`[Melhor Envio Webhook] Pedido #${order.orderNumber} atualizado via webhook para ${newStatus}`);
-          }
-        }
-      }
-
-      res.status(200).json({ received: true, status: "success" });
-    } catch (err) {
-      console.error("[Melhor Envio Webhook] Erro ao processar evento:", err);
-      res.status(200).json({ received: true });
-    }
-  });
+  // Webhook unificado e robusto do Melhor Envio já posicionado abaixo
 
   // Webhook endpoint para notificações de pagamento do Mercado Pago.
   app.post("/api/mercadopago/webhook", async (req, res) => {
@@ -138,6 +105,98 @@ async function startServer() {
       // O Mercado Pago pode reenviar eventos; 200 evita uma tempestade de retries
       // quando a consulta externa estiver temporariamente indisponível.
       res.status(200).json({ received: true, processed: false });
+    }
+  });
+
+  app.post("/api/melhor-envio/webhook", async (req, res) => {
+    try {
+      const event = req.body as Record<string, any>;
+      console.log("[Melhor Envio Webhook] Evento recebido:", JSON.stringify(event).slice(0, 500));
+
+      const trackingCode =
+        event?.data?.tracking ||
+        event?.tracking ||
+        event?.data?.tracking_code ||
+        event?.tracking_code ||
+        null;
+
+      const statusRaw =
+        event?.data?.status ||
+        event?.status ||
+        event?.event ||
+        "";
+
+      const orderIdFromEvent =
+        event?.data?.order_id ||
+        event?.order_id ||
+        event?.data?.id ||
+        null;
+
+      const statusMap: Record<string, string> = {
+        posted: "Em trânsito",
+        "in transit": "Em trânsito",
+        "em trânsito": "Em trânsito",
+        delivered: "Entregue",
+        entregue: "Entregue",
+        undelivered: "Falha na entrega",
+        "falha na entrega": "Falha na entrega",
+        returned: "Devolvido",
+        devolvido: "Devolvido",
+      };
+
+      const normalized = String(statusRaw).toLowerCase();
+      const newStatus = statusMap[normalized] || statusRaw || null;
+
+      if (trackingCode || orderIdFromEvent) {
+        const { getDb } = await import("../db");
+        const { orders } = await import("../../drizzle/schema");
+        const { eq, or } = await import("drizzle-orm");
+        const db = await getDb();
+
+        if (db) {
+          const candidates = await db
+            .select()
+            .from(orders)
+            .where(
+              or(
+                trackingCode ? eq(orders.trackingCode, String(trackingCode)) : undefined as any,
+                orderIdFromEvent ? eq(orders.shippingOrderId, String(orderIdFromEvent)) : undefined as any
+              )
+            )
+            .limit(5);
+
+          for (const order of candidates) {
+            const updatePayload: any = {};
+            if (trackingCode) updatePayload.trackingCode = String(trackingCode);
+            if (newStatus) {
+              updatePayload.status = newStatus;
+              if (newStatus === "Em trânsito") updatePayload.fulfillmentStatus = "shipped";
+              if (newStatus === "Entregue") updatePayload.fulfillmentStatus = "shipped";
+            }
+
+            if (Object.keys(updatePayload).length > 0) {
+              await db.update(orders).set(updatePayload).where(eq(orders.id, order.id));
+
+              try {
+                const { createNotification } = await import("../db");
+                await createNotification({
+                  targetRole: "admin",
+                  title: `Atualização de envio — ${order.orderNumber}`,
+                  message: `Status: ${newStatus || "atualizado"}${trackingCode ? ` | Rastreio: ${trackingCode}` : ""}`,
+                  type: "shipping_update",
+                });
+              } catch (notifErr) {
+                console.warn("[Melhor Envio Webhook] Falha ao criar notificação:", notifErr);
+              }
+            }
+          }
+        }
+      }
+
+      res.status(200).json({ received: true, status: "success" });
+    } catch (err) {
+      console.error("[Melhor Envio Webhook] Erro:", err);
+      res.status(200).json({ received: true });
     }
   });
   // development mode uses Vite, production mode uses static files

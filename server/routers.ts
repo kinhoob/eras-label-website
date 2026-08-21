@@ -427,7 +427,6 @@ export const appRouter = router({
   checkout: router({
     publicConfig: publicProcedure.query(async () => ({ publicKey: ENV.mpPublicKey || null, commercial: await getCommercialConfig() })),
     create: publicProcedure.input(z.object({
-      orderNumber: z.string().regex(/^ER-\d{4}-\d{4,12}$/).optional(),
       customerName: z.string().min(2),
       customerEmail: z.string().email(),
       customerCpf: z.string().min(11),
@@ -444,7 +443,7 @@ export const appRouter = router({
       paymentMethodId: z.string().min(2).optional(),
       installments: z.number().int().positive().optional(),
     })).mutation(async ({ input, ctx }) => {
-      const orderNumber = input.orderNumber ?? `ER-${new Date().getFullYear()}-${Math.floor(Math.random() * 9000 + 1000)}`;
+      const orderNumber = await generateNextOrderNumber();
       const commercialConfig = await getCommercialConfig();
 
       // Recálculo server-side rigoroso dos preços a partir do banco de dados

@@ -1001,6 +1001,8 @@ export async function updateOrderPixPayment(data: {
 }
 
 export async function generateNextOrderNumber(): Promise<string> {
+  // ATENÇÃO: Sob alta concorrência massiva, esta consulta pode apresentar condição de corrida se dois clientes finalizarem simultaneamente.
+  // Em ambientes de altíssimo volume, priorize transações serializáveis ou uma tabela dedicada de contadores com lock pessimista (SELECT FOR UPDATE).
   const db = await getDb();
   const year = new Date().getFullYear();
   const prefix = `ER-${year}-`;
