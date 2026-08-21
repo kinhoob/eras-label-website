@@ -81,3 +81,11 @@
 - [x] Auditar painel administrativo, segurança, dados reais e operações críticas
 - [x] Auditar preparação para Vercel, domínio próprio, SEO, performance e observabilidade
 - [x] Consolidar relatório priorizado com lacunas, riscos e próximos passos do lançamento
+- [x] Corrigir o erro “Unexpected token '<'” ao marcar pedidos como Processando ou Em Preparação / Embalado
+- [x] Permitir excluir qualquer pedido pelo menu de ações, independentemente do estado do pagamento
+- [x] Adicionar regressões para atualização de status e exclusão de pedidos e validar o painel em desktop/mobile
+- [x] Reproduzir no painel as ações Processando e Em Preparação / Embalado após o patch e registrar resposta tRPC JSON sem erro de parse
+- [ ] Executar validação end-to-end da exclusão pelo menu, confirmando remoção da listagem e limpeza segura das referências relacionadas
+- [x] Adicionar regressões automatizadas para admin.deleteOrder e admin.updateFulfillmentStatus e validar Vendas em desktop e mobile após a correção
+- [x] Ler e registrar evidência verificável do conteúdo de server/admin-order-actions.test.ts, cobrindo admin.deleteOrder e admin.updateFulfillmentStatus
+- [x] Registrar saída objetiva dos testes confirmando que a regressão específica de pedidos passou após a correção

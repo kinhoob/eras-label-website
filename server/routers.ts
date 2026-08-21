@@ -87,6 +87,7 @@ import {
   updateOrderPaymentStatus,
   updateOrderTracking,
   updateOrderFulfillmentStatus,
+  deleteOrderData,
   updateOrderLabelData,
   recordAnalyticsEvent,
   upsertUser,
@@ -1095,6 +1096,21 @@ export const appRouter = router({
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: error instanceof Error ? error.message : "Não foi possível actualizar o estado operacional do pedido.",
+        });
+      }
+    }),
+    deleteOrder: adminProcedure.input(z.object({
+      orderId: z.number().int().positive(),
+    })).mutation(async ({ input }) => {
+      try {
+        const deleted = await deleteOrderData(input.orderId);
+        if (!deleted) throw new TRPCError({ code: "NOT_FOUND", message: "Pedido não encontrado." });
+        return { success: true, order: deleted };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: error instanceof Error ? error.message : "Não foi possível excluir o pedido.",
         });
       }
     }),

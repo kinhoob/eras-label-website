@@ -145,6 +145,21 @@ export default function AdminSalesSection() {
     },
   });
 
+  const deleteOrderMutation = trpc.admin.deleteOrder.useMutation({
+    onSuccess: (data) => {
+      setSelectedOrder((current: any) => current?.id === data.order.id ? null : current);
+      setSelectedOrderIds((current) => current.filter((id) => id !== data.order.id));
+      setShippingQuotes([]);
+      setLabelPdfUrl(null);
+      void refetch();
+      void utils.admin.listOrders.invalidate();
+      toast.success(`Pedido ${data.order.orderNumber} excluído definitivamente.`);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Não foi possível excluir o pedido.");
+    },
+  });
+
   const reconcilePaymentMutation = trpc.admin.reconcilePayment.useMutation({
     onSuccess: (data) => {
       if (data.order) setSelectedOrder(data.order);
@@ -487,13 +502,16 @@ export default function AdminSalesSection() {
                           }}>
                             <RefreshCw size={13} /> Estornar Compra
                           </button>
-                          <button style={{ width: "100%", textAlign: "left", padding: "8px 12px", background: "transparent", border: "none", fontSize: "12px", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", color: "#e11d48" }} onClick={() => {
-                            if (confirm("Deseja excluir permanentemente este pedido do painel?")) {
-                              updateFulfillmentMutation.mutate({ orderId: order.id, status: "archived" });
-                              toast.success("Pedido arquivado / excluído da listagem ativa.");
-                            }
-                          }}>
-                            <Trash2 size={13} /> Excluir Pedido
+                          <button
+                            disabled={deleteOrderMutation.isPending}
+                            style={{ width: "100%", textAlign: "left", padding: "8px 12px", background: "transparent", border: "none", fontSize: "12px", cursor: deleteOrderMutation.isPending ? "wait" : "pointer", display: "flex", alignItems: "center", gap: "8px", color: "#e11d48", opacity: deleteOrderMutation.isPending ? 0.6 : 1 }}
+                            onClick={() => {
+                              if (confirm("Deseja excluir permanentemente este pedido do painel? Esta ação não depende do estado do pagamento e não pode ser desfeita.")) {
+                                deleteOrderMutation.mutate({ orderId: order.id });
+                              }
+                            }}
+                          >
+                            <Trash2 size={13} /> {deleteOrderMutation.isPending ? "A excluir…" : "Excluir Pedido"}
                           </button>
                         </div>
                       </div>

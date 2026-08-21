@@ -1151,8 +1151,11 @@ export function getFulfillmentTransitionError(currentStatus: FulfillmentStatus, 
   if (nextStatus === "shipped") return null;
 
   const paymentConfirmed = ["approved", "authorized"].includes(String(paymentStatus ?? "").toLowerCase());
-  if (["packed", "archived"].includes(nextStatus) && !paymentConfirmed) {
-    return "Só é possível preparar ou arquivar pedidos com pagamento aprovado.";
+  // A preparação/embalagem é uma ação operacional manual e pode ser
+  // registada pelo administrador antes da confirmação do pagamento. O
+  // arquivamento continua protegido para não encerrar uma venda pendente.
+  if (nextStatus === "archived" && !paymentConfirmed) {
+    return "Só é possível arquivar pedidos com pagamento aprovado.";
   }
 
   if (nextStatus !== "pending_packaging" && nextStatus !== currentStatus) {
@@ -1181,6 +1184,23 @@ export async function updateOrderFulfillmentStatus(orderId: number, nextStatus: 
   }).where(eq(orders.id, orderId));
   const updated = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
   return updated[0] ? normalizeOrderForClient(updated[0]) : undefined;
+}
+
+/**
+ * Exclui permanentemente um pedido administrativo, independentemente do
+ * estado do pagamento ou da etapa logística. A referência de notificação é
+ * removida primeiro para não deixar alertas órfãos no centro administrativo.
+ */
+export async function deleteOrderData(orderId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const [current] = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
+  if (!current) return undefined;
+
+  await db.delete(notifications).where(eq(notifications.orderId, current.orderNumber));
+  await db.delete(orders).where(eq(orders.id, orderId));
+  return normalizeOrderForClient(current);
 }
 
 export type AnalyticsRange = {
