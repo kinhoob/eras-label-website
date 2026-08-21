@@ -723,6 +723,7 @@ export default function Admin() {
   const { data: catalogProducts, isLoading: catalogProductsLoading, isError: catalogProductsError, refetch: refetchCatalogProducts } = trpc.admin.listProducts.useQuery(undefined, { enabled: needsProducts });
   const { data: adminOrders = [], isLoading: adminOrdersLoading } = trpc.admin.listOrders.useQuery(undefined, { enabled: needsOrders });
   const { data: adminCategories = [] } = trpc.admin.listCategories.useQuery(undefined, { enabled: needsCategories });
+  const { data: adminCollections = [] } = trpc.collections.list.useQuery(undefined, { enabled: needsProducts });
   const utils = trpc.useUtils();
   const [pixDiscountPercent, setPixDiscountPercent] = useState<number>(5);
   const [freeShippingThreshold, setFreeShippingThreshold] = useState<number>(350);
@@ -1354,7 +1355,21 @@ export default function Admin() {
                   </div>
                   <div className="editor-field">
                     <label>Coleção</label>
-                    <Input value={editingProduct.collection} onChange={(e) => setEditingProduct({ ...editingProduct, collection: e.target.value })} />
+                    <select
+                      style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', background: '#fff', color: '#111' }}
+                      value={editingProduct.collection}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, collection: e.target.value })}
+                    >
+                      <option value="">Selecione uma coleção...</option>
+                      {adminCollections.map((col: any) => (
+                        <option key={col.id || col.slug} value={col.name}>
+                          {col.name} ({col.year})
+                        </option>
+                      ))}
+                      {editingProduct.collection && !adminCollections.some((col: any) => col.name === editingProduct.collection) && (
+                        <option value={editingProduct.collection}>{editingProduct.collection} (Atual)</option>
+                      )}
+                    </select>
                   </div>
                   <div className="editor-field">
                     <label>Categoria</label>

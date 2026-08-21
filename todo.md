@@ -97,7 +97,8 @@
 - [x] Cobrir em teste o cenário com referência de notificação existente e comprovar que nenhuma referência órfã permanece após a exclusão
 - [x] Testar diretamente o entrypoint público deleteOrderData ou o caller admin.deleteOrder com mocks controlados, verificando a remoção do pedido e de notifications pelo ID interno
 - [x] Modelar notificações relacionadas existentes e afirmar explicitamente que ficam zero referências após a exclusão
-- [ ] Adicionar no cadastro de produto um select de coleção com as coleções geridas no Admin
-- [ ] Persistir a coleção do produto e ligar a consulta do Archive ao vínculo real da peça
-- [ ] Validar que produtos aparecem automaticamente na coleção correta no Archive e no storefront
+- [x] Substituir o campo livre de coleção por um `<select>` no editor de produtos do Admin preenchido pelas coleções criadas no painel.
+- [x] Substituir o input livre de coleção por um `<select>` no editor de produtos do Admin preenchido pelas coleções criadas no painel.
 - [x] Aumentar a margem entre o botão de modo noturno e a sacola na navbar mobile para evitar cliques acidentais.
+- [ ] Persistir a coleção do produto e ligar a consulta do Archive ao vínculo relacional real da peça.
+- [ ] Validar de forma automatizada e visual que produtos associados aparecem automaticamente nas páginas de coleção e no storefront.
