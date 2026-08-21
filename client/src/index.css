@@ -12745,3 +12745,104 @@ html.dark .site-footer.official-footer .footer-social-link:focus-visible {
     max-width: 360px !important;
   }
 }
+
+/*
+ * Troca editorial de fotografia nos cards públicos.
+ * A segunda imagem fica sobreposta à principal e só aparece quando existe uma
+ * foto cadastrada; isso preserva o layout, evita mudanças de altura e mantém
+ * os selos de preço/esgotado acima das duas camadas.
+ */
+.product-image-button.has-image-swap,
+.catalog-product-media.has-image-swap {
+  isolation: isolate;
+  overflow: hidden;
+}
+
+/* A fotografia principal ocupa o fluxo normal do card e define sua altura. */
+.product-image-button.has-image-swap .product-image-swap-base,
+.catalog-product-media.has-image-swap .product-image-swap-base {
+  position: relative;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1);
+  transition: transform 420ms var(--eras-ease), filter 320ms ease;
+}
+
+/*
+ * A fotografia do modelo é uma camada independente. Começa invisível para
+ * não alterar a composição até o cursor entrar no card.
+ */
+.product-image-button.has-image-swap .product-image-swap-hover,
+.catalog-product-media.has-image-swap .product-image-swap-hover {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transform: scale(1.025);
+  transition: opacity 360ms var(--eras-ease), transform 540ms var(--eras-ease), filter 320ms ease;
+  pointer-events: none;
+}
+
+/*
+ * Em ponteiros com hover real, a entrada do mouse revela a foto do modelo
+ * com crossfade e um zoom mínimo que acompanha a linguagem editorial.
+ */
+.product-image-button.has-image-swap:hover .product-image-swap-base,
+.catalog-product-media.has-image-swap:hover .product-image-swap-base {
+  transform: scale(1.045);
+  filter: saturate(.92) contrast(1.02);
+}
+
+.product-image-button.has-image-swap:hover .product-image-swap-hover,
+.catalog-product-media.has-image-swap:hover .product-image-swap-hover,
+.product-image-button.has-image-swap:focus-visible .product-image-swap-hover,
+.catalog-product-media.has-image-swap:focus-visible .product-image-swap-hover,
+.catalog-product-card:hover .catalog-product-media.has-image-swap .product-image-swap-hover {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* O teclado recebe a mesma informação visual sem depender de hover. */
+.product-image-button.has-image-swap:focus-visible .product-image-swap-hover,
+.catalog-product-media.has-image-swap:focus-visible .product-image-swap-hover {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Uma segunda URL quebrada nunca deixa um bloco vazio sobre a foto principal. */
+.product-image-swap-hover[data-image-error="true"] {
+  opacity: 0 !important;
+  visibility: hidden;
+}
+
+/*
+ * Usuários que pedem menos movimento continuam podendo ver a segunda foto,
+ * mas sem transições ou zoom; apenas a troca imediata de conteúdo é mantida.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .product-image-button.has-image-swap .product-image-swap-base,
+  .product-image-button.has-image-swap .product-image-swap-hover,
+  .catalog-product-media.has-image-swap .product-image-swap-base,
+  .catalog-product-media.has-image-swap .product-image-swap-hover {
+    transition: none;
+  }
+
+  .product-image-button.has-image-swap:hover .product-image-swap-base,
+  .catalog-product-media.has-image-swap:hover .product-image-swap-base {
+    transform: none;
+  }
+
+  .product-image-button.has-image-swap:hover .product-image-swap-hover,
+  .catalog-product-media.has-image-swap:hover .product-image-swap-hover,
+  .product-image-button.has-image-swap:focus-visible .product-image-swap-hover,
+  .catalog-product-media.has-image-swap:focus-visible .product-image-swap-hover {
+    transform: none;
+  }
+}
