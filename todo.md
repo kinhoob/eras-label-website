@@ -77,3 +77,7 @@
 - [x] Adicionar regressão automatizada que confirme a tag de estoque baixo no tema claro e no tema escuro
 - [x] Atualizar o alerta editorial para mostrar “POUCAS UNIDADES” quando o estoque da variação for inferior a 6, mantendo “ÚLTIMA PEÇA” para uma unidade
 - [x] Confirmar e testar que a guia de tamanhos continua editável e persistente em cada produto no Admin e na página pública
+- [x] Auditar storefront, checkout, pagamentos, frete e experiência mobile antes do lançamento
+- [x] Auditar painel administrativo, segurança, dados reais e operações críticas
+- [x] Auditar preparação para Vercel, domínio próprio, SEO, performance e observabilidade
+- [x] Consolidar relatório priorizado com lacunas, riscos e próximos passos do lançamento
