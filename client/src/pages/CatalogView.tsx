@@ -7,7 +7,8 @@ import { PageTransitionHandler } from "@/components/PageTransition";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import OfficialFooter from "@/components/OfficialFooter";
-import ProductImageSwap from "@/components/ProductImageSwap";
+import PublicProductCard from "@/components/PublicProductCard";
+import { getPublicProductCardState } from "@/lib/product-card-state";
 
 const catalogImageFallback = "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1200&q=85";
 
@@ -312,29 +313,17 @@ export default function CatalogViewPage() {
                   const images = normalizeImages(product.images);
                   // Produtos esgotados continuam a usar a foto real; sem foto cadastrada, usamos apenas um fallback neutro.
                   const imageSrc = images[0] || product.image || catalogImageFallback;
+                  const cardState = getPublicProductCardState({ ...product, images });
                   return (
-                    <article key={product.id} className="catalog-product-card group">
-                      <Link href={`/produto/${product.slug || product.id}`} className={`catalog-product-media relative${images[1] ? " has-image-swap" : ""}`} aria-label={`Ver ${product.name}`}>
-                        {imageSrc ? (
-                          <ProductImageSwap
-                            primaryImage={imageSrc}
-                            secondaryImage={images[1]}
-                            fallbackImage={catalogImageFallback}
-                            alt={product.name}
-                            onPrimaryError={(event) => {
-                              event.currentTarget.onerror = null;
-                              event.currentTarget.src = catalogImageFallback;
-                            }}
-                          />
-                        ) : (
-                          <span className="catalog-product-media-placeholder">Imagem a caminho</span>
-                        )}
-                        {(product.status === "soldout" || (Array.isArray(product.variations) && product.variations.every((v: any) => Number(v.stock ?? 0) === 0))) && (
-                          <span className="absolute bottom-3 left-3 bg-[#b22222] text-white text-[9px] tracking-widest uppercase px-2 py-0.5 font-bold rounded-sm shadow-sm z-10 pointer-events-none">
-                            ESGOTADO
-                          </span>
-                        )}
-                      </Link>
+                    <PublicProductCard
+                      key={product.id}
+                      product={{ ...product, images }}
+                      variant="catalog"
+                      primaryImage={imageSrc}
+                      secondaryImage={cardState.secondaryImage}
+                      fallbackImage={catalogImageFallback}
+                      href={`/produto/${product.slug || product.id}`}
+                    >
                       <div className="catalog-product-copy">
                         <div className="catalog-product-heading">
                           <div>
@@ -345,7 +334,7 @@ export default function CatalogViewPage() {
                         </div>
                         <p>{product.pixPrice ? `${formatPrice(product.pixPrice)} no Pix` : "Edição limitada"}</p>
                       </div>
-                    </article>
+                    </PublicProductCard>
                   );
                 })}
               </div>

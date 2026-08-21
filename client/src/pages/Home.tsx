@@ -45,7 +45,9 @@ import { filterStorefrontProducts, getStorefrontFilterOptions } from "@/lib/stor
 import { getSearchSuggestionText, searchStorefrontProducts, sortSoldOutLast, sortStorefrontProducts, type StorefrontSearchSort } from "@/lib/storefront-search";
 import { clearRecentSearches, loadRecentSearches, removeRecentSearch, saveRecentSearch } from "@/lib/recent-searches";
 import OfficialFooter from "@/components/OfficialFooter";
-import ProductImageSwap from "@/components/ProductImageSwap";
+import PublicProductCard from "@/components/PublicProductCard";
+import PublicProductPurchaseButton from "@/components/PublicProductPurchaseButton";
+import { getPublicProductCardState } from "@/lib/product-card-state";
 import { SidebarMenu } from "@/components/SidebarMenu";
 import { getUpcomingPublishedEvents, parseCmsContent } from "@shared/cms";
 
@@ -1064,33 +1066,28 @@ export default function Home() {
               </div>
               <div className="product-grid editorial-product-grid home-curated-grid">
                 {sortSoldOutLast(section.productIds.map((productId) => products.find((item) => item.id === productId)).filter((product): product is Product => Boolean(product))).slice(0, 8).map((product) => {
+                  const cardState = getPublicProductCardState(product);
                   return (
-                    <article className="product-card" key={`${section.id}-${product.id}`}>
-                      <button className={`product-image-button${product.images?.[1] ? " has-image-swap" : ""}`} onClick={() => openProduct(product)} aria-label={`Ver ${product.name}`}>
-                        <ProductImageSwap
-                          primaryImage={product.image}
-                          secondaryImage={product.images?.[1]}
-                          fallbackImage={product.fallbackImage}
-                          alt={product.alt}
-                          onPrimaryError={(event) => {
-                            if (!product.fallbackImage || event.currentTarget.dataset.fallbackApplied) return;
-                            event.currentTarget.dataset.fallbackApplied = "true";
-                            event.currentTarget.src = product.fallbackImage;
-                          }}
-                        />
-                        {product.stock === 0 && (
-                          <span className="absolute bottom-3 left-3 bg-[#b22222] text-white text-[9px] tracking-widest uppercase px-2 py-0.5 font-bold rounded-sm shadow-sm z-10 pointer-events-none">
-                            ESGOTADO
-                          </span>
-                        )}
-                        {product.promotionalPrice !== null && product.promotionalPrice !== undefined && product.promotionalPrice > 0 && (
-                          <span style={{ position: 'absolute', top: '12px', left: '12px', background: '#b22222', color: '#fff', fontSize: '10px', fontWeight: 700, padding: '0.2rem 0.45rem', borderRadius: '3px', textTransform: 'uppercase', zIndex: 2, letterSpacing: '0.08em' }}>
-                            {Math.round((1 - product.promotionalPrice / product.price) * 100)}% OFF
-                          </span>
-                        )}
-                        <span className="quick-view-label">VISUALIZAÇÃO RÁPIDA</span>
-                        <span className="product-arrow"><ArrowRight size={15} /></span>
-                      </button>
+                    <PublicProductCard
+                      key={`${section.id}-${product.id}`}
+                      product={product}
+                      variant="home"
+                      primaryImage={product.image}
+                      secondaryImage={cardState.secondaryImage}
+                      fallbackImage={product.fallbackImage}
+                      onOpen={() => openProduct(product)}
+                      mediaOverlay={(
+                        <>
+                          {product.promotionalPrice !== null && product.promotionalPrice !== undefined && product.promotionalPrice > 0 && (
+                            <span style={{ position: 'absolute', top: '12px', left: '12px', background: '#b22222', color: '#fff', fontSize: '10px', fontWeight: 700, padding: '0.2rem 0.45rem', borderRadius: '3px', textTransform: 'uppercase', zIndex: 2, letterSpacing: '0.08em' }}>
+                              {Math.round((1 - product.promotionalPrice / product.price) * 100)}% OFF
+                            </span>
+                          )}
+                          <span className="quick-view-label">VISUALIZAÇÃO RÁPIDA</span>
+                          <span className="product-arrow"><ArrowRight size={15} /></span>
+                        </>
+                      )}
+                    >
                       <div className="product-meta">
                         <div>
                           <a href={`/produto/${product.slug || product.id}`} className="product-name-link" onClick={(event) => { event.preventDefault(); playClick(soundsOn); window.location.href = `/produto/${product.slug || product.id}`; }}>{product.name}</a>
@@ -1113,7 +1110,7 @@ export default function Home() {
                           )}
                         </div>
                       </div>
-                    </article>
+                    </PublicProductCard>
                   );
                 })}
               </div>
@@ -1509,14 +1506,11 @@ export default function Home() {
                   <p>Meça uma peça semelhante sobre uma superfície plana. As medidas são uma referência de modelagem e podem variar ligeiramente entre coleções.</p>
                 </section>
               )}
-              <button
-                className={`primary-button add-to-cart-button ${addedProductId === selectedProduct.id ? "is-added" : ""}`}
-                onClick={() => addToCart(selectedProduct, selectedSize)}
-                disabled={selectedProduct.stock === 0 || addedProductId === selectedProduct.id}
-                aria-live="polite"
-              >
-                {selectedProduct.stock === 0 ? "ESGOTADO" : addedProductId === selectedProduct.id ? <><CheckCircle2 size={16} /> ADICIONADO À SACOLA</> : <>ADICIONAR À SACOLA <ArrowRight size={16} /></>}
-              </button>
+              <PublicProductPurchaseButton
+                product={selectedProduct}
+                added={addedProductId === selectedProduct.id}
+                onPurchase={() => addToCart(selectedProduct, selectedSize)}
+              />
               <p className="stock-note"><Sparkles size={13} /> Estoque gerido no painel administrativo.</p>
               {relatedProducts.length > 0 && (
                 <section className="quick-view-related" aria-label="Produtos relacionados">

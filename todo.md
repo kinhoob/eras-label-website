@@ -54,8 +54,8 @@
 - [x] Aplicar o comportamento nos cards da Home e do catálogo com fallback quando não houver segunda imagem
 - [x] Validar teclado, mobile, imagens ausentes, modo escuro e estados de produto esgotado
 - [x] Validar explicitamente cards com segunda foto em produtos esgotados, mantendo selo e CTA bloqueado
-- [ ] Validar Home e catálogo com cards esgotados com segunda foto durante hover e focus
-- [ ] Confirmar de forma reproduzível que hover/focus não reativa compra ou CTA em produtos esgotados
+- [x] Validar Home e catálogo com cards esgotados com segunda foto durante hover e focus
+- [x] Confirmar de forma reproduzível que hover/focus não reativa compra ou CTA em produtos esgotados
 - [x] Adicionar verificação reproduzível do comportamento por teclado nos cards com segunda imagem
 - [x] Registrar evidência objetiva para segunda imagem ausente e URL secundária quebrada
 - [x] Corrigir checkout.create com validação rigorosa server-side (preço, cupom, frete, subtotal, taxa PIX/parcelamento e verificação de clientTotal).
@@ -68,12 +68,19 @@
 - [x] Alinhar checkout.create ao contrato seguro com cupom, frete reconsultado e clientTotal
 - [x] Atualizar o frontend do checkout para enviar couponCode, shippingOptionId e clientTotal
 - [x] Adicionar ou atualizar testes de regressão para manipulação de total, frete, desconto e orderNumber
-- [ ] Validar a Home e o catálogo com cards esgotados com segunda foto durante hover e focus
-- [ ] Confirmar de forma reproduzível que hover/focus não reativa compra ou CTA em produtos esgotados
+- [x] Validar a Home e o catálogo com cards esgotados com segunda foto durante hover e focus
+- [x] Confirmar de forma reproduzível que hover/focus não reativa compra ou CTA em produtos esgotados
 
 > Registo: tarefas extraídas de Pasted_content_04.txt e aplicadas somente nos locais indicados pelo usuário.
 
-> Registo: as duas tarefas anteriores de validação dos cards com segunda foto permanecem pendentes até a validação específica desta rodada.
+> Registo: as validações dos cards com segunda foto foram concluídas nesta rodada com view model compartilhado e testes runtime do estado soldout + hover/focus.
 
 - [x] Adicionar teste de integração comportamental do checkout.create com preços, frete, cupom, total e orderNumber adulterados
 - [x] Adicionar teste comportamental do mapeamento do webhook Melhor Envio para trackingCode, shippingOrderId e estados de entrega
+
+- [x] Adicionar teste DOM renderizado para Home e catálogo com produto esgotado e segunda imagem
+- [x] Validar em DOM que hover/focus-visible preserva imagem principal, segunda imagem e selo ESGOTADO sem habilitar o CTA
+- [x] Reexecutar build de produção após a validação DOM final dos cards públicos
+
+- [x] Renderizar e testar o wrapper de card efetivamente usado pela Home e pelo catálogo, não apenas a mídia isolada
+- [x] Cobrir focus-visible e hover no wrapper real, preservando principal, secundária, selo ESGOTADO e CTA bloqueado

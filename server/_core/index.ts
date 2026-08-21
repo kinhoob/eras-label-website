@@ -11,7 +11,7 @@ import { serveStatic, setupVite } from "./vite";
 import { getMercadoPagoPayment } from "../mercadopago";
 import { getDb, updateOrderPaymentStatus } from "../db";
 import { orders } from "../../drizzle/schema";
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 import { registerSitemapRoutes } from "../sitemap";
 import { verifyMercadoPagoSignature } from "../mercadopago.signature";
 import { ENV } from "./env";
