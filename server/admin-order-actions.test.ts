@@ -12,6 +12,8 @@ const mockedOrder = {
 
 const updateOrderFulfillmentStatus = vi.fn();
 const deleteOrderData = vi.fn();
+const generateNextOrderNumber = vi.fn();
+const createManualOrder = vi.fn();
 
 vi.mock("./db", async () => {
   const actual = await vi.importActual<typeof import("./db")>("./db");
@@ -19,6 +21,8 @@ vi.mock("./db", async () => {
     ...actual,
     updateOrderFulfillmentStatus,
     deleteOrderData,
+    generateNextOrderNumber,
+    createManualOrder,
   };
 });
 
@@ -72,5 +76,37 @@ describe("mutations administrativas de pedidos", () => {
       code: "NOT_FOUND",
       message: "Pedido não encontrado.",
     });
+  });
+
+  it("retorna o número efetivamente persistido no pedido manual após retry", async () => {
+    generateNextOrderNumber.mockResolvedValueOnce("ER-2026-0043");
+    createManualOrder.mockResolvedValueOnce({ id: 43, orderNumber: "ER-2026-0044" });
+    const caller = appRouter.createCaller(adminContext);
+
+    const response = await caller.admin.createManualOrder({
+      customerName: "Cliente Manual",
+      customerEmail: "manual@example.com",
+      customerCpf: "12345678909",
+      phone: "81999999999",
+      shippingAddress: {
+        street: "Rua Herculano Bandeira",
+        number: "74",
+        neighborhood: "Sítio Novo",
+        city: "Olinda",
+        state: "PE",
+        postalCode: "53110380",
+      },
+      items: [{ productId: 1, name: "Camisa Oficial", size: "M", quantity: 1, price: 100 }],
+      shippingMethod: "PAC",
+      paymentMethod: "pix",
+      shippingCost: 20,
+      discount: 0,
+      status: "Aguardando pagamento",
+      paymentStatus: "pending",
+    });
+
+    expect(response.orderNumber).toBe("ER-2026-0044");
+    expect(response.order.orderNumber).toBe(response.orderNumber);
+    expect(createManualOrder).toHaveBeenCalledWith(expect.objectContaining({ orderNumber: "ER-2026-0043" }), "ER-2026-0043");
   });
 });

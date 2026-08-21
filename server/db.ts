@@ -949,11 +949,16 @@ export async function listAbandonedCarts() {
   }));
 }
 
-export async function createManualOrder(data: typeof orders.$inferInsert) {
+export async function createManualOrder(
+  data: typeof orders.$inferInsert,
+  trustedOrderNumber?: string,
+  dbOverride?: any,
+  nextOrderNumber?: () => Promise<string>,
+) {
   return createOrder({
     ...data,
     notes: ["Pedido criado manualmente pelo painel administrativo.", data.notes].filter(Boolean).join(" "),
-  });
+  }, trustedOrderNumber, dbOverride, nextOrderNumber);
 }
 
 export async function getOrderById(orderId: number) {
@@ -1024,8 +1029,14 @@ export async function generateNextOrderNumber(): Promise<string> {
   return `${prefix}${String(nextSeq).padStart(3, "0")}`;
 }
 
-export async function createOrder(data: typeof orders.$inferInsert, trustedOrderNumber?: string) {
-  const db = await getDb();
+export async function createOrder(
+  data: typeof orders.$inferInsert,
+  trustedOrderNumber?: string,
+  dbOverride?: any,
+  nextOrderNumber?: () => Promise<string>,
+) {
+  const db = dbOverride ?? await getDb();
+  const generateOrderNumber = nextOrderNumber ?? generateNextOrderNumber;
   if (!db) return undefined;
 
   let attempts = 0;
@@ -1033,7 +1044,7 @@ export async function createOrder(data: typeof orders.$inferInsert, trustedOrder
 
   while (attempts < 3) {
     attempts++;
-    const orderNumber = (attempts === 1 && trustedOrderNumber) ? trustedOrderNumber : await generateNextOrderNumber();
+    const orderNumber = (attempts === 1 && trustedOrderNumber) ? trustedOrderNumber : await generateOrderNumber();
     const orderWithSequence = { ...data, orderNumber };
 
     try {

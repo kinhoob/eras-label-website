@@ -30,10 +30,19 @@ describe("contrato seguro do checkout Eras Label", () => {
   });
 
   it("mantém o número do pedido no servidor e sincronizado com o pagamento", () => {
-    expect(db).toContain("createOrder(data: typeof orders.$inferInsert, trustedOrderNumber?: string)");
-    expect(db).toContain("trustedOrderNumber");
+    expect(db).toContain("export async function createOrder(");
+    expect(db).toContain("trustedOrderNumber?: string");
+    expect(db).toContain("export async function createManualOrder(");
+    expect(db).toContain("}, trustedOrderNumber, dbOverride, nextOrderNumber);");
     expect(routers).toContain("}, orderNumber);");
     expect(checkout).not.toContain("orderNumber: createOrderReference()");
+  });
+
+  it("rejeita variação de tamanho inexistente antes da cobrança", () => {
+    expect(checkoutBlock).toContain("if (!variation)");
+    expect(checkoutBlock).toContain('code: "BAD_REQUEST"');
+    expect(checkoutBlock).toContain("Variação indisponível");
+    expect(checkoutBlock.indexOf("if (!variation)")).toBeLessThan(checkoutBlock.indexOf("createMercadoPagoPayment"));
   });
 
   it("envia ao backend somente a prévia necessária para conferência", () => {

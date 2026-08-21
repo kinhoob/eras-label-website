@@ -13,7 +13,7 @@ import { createMercadoPagoPayment, getMercadoPagoPayment, searchMercadoPagoPayme
 import { getDb } from "./db";
 import { isGroundedAiSummary } from "./analytics-grounding";
 import { products, orders, coupons, productVariations } from "../drizzle/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { MelhorEnvioApiError, calculateMelhorEnvioShipping, createMelhorEnvioCartItem, downloadMelhorEnvioLabelFile, getMelhorEnvioTracking } from "./melhor-envio";
 import { sendAbandonedCartReminderEmail } from "./resend";
 import { STOREFRONT_ACCESS_COOKIE, createStorefrontAccessToken, hashStorefrontPassword, hasValidStorefrontAccess, verifyStorefrontPassword } from "./storefront-access";
@@ -565,7 +565,13 @@ export const appRouter = router({
           .from(productVariations)
           .where(and(eq(productVariations.productId, item.productId), eq(productVariations.size, item.size)))
           .limit(1);
-        if (variation && Number(variation.stock) < item.quantity) {
+        if (!variation) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `Variação indisponível para o produto "${item.name}" no tamanho ${item.size}.`,
+          });
+        }
+        if (Number(variation.stock) < item.quantity) {
           throw new TRPCError({
             code: "BAD_REQUEST",
             message: `Estoque insuficiente para o produto "${item.name}" no tamanho ${item.size}. Disponível: ${variation.stock}, solicitado: ${item.quantity}.`,
@@ -649,17 +655,19 @@ export const appRouter = router({
         status: (initialPaymentStatus === "approved" || initialPaymentStatus === "authorized") ? "Processando" : initialPaymentStatus === "in_process" ? "Em análise" : "Aguardando pagamento",
       }, orderNumber);
 
-      // Incrementar de forma atômica/segura a utilização do cupom se aplicado
-      if (input.couponCode) {
+      // Incrementar somente após createOrder com sucesso; a expressão SQL limita o contador
+      // ao usageLimit de forma atômica, evitando ultrapassagem em requisições concorrentes.
+      if (persistedOrder && input.couponCode) {
         try {
           const normalizedCouponCode = input.couponCode.trim().toUpperCase();
           const [dbCoupon] = await database.select().from(coupons).where(eq(coupons.code, normalizedCouponCode)).limit(1);
           if (dbCoupon) {
-            const currentTimes = Number(dbCoupon.timesUsed || 0);
-            const limit = dbCoupon.usageLimit !== null ? Number(dbCoupon.usageLimit) : null;
-            if (limit === null || currentTimes < limit) {
-              await database.update(coupons).set({ timesUsed: currentTimes + 1 }).where(eq(coupons.id, dbCoupon.id));
-            }
+            await database
+              .update(coupons)
+              .set({
+                timesUsed: sql`LEAST(${coupons.timesUsed} + 1, COALESCE(${coupons.usageLimit}, ${coupons.timesUsed} + 1))`,
+              })
+              .where(eq(coupons.id, dbCoupon.id));
           }
         } catch (couponIncErr) {
           console.warn("[Checkout] Falha ao incrementar uso do cupom:", couponIncErr);
@@ -1364,9 +1372,9 @@ export const appRouter = router({
         status: input.status,
         paymentStatus: input.paymentStatus,
         notes: input.notes || null,
-      });
+      }, orderNumber);
       if (!created) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Não foi possível criar o pedido manual." });
-      return { success: true, order: created, orderNumber };
+      return { success: true, order: created, orderNumber: created.orderNumber };
     }),
     calculateShippingQuote: adminProcedure.input(z.object({
       cepDestination: z.string().min(8),

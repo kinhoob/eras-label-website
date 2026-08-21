@@ -84,3 +84,16 @@
 
 - [x] Renderizar e testar o wrapper de card efetivamente usado pela Home e pelo catálogo, não apenas a mídia isolada
 - [x] Cobrir focus-visible e hover no wrapper real, preservando principal, secundária, selo ESGOTADO e CTA bloqueado
+
+- [x] Corrigir/confirmar validação de estoque por produto + size antes de chamar o Mercado Pago no checkout público
+- [x] Corrigir/confirmar incremento seguro de timesUsed após createOrder com sucesso, respeitando usageLimit
+- [x] Corrigir/confirmar generateNextOrderNumber no pedido manual do admin no formato ER-AAAA-XXX
+
+- [x] Rejeitar checkout público quando a variação produto + size não existir, antes de chamar o Mercado Pago
+- [x] Repassar trustedOrderNumber de createManualOrder para createOrder e garantir igualdade do número persistido
+- [x] Adicionar regressão para variação inexistente e igualdade do número no pedido manual
+
+- [x] Fazer o pedido manual retornar sempre o orderNumber realmente persistido em created.orderNumber
+- [x] Adicionar teste runtime do pedido manual cobrindo igualdade após retry de colisão do número
+
+- [x] Adicionar teste integrado do pedido manual com colisão real do trustedOrderNumber dentro de createOrder e retorno do número persistido

@@ -8,6 +8,7 @@ const getCommercialConfig = vi.fn();
 const createMercadoPagoPayment = vi.fn();
 const calculateMelhorEnvioShipping = vi.fn();
 const sendResendEmail = vi.fn();
+let variationExists = true;
 
 const product = {
   id: 101,
@@ -17,15 +18,26 @@ const product = {
   promotionalPrice: null,
 };
 
+const variation = { productId: 101, size: "M", stock: 10 };
+
 const fakeDb = {
   select: () => ({
     from: () => ({
       where: () => ({
-        limit: async () => [product],
+        limit: async () => {
+          if (fakeDbSelectCount++ === 0) return [product];
+          return variationExists ? [variation] : [];
+        },
       }),
     }),
   }),
+  update: () => ({
+    set: () => ({
+      where: async () => undefined,
+    }),
+  }),
 };
+let fakeDbSelectCount = 0;
 
 vi.mock("./db", async () => {
   const actual = await vi.importActual<typeof import("./db")>("./db");
@@ -88,6 +100,8 @@ const baseInput = {
 describe("checkout.create em runtime", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    variationExists = true;
+    fakeDbSelectCount = 0;
     generateNextOrderNumber.mockResolvedValue("ER-2026-0999");
     validateCoupon.mockResolvedValue({ valid: true, discount: 10 });
     getCommercialConfig.mockResolvedValue({
@@ -114,6 +128,19 @@ describe("checkout.create em runtime", () => {
     await expect(caller.checkout.create({ ...baseInput, clientTotal: 1 })).rejects.toMatchObject({
       code: "BAD_REQUEST",
       message: expect.stringContaining("Total inconsistente"),
+    });
+
+    expect(createMercadoPagoPayment).not.toHaveBeenCalled();
+    expect(createOrder).not.toHaveBeenCalled();
+  });
+
+  it("rejeita variação inexistente antes de chamar o Mercado Pago", async () => {
+    variationExists = false;
+    const caller = appRouter.createCaller(publicContext);
+
+    await expect(caller.checkout.create({ ...baseInput })).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+      message: expect.stringContaining("Variação indisponível"),
     });
 
     expect(createMercadoPagoPayment).not.toHaveBeenCalled();
