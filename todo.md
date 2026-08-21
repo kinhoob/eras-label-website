@@ -68,3 +68,10 @@
 - [x] Validar o fluxo completo de salvamento no Admin, reabertura e exibição pública das novas medidas e descrição
 - [x] Executar um teste ponta a ponta verificável: editar descrição e guia de tamanhos de um produto real, salvar com sucesso, reabrir o mesmo produto no Admin e confirmar os valores persistidos
 - [x] Validar após o salvamento que a página pública do produto exibe a descrição e a guia atualizadas, registrando evidência objetiva do fluxo completo
+- [x] Adicionar tag “POUCAS UNIDADES” para tamanhos com estoque baixo na foto do produto
+- [x] Mostrar “ÚLTIMA PEÇA” quando o tamanho selecionado tiver apenas uma unidade, sem exibir a quantidade
+- [x] Validar posição no canto superior esquerdo, atualização por tamanho, temas, mobile e bloqueio de compra
+- [x] Validar explicitamente a tag de estoque baixo nos temas claro e escuro na página de produto, com evidência verificável
+- [x] Executar uma verificação reproduzível de que a tag no canto superior esquerdo não intercepta cliques nem interfere no CTA de compra ao trocar tamanhos
+- [x] Capturar evidência verificável no tema claro da página de produto, selecionando uma variação com baixo estoque e confirmando a tag de urgência
+- [x] Adicionar regressão automatizada que confirme a tag de estoque baixo no tema claro e no tema escuro

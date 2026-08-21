@@ -7822,6 +7822,33 @@ body {
   overflow: hidden;
   background: #eeeae3;
 }
+
+/*
+ * Alerta de urgência editorial: fica dentro da moldura da fotografia para
+ * ocupar apenas um pequeno bloco no canto superior esquerdo, sem revelar
+ * qualquer quantidade de inventário ao cliente.
+ */
+.product-stock-alert {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  max-width: calc(100% - 32px);
+  padding: 8px 11px;
+  border: 1px solid rgba(255, 255, 255, .34);
+  background: #b22222;
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(35, 34, 30, .18);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .14em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  pointer-events: none;
+}
 .product-gallery-image {
   display: block;
   width: 100%;
@@ -8013,6 +8040,8 @@ body {
   .product-gallery-thumbnails { position: static; order: 2; display: flex; width: 100%; max-height: none; overflow-x: auto; overflow-y: hidden; padding-bottom: 3px; }
   .product-gallery-thumbnail { width: 66px; flex: 0 0 66px; }
   .product-gallery-stage { aspect-ratio: 4 / 5; }
+  /* Reduzimos apenas o tamanho do bloco no mobile; a posição continua no canto solicitado. */
+  .product-stock-alert { top: 12px; left: 12px; min-height: 28px; padding: 7px 9px; font-size: 8px; }
   .product-gallery-control { width: 38px; height: 38px; opacity: 1; }
   .product-gallery-control-prev { left: 10px; }
   .product-gallery-control-next { right: 10px; }

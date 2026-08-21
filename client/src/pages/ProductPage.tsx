@@ -27,6 +27,8 @@ import { toast } from "sonner";
 import type { PublicCartLine } from "@/components/PublicCartDrawer";
 import { getProductDescription, hasSavedProductDescription } from "@/lib/product-content";
 import { resolveProductSizeGuide } from "@shared/product-size-guide";
+import { getProductSizeAvailabilityLabel } from "@shared/product-stock-alert";
+import { ProductStockAlert } from "@/components/ProductStockAlert";
 
 const productImageFallback =
   "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1200&q=85";
@@ -274,6 +276,7 @@ export default function ProductPage() {
                     {(images.length > 0 ? images : [productImageFallback]).map((image, index) => (
                       <CarouselItem key={`${image}-${index}`} className="product-carousel-slide">
                         <div className="product-gallery-stage">
+                          <ProductStockAlert stock={selectedStock} />
                           <img
                             src={image}
                             alt={`${product.name} — imagem ${index + 1} de ${Math.max(images.length, 1)}`}
@@ -375,9 +378,7 @@ export default function ProductPage() {
                         ))}
                       </div>
                       <p className={`product-option-hint ${selectedVariation ? "is-ready" : ""}`}>
-                        {selectedVariation
-                          ? `${selectedStock} ${selectedStock === 1 ? "unidade disponível" : "unidades disponíveis"}`
-                          : "Selecione o tamanho para continuar"}
+                        {getProductSizeAvailabilityLabel(Boolean(selectedVariation))}
                       </p>
                     </div>
                 </div>
