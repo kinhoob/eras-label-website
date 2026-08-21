@@ -179,6 +179,7 @@ export const collections = mysqlTable("collections", {
   ctaUrl: varchar("ctaUrl", { length: 255 }),
   sortOrder: int("sortOrder").default(0).notNull(),
   active: int("active").default(1).notNull(),
+  productIds: json("productIds"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

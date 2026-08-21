@@ -744,6 +744,7 @@ export const appRouter = router({
       ctaUrl: z.string().optional(),
       sortOrder: z.number().optional(),
       active: z.number().optional(),
+      productIds: z.array(z.number()).optional(),
     })).mutation(({ input }) => saveCollectionData(input)),
     archive: adminProcedure.input(z.object({ id: z.number() })).mutation(({ input }) => archiveCollection(input.id)),
     restore: adminProcedure.input(z.object({ id: z.number() })).mutation(({ input }) => restoreCollection(input.id)),

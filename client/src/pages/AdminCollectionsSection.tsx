@@ -18,6 +18,7 @@ type CollectionForm = {
   ctaUrl: string;
   sortOrder: number;
   active: number;
+  productIds: number[];
 };
 
 const emptyForm: CollectionForm = {
@@ -31,6 +32,7 @@ const emptyForm: CollectionForm = {
   ctaUrl: "",
   sortOrder: 0,
   active: 1,
+  productIds: [],
 };
 
 /**
@@ -71,7 +73,28 @@ export function AdminCollectionsSection() {
   const collections = collectionsQuery.data ?? [];
   const activeCount = useMemo(() => collections.filter((c) => c.active === 1).length, [collections]);
 
-  const startEdit = (collection?: typeof collections[number]) =>
+  const { data: adminProducts = [] } = trpc.admin.listProducts.useQuery(undefined, { enabled: true });
+
+  const startEdit = (collection?: typeof collections[number]) => {
+    let parsedProductIds: number[] = [];
+    if (collection && (collection as any).productIds) {
+      try {
+        parsedProductIds = typeof (collection as any).productIds === "string" 
+          ? JSON.parse((collection as any).productIds) 
+          : Array.isArray((collection as any).productIds) 
+          ? (collection as any).productIds 
+          : [];
+      } catch {
+        parsedProductIds = [];
+      }
+    }
+    // Fallback: se não tiver productIds explícitos mas tiver produtos no catálogo com o nome da coleção
+    if (parsedProductIds.length === 0 && collection) {
+      parsedProductIds = adminProducts
+        .filter((p: any) => p.collection && p.collection.toLowerCase() === collection.name.toLowerCase())
+        .map((p: any) => Number(p.id));
+    }
+
     setEditing(
       collection
         ? {
@@ -86,9 +109,11 @@ export function AdminCollectionsSection() {
             ctaUrl: collection.ctaUrl ?? "",
             sortOrder: collection.sortOrder,
             active: collection.active,
+            productIds: parsedProductIds,
           }
-        : { ...emptyForm }
+        : { ...emptyForm, productIds: [] }
     );
+  };
 
   const update = (key: keyof CollectionForm, value: string | number) =>
     setEditing((current) => (current ? { ...current, [key]: value } : current));
@@ -290,6 +315,53 @@ export function AdminCollectionsSection() {
                 Texto editorial completo
                 <Textarea value={editing.editorialText} onChange={(e) => update("editorialText", e.target.value)} rows={4} placeholder="História, manifesto e detalhes da era..." />
               </label>
+
+              <div style={{ gridColumn: "span 2", borderTop: "1px solid #f2eee9", paddingTop: "1rem", marginTop: "0.5rem" }}>
+                <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#111", display: "block", marginBottom: "0.5rem" }}>
+                  Selecionar produtos que fazem parte desta coleção ({editing.productIds.length} selecionados)
+                </span>
+                <p style={{ fontSize: "0.8rem", color: "#666", marginBottom: "0.75rem" }}>
+                  Marque as peças abaixo para vinculá-las automaticamente a esta coleção no Archive e na página pública.
+                </p>
+                <div style={{ maxHeight: "200px", overflowY: "auto", border: "1px solid #eae5de", borderRadius: "6px", padding: "0.75rem", background: "#fafafa" }}>
+                  {adminProducts.length === 0 ? (
+                    <p style={{ fontSize: "0.85rem", color: "#666", textAlign: "center", padding: "1rem" }}>Nenhum produto cadastrado no catálogo.</p>
+                  ) : (
+                    adminProducts.map((p: any) => {
+                      const isChecked = editing.productIds.includes(Number(p.id));
+                      return (
+                        <label key={p.id} style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.35rem 0", fontSize: "0.85rem", cursor: "pointer", borderBottom: "1px solid #eee" }}>
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => {
+                              const checked = e.target.checked;
+                              setEditing((curr) => {
+                                if (!curr) return curr;
+                                const currentIds = curr.productIds || [];
+                                const nextIds = checked 
+                                  ? [...currentIds, Number(p.id)]
+                                  : currentIds.filter((id) => id !== Number(p.id));
+                                return { ...curr, productIds: nextIds };
+                              });
+                            }}
+                            style={{ width: "16px", height: "16px", accentColor: "#b22222" }}
+                          />
+                          <div style={{ width: "32px", height: "32px", borderRadius: "4px", overflow: "hidden", background: "#eee", flexShrink: 0 }}>
+                            {p.images?.[0] ? <img src={p.images[0]} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : null}
+                          </div>
+                          <div style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            <strong>{p.name}</strong> <span style={{ color: "#666", fontSize: "0.75rem" }}>· R$ {Number(p.price).toFixed(2)}</span>
+                          </div>
+                          <span style={{ fontSize: "0.75rem", padding: "2px 6px", background: p.collection ? "#eee" : "#fef2f2", borderRadius: "4px", color: p.collection ? "#333" : "#b22222" }}>
+                            {p.collection || "Sem coleção"}
+                          </span>
+                        </label>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
             </div>
 
             <div className="admin-editorial-modal-footer" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #f2eee9", paddingTop: "1rem" }}>

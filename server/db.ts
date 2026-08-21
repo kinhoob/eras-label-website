@@ -1850,9 +1850,11 @@ export async function saveCollectionData(data: {
   ctaUrl?: string;
   sortOrder?: number;
   active?: number;
+  productIds?: number[];
 }) {
   const db = await getDb();
   const slug = data.slug?.trim() ? slugifyCategory(data.slug) : slugifyCategory(data.name);
+  const productIdsArr = Array.isArray(data.productIds) ? data.productIds : [];
   const values = {
     name: data.name,
     slug,
@@ -1864,20 +1866,28 @@ export async function saveCollectionData(data: {
     ctaUrl: data.ctaUrl || `/collection/${slug}`,
     sortOrder: Number(data.sortOrder || 0),
     active: data.active !== undefined ? Number(data.active) : 1,
+    productIds: productIdsArr,
   };
 
   if (!db) return { id: data.id || 1, ...values };
 
-  if (data.id) {
-    await db.update(collections).set(values).where(eq(collections.id, data.id));
-    const [updated] = await db.select().from(collections).where(eq(collections.id, data.id)).limit(1);
-    return updated;
+  let savedId = data.id;
+  if (savedId) {
+    await db.update(collections).set(values).where(eq(collections.id, savedId));
   } else {
     const [inserted] = await db.insert(collections).values(values);
-    const insertId = Number((inserted as any).insertId || 0);
-    const [created] = await db.select().from(collections).where(eq(collections.id, insertId)).limit(1);
-    return created;
+    savedId = Number((inserted as any).insertId || 0);
   }
+
+  // Sincronizar o nome da coleção nos produtos selecionados
+  if (savedId && productIdsArr.length > 0) {
+    for (const pId of productIdsArr) {
+      await db.update(products).set({ collection: data.name }).where(eq(products.id, Number(pId)));
+    }
+  }
+
+  const [created] = await db.select().from(collections).where(eq(collections.id, savedId)).limit(1);
+  return created;
 }
 
 export async function archiveCollection(id: number) {

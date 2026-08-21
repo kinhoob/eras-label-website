@@ -183,6 +183,13 @@
       "when": 1787277295383,
       "tag": "0025_fearless_may_parker",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "5",
+      "when": 1787279692954,
+      "tag": "0026_tense_calypso",
+      "breakpoints": true
     }
   ]
 }

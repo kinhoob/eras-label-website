@@ -102,3 +102,5 @@
 - [x] Aumentar a margem entre o botão de modo noturno e a sacola na navbar mobile para evitar cliques acidentais.
 - [ ] Persistir a coleção do produto e ligar a consulta do Archive ao vínculo relacional real da peça.
 - [ ] Validar de forma automatizada e visual que produtos associados aparecem automaticamente nas páginas de coleção e no storefront.
+- [x] Adicionar no painel administrativo (editor de coleções) uma lista de checkboxes para selecionar quais produtos fazem parte daquela coleção.
+- [x] Atualizar a persistência de coleções e o mapeamento público do Archive e `/collection/:slug` para respeitar a seleção de produtos.
