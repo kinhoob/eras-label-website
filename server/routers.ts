@@ -33,6 +33,7 @@ import {
   getCategoryRevenueMetrics,
   getLowStockAlerts,
   markAllNotificationsAsRead,
+  generateNextOrderNumber,
   listInventoryAuditLogs,
   logInventoryAudit,
   listAdminUsers,

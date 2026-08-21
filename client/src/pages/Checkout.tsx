@@ -399,7 +399,6 @@ export default function CheckoutPage() {
     }
 
     checkoutMutation.mutate({
-      orderNumber,
       customerName: fields.customerName.trim(),
       customerEmail: fields.customerEmail.trim(),
       customerCpf: fields.cpf.trim(),

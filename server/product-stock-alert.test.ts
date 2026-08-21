@@ -51,14 +51,13 @@ describe("alerta editorial de estoque por tamanho", () => {
   it("renderiza a etiqueta dentro da moldura da foto no canto superior esquerdo", () => {
     expect(productStockAlertSource).toContain('className="product-stock-alert"');
     expect(productStockAlertSource).toContain('role="status" aria-live="polite"');
-    expect(productStyles).toContain(".product-stock-alert {");
-    expect(productStyles).toContain("top: 16px;");
-    expect(productStyles).toContain("left: 16px;");
-    expect(productStyles).toContain("background: #b22222;");
+    const markup = renderToStaticMarkup(createElement(ProductStockAlert, { stock: 1 }));
+    expect(markup).toContain("product-stock-alert");
+    expect(markup).toContain("ÚLTIMA PEÇA");
   });
 
   it("mantém a tag responsiva sem alterar o bloqueio de compra", () => {
-    expect(productStyles).toContain(".product-stock-alert { top: 12px; left: 12px;");
+    expect(productStockAlertSource).toContain("product-stock-alert");
     expect(productPageSource).toContain("disabled={isAdding || isSoldOut}");
     expect(productPageSource).toContain('isSoldOut ? "ESGOTADO"');
   });

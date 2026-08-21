@@ -58,5 +58,5 @@
 - [ ] Confirmar de forma reproduzível que hover/focus não reativa compra ou CTA em produtos esgotados
 - [x] Adicionar verificação reproduzível do comportamento por teclado nos cards com segunda imagem
 - [x] Registrar evidência objetiva para segunda imagem ausente e URL secundária quebrada
-- [ ] Corrigir checkout.create com validação rigorosa server-side (preço, cupom, frete, subtotal, taxa PIX/parcelamento e verificação de clientTotal).
-- [ ] Corrigir webhook do Melhor Envio para localizar pedidos por `trackingCode` ou `shippingOrderId` usando `or` do Drizzle e atualizar com `trackingCode`.
+- [x] Corrigir checkout.create com validação rigorosa server-side (preço, cupom, frete, subtotal, taxa PIX/parcelamento e verificação de clientTotal).
+- [x] Corrigir webhook do Melhor Envio para localizar pedidos por `trackingCode` ou `shippingOrderId` usando `or` do Drizzle e atualizar com `trackingCode`.
