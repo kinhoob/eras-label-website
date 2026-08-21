@@ -9,7 +9,9 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { getMercadoPagoPayment } from "../mercadopago";
-import { updateOrderPaymentStatus } from "../db";
+import { getDb, updateOrderPaymentStatus } from "../db";
+import { orders } from "../../drizzle/schema";
+import { eq } from "drizzle-orm";
 import { registerSitemapRoutes } from "../sitemap";
 import { verifyMercadoPagoSignature } from "../mercadopago.signature";
 import { ENV } from "./env";
@@ -51,14 +53,44 @@ async function startServer() {
     })
   );
 
-  // Webhook endpoint para notificações e validação do Melhor Envio (evita erro 404 E-WBH-0002)
+  // Webhook endpoint para notificações e validação do Melhor Envio com sincronização de status e rastreio
   app.post("/api/melhor-envio/webhook", async (req, res) => {
     try {
-      console.log("[Melhor Envio Webhook] Evento recebido:", req.body);
-      // O Melhor Envio valida a URL enviando uma requisição de teste. Respondemos com 200 OK.
+      const event = req.body as Record<string, any>;
+      console.log("[Melhor Envio Webhook] Evento recebido:", JSON.stringify(event));
+
+      const trackingCode = event?.tracking || event?.protocol || event?.id;
+      const statusEvent = String(event?.status || event?.event || "").toLowerCase();
+
+      if (trackingCode) {
+        const db = await getDb();
+        if (db) {
+          const matchingOrders = await db.select().from(orders).where(eq(orders.shippingMethod, String(trackingCode))).limit(1);
+          if (matchingOrders.length > 0) {
+            const order = matchingOrders[0];
+            let newFulfillment = order.fulfillmentStatus;
+            let newStatus = order.status;
+
+            if (statusEvent.includes("posted") || statusEvent.includes("shipped") || statusEvent.includes("enviado")) {
+              newFulfillment = "shipped";
+              newStatus = "Enviado";
+            } else if (statusEvent.includes("delivered") || statusEvent.includes("entregue")) {
+              newFulfillment = "shipped";
+              newStatus = "Entregue";
+            }
+
+            await db.update(orders).set({
+              fulfillmentStatus: newFulfillment,
+              status: newStatus,
+            }).where(eq(orders.id, order.id));
+            console.log(`[Melhor Envio Webhook] Pedido #${order.orderNumber} atualizado via webhook para ${newStatus}`);
+          }
+        }
+      }
+
       res.status(200).json({ received: true, status: "success" });
     } catch (err) {
-      console.error("[Melhor Envio Webhook] Erro:", err);
+      console.error("[Melhor Envio Webhook] Erro ao processar evento:", err);
       res.status(200).json({ received: true });
     }
   });

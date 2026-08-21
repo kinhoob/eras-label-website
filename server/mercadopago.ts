@@ -135,9 +135,13 @@ export function getMercadoPagoErrorMessage(data: any, status: number) {
 export async function createMercadoPagoPayment(params: CreatePaymentParams) {
   const accessToken = ENV.mpAccessToken;
 
-  // Se o token de acesso não estiver configurado, retornamos um mock simulado para testes e desenvolvimento local
+  // Se o token de acesso não estiver configurado, em produção aplicamos fail-fast para evitar aprovações falsas
   if (!accessToken || accessToken.trim() === "") {
-    console.warn("[MercadoPago] ATENÇÃO: MP_ACCESS_TOKEN não configurado. Utilizando modo simulado (sandbox/mock).");
+    if (ENV.isProduction) {
+      console.error("[MercadoPago CRITICAL] Erro de configuração: MP_ACCESS_TOKEN não está definido no ambiente de produção.");
+      throw new Error("Configuração de pagamento incompleta em produção: credenciais do Mercado Pago não fornecidas.");
+    }
+    console.warn("[MercadoPago] ATENÇÃO: MP_ACCESS_TOKEN não configurado. Utilizando modo simulado (sandbox/mock) em desenvolvimento.");
     
     if (params.payment_method_id === "pix") {
       return {
