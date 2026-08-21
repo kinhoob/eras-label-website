@@ -97,3 +97,6 @@
 - [x] Cobrir em teste o cenário com referência de notificação existente e comprovar que nenhuma referência órfã permanece após a exclusão
 - [x] Testar diretamente o entrypoint público deleteOrderData ou o caller admin.deleteOrder com mocks controlados, verificando a remoção do pedido e de notifications pelo ID interno
 - [x] Modelar notificações relacionadas existentes e afirmar explicitamente que ficam zero referências após a exclusão
+- [ ] Adicionar no cadastro de produto um select de coleção com as coleções geridas no Admin
+- [ ] Persistir a coleção do produto e ligar a consulta do Archive ao vínculo real da peça
+- [ ] Validar que produtos aparecem automaticamente na coleção correta no Archive e no storefront
