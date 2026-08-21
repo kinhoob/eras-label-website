@@ -85,7 +85,15 @@
 - [x] Permitir excluir qualquer pedido pelo menu de ações, independentemente do estado do pagamento
 - [x] Adicionar regressões para atualização de status e exclusão de pedidos e validar o painel em desktop/mobile
 - [x] Reproduzir no painel as ações Processando e Em Preparação / Embalado após o patch e registrar resposta tRPC JSON sem erro de parse
-- [ ] Executar validação end-to-end da exclusão pelo menu, confirmando remoção da listagem e limpeza segura das referências relacionadas
+- [x] Executar validação end-to-end da exclusão pelo menu, confirmando remoção da listagem e limpeza segura das referências relacionadas
 - [x] Adicionar regressões automatizadas para admin.deleteOrder e admin.updateFulfillmentStatus e validar Vendas em desktop e mobile após a correção
 - [x] Ler e registrar evidência verificável do conteúdo de server/admin-order-actions.test.ts, cobrindo admin.deleteOrder e admin.updateFulfillmentStatus
 - [x] Registrar saída objetiva dos testes confirmando que a regressão específica de pedidos passou após a correção
+- [x] Substituir a confirmação nativa da exclusão por um diálogo visual no painel, permitindo validar a ação sem bloquear o navegador
+- [x] Corrigir a limpeza de notificações na exclusão permanente, que atualmente falha ao usar o número público ER-2026-6399 como orderId incompatível
+- [x] Validar explicitamente a exclusão ponta a ponta de um pedido com todos os vínculos relevantes, incluindo registros de envio, e registrar ausência de referências órfãs
+- [x] Adicionar regressão automatizada que cubra a limpeza de referências relacionadas na exclusão de pedidos, além da remoção do registro principal
+- [x] Adicionar teste automatizado que execute deleteOrderData ou admin.deleteOrder com mock controlado e verifique a remoção do pedido e de notifications pelo orderId interno
+- [x] Cobrir em teste o cenário com referência de notificação existente e comprovar que nenhuma referência órfã permanece após a exclusão
+- [x] Testar diretamente o entrypoint público deleteOrderData ou o caller admin.deleteOrder com mocks controlados, verificando a remoção do pedido e de notifications pelo ID interno
+- [x] Modelar notificações relacionadas existentes e afirmar explicitamente que ficam zero referências após a exclusão

@@ -1187,20 +1187,40 @@ export async function updateOrderFulfillmentStatus(orderId: number, nextStatus: 
 }
 
 /**
+ * Define as referências derivadas que devem ser limpas ao excluir um pedido.
+ * O orderNumber público nunca é usado como chave de relacionamento.
+ */
+export function getOrderDeletionReferences(orderId: number) {
+  return {
+    orderId,
+    notificationOrderId: orderId,
+  };
+}
+
+/**
+ * Executa a limpeza contra uma conexão fornecida. A função separada mantém
+ * verificável, sem banco de teste persistente, a ordem e as referências que
+ * são removidas durante a exclusão real.
+ */
+export async function deleteOrderDataFromDb(db: any, orderId: number) {
+  const [current] = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
+  if (!current) return undefined;
+
+  const references = getOrderDeletionReferences(current.id);
+  await db.delete(notifications).where(eq(notifications.orderId, references.notificationOrderId));
+  await db.delete(orders).where(eq(orders.id, references.orderId));
+  return normalizeOrderForClient(current);
+}
+
+/**
  * Exclui permanentemente um pedido administrativo, independentemente do
  * estado do pagamento ou da etapa logística. A referência de notificação é
  * removida primeiro para não deixar alertas órfãos no centro administrativo.
  */
-export async function deleteOrderData(orderId: number) {
-  const db = await getDb();
+export async function deleteOrderData(orderId: number, injectedDb?: any) {
+  const db = injectedDb ?? (await getDb());
   if (!db) return undefined;
-
-  const [current] = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
-  if (!current) return undefined;
-
-  await db.delete(notifications).where(eq(notifications.orderId, current.orderNumber));
-  await db.delete(orders).where(eq(orders.id, orderId));
-  return normalizeOrderForClient(current);
+  return deleteOrderDataFromDb(db, orderId);
 }
 
 export type AnalyticsRange = {

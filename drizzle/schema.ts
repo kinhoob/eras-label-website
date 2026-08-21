@@ -215,7 +215,8 @@ export const notifications = mysqlTable("notifications", {
   title: varchar("title", { length: 255 }).notNull(),
   message: text("message").notNull(),
   type: varchar("type", { length: 50 }).default("new_order").notNull(),
-  orderId: varchar("orderId", { length: 100 }),
+  /** Referência interna ao ID numérico do pedido; o orderNumber público não é armazenado aqui. */
+  orderId: int("orderId"),
   isRead: int("isRead").default(0).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
