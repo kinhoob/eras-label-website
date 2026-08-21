@@ -75,3 +75,5 @@
 - [x] Executar uma verificação reproduzível de que a tag no canto superior esquerdo não intercepta cliques nem interfere no CTA de compra ao trocar tamanhos
 - [x] Capturar evidência verificável no tema claro da página de produto, selecionando uma variação com baixo estoque e confirmando a tag de urgência
 - [x] Adicionar regressão automatizada que confirme a tag de estoque baixo no tema claro e no tema escuro
+- [x] Atualizar o alerta editorial para mostrar “POUCAS UNIDADES” quando o estoque da variação for inferior a 6, mantendo “ÚLTIMA PEÇA” para uma unidade
+- [x] Confirmar e testar que a guia de tamanhos continua editável e persistente em cada produto no Admin e na página pública

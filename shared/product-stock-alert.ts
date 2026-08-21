@@ -2,11 +2,11 @@
  * Limite editorial para sinalizar urgência sem revelar o inventário exato.
  * O cliente vê apenas uma etiqueta textual na fotografia do produto.
  */
-export const LOW_STOCK_THRESHOLD = 3;
+export const LOW_STOCK_THRESHOLD = 5;
 
 /**
  * Converte o estoque da variação selecionada na etiqueta pública adequada.
- * Valores inválidos, zero ou acima do limite não exibem alerta.
+ * Valores inválidos, zero ou acima de cinco unidades não exibem alerta.
  */
 export function getProductStockAlertLabel(stock: unknown): "POUCAS UNIDADES" | "ÚLTIMA PEÇA" | null {
   const normalizedStock = Number(stock ?? 0);

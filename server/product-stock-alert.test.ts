@@ -32,11 +32,11 @@ const themeContextSource = readFileSync(
 
 describe("alerta editorial de estoque por tamanho", () => {
   it("mostra poucas unidades apenas dentro do limite editorial", () => {
-    expect(LOW_STOCK_THRESHOLD).toBe(3);
-    expect(getProductStockAlertLabel(3)).toBe("POUCAS UNIDADES");
+    expect(LOW_STOCK_THRESHOLD).toBe(5);
+    expect(getProductStockAlertLabel(5)).toBe("POUCAS UNIDADES");
     expect(getProductStockAlertLabel(2)).toBe("POUCAS UNIDADES");
     expect(getProductStockAlertLabel(1)).toBe("ÚLTIMA PEÇA");
-    expect(getProductStockAlertLabel(4)).toBeNull();
+    expect(getProductStockAlertLabel(6)).toBeNull();
     expect(getProductStockAlertLabel(0)).toBeNull();
   });
 
