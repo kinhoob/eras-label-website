@@ -100,10 +100,10 @@
 - [x] Substituir o campo livre de coleção por um `<select>` no editor de produtos do Admin preenchido pelas coleções criadas no painel.
 - [x] Substituir o input livre de coleção por um `<select>` no editor de produtos do Admin preenchido pelas coleções criadas no painel.
 - [x] Aumentar a margem entre o botão de modo noturno e a sacola na navbar mobile para evitar cliques acidentais.
-- [ ] Persistir a coleção do produto e ligar a consulta do Archive ao vínculo relacional real da peça.
-- [ ] Validar de forma automatizada e visual que produtos associados aparecem automaticamente nas páginas de coleção e no storefront.
+- [x] Persistir a coleção do produto e ligar a consulta do Archive ao vínculo relacional real da peça.
+- [x] Validar de forma automatizada e visual que produtos associados aparecem automaticamente nas páginas de coleção e no storefront.
 - [x] Adicionar no painel administrativo (editor de coleções) uma lista de checkboxes para selecionar quais produtos fazem parte daquela coleção.
 - [x] Atualizar a persistência de coleções e o mapeamento público do Archive e `/collection/:slug` para respeitar a seleção de produtos.
-- [ ] Corrigir o filtro e a leitura da coleção Raízes e demais coleções no CatalogView.tsx e no banco para exibir corretamente os produtos associados.
+- [x] Corrigir o filtro e a leitura da coleção Raízes e demais coleções no CatalogView.tsx e no banco para exibir corretamente os produtos associados.
 - [x] Garantir que o CatalogView e o banco associem corretamente os produtos da coleção (Raízes, Drafts) usando tanto o ID salvo em `productIds` quanto o nome da coleção.
 - [x] Adicionar `window.scrollTo(0, 0)` na abertura da página de coleção para que abra sempre no início e nunca no final da página.
