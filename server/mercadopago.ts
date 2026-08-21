@@ -135,10 +135,14 @@ export function getMercadoPagoErrorMessage(data: any, status: number) {
 export async function createMercadoPagoPayment(params: CreatePaymentParams) {
   const accessToken = ENV.mpAccessToken;
 
-  // Se o token de acesso não estiver configurado, retornamos um mock simulado para testes e desenvolvimento local
   if (!accessToken || accessToken.trim() === "") {
-    console.warn("[MercadoPago] ATENÇÃO: MP_ACCESS_TOKEN não configurado. Utilizando modo simulado (sandbox/mock).");
-    
+    if (ENV.isProduction) {
+      throw new Error(
+        "[MercadoPago] FATAL: MP_ACCESS_TOKEN ausente em produção. A aplicação não pode processar pagamentos sem credenciais válidas."
+      );
+    }
+    console.warn("[MercadoPago] ATENÇÃO: MP_ACCESS_TOKEN não configurado. Utilizando modo simulado (apenas desenvolvimento).");
+
     if (params.payment_method_id === "pix") {
       return {
         id: Math.floor(Math.random() * 1000000000),
@@ -156,7 +160,6 @@ export async function createMercadoPagoPayment(params: CreatePaymentParams) {
         date_of_expiration: params.date_of_expiration,
       };
     } else {
-      // Cartão aprovado no mock
       return {
         id: Math.floor(Math.random() * 1000000000),
         status: "approved",
@@ -167,7 +170,6 @@ export async function createMercadoPagoPayment(params: CreatePaymentParams) {
     }
   }
 
-  // Requisição real à API do Mercado Pago
   const payload = buildMercadoPagoPaymentPayload(params);
   const idempotencyKey = params.idempotencyKey || `${params.external_reference || "eras-payment"}-v1`;
   const response = await fetch(`${MP_API_BASE}/v1/payments`, {
@@ -175,7 +177,6 @@ export async function createMercadoPagoPayment(params: CreatePaymentParams) {
     headers: {
       "Authorization": `Bearer ${accessToken}`,
       "Content-Type": "application/json",
-      // A chave precisa ser estável para que um retry do mesmo pedido não crie uma cobrança duplicada.
       "X-Idempotency-Key": idempotencyKey,
     },
     body: JSON.stringify(payload),

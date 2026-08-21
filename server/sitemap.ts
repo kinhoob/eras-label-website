@@ -49,10 +49,8 @@ Sitemap: https://www.eraslabel.com/sitemap.xml
 
       // Buscar produtos ativos do banco de dados para indexação de e-commerce
       const database = await getDb();
-      // O preview pode ser validado sem banco conectado. Nesse caso, ainda
-      // entregamos as páginas estáticas e deixamos produtos/categorias vazios.
       const activeProducts = database
-        ? await database.select().from(products).where(eq(products.status, "published"))
+        ? await database.select().from(products).where(eq(products.status, "active"))
         : [];
       const activeCategories = database ? await database.select().from(categories) : [];
 
@@ -79,10 +77,11 @@ Sitemap: https://www.eraslabel.com/sitemap.xml
         xml += `  </url>\n`;
       }
 
-      // Adicionar páginas individuais de produtos publicados
+      // Adicionar páginas individuais de produtos ativos
       for (const prod of activeProducts) {
+        const prodSlug = prod.slug || String(prod.id);
         xml += `  <url>\n`;
-        xml += `    <loc>${domain}/product/${prod.id}</loc>\n`;
+        xml += `    <loc>${domain}/produto/${encodeURIComponent(prodSlug)}</loc>\n`;
         xml += `    <lastmod>${now}</lastmod>\n`;
         xml += `    <changefreq>daily</changefreq>\n`;
         xml += `    <priority>0.9</priority>\n`;

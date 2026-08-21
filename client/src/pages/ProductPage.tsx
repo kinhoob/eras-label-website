@@ -26,6 +26,9 @@ import { loadCart, saveCart } from "@/lib/cart-storage";
 import { toast } from "sonner";
 import type { PublicCartLine } from "@/components/PublicCartDrawer";
 import { getProductDescription, hasSavedProductDescription } from "@/lib/product-content";
+import { resolveProductSizeGuide } from "@shared/product-size-guide";
+import { getProductSizeAvailabilityLabel } from "@shared/product-stock-alert";
+import { ProductStockAlert } from "@/components/ProductStockAlert";
 
 const productImageFallback =
   "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1200&q=85";
@@ -96,6 +99,16 @@ export default function ProductPage() {
   const availableSizes = useMemo(
     () => Array.from(new Set(variations.map((variation: any) => String(variation.size)))),
     [variations],
+  );
+  const allProductSizes = useMemo(
+    () => Array.isArray(product?.variations)
+      ? Array.from(new Set(product.variations.map((variation: any) => String(variation.size)).filter(Boolean)))
+      : [],
+    [product?.variations],
+  );
+  const sizeGuide = useMemo(
+    () => resolveProductSizeGuide(product?.sizeGuide, String(product?.category ?? ""), allProductSizes),
+    [product?.sizeGuide, product?.category, allProductSizes],
   );
   const selectedVariation = variations.find(
     (variation: any) => String(variation.size) === selectedSize,
@@ -263,6 +276,7 @@ export default function ProductPage() {
                     {(images.length > 0 ? images : [productImageFallback]).map((image, index) => (
                       <CarouselItem key={`${image}-${index}`} className="product-carousel-slide">
                         <div className="product-gallery-stage">
+                          <ProductStockAlert stock={selectedStock} />
                           <img
                             src={image}
                             alt={`${product.name} — imagem ${index + 1} de ${Math.max(images.length, 1)}`}
@@ -364,9 +378,7 @@ export default function ProductPage() {
                         ))}
                       </div>
                       <p className={`product-option-hint ${selectedVariation ? "is-ready" : ""}`}>
-                        {selectedVariation
-                          ? `${selectedStock} ${selectedStock === 1 ? "unidade disponível" : "unidades disponíveis"}`
-                          : "Selecione o tamanho para continuar"}
+                        {getProductSizeAvailabilityLabel(Boolean(selectedVariation))}
                       </p>
                     </div>
                 </div>
@@ -421,6 +433,20 @@ export default function ProductPage() {
                   </summary>
                   <p className="whitespace-pre-line">{getProductDescription(product.description)}</p>
                 </details>
+                {sizeGuide.length > 0 && (
+                  <details className="product-size-guide-public">
+                    <summary>
+                      <span><Ruler size={15} aria-hidden="true" /> Guia de tamanhos</span>
+                      <ChevronDown size={16} aria-hidden="true" />
+                    </summary>
+                    <div className="product-size-guide-scroll">
+                      <table>
+                        <thead><tr><th>Tamanho</th><th>Largura</th><th>Comprimento</th></tr></thead>
+                        <tbody>{sizeGuide.map((row) => <tr key={`${row.size}-${row.width}-${row.length}`}><td>{row.size}</td><td>{row.width || "—"}</td><td>{row.length || "—"}</td></tr>)}</tbody>
+                      </table>
+                    </div>
+                  </details>
+                )}
               </div>
             </section>
           </div>

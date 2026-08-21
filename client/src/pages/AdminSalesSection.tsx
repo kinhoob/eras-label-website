@@ -3,6 +3,16 @@ import { useEffect, useMemo, useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { getOrderStatusLabel, getPaymentLabel, getPaymentTone, isPaymentConfirmed } from "@shared/payment-status";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { filterOrdersWithReadyLabels } from "@/lib/order-label-filter";
@@ -59,6 +69,7 @@ export default function AdminSalesSection() {
   const { data: orders = [], isLoading, refetch } = trpc.admin.listOrders.useQuery({ includeArchived });
   const utils = trpc.useUtils();
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
+  const [deleteOrderConfirmation, setDeleteOrderConfirmation] = useState<any | null>(null);
   const [shippingQuotes, setShippingQuotes] = useState<any[]>([]);
   const [calculatingShipping, setCalculatingShipping] = useState(false);
   const [labelPdfUrl, setLabelPdfUrl] = useState<string | null>(null);
@@ -142,6 +153,21 @@ export default function AdminSalesSection() {
     },
     onError: (error) => {
       toast.error(error.message || "Não foi possível actualizar o estado do pedido.");
+    },
+  });
+
+  const deleteOrderMutation = trpc.admin.deleteOrder.useMutation({
+    onSuccess: (data) => {
+      setSelectedOrder((current: any) => current?.id === data.order.id ? null : current);
+      setSelectedOrderIds((current) => current.filter((id) => id !== data.order.id));
+      setShippingQuotes([]);
+      setLabelPdfUrl(null);
+      void refetch();
+      void utils.admin.listOrders.invalidate();
+      toast.success(`Pedido ${data.order.orderNumber} excluído definitivamente.`);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Não foi possível excluir o pedido.");
     },
   });
 
@@ -487,13 +513,12 @@ export default function AdminSalesSection() {
                           }}>
                             <RefreshCw size={13} /> Estornar Compra
                           </button>
-                          <button style={{ width: "100%", textAlign: "left", padding: "8px 12px", background: "transparent", border: "none", fontSize: "12px", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", color: "#e11d48" }} onClick={() => {
-                            if (confirm("Deseja excluir permanentemente este pedido do painel?")) {
-                              updateFulfillmentMutation.mutate({ orderId: order.id, status: "archived" });
-                              toast.success("Pedido arquivado / excluído da listagem ativa.");
-                            }
-                          }}>
-                            <Trash2 size={13} /> Excluir Pedido
+                          <button
+                            disabled={deleteOrderMutation.isPending}
+                            style={{ width: "100%", textAlign: "left", padding: "8px 12px", background: "transparent", border: "none", fontSize: "12px", cursor: deleteOrderMutation.isPending ? "wait" : "pointer", display: "flex", alignItems: "center", gap: "8px", color: "#e11d48", opacity: deleteOrderMutation.isPending ? 0.6 : 1 }}
+                            onClick={() => setDeleteOrderConfirmation(order)}
+                          >
+                            <Trash2 size={13} /> {deleteOrderMutation.isPending ? "A excluir…" : "Excluir Pedido"}
                           </button>
                         </div>
                       </div>
@@ -505,6 +530,37 @@ export default function AdminSalesSection() {
           </table>
         )}
       </div>
+
+      <AlertDialog
+        open={Boolean(deleteOrderConfirmation)}
+        onOpenChange={(open) => {
+          if (!open && !deleteOrderMutation.isPending) setDeleteOrderConfirmation(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir pedido definitivamente?</AlertDialogTitle>
+            <AlertDialogDescription>
+              O pedido {deleteOrderConfirmation?.orderNumber || "selecionado"} será removido permanentemente do painel. Esta ação não depende do estado do pagamento e não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteOrderMutation.isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleteOrderMutation.isPending}
+              className="bg-[#b22222] text-white hover:bg-[#8e1b1b]"
+              onClick={() => {
+                if (!deleteOrderConfirmation) return;
+                const orderId = deleteOrderConfirmation.id;
+                setDeleteOrderConfirmation(null);
+                deleteOrderMutation.mutate({ orderId });
+              }}
+            >
+              {deleteOrderMutation.isPending ? "A excluir…" : "Excluir definitivamente"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {selectedOrder && createPortal(
         <div className="admin-sales-modal-overlay" style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>

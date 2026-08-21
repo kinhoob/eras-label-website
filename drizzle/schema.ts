@@ -42,6 +42,8 @@ export const products = mysqlTable("products", {
   pixPrice: decimal("pixPrice", { precision: 10, scale: 2 }).notNull(),
   promotionalPrice: decimal("promotionalPrice", { precision: 10, scale: 2 }),
   description: text("description"),
+  /** Guia de tamanhos personalizada por produto; null usa a referência padrão da categoria. */
+  sizeGuide: json("sizeGuide"),
   images: json("images").notNull(),
   status: varchar("status", { length: 50 }).default("Publicado").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -177,6 +179,9 @@ export const collections = mysqlTable("collections", {
   ctaUrl: varchar("ctaUrl", { length: 255 }),
   sortOrder: int("sortOrder").default(0).notNull(),
   active: int("active").default(1).notNull(),
+  productIds: json("productIds"),
+  /** Galeria de fotos adicionais da coleção para exibição na experiência pública */
+  photos: json("photos"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
@@ -213,7 +218,8 @@ export const notifications = mysqlTable("notifications", {
   title: varchar("title", { length: 255 }).notNull(),
   message: text("message").notNull(),
   type: varchar("type", { length: 50 }).default("new_order").notNull(),
-  orderId: varchar("orderId", { length: 100 }),
+  /** Referência interna ao ID numérico do pedido; o orderNumber público não é armazenado aqui. */
+  orderId: int("orderId"),
   isRead: int("isRead").default(0).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });

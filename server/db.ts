@@ -31,6 +31,7 @@ import { collectCollectionRecipients } from "./marketing-audience";
 import { normalizeInventoryVariations, sumInventoryStock } from "../shared/inventory";
 import { normalizeCategoryName, slugifyCategory } from "../shared/categories";
 import { DEFAULT_STOREFRONT_CONFIG, type StorefrontConfig, type StorefrontAnnouncementMessage } from "../shared/storefront";
+import { normalizeProductSizeGuide } from "../shared/product-size-guide";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -144,6 +145,9 @@ export async function listProducts(category?: string) {
     : baseRows;
   // The storefront needs available sizes to filter accurately. Keep this enrichment
   // server-side so the UI does not have to guess from a product category.
+  // Buscar todas as coleções cadastradas para associar productIds e slugs
+  const allCollections = await db.select().from(collections);
+
   return Promise.all(rows.map(async (product) => {
     const variations = await db
       .select({ id: productVariations.id, size: productVariations.size, color: productVariations.color, stock: productVariations.stock })
@@ -158,12 +162,26 @@ export async function listProducts(category?: string) {
       const categoryRow = await db.select({ name: categories.name }).from(categories).where(eq(categories.id, categoryId)).limit(1);
       return categoryRow[0]?.name;
     }))).filter((name): name is string => Boolean(name));
+
+    // Descobrir em quais coleções este produto está associado (via productIds ou match de nome)
+    const matchedCollections = allCollections.filter((col) => {
+      const pIds = Array.isArray(col.productIds) ? col.productIds.map(Number) : [];
+      if (pIds.includes(product.id)) return true;
+      if (product.collection && col.name && product.collection.toLowerCase().trim() === col.name.toLowerCase().trim()) return true;
+      return false;
+    });
+
+    const collectionSlugs = matchedCollections.map((c) => c.slug);
+    const collectionNames = matchedCollections.map((c) => c.name);
+
     return {
       ...product,
       variations,
       categoryIds,
       categoryNames,
-      // O catálogo consome este campo para ordenar por popularidade real.
+      collectionSlugs,
+      collectionNames,
+      collection: matchedCollections[0]?.name || product.collection || "",
       salesCount: productSalesCount.get(product.id) ?? 0,
     };
   }));
@@ -415,6 +433,7 @@ export async function duplicateProductData(productId: number) {
     images: Array.isArray(source.images) ? source.images : [],
     status: source.status === "active" ? "Publicado" : source.status === "soldout" ? "Esgotado" : "Rascunho",
     variations: sourceVariations.map((variation) => ({ size: variation.size, stock: Number(variation.stock ?? 0) })),
+    sizeGuide: normalizeProductSizeGuide((source as any).sizeGuide),
   });
 }
 
@@ -727,8 +746,10 @@ export async function saveProductData(data: {
   sku?: string | null;
   subcategory?: string | null;
   variations?: Array<{ size: string; stock: number }>;
+  sizeGuide?: unknown;
 }) {
   const normalizedVariations = normalizeInventoryVariations(data.variations ?? []);
+  const normalizedSizeGuide = normalizeProductSizeGuide(data.sizeGuide);
   const normalizedSlug = slugifyCategory(data.slug?.trim() || data.name);
   const visibility = data.visibility ?? "visible";
   const categoryIds = Array.from(new Set((data.categoryIds ?? []).filter((id) => Number.isInteger(id) && id > 0)));
@@ -741,6 +762,7 @@ export async function saveProductData(data: {
       visibility,
       categoryIds,
       variations: normalizedVariations,
+      sizeGuide: normalizedSizeGuide,
       totalStock: sumInventoryStock(normalizedVariations),
     };
   }
@@ -766,6 +788,7 @@ export async function saveProductData(data: {
       pixPrice: String(data.pixPrice),
       promotionalPrice: data.promotionalPrice !== undefined && data.promotionalPrice !== null && !Number.isNaN(data.promotionalPrice) ? String(data.promotionalPrice) : null,
       description: data.description,
+      sizeGuide: normalizedSizeGuide.length > 0 ? normalizedSizeGuide as any : null,
       images: data.images as any,
       status: statusDb as any,
     }).where(eq(products.id, data.id));
@@ -782,6 +805,7 @@ export async function saveProductData(data: {
       pixPrice: String(data.pixPrice),
       promotionalPrice: data.promotionalPrice !== undefined && data.promotionalPrice !== null && !Number.isNaN(data.promotionalPrice) ? String(data.promotionalPrice) : null,
       description: data.description,
+      sizeGuide: normalizedSizeGuide.length > 0 ? normalizedSizeGuide as any : null,
       images: data.images as any,
       status: statusDb as any,
     });
@@ -814,6 +838,7 @@ export async function saveProductData(data: {
     visibility,
     categoryIds,
     variations: normalizedVariations,
+    sizeGuide: normalizedSizeGuide,
     totalStock: normalizedVariations.reduce((total, variation) => total + variation.stock, 0),
   };
 }
@@ -976,6 +1001,8 @@ export async function updateOrderPixPayment(data: {
 }
 
 export async function generateNextOrderNumber(): Promise<string> {
+  // ATENÇÃO: Sob alta concorrência massiva, esta consulta pode apresentar condição de corrida se dois clientes finalizarem simultaneamente.
+  // Em ambientes de altíssimo volume, priorize transações serializáveis ou uma tabela dedicada de contadores com lock pessimista (SELECT FOR UPDATE).
   const db = await getDb();
   const year = new Date().getFullYear();
   const prefix = `ER-${year}-`;
@@ -1143,8 +1170,11 @@ export function getFulfillmentTransitionError(currentStatus: FulfillmentStatus, 
   if (nextStatus === "shipped") return null;
 
   const paymentConfirmed = ["approved", "authorized"].includes(String(paymentStatus ?? "").toLowerCase());
-  if (["packed", "archived"].includes(nextStatus) && !paymentConfirmed) {
-    return "Só é possível preparar ou arquivar pedidos com pagamento aprovado.";
+  // A preparação/embalagem é uma ação operacional manual e pode ser
+  // registada pelo administrador antes da confirmação do pagamento. O
+  // arquivamento continua protegido para não encerrar uma venda pendente.
+  if (nextStatus === "archived" && !paymentConfirmed) {
+    return "Só é possível arquivar pedidos com pagamento aprovado.";
   }
 
   if (nextStatus !== "pending_packaging" && nextStatus !== currentStatus) {
@@ -1173,6 +1203,43 @@ export async function updateOrderFulfillmentStatus(orderId: number, nextStatus: 
   }).where(eq(orders.id, orderId));
   const updated = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
   return updated[0] ? normalizeOrderForClient(updated[0]) : undefined;
+}
+
+/**
+ * Define as referências derivadas que devem ser limpas ao excluir um pedido.
+ * O orderNumber público nunca é usado como chave de relacionamento.
+ */
+export function getOrderDeletionReferences(orderId: number) {
+  return {
+    orderId,
+    notificationOrderId: orderId,
+  };
+}
+
+/**
+ * Executa a limpeza contra uma conexão fornecida. A função separada mantém
+ * verificável, sem banco de teste persistente, a ordem e as referências que
+ * são removidas durante a exclusão real.
+ */
+export async function deleteOrderDataFromDb(db: any, orderId: number) {
+  const [current] = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
+  if (!current) return undefined;
+
+  const references = getOrderDeletionReferences(current.id);
+  await db.delete(notifications).where(eq(notifications.orderId, references.notificationOrderId));
+  await db.delete(orders).where(eq(orders.id, references.orderId));
+  return normalizeOrderForClient(current);
+}
+
+/**
+ * Exclui permanentemente um pedido administrativo, independentemente do
+ * estado do pagamento ou da etapa logística. A referência de notificação é
+ * removida primeiro para não deixar alertas órfãos no centro administrativo.
+ */
+export async function deleteOrderData(orderId: number, injectedDb?: any) {
+  const db = injectedDb ?? (await getDb());
+  if (!db) return undefined;
+  return deleteOrderDataFromDb(db, orderId);
 }
 
 export type AnalyticsRange = {
@@ -1802,9 +1869,13 @@ export async function saveCollectionData(data: {
   ctaUrl?: string;
   sortOrder?: number;
   active?: number;
+  productIds?: number[];
+  photos?: string[];
 }) {
   const db = await getDb();
   const slug = data.slug?.trim() ? slugifyCategory(data.slug) : slugifyCategory(data.name);
+  const productIdsArr = Array.isArray(data.productIds) ? data.productIds : [];
+  const photosArr = Array.isArray(data.photos) ? data.photos.filter(Boolean) : [];
   const values = {
     name: data.name,
     slug,
@@ -1816,20 +1887,35 @@ export async function saveCollectionData(data: {
     ctaUrl: data.ctaUrl || `/collection/${slug}`,
     sortOrder: Number(data.sortOrder || 0),
     active: data.active !== undefined ? Number(data.active) : 1,
+    productIds: productIdsArr,
+    photos: photosArr,
   };
 
   if (!db) return { id: data.id || 1, ...values };
 
-  if (data.id) {
-    await db.update(collections).set(values).where(eq(collections.id, data.id));
-    const [updated] = await db.select().from(collections).where(eq(collections.id, data.id)).limit(1);
-    return updated;
+  let savedId = data.id;
+  if (savedId) {
+    await db.update(collections).set(values).where(eq(collections.id, savedId));
   } else {
     const [inserted] = await db.insert(collections).values(values);
-    const insertId = Number((inserted as any).insertId || 0);
-    const [created] = await db.select().from(collections).where(eq(collections.id, insertId)).limit(1);
-    return created;
+    savedId = Number((inserted as any).insertId || 0);
   }
+
+  // Sincronizar o nome da coleção nos produtos selecionados e limpar dos desmarcados
+  if (savedId) {
+    const allProds = await db.select({ id: products.id, collection: products.collection }).from(products);
+    for (const prod of allProds) {
+      const isSelected = productIdsArr.includes(Number(prod.id));
+      if (isSelected) {
+        await db.update(products).set({ collection: data.name }).where(eq(products.id, Number(prod.id)));
+      } else if (prod.collection && prod.collection.toLowerCase().trim() === data.name.toLowerCase().trim()) {
+        await db.update(products).set({ collection: "" }).where(eq(products.id, Number(prod.id)));
+      }
+    }
+  }
+
+  const [created] = await db.select().from(collections).where(eq(collections.id, savedId)).limit(1);
+  return created;
 }
 
 export async function archiveCollection(id: number) {

@@ -18,6 +18,8 @@ type CollectionForm = {
   ctaUrl: string;
   sortOrder: number;
   active: number;
+  productIds: number[];
+  photos: string[];
 };
 
 const emptyForm: CollectionForm = {
@@ -31,6 +33,8 @@ const emptyForm: CollectionForm = {
   ctaUrl: "",
   sortOrder: 0,
   active: 1,
+  productIds: [],
+  photos: [],
 };
 
 /**
@@ -40,6 +44,8 @@ const emptyForm: CollectionForm = {
 export function AdminCollectionsSection() {
   const utils = trpc.useUtils();
   const collectionsQuery = trpc.collections.list.useQuery();
+
+  const uploadImage = trpc.admin.uploadImage.useMutation();
 
   const saveMutation = trpc.collections.save.useMutation({
     onSuccess: async () => {
@@ -71,7 +77,41 @@ export function AdminCollectionsSection() {
   const collections = collectionsQuery.data ?? [];
   const activeCount = useMemo(() => collections.filter((c) => c.active === 1).length, [collections]);
 
-  const startEdit = (collection?: typeof collections[number]) =>
+  const { data: adminProducts = [] } = trpc.admin.listProducts.useQuery(undefined, { enabled: true });
+
+  const startEdit = (collection?: typeof collections[number]) => {
+    let parsedProductIds: number[] = [];
+    if (collection && (collection as any).productIds) {
+      try {
+        parsedProductIds = typeof (collection as any).productIds === "string" 
+          ? JSON.parse((collection as any).productIds) 
+          : Array.isArray((collection as any).productIds) 
+          ? (collection as any).productIds 
+          : [];
+      } catch {
+        parsedProductIds = [];
+      }
+    }
+    let parsedPhotos: string[] = [];
+    if (collection && (collection as any).photos) {
+      try {
+        parsedPhotos = typeof (collection as any).photos === "string"
+          ? JSON.parse((collection as any).photos)
+          : Array.isArray((collection as any).photos)
+          ? (collection as any).photos
+          : [];
+      } catch {
+        parsedPhotos = [];
+      }
+    }
+
+    // Fallback: se não tiver productIds explícitos mas tiver produtos no catálogo com o nome da coleção
+    if (parsedProductIds.length === 0 && collection) {
+      parsedProductIds = adminProducts
+        .filter((p: any) => p.collection && p.collection.toLowerCase() === collection.name.toLowerCase())
+        .map((p: any) => Number(p.id));
+    }
+
     setEditing(
       collection
         ? {
@@ -86,9 +126,12 @@ export function AdminCollectionsSection() {
             ctaUrl: collection.ctaUrl ?? "",
             sortOrder: collection.sortOrder,
             active: collection.active,
+            productIds: parsedProductIds,
+            photos: parsedPhotos,
           }
-        : { ...emptyForm }
+        : { ...emptyForm, productIds: [], photos: [] }
     );
+  };
 
   const update = (key: keyof CollectionForm, value: string | number) =>
     setEditing((current) => (current ? { ...current, [key]: value } : current));
@@ -264,12 +307,122 @@ export function AdminCollectionsSection() {
                 <Input type="number" value={editing.sortOrder} onChange={(e) => update("sortOrder", Number(e.target.value))} style={{ height: "40px" }} />
               </label>
               <label style={{ display: "flex", flexDirection: "column", gap: "0.4rem", fontSize: "0.85rem", fontWeight: 600, color: "#333", gridColumn: "span 2" }}>
-                Imagem de capa (URL)
-                <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-                  <Input value={editing.imageUrl} onChange={(e) => update("imageUrl", e.target.value)} placeholder="https://..." style={{ height: "40px", flex: 1 }} />
+                Imagem de Capa da Coleção (Upload de Ficheiro)
+                <div style={{ display: "flex", gap: "1rem", alignItems: "center", width: "100%" }}>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      event.target.value = "";
+                      if (!file) return;
+                      if (file.size > 8 * 1024 * 1024) {
+                        toast.error("A capa deve ter no máximo 8MB.");
+                        return;
+                      }
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        uploadImage.mutate({
+                          fileName: file.name,
+                          fileBase64: String(reader.result),
+                          contentType: file.type || "image/jpeg",
+                        }, {
+                          onSuccess: (res) => {
+                            update("imageUrl", res.url);
+                            toast.success("Imagem de capa carregada com sucesso.");
+                          },
+                          onError: () => toast.error("Não foi possível carregar a imagem de capa."),
+                        });
+                      };
+                      reader.readAsDataURL(file);
+                    }}
+                    style={{ height: "40px", padding: "0.4rem", background: "#fff", flex: 1 }}
+                  />
                   {editing.imageUrl && (
-                    <div style={{ width: "40px", height: "40px", borderRadius: "6px", overflow: "hidden", border: "1px solid #ccc", flexShrink: 0 }}>
-                      <img src={editing.imageUrl} alt="Preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    <div style={{ width: "60px", height: "60px", borderRadius: "8px", overflow: "hidden", border: "1px solid #d1d5db", flexShrink: 0, background: "#f3f4f6", position: "relative" }}>
+                      <img src={editing.imageUrl} alt="Capa" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      <button
+                        type="button"
+                        onClick={() => update("imageUrl", "")}
+                        style={{ position: "absolute", top: "2px", right: "2px", background: "rgba(0,0,0,0.7)", color: "#fff", border: "none", borderRadius: "50%", width: "18px", height: "18px", fontSize: "10px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+                        title="Remover capa"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </label>
+
+              <label style={{ display: "flex", flexDirection: "column", gap: "0.4rem", fontSize: "0.85rem", fontWeight: 600, color: "#333", gridColumn: "span 2" }}>
+                Galeria de Fotos da Coleção (Upload de Ficheiros)
+                <div style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start", flexDirection: "column", width: "100%" }}>
+                  <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", width: "100%" }}>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files ?? []);
+                        e.target.value = "";
+                        if (files.length === 0) return;
+                        
+                        let uploadedCount = 0;
+                        files.forEach((file) => {
+                          if (file.size > 8 * 1024 * 1024) {
+                            toast.error(`A imagem ${file.name} excede 8MB.`);
+                            return;
+                          }
+                          const reader = new FileReader();
+                          reader.onload = () => {
+                            uploadImage.mutate({
+                              fileName: file.name,
+                              fileBase64: String(reader.result),
+                              contentType: file.type || "image/jpeg",
+                            }, {
+                              onSuccess: (res) => {
+                                setEditing((curr) => {
+                                  if (!curr) return curr;
+                                  const existing = Array.isArray(curr.photos) ? curr.photos : [];
+                                  return { ...curr, photos: [...existing, res.url] };
+                                });
+                                uploadedCount++;
+                                if (uploadedCount === files.length) {
+                                  toast.success(`${uploadedCount} foto(s) carregada(s) com sucesso.`);
+                                }
+                              },
+                              onError: () => toast.error(`Falha ao carregar ${file.name}`),
+                            });
+                          };
+                          reader.readAsDataURL(file);
+                        });
+                      }}
+                      style={{ height: "40px", padding: "0.4rem", background: "#fff" }}
+                    />
+                  </div>
+                  {uploadImage.isPending && <span style={{ fontSize: "0.75rem", color: "#b22222", fontStyle: "italic" }}>A carregar imagens para o servidor...</span>}
+
+                  {Array.isArray(editing.photos) && editing.photos.length > 0 && (
+                    <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", marginTop: "0.5rem", width: "100%" }}>
+                      {editing.photos.map((photoUrl, pIdx) => (
+                        <div key={pIdx} style={{ width: "70px", height: "70px", borderRadius: "8px", overflow: "hidden", border: "1px solid #d1d5db", position: "relative", background: "#f3f4f6" }}>
+                          <img src={photoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditing(curr => {
+                                if (!curr) return curr;
+                                const updated = curr.photos.filter((_, idx) => idx !== pIdx);
+                                return { ...curr, photos: updated };
+                              });
+                            }}
+                            style={{ position: "absolute", top: "2px", right: "2px", background: "rgba(0,0,0,0.7)", color: "#fff", border: "none", borderRadius: "50%", width: "20px", height: "20px", fontSize: "11px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+                            title="Remover foto"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
@@ -290,6 +443,53 @@ export function AdminCollectionsSection() {
                 Texto editorial completo
                 <Textarea value={editing.editorialText} onChange={(e) => update("editorialText", e.target.value)} rows={4} placeholder="História, manifesto e detalhes da era..." />
               </label>
+
+              <div style={{ gridColumn: "span 2", borderTop: "1px solid #f2eee9", paddingTop: "1rem", marginTop: "0.5rem" }}>
+                <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#111", display: "block", marginBottom: "0.5rem" }}>
+                  Selecionar produtos que fazem parte desta coleção ({editing.productIds.length} selecionados)
+                </span>
+                <p style={{ fontSize: "0.8rem", color: "#666", marginBottom: "0.75rem" }}>
+                  Marque as peças abaixo para vinculá-las automaticamente a esta coleção no Archive e na página pública.
+                </p>
+                <div style={{ maxHeight: "200px", overflowY: "auto", border: "1px solid #eae5de", borderRadius: "6px", padding: "0.75rem", background: "#fafafa" }}>
+                  {adminProducts.length === 0 ? (
+                    <p style={{ fontSize: "0.85rem", color: "#666", textAlign: "center", padding: "1rem" }}>Nenhum produto cadastrado no catálogo.</p>
+                  ) : (
+                    adminProducts.map((p: any) => {
+                      const isChecked = editing.productIds.includes(Number(p.id));
+                      return (
+                        <label key={p.id} style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.35rem 0", fontSize: "0.85rem", cursor: "pointer", borderBottom: "1px solid #eee" }}>
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => {
+                              const checked = e.target.checked;
+                              setEditing((curr) => {
+                                if (!curr) return curr;
+                                const currentIds = curr.productIds || [];
+                                const nextIds = checked 
+                                  ? [...currentIds, Number(p.id)]
+                                  : currentIds.filter((id) => id !== Number(p.id));
+                                return { ...curr, productIds: nextIds };
+                              });
+                            }}
+                            style={{ width: "16px", height: "16px", accentColor: "#b22222" }}
+                          />
+                          <div style={{ width: "32px", height: "32px", borderRadius: "4px", overflow: "hidden", background: "#eee", flexShrink: 0 }}>
+                            {p.images?.[0] ? <img src={p.images[0]} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : null}
+                          </div>
+                          <div style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            <strong>{p.name}</strong> <span style={{ color: "#666", fontSize: "0.75rem" }}>· R$ {Number(p.price).toFixed(2)}</span>
+                          </div>
+                          <span style={{ fontSize: "0.75rem", padding: "2px 6px", background: p.collection ? "#eee" : "#fef2f2", borderRadius: "4px", color: p.collection ? "#333" : "#b22222" }}>
+                            {p.collection || "Sem coleção"}
+                          </span>
+                        </label>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
             </div>
 
             <div className="admin-editorial-modal-footer" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #f2eee9", paddingTop: "1rem" }}>

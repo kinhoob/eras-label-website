@@ -49,10 +49,15 @@ export default function ArchivePage() {
                   <p className="text-base text-[#554f46] leading-relaxed mb-8">
                     {col.editorialText || col.description || "A era em curso: silhuetas autorais e acabamento artesanal."}
                   </p>
-                  <div>
+                  <div className="flex flex-wrap items-center gap-6">
                     <Link href={col.ctaUrl || `/collection/${col.slug}`} onClick={playClickSound}>
                       <button className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.250em] text-[#23221e] border-b border-[#23221e] pb-1 hover:text-[#b22222] hover:border-[#b22222] transition-colors">
                         {col.ctaLabel || "Comprar a era"} <span aria-hidden="true">→</span>
+                      </button>
+                    </Link>
+                    <Link href={`/collection/${col.slug}`} onClick={playClickSound}>
+                      <button className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.250em] text-[#b22222] bg-[#f0e6dc] px-4 py-2 rounded-lg hover:bg-[#e6d8cc] transition-colors">
+                        Ver fotos da coleção ↗
                       </button>
                     </Link>
                   </div>

@@ -87,6 +87,7 @@ import {
   updateOrderPaymentStatus,
   updateOrderTracking,
   updateOrderFulfillmentStatus,
+  deleteOrderData,
   updateOrderLabelData,
   recordAnalyticsEvent,
   upsertUser,
@@ -426,7 +427,6 @@ export const appRouter = router({
   checkout: router({
     publicConfig: publicProcedure.query(async () => ({ publicKey: ENV.mpPublicKey || null, commercial: await getCommercialConfig() })),
     create: publicProcedure.input(z.object({
-      orderNumber: z.string().regex(/^ER-\d{4}-\d{4,12}$/).optional(),
       customerName: z.string().min(2),
       customerEmail: z.string().email(),
       customerCpf: z.string().min(11),
@@ -443,7 +443,7 @@ export const appRouter = router({
       paymentMethodId: z.string().min(2).optional(),
       installments: z.number().int().positive().optional(),
     })).mutation(async ({ input, ctx }) => {
-      const orderNumber = input.orderNumber ?? `ER-${new Date().getFullYear()}-${Math.floor(Math.random() * 9000 + 1000)}`;
+      const orderNumber = await generateNextOrderNumber();
       const commercialConfig = await getCommercialConfig();
 
       // Recálculo server-side rigoroso dos preços a partir do banco de dados
@@ -743,6 +743,8 @@ export const appRouter = router({
       ctaUrl: z.string().optional(),
       sortOrder: z.number().optional(),
       active: z.number().optional(),
+      productIds: z.array(z.number()).optional(),
+      photos: z.array(z.string()).optional(),
     })).mutation(({ input }) => saveCollectionData(input)),
     archive: adminProcedure.input(z.object({ id: z.number() })).mutation(({ input }) => archiveCollection(input.id)),
     restore: adminProcedure.input(z.object({ id: z.number() })).mutation(({ input }) => restoreCollection(input.id)),
@@ -798,6 +800,11 @@ export const appRouter = router({
         size: z.string().trim().min(1).max(20),
         stock: z.number().int().min(0).max(100000),
       })).max(50).optional(),
+      sizeGuide: z.array(z.object({
+        size: z.string().trim().min(1).max(24),
+        width: z.string().trim().max(48),
+        length: z.string().trim().max(48),
+      })).max(20).optional(),
     })).mutation(async ({ input }) => {
       const saved = await saveProductData(input);
       return {
@@ -1090,6 +1097,21 @@ export const appRouter = router({
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: error instanceof Error ? error.message : "Não foi possível actualizar o estado operacional do pedido.",
+        });
+      }
+    }),
+    deleteOrder: adminProcedure.input(z.object({
+      orderId: z.number().int().positive(),
+    })).mutation(async ({ input }) => {
+      try {
+        const deleted = await deleteOrderData(input.orderId);
+        if (!deleted) throw new TRPCError({ code: "NOT_FOUND", message: "Pedido não encontrado." });
+        return { success: true, order: deleted };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: error instanceof Error ? error.message : "Não foi possível excluir o pedido.",
         });
       }
     }),

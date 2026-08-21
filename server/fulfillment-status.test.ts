@@ -16,9 +16,13 @@ describe("transições de fulfillment no painel", () => {
     );
   });
 
-  it("continua exigindo pagamento aprovado para embalar", () => {
-    expect(getFulfillmentTransitionError("pending_packaging", "packed", "pending")).toBe(
-      "Só é possível preparar ou arquivar pedidos com pagamento aprovado."
+  it("permite registar a embalagem mesmo com pagamento pendente", () => {
+    expect(getFulfillmentTransitionError("pending_packaging", "packed", "pending")).toBeNull();
+  });
+
+  it("continua exigindo pagamento aprovado para arquivar", () => {
+    expect(getFulfillmentTransitionError("packed", "archived", "pending")).toBe(
+      "Só é possível arquivar pedidos com pagamento aprovado."
     );
   });
 });
