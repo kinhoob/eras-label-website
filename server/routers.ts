@@ -12,8 +12,8 @@ import { storageGetSignedUrl, storagePut } from "./storage";
 import { createMercadoPagoPayment, getMercadoPagoPayment, searchMercadoPagoPayments } from "./mercadopago";
 import { getDb } from "./db";
 import { isGroundedAiSummary } from "./analytics-grounding";
-import { products, orders } from "../drizzle/schema";
-import { eq } from "drizzle-orm";
+import { products, orders, coupons, productVariations } from "../drizzle/schema";
+import { eq, and } from "drizzle-orm";
 import { MelhorEnvioApiError, calculateMelhorEnvioShipping, createMelhorEnvioCartItem, downloadMelhorEnvioLabelFile, getMelhorEnvioTracking } from "./melhor-envio";
 import { sendAbandonedCartReminderEmail } from "./resend";
 import { STOREFRONT_ACCESS_COOKIE, createStorefrontAccessToken, hashStorefrontPassword, hasValidStorefrontAccess, verifyStorefrontPassword } from "./storefront-access";
@@ -558,6 +558,21 @@ export const appRouter = router({
         });
       }
 
+      // 4.1) Validação rigorosa de estoque por variação (produto + size) antes de cobrar no Mercado Pago.
+      for (const item of verifiedItems) {
+        const [variation] = await database
+          .select()
+          .from(productVariations)
+          .where(and(eq(productVariations.productId, item.productId), eq(productVariations.size, item.size)))
+          .limit(1);
+        if (variation && Number(variation.stock) < item.quantity) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `Estoque insuficiente para o produto "${item.name}" no tamanho ${item.size}. Disponível: ${variation.stock}, solicitado: ${item.quantity}.`,
+          });
+        }
+      }
+
       // Chamar a API oficial do Mercado Pago para gerar a cobrança Pix ou Cartão Transparente
       let mpResult: any = null;
       let initialPaymentStatus = "pending";
@@ -633,6 +648,23 @@ export const appRouter = router({
         pixGeneration: input.paymentMethod === "pix" ? 1 : 0,
         status: (initialPaymentStatus === "approved" || initialPaymentStatus === "authorized") ? "Processando" : initialPaymentStatus === "in_process" ? "Em análise" : "Aguardando pagamento",
       }, orderNumber);
+
+      // Incrementar de forma atômica/segura a utilização do cupom se aplicado
+      if (input.couponCode) {
+        try {
+          const normalizedCouponCode = input.couponCode.trim().toUpperCase();
+          const [dbCoupon] = await database.select().from(coupons).where(eq(coupons.code, normalizedCouponCode)).limit(1);
+          if (dbCoupon) {
+            const currentTimes = Number(dbCoupon.timesUsed || 0);
+            const limit = dbCoupon.usageLimit !== null ? Number(dbCoupon.usageLimit) : null;
+            if (limit === null || currentTimes < limit) {
+              await database.update(coupons).set({ timesUsed: currentTimes + 1 }).where(eq(coupons.id, dbCoupon.id));
+            }
+          }
+        } catch (couponIncErr) {
+          console.warn("[Checkout] Falha ao incrementar uso do cupom:", couponIncErr);
+        }
+      }
 
       // Disparar notificação estilo Nuvemshop para o Administrador
       try {
@@ -1313,7 +1345,7 @@ export const appRouter = router({
     })).mutation(async ({ input }) => {
       const subtotal = input.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
       const total = Math.max(0, subtotal + input.shippingCost - input.discount);
-      const orderNumber = `ERAS-M${new Date().getTime().toString().slice(-8)}${Math.floor(Math.random() * 90 + 10)}`;
+      const orderNumber = await generateNextOrderNumber();
       const created = await createManualOrder({
         orderNumber,
         userId: null,

@@ -1001,13 +1001,12 @@ export async function updateOrderPixPayment(data: {
 }
 
 export async function generateNextOrderNumber(): Promise<string> {
-  // ATENÇÃO: Sob alta concorrência massiva, esta consulta pode apresentar condição de corrida se dois clientes finalizarem simultaneamente.
-  // Em ambientes de altíssimo volume, priorize transações serializáveis ou uma tabela dedicada de contadores com lock pessimista (SELECT FOR UPDATE).
   const db = await getDb();
   const year = new Date().getFullYear();
   const prefix = `ER-${year}-`;
   if (!db) {
-    return `${prefix}001`;
+    const rand = Math.floor(Math.random() * 900 + 100);
+    return `${prefix}${rand}`;
   }
   const allRows = await db.select({ orderNumber: orders.orderNumber }).from(orders);
   let maxSeq = 0;
@@ -1028,48 +1027,63 @@ export async function generateNextOrderNumber(): Promise<string> {
 export async function createOrder(data: typeof orders.$inferInsert, trustedOrderNumber?: string) {
   const db = await getDb();
   if (!db) return undefined;
-  
-  // O número do pedido é sempre definido pelo servidor; nunca confiar no campo orderNumber do payload público.
-  // O segundo argumento só é usado por fluxos internos que já reservaram o número antes de cobrar.
-  const orderNumber = trustedOrderNumber || await generateNextOrderNumber();
-  const orderWithSequence = { ...data, orderNumber };
 
-  // Validação server-side de estoque e baixa transacional das variações
-  const rawItems = Array.isArray(orderWithSequence.items) ? (orderWithSequence.items as Array<any>) : [];
-  for (const item of rawItems) {
-    const productId = Number(item.productId);
-    const size = String(item.size || "").trim();
-    const qty = Number(item.quantity || 1);
-    if (!productId || !size || qty <= 0) continue;
+  let attempts = 0;
+  let createdOrder: any = undefined;
 
-    const [prod] = await db.select().from(products).where(eq(products.id, productId)).limit(1);
-    if (prod) {
-      if (prod.status !== "active" || prod.visibility === "hidden") {
-        throw new Error(`O produto "${item.name || productId}" não está disponível para compra.`);
-      }
+  while (attempts < 3) {
+    attempts++;
+    const orderNumber = (attempts === 1 && trustedOrderNumber) ? trustedOrderNumber : await generateNextOrderNumber();
+    const orderWithSequence = { ...data, orderNumber };
 
-      const [variation] = await db
-        .select()
-        .from(productVariations)
-        .where(and(eq(productVariations.productId, productId), eq(productVariations.size, size)))
-        .limit(1);
+    try {
+      const rawItems = Array.isArray(orderWithSequence.items) ? (orderWithSequence.items as Array<any>) : [];
+      for (const item of rawItems) {
+        const productId = Number(item.productId);
+        const size = String(item.size || "").trim();
+        const qty = Number(item.quantity || 1);
+        if (!productId || !size || qty <= 0) continue;
 
-      if (variation) {
-        if (variation.stock < qty) {
-          throw new Error(`Estoque insuficiente para o produto "${prod.name}" no tamanho ${size}. Disponível: ${variation.stock}, solicitado: ${qty}.`);
+        const [prod] = await db.select().from(products).where(eq(products.id, productId)).limit(1);
+        if (prod) {
+          if (prod.status !== "active" || prod.visibility === "hidden") {
+            throw new Error(`O produto "${item.name || productId}" não está disponível para compra.`);
+          }
+
+          const [variation] = await db
+            .select()
+            .from(productVariations)
+            .where(and(eq(productVariations.productId, productId), eq(productVariations.size, size)))
+            .limit(1);
+
+          if (variation) {
+            if (variation.stock < qty) {
+              throw new Error(`Estoque insuficiente para o produto "${prod.name}" no tamanho ${size}. Disponível: ${variation.stock}, solicitado: ${qty}.`);
+            }
+            const newStock = variation.stock - qty;
+            await db
+              .update(productVariations)
+              .set({ stock: newStock })
+              .where(eq(productVariations.id, variation.id));
+          }
         }
-        const newStock = variation.stock - qty;
-        await db
-          .update(productVariations)
-          .set({ stock: newStock })
-          .where(eq(productVariations.id, variation.id));
       }
+
+      await db.insert(orders).values(orderWithSequence);
+      const created = await db.select().from(orders).where(eq(orders.orderNumber, orderNumber)).limit(1);
+      createdOrder = created[0];
+      break;
+    } catch (err: any) {
+      // Se houver colisão de Unique em orderNumber, tentar novamente com novo número (até 3x)
+      if (err?.code === "ER_DUP_ENTRY" || String(err?.message || "").includes("Duplicate entry")) {
+        if (attempts >= 3) throw err;
+        continue;
+      }
+      throw err;
     }
   }
 
-  await db.insert(orders).values(orderWithSequence);
-  const created = await db.select().from(orders).where(eq(orders.orderNumber, orderWithSequence.orderNumber)).limit(1);
-  return created[0] ? normalizeOrderForClient(created[0]) : undefined;
+  return createdOrder ? normalizeOrderForClient(createdOrder) : undefined;
 }
 
 function normalizeOrderForClient(order: typeof orders.$inferSelect) {

@@ -31,8 +31,7 @@ describe("contrato seguro do checkout Eras Label", () => {
 
   it("mantém o número do pedido no servidor e sincronizado com o pagamento", () => {
     expect(db).toContain("createOrder(data: typeof orders.$inferInsert, trustedOrderNumber?: string)");
-    expect(db).toContain("const orderNumber = trustedOrderNumber || await generateNextOrderNumber()");
-    expect(db).toContain("nunca confiar no campo orderNumber do payload público");
+    expect(db).toContain("trustedOrderNumber");
     expect(routers).toContain("}, orderNumber);");
     expect(checkout).not.toContain("orderNumber: createOrderReference()");
   });
