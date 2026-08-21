@@ -45,6 +45,8 @@ export function AdminCollectionsSection() {
   const utils = trpc.useUtils();
   const collectionsQuery = trpc.collections.list.useQuery();
 
+  const uploadImage = trpc.admin.uploadImage.useMutation();
+
   const saveMutation = trpc.collections.save.useMutation({
     onSuccess: async () => {
       toast.success("Coleção guardada com sucesso.");
@@ -317,25 +319,72 @@ export function AdminCollectionsSection() {
               </label>
 
               <label style={{ display: "flex", flexDirection: "column", gap: "0.4rem", fontSize: "0.85rem", fontWeight: 600, color: "#333", gridColumn: "span 2" }}>
-                Galeria de Fotos da Coleção (URLs, uma por linha ou separadas por vírgula)
-                <div style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start", flexDirection: "column" }}>
-                  <Textarea
-                    value={Array.isArray(editing.photos) ? editing.photos.join("\n") : ""}
-                    onChange={(e) => {
-                      const raw = e.target.value;
-                      const list = raw.includes(",") && !raw.includes("\n")
-                        ? raw.split(",").map(s => s.trim()).filter(Boolean)
-                        : raw.split("\n").map(s => s.trim()).filter(Boolean);
-                      setEditing(curr => curr ? { ...curr, photos: list } : curr);
-                    }}
-                    rows={3}
-                    placeholder="https://exemplo.com/foto1.jpg&#10;https://exemplo.com/foto2.jpg"
-                  />
+                Galeria de Fotos da Coleção (Upload de Ficheiros)
+                <div style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start", flexDirection: "column", width: "100%" }}>
+                  <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", width: "100%" }}>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files ?? []);
+                        e.target.value = "";
+                        if (files.length === 0) return;
+                        
+                        let uploadedCount = 0;
+                        files.forEach((file) => {
+                          if (file.size > 8 * 1024 * 1024) {
+                            toast.error(`A imagem ${file.name} excede 8MB.`);
+                            return;
+                          }
+                          const reader = new FileReader();
+                          reader.onload = () => {
+                            uploadImage.mutate({
+                              fileName: file.name,
+                              fileBase64: String(reader.result),
+                              contentType: file.type || "image/jpeg",
+                            }, {
+                              onSuccess: (res) => {
+                                setEditing((curr) => {
+                                  if (!curr) return curr;
+                                  const existing = Array.isArray(curr.photos) ? curr.photos : [];
+                                  return { ...curr, photos: [...existing, res.url] };
+                                });
+                                uploadedCount++;
+                                if (uploadedCount === files.length) {
+                                  toast.success(`${uploadedCount} foto(s) carregada(s) com sucesso.`);
+                                }
+                              },
+                              onError: () => toast.error(`Falha ao carregar ${file.name}`),
+                            });
+                          };
+                          reader.readAsDataURL(file);
+                        });
+                      }}
+                      style={{ height: "40px", padding: "0.4rem", background: "#fff" }}
+                    />
+                  </div>
+                  {uploadImage.isPending && <span style={{ fontSize: "0.75rem", color: "#b22222", fontStyle: "italic" }}>A carregar imagens para o servidor...</span>}
+
                   {Array.isArray(editing.photos) && editing.photos.length > 0 && (
-                    <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "0.5rem" }}>
+                    <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", marginTop: "0.5rem", width: "100%" }}>
                       {editing.photos.map((photoUrl, pIdx) => (
-                        <div key={pIdx} style={{ width: "50px", height: "50px", borderRadius: "6px", overflow: "hidden", border: "1px solid #ccc", position: "relative" }}>
+                        <div key={pIdx} style={{ width: "70px", height: "70px", borderRadius: "8px", overflow: "hidden", border: "1px solid #d1d5db", position: "relative", background: "#f3f4f6" }}>
                           <img src={photoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditing(curr => {
+                                if (!curr) return curr;
+                                const updated = curr.photos.filter((_, idx) => idx !== pIdx);
+                                return { ...curr, photos: updated };
+                              });
+                            }}
+                            style={{ position: "absolute", top: "2px", right: "2px", background: "rgba(0,0,0,0.7)", color: "#fff", border: "none", borderRadius: "50%", width: "20px", height: "20px", fontSize: "11px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+                            title="Remover foto"
+                          >
+                            ×
+                          </button>
                         </div>
                       ))}
                     </div>
