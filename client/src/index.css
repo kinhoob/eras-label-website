@@ -5318,6 +5318,8 @@ body {
   .public-global-links { display: none; }
   .public-global-menu-trigger span, .public-global-bag span { display: none; }
   .public-global-menu-trigger, .public-global-bag { padding: .5rem; }
+  /* Mantém uma zona de toque clara entre tema, conta e sacola no mobile. */
+  .public-global-right-tools { gap: 20px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .public-global-links a, .public-global-links a::after { transition: none; }
@@ -6764,7 +6766,7 @@ body {
 }
 
 .public-global-left-tools { grid-area: tools; gap: 14px; }
-.public-global-right-tools { grid-area: right; justify-self: end; gap: 13px; }
+.public-global-right-tools { grid-area: right; justify-self: end; gap: clamp(16px, 1.8vw, 22px); }
 
 .public-global-menu-trigger,
 .public-global-account,

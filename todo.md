@@ -100,3 +100,4 @@
 - [ ] Adicionar no cadastro de produto um select de coleção com as coleções geridas no Admin
 - [ ] Persistir a coleção do produto e ligar a consulta do Archive ao vínculo real da peça
 - [ ] Validar que produtos aparecem automaticamente na coleção correta no Archive e no storefront
+- [x] Aumentar a margem entre o botão de modo noturno e a sacola na navbar mobile para evitar cliques acidentais.
