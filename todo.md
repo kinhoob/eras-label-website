@@ -110,3 +110,4 @@
 - [x] Adicionar no Archive a opção de visualização de fotos/galeria da coleção, além do botão de compra da era.
 - [x] Adicionar suporte a galeria de fotos de coleção no painel administrativo e exibição na página pública da coleção.
 - [x] Substituir o campo de texto/links de galeria de coleção por upload real de ficheiros (multipart/base64 via mutation de upload) no painel administrativo.
+- [x] Substituir o campo de texto/URL da imagem de capa (imageUrl) por upload direto de ficheiro no editor de coleções do painel administrativo.

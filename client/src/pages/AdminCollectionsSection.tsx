@@ -307,12 +307,48 @@ export function AdminCollectionsSection() {
                 <Input type="number" value={editing.sortOrder} onChange={(e) => update("sortOrder", Number(e.target.value))} style={{ height: "40px" }} />
               </label>
               <label style={{ display: "flex", flexDirection: "column", gap: "0.4rem", fontSize: "0.85rem", fontWeight: 600, color: "#333", gridColumn: "span 2" }}>
-                Imagem de capa (URL)
-                <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-                  <Input value={editing.imageUrl} onChange={(e) => update("imageUrl", e.target.value)} placeholder="https://..." style={{ height: "40px", flex: 1 }} />
+                Imagem de Capa da Coleção (Upload de Ficheiro)
+                <div style={{ display: "flex", gap: "1rem", alignItems: "center", width: "100%" }}>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      event.target.value = "";
+                      if (!file) return;
+                      if (file.size > 8 * 1024 * 1024) {
+                        toast.error("A capa deve ter no máximo 8MB.");
+                        return;
+                      }
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        uploadImage.mutate({
+                          fileName: file.name,
+                          fileBase64: String(reader.result),
+                          contentType: file.type || "image/jpeg",
+                        }, {
+                          onSuccess: (res) => {
+                            update("imageUrl", res.url);
+                            toast.success("Imagem de capa carregada com sucesso.");
+                          },
+                          onError: () => toast.error("Não foi possível carregar a imagem de capa."),
+                        });
+                      };
+                      reader.readAsDataURL(file);
+                    }}
+                    style={{ height: "40px", padding: "0.4rem", background: "#fff", flex: 1 }}
+                  />
                   {editing.imageUrl && (
-                    <div style={{ width: "40px", height: "40px", borderRadius: "6px", overflow: "hidden", border: "1px solid #ccc", flexShrink: 0 }}>
-                      <img src={editing.imageUrl} alt="Preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    <div style={{ width: "60px", height: "60px", borderRadius: "8px", overflow: "hidden", border: "1px solid #d1d5db", flexShrink: 0, background: "#f3f4f6", position: "relative" }}>
+                      <img src={editing.imageUrl} alt="Capa" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      <button
+                        type="button"
+                        onClick={() => update("imageUrl", "")}
+                        style={{ position: "absolute", top: "2px", right: "2px", background: "rgba(0,0,0,0.7)", color: "#fff", border: "none", borderRadius: "50%", width: "18px", height: "18px", fontSize: "10px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+                        title="Remover capa"
+                      >
+                        ×
+                      </button>
                     </div>
                   )}
                 </div>
