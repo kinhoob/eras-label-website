@@ -104,3 +104,6 @@
 - [ ] Validar de forma automatizada e visual que produtos associados aparecem automaticamente nas páginas de coleção e no storefront.
 - [x] Adicionar no painel administrativo (editor de coleções) uma lista de checkboxes para selecionar quais produtos fazem parte daquela coleção.
 - [x] Atualizar a persistência de coleções e o mapeamento público do Archive e `/collection/:slug` para respeitar a seleção de produtos.
+- [ ] Corrigir o filtro e a leitura da coleção Raízes e demais coleções no CatalogView.tsx e no banco para exibir corretamente os produtos associados.
+- [x] Garantir que o CatalogView e o banco associem corretamente os produtos da coleção (Raízes, Drafts) usando tanto o ID salvo em `productIds` quanto o nome da coleção.
+- [x] Adicionar `window.scrollTo(0, 0)` na abertura da página de coleção para que abra sempre no início e nunca no final da página.

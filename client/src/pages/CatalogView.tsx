@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useRoute } from "wouter";
 import { RotateCcw, SlidersHorizontal } from "lucide-react";
 import { searchStorefrontProducts, sortStorefrontProducts, type StorefrontSearchSort } from "@/lib/storefront-search";
@@ -64,6 +64,11 @@ export default function CatalogViewPage() {
   const { data: products = [], isLoading } = trpc.catalog.list.useQuery();
   const { data: categories = [] } = trpc.catalog.categories.useQuery();
 
+  // Forçar scroll para o topo sempre que a rota ou filtros mudarem (evitando abrir no rodapé)
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, [location, filterType, filterSlug]);
+
   const searchableProducts = useMemo(() => products.map((product: any) => {
     const variationSizes = Array.isArray(product.variations) ? product.variations.map((v: any) => v.size).filter(Boolean) : [];
     const directSizes = Array.isArray(product.sizes) ? product.sizes : [];
@@ -71,6 +76,8 @@ export default function CatalogViewPage() {
     return {
       ...product,
       collection: product.collection ?? product.collectionName ?? "",
+      collectionSlugs: Array.isArray(product.collectionSlugs) ? product.collectionSlugs : [],
+      collectionNames: Array.isArray(product.collectionNames) ? product.collectionNames : [],
       category: product.category ?? "",
       categoryNames: Array.isArray(product.categoryNames) ? product.categoryNames : [],
       sizes: combinedSizes.length > 0 ? combinedSizes : ["PP", "P", "M", "G", "GG"],
@@ -87,9 +94,17 @@ export default function CatalogViewPage() {
     }
 
     if (filterType === "collection") {
-      const collection = normalizeSlug(product.collection);
       const target = normalizeSlug(filterSlug);
-      return collection === target || collection.includes(target);
+      const slugs = (product.collectionSlugs || []).map((s: any) => normalizeSlug(s));
+      const names = (product.collectionNames || []).map((n: any) => normalizeSlug(n));
+      const mainCol = normalizeSlug(product.collection);
+      
+      return slugs.includes(target) ||
+             names.includes(target) ||
+             mainCol === target ||
+             slugs.some((s: string) => s.includes(target) || target.includes(s)) ||
+             names.some((n: string) => n.includes(target) || target.includes(n)) ||
+             mainCol.includes(target);
     }
 
     return true;

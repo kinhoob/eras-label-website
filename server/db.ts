@@ -145,6 +145,9 @@ export async function listProducts(category?: string) {
     : baseRows;
   // The storefront needs available sizes to filter accurately. Keep this enrichment
   // server-side so the UI does not have to guess from a product category.
+  // Buscar todas as coleções cadastradas para associar productIds e slugs
+  const allCollections = await db.select().from(collections);
+
   return Promise.all(rows.map(async (product) => {
     const variations = await db
       .select({ id: productVariations.id, size: productVariations.size, color: productVariations.color, stock: productVariations.stock })
@@ -159,12 +162,26 @@ export async function listProducts(category?: string) {
       const categoryRow = await db.select({ name: categories.name }).from(categories).where(eq(categories.id, categoryId)).limit(1);
       return categoryRow[0]?.name;
     }))).filter((name): name is string => Boolean(name));
+
+    // Descobrir em quais coleções este produto está associado (via productIds ou match de nome)
+    const matchedCollections = allCollections.filter((col) => {
+      const pIds = Array.isArray(col.productIds) ? col.productIds.map(Number) : [];
+      if (pIds.includes(product.id)) return true;
+      if (product.collection && col.name && product.collection.toLowerCase().trim() === col.name.toLowerCase().trim()) return true;
+      return false;
+    });
+
+    const collectionSlugs = matchedCollections.map((c) => c.slug);
+    const collectionNames = matchedCollections.map((c) => c.name);
+
     return {
       ...product,
       variations,
       categoryIds,
       categoryNames,
-      // O catálogo consome este campo para ordenar por popularidade real.
+      collectionSlugs,
+      collectionNames,
+      collection: matchedCollections[0]?.name || product.collection || "",
       salesCount: productSalesCount.get(product.id) ?? 0,
     };
   }));
@@ -1879,10 +1896,16 @@ export async function saveCollectionData(data: {
     savedId = Number((inserted as any).insertId || 0);
   }
 
-  // Sincronizar o nome da coleção nos produtos selecionados
-  if (savedId && productIdsArr.length > 0) {
-    for (const pId of productIdsArr) {
-      await db.update(products).set({ collection: data.name }).where(eq(products.id, Number(pId)));
+  // Sincronizar o nome da coleção nos produtos selecionados e limpar dos desmarcados
+  if (savedId) {
+    const allProds = await db.select({ id: products.id, collection: products.collection }).from(products);
+    for (const prod of allProds) {
+      const isSelected = productIdsArr.includes(Number(prod.id));
+      if (isSelected) {
+        await db.update(products).set({ collection: data.name }).where(eq(products.id, Number(prod.id)));
+      } else if (prod.collection && prod.collection.toLowerCase().trim() === data.name.toLowerCase().trim()) {
+        await db.update(products).set({ collection: "" }).where(eq(products.id, Number(prod.id)));
+      }
     }
   }
 
