@@ -190,6 +190,13 @@
       "when": 1787279692954,
       "tag": "0026_tense_calypso",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "5",
+      "when": 1787280409234,
+      "tag": "0027_broken_wendell_vaughn",
+      "breakpoints": true
     }
   ]
 }

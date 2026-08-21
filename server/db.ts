@@ -1868,10 +1868,12 @@ export async function saveCollectionData(data: {
   sortOrder?: number;
   active?: number;
   productIds?: number[];
+  photos?: string[];
 }) {
   const db = await getDb();
   const slug = data.slug?.trim() ? slugifyCategory(data.slug) : slugifyCategory(data.name);
   const productIdsArr = Array.isArray(data.productIds) ? data.productIds : [];
+  const photosArr = Array.isArray(data.photos) ? data.photos.filter(Boolean) : [];
   const values = {
     name: data.name,
     slug,
@@ -1884,6 +1886,7 @@ export async function saveCollectionData(data: {
     sortOrder: Number(data.sortOrder || 0),
     active: data.active !== undefined ? Number(data.active) : 1,
     productIds: productIdsArr,
+    photos: photosArr,
   };
 
   if (!db) return { id: data.id || 1, ...values };

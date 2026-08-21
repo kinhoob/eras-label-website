@@ -63,6 +63,7 @@ export default function CatalogViewPage() {
 
   const { data: products = [], isLoading } = trpc.catalog.list.useQuery();
   const { data: categories = [] } = trpc.catalog.categories.useQuery();
+  const { data: collectionsList = [] } = trpc.collections.list.useQuery();
 
   // Forçar scroll para o topo sempre que a rota ou filtros mudarem (evitando abrir no rodapé)
   useEffect(() => {
@@ -141,6 +142,22 @@ export default function CatalogViewPage() {
   const subcategories = matchedCategory
     ? categories.filter((category: any) => category.parentId === matchedCategory.id && category.active)
     : [];
+
+  const matchedCollection = filterType === "collection"
+    ? collectionsList.find((col: any) => normalizeSlug(col.slug) === normalizeSlug(filterSlug) || normalizeSlug(col.name) === normalizeSlug(filterSlug))
+    : null;
+
+  const collectionPhotos = useMemo(() => {
+    if (!matchedCollection || !(matchedCollection as any).photos) return [];
+    try {
+      const parsed = typeof (matchedCollection as any).photos === "string" 
+        ? JSON.parse((matchedCollection as any).photos) 
+        : (matchedCollection as any).photos;
+      return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+    } catch {
+      return [];
+    }
+  }, [matchedCollection]);
   const activeFilterCount = [
     selectedCategory !== "Todos" && filterType === "all",
     selectedSize !== "Todos",
@@ -181,6 +198,26 @@ export default function CatalogViewPage() {
         {matchedCategory?.coverImageUrl && (
           <div className="catalog-category-cover">
             <img src={matchedCategory.coverImageUrl} alt={`Capa da categoria ${matchedCategory.name}`} />
+          </div>
+        )}
+
+        {matchedCollection?.editorialText && (
+          <div className="collection-editorial-banner" style={{ margin: "1.5rem 2rem", padding: "2rem", background: "#f2eee9", borderRadius: "8px", borderLeft: "4px solid #b22222" }}>
+            <span style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.1em", color: "#b22222", fontWeight: 700, display: "block", marginBottom: "0.5rem" }}>Manifesto da Era</span>
+            <p style={{ fontSize: "1rem", lineHeight: "1.6", color: "#333", whiteSpace: "pre-line", margin: 0 }}>{matchedCollection.editorialText}</p>
+          </div>
+        )}
+
+        {collectionPhotos.length > 0 && (
+          <div className="collection-public-gallery" style={{ padding: "0 2rem 2rem", margin: "1.5rem 0" }}>
+            <span style={{ fontSize: "0.8rem", textTransform: "uppercase", letterSpacing: "0.1em", color: "#555", fontWeight: 700, display: "block", marginBottom: "1rem" }}>Galeria Fotográfica da Coleção</span>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1rem" }}>
+              {collectionPhotos.map((photoUrl: string, idx: number) => (
+                <div key={idx} style={{ borderRadius: "8px", overflow: "hidden", height: "360px", boxShadow: "0 4px 12px rgba(0,0,0,0.06)", background: "#eae5de" }}>
+                  <img src={photoUrl} alt={`Foto ${idx + 1} da coleção`} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease" }} />
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

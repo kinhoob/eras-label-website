@@ -108,3 +108,4 @@
 - [x] Garantir que o CatalogView e o banco associem corretamente os produtos da coleção (Raízes, Drafts) usando tanto o ID salvo em `productIds` quanto o nome da coleção.
 - [x] Adicionar `window.scrollTo(0, 0)` na abertura da página de coleção para que abra sempre no início e nunca no final da página.
 - [x] Adicionar no Archive a opção de visualização de fotos/galeria da coleção, além do botão de compra da era.
+- [x] Adicionar suporte a galeria de fotos de coleção no painel administrativo e exibição na página pública da coleção.

@@ -19,6 +19,7 @@ type CollectionForm = {
   sortOrder: number;
   active: number;
   productIds: number[];
+  photos: string[];
 };
 
 const emptyForm: CollectionForm = {
@@ -33,6 +34,7 @@ const emptyForm: CollectionForm = {
   sortOrder: 0,
   active: 1,
   productIds: [],
+  photos: [],
 };
 
 /**
@@ -88,6 +90,19 @@ export function AdminCollectionsSection() {
         parsedProductIds = [];
       }
     }
+    let parsedPhotos: string[] = [];
+    if (collection && (collection as any).photos) {
+      try {
+        parsedPhotos = typeof (collection as any).photos === "string"
+          ? JSON.parse((collection as any).photos)
+          : Array.isArray((collection as any).photos)
+          ? (collection as any).photos
+          : [];
+      } catch {
+        parsedPhotos = [];
+      }
+    }
+
     // Fallback: se não tiver productIds explícitos mas tiver produtos no catálogo com o nome da coleção
     if (parsedProductIds.length === 0 && collection) {
       parsedProductIds = adminProducts
@@ -110,8 +125,9 @@ export function AdminCollectionsSection() {
             sortOrder: collection.sortOrder,
             active: collection.active,
             productIds: parsedProductIds,
+            photos: parsedPhotos,
           }
-        : { ...emptyForm, productIds: [] }
+        : { ...emptyForm, productIds: [], photos: [] }
     );
   };
 
@@ -295,6 +311,33 @@ export function AdminCollectionsSection() {
                   {editing.imageUrl && (
                     <div style={{ width: "40px", height: "40px", borderRadius: "6px", overflow: "hidden", border: "1px solid #ccc", flexShrink: 0 }}>
                       <img src={editing.imageUrl} alt="Preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    </div>
+                  )}
+                </div>
+              </label>
+
+              <label style={{ display: "flex", flexDirection: "column", gap: "0.4rem", fontSize: "0.85rem", fontWeight: 600, color: "#333", gridColumn: "span 2" }}>
+                Galeria de Fotos da Coleção (URLs, uma por linha ou separadas por vírgula)
+                <div style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start", flexDirection: "column" }}>
+                  <Textarea
+                    value={Array.isArray(editing.photos) ? editing.photos.join("\n") : ""}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      const list = raw.includes(",") && !raw.includes("\n")
+                        ? raw.split(",").map(s => s.trim()).filter(Boolean)
+                        : raw.split("\n").map(s => s.trim()).filter(Boolean);
+                      setEditing(curr => curr ? { ...curr, photos: list } : curr);
+                    }}
+                    rows={3}
+                    placeholder="https://exemplo.com/foto1.jpg&#10;https://exemplo.com/foto2.jpg"
+                  />
+                  {Array.isArray(editing.photos) && editing.photos.length > 0 && (
+                    <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "0.5rem" }}>
+                      {editing.photos.map((photoUrl, pIdx) => (
+                        <div key={pIdx} style={{ width: "50px", height: "50px", borderRadius: "6px", overflow: "hidden", border: "1px solid #ccc", position: "relative" }}>
+                          <img src={photoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>

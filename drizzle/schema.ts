@@ -180,6 +180,8 @@ export const collections = mysqlTable("collections", {
   sortOrder: int("sortOrder").default(0).notNull(),
   active: int("active").default(1).notNull(),
   productIds: json("productIds"),
+  /** Galeria de fotos adicionais da coleção para exibição na experiência pública */
+  photos: json("photos"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

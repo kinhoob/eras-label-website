@@ -745,6 +745,7 @@ export const appRouter = router({
       sortOrder: z.number().optional(),
       active: z.number().optional(),
       productIds: z.array(z.number()).optional(),
+      photos: z.array(z.string()).optional(),
     })).mutation(({ input }) => saveCollectionData(input)),
     archive: adminProcedure.input(z.object({ id: z.number() })).mutation(({ input }) => archiveCollection(input.id)),
     restore: adminProcedure.input(z.object({ id: z.number() })).mutation(({ input }) => restoreCollection(input.id)),
