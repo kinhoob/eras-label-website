@@ -97,3 +97,13 @@
 - [x] Adicionar teste runtime do pedido manual cobrindo igualdade após retry de colisão do número
 
 - [x] Adicionar teste integrado do pedido manual com colisão real do trustedOrderNumber dentro de createOrder e retorno do número persistido
+
+- [x] Auditar a prontidão para produção de pagamentos, fretes, webhooks, domínio, emails e dados reais
+- [x] Confirmar quais riscos de go-live permanecem dependentes de teste com credenciais reais
+- [x] Consolidar checklist final de lançamento e veredito de prontidão
+
+- [ ] Expor um healthcheck HTTP GET /health separado do fallback HTML da aplicação
+- [ ] Validar X-ME-Signature no webhook do Melhor Envio com HMAC-SHA256
+- [ ] Rever respostas de erro do webhook Melhor Envio para permitir retentativas quando houver falha interna
+- [ ] Executar matriz de homologação com credenciais produtivas de Mercado Pago e Melhor Envio
+- [ ] Confirmar domínio, SSL, URLs públicas de webhook, email transacional e imagem social no ambiente final
